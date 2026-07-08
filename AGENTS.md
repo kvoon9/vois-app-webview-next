@@ -1,3 +1,8 @@
+- Always follow `rizumu`, `antfu`, `vue/vueuse best practice` coding styles
+- Perfer using `defuddle` to fetch web content, `ast-grep` to search local codebase
+- Perfer using existed vueuse functions instead of create a custom composition api
+- Use space, flex instead of gap, grid for styling, since they have compatibility issues
+
 <!--VITE PLUS START-->
 
 # Using Vite+, the Unified Toolchain for the Web

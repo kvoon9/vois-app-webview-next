@@ -2,8 +2,10 @@
 import { useDark } from '@vueuse/core'
 import { shallowRef, onErrorCaptured } from 'vue'
 import { RouterView } from 'vue-router'
+import { useLangQuery } from '~/composables/useLangQuery'
 
 useDark()
+useLangQuery()
 
 const error = shallowRef<Error | null>(null)
 
@@ -19,11 +21,11 @@ onErrorCaptured((err) => {
     v-if="error"
     class="min-h-svh flex flex-col items-center justify-center p-8 bg-surface text-text-primary"
   >
-    <h1 class="text-lg font-bold mb-2">Something went wrong</h1>
+    <h1 class="text-lg font-bold mb-2">{{ $t('error.title') }}</h1>
     <p class="text-body text-text-secondary text-center mb-6">
-      An unexpected error occurred. Please try again.
+      {{ $t('error.description') }}
     </p>
-    <button type="button" class="btn-primary" @click="error = null">Try again</button>
+    <button type="button" class="btn-primary" @click="error = null">{{ $t('error.retry') }}</button>
   </div>
   <RouterView v-else />
 </template>

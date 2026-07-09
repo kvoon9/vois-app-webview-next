@@ -1,0 +1,44 @@
+{
+  "nav": { "back": "返回" },
+  "error": {
+    "title": "出了点问题",
+    "description": "发生了意外错误，请重试。",
+    "retry": "重试"
+  },
+  "help": {
+    "title": "帮助",
+    "faq": "常见问题",
+    "contact": "联系我们",
+    "feedback": "提交反馈",
+    "report": "报告问题",
+    "questions": [
+      "如何连接我的硬件设备？",
+      "没有硬件设备可以使用应用吗？",
+      "如何创建新频道？",
+      "如何管理我的隐私设置？",
+      "哪些设备与该应用兼容？"
+    ]
+  },
+  "feedback": {
+    "title": "提交反馈",
+    "category": "类别",
+    "categories": ["通用", "聊天", "设备", "设计", "连接", "账户"],
+    "yourFeedback": "您的反馈",
+    "placeholder": "告诉我们您的想法。",
+    "submit": "提交"
+  },
+  "report": {
+    "title": "报告问题",
+    "problemType": "问题类型",
+    "types": ["音频", "消息", "设备", "账户", "连接", "其他"],
+    "whatHappened": "发生了什么问题？",
+    "placeholder": "描述该问题。",
+    "report": "报告"
+  },
+  "language": {
+    "title": "语言",
+    "en": "English",
+    "zh-CN": "简体中文",
+    "zh-TW": "繁体中文"
+  }
+}

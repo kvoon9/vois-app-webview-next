@@ -1,17 +1,13 @@
 <script setup lang="ts">
-import { shallowRef } from 'vue'
+import { computed, shallowRef } from 'vue'
 import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import PageHeader from '~/components/PageHeader.vue'
 
 const router = useRouter()
+const { tm } = useI18n({ useScope: 'global' })
 
-const questions = [
-  'How do I connect my hardware device?',
-  'Can I use the app without hardware devices?',
-  'How do I create a new channel?',
-  'How do I manage my privacy settings?',
-  'What devices are compatible with the app?',
-]
+const questions = computed(() => tm('help.questions') as string[])
 
 const expandedIndex = shallowRef<number | null>(null)
 
@@ -26,9 +22,9 @@ function navigateTo(path: string) {
 
 <template>
   <div class="min-h-svh bg-surface text-text-primary">
-    <PageHeader title="Help" />
+    <PageHeader :title="$t('help.title')" />
     <main class="p-4">
-      <h2 class="section-title mb-4">Frequently asked questions</h2>
+      <h2 class="section-title mb-4">{{ $t('help.faq') }}</h2>
       <div class="space-y-3">
         <button
           v-for="(question, index) in questions"
@@ -58,14 +54,14 @@ function navigateTo(path: string) {
         </button>
       </div>
 
-      <h2 class="section-title mt-8 mb-4">Contact us</h2>
+      <h2 class="section-title mt-8 mb-4">{{ $t('help.contact') }}</h2>
       <div class="space-y-3">
         <button
           type="button"
           class="card w-full flex items-center justify-between text-left"
           @click="navigateTo('/feedback')"
         >
-          <span class="text-body">Submit a feedback</span>
+          <span class="text-body">{{ $t('help.feedback') }}</span>
           <svg
             width="20"
             height="20"
@@ -101,7 +97,7 @@ function navigateTo(path: string) {
           class="card w-full flex items-center justify-between text-left"
           @click="navigateTo('/report')"
         >
-          <span class="text-body">Report a problem</span>
+          <span class="text-body">{{ $t('help.report') }}</span>
           <svg
             width="20"
             height="20"

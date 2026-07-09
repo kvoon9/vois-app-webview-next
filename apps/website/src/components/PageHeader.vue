@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { useRouter } from 'vue-router'
+import LanguageSwitcher from '~/components/LanguageSwitcher.vue'
 
 defineProps<{
   title: string
@@ -15,7 +16,7 @@ const router = useRouter()
     <button
       type="button"
       class="absolute left-0 top-1/2 -translate-y-1/2 flex items-center justify-center w-11 h-11"
-      aria-label="Back"
+      :aria-label="$t('nav.back')"
       @click="router.back()"
     >
       <svg
@@ -34,5 +35,6 @@ const router = useRouter()
       </svg>
     </button>
     <h1 class="page-title">{{ title }}</h1>
+    <LanguageSwitcher class="absolute right-2 top-1/2 -translate-y-1/2" />
   </header>
 </template>

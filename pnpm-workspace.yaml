@@ -13,12 +13,14 @@ catalog:
   vite-plus: latest
   vue: ^3.5.39
   '@vueuse/core': ^14.3.0
+  '@vueuse/router': ^14.3.0
   '@vitejs/plugin-vue': ^6.0.7
   unocss: ^66.7.4
   '@unocss/reset': ^66.7.4
   vconsole: ^3.15.1
   '@vitejs/plugin-legacy': ^8.1.0
   terser: ^5.48.0
+  vue-i18n: ^11.4.6
   core-js: ^3.49.0
 overrides:
   vite: 'catalog:'

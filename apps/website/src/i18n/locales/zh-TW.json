@@ -1,0 +1,44 @@
+{
+  "nav": { "back": "返回" },
+  "error": {
+    "title": "出了點問題",
+    "description": "發生了意外錯誤，請再試一次。",
+    "retry": "重試"
+  },
+  "help": {
+    "title": "說明",
+    "faq": "常見問題",
+    "contact": "聯絡我們",
+    "feedback": "提交意見回饋",
+    "report": "回報問題",
+    "questions": [
+      "如何連接我的硬體裝置？",
+      "沒有硬體裝置可以使用應用程式嗎？",
+      "如何建立新頻道？",
+      "如何管理我的隱私設定？",
+      "哪些裝置與該應用程式相容？"
+    ]
+  },
+  "feedback": {
+    "title": "提交意見回饋",
+    "category": "類別",
+    "categories": ["一般", "聊天", "裝置", "設計", "連線", "帳戶"],
+    "yourFeedback": "您的意見回饋",
+    "placeholder": "告訴我們您的想法。",
+    "submit": "提交"
+  },
+  "report": {
+    "title": "回報問題",
+    "problemType": "問題類型",
+    "types": ["音訊", "訊息", "裝置", "帳戶", "連線", "其他"],
+    "whatHappened": "發生了什麼問題？",
+    "placeholder": "描述該問題。",
+    "report": "回報"
+  },
+  "language": {
+    "title": "語言",
+    "en": "English",
+    "zh-CN": "简体中文",
+    "zh-TW": "繁体中文"
+  }
+}

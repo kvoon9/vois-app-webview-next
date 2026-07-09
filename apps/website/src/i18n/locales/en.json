@@ -1,0 +1,44 @@
+{
+  "nav": { "back": "Back" },
+  "error": {
+    "title": "Something went wrong",
+    "description": "An unexpected error occurred. Please try again.",
+    "retry": "Try again"
+  },
+  "help": {
+    "title": "Help",
+    "faq": "Frequently asked questions",
+    "contact": "Contact us",
+    "feedback": "Submit a feedback",
+    "report": "Report a problem",
+    "questions": [
+      "How do I connect my hardware device?",
+      "Can I use the app without hardware devices?",
+      "How do I create a new channel?",
+      "How do I manage my privacy settings?",
+      "What devices are compatible with the app?"
+    ]
+  },
+  "feedback": {
+    "title": "Submit a feedback",
+    "category": "Category",
+    "categories": ["General", "Chat", "Device", "Design", "Connection", "Account"],
+    "yourFeedback": "Your feedback",
+    "placeholder": "Tell us what you think.",
+    "submit": "Submit"
+  },
+  "report": {
+    "title": "Report a problem",
+    "problemType": "Problem type",
+    "types": ["Audio", "Message", "Device", "Account", "Connection", "Other"],
+    "whatHappened": "What happened?",
+    "placeholder": "Describe the problem.",
+    "report": "Report"
+  },
+  "language": {
+    "title": "Language",
+    "en": "English",
+    "zh-CN": "简体中文",
+    "zh-TW": "繁体中文"
+  }
+}

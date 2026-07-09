@@ -31,6 +31,14 @@ function vconsoleDev(): import('vite-plus').Plugin {
 }
 
 export default defineConfig({
+  server: {
+    host: true,
+    port: 3021,
+  },
+  preview: {
+    host: true,
+    port: 5173,
+  },
   plugins: [
     vconsoleDev(),
     VueRouter({ dts: 'src/route-map.d.ts' }),

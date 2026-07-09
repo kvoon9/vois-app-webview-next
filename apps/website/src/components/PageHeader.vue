@@ -9,7 +9,9 @@ const router = useRouter()
 </script>
 
 <template>
-  <header class="relative h-14 flex items-center justify-center border-b border-stroke">
+  <header
+    class="sticky top-0 z-10 h-14 flex items-center justify-center border-b border-stroke bg-surface"
+  >
     <button
       type="button"
       class="absolute left-0 top-1/2 -translate-y-1/2 flex items-center justify-center w-11 h-11"

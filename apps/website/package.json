@@ -4,9 +4,9 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "vp dev",
+    "dev": "vp dev --host",
     "build": "tsc && vp build",
-    "preview": "vp preview"
+    "preview": "vp preview --host --port 5173"
   },
   "dependencies": {
     "@vueuse/core": "catalog:",

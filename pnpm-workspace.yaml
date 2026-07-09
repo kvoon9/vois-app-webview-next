@@ -28,4 +28,4 @@ peerDependencyRules:
     vite: '*'
     vitest: '*'
 allowBuilds:
-  core-js: set this to true or false
+  core-js: true

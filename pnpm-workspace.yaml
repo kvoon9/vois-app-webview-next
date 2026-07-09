@@ -16,6 +16,7 @@ catalog:
   '@vitejs/plugin-vue': ^6.0.7
   unocss: ^66.7.4
   '@unocss/reset': ^66.7.4
+  vconsole: ^3.15.1
 overrides:
   vite: 'catalog:'
   vitest: 'catalog:'
@@ -26,3 +27,5 @@ peerDependencyRules:
   allowedVersions:
     vite: '*'
     vitest: '*'
+allowBuilds:
+  core-js: set this to true or false

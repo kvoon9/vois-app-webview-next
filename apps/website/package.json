@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@vueuse/core": "catalog:",
+    "vconsole": "catalog:",
     "vue": "catalog:",
     "vue-router": "^5.1.0"
   },

@@ -13,4 +13,8 @@ const router = createRouter({
 
 const app = createApp(App)
 app.use(router)
+app.config.errorHandler = (err: unknown) => {
+  console.error('[app.errorHandler]', err)
+  // ponytail: global last-resort handler; ErrorBoundary onErrorCaptured catches per-route first
+}
 app.mount('#app')

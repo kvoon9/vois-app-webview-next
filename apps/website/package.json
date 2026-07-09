@@ -8,8 +8,16 @@
     "build": "tsc && vp build",
     "preview": "vp preview"
   },
+  "dependencies": {
+    "@vueuse/core": "catalog:",
+    "vue": "catalog:",
+    "vue-router": "^5.1.0"
+  },
   "devDependencies": {
+    "@unocss/reset": "catalog:",
+    "@vitejs/plugin-vue": "catalog:",
     "typescript": "~6.0.2",
+    "unocss": "catalog:",
     "vite": "catalog:",
     "vite-plus": "catalog:"
   }

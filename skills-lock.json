@@ -31,6 +31,24 @@
       "skillPath": "skills/defuddle/SKILL.md",
       "computedHash": "38e4230ec519114ab5fdb2e19b579564824a69e6a47c4782f04c9122ca5e6aa3"
     },
+    "grill-me": {
+      "source": "mattpocock/skills",
+      "sourceType": "github",
+      "skillPath": "skills/productivity/grill-me/SKILL.md",
+      "computedHash": "f321507f77702a54af1db66549ec1685fc625390d06c57d7949cdcda8eb1b5c7"
+    },
+    "grill-with-docs": {
+      "source": "mattpocock/skills",
+      "sourceType": "github",
+      "skillPath": "skills/engineering/grill-with-docs/SKILL.md",
+      "computedHash": "e7ef25bbee50cda2eb7b3a8ef541db0a0396dad7d369f7d14fb610671dd1864b"
+    },
+    "herdr": {
+      "source": "ogulcancelik/herdr",
+      "sourceType": "github",
+      "skillPath": "SKILL.md",
+      "computedHash": "69d3762de6941e5632e7cbcaeea3584b47ce906a9275afb333d5405ff5480b80"
+    },
     "pinia": {
       "source": "kvoon3/skills",
       "sourceType": "github",

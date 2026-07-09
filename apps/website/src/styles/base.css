@@ -1,0 +1,33 @@
+:root {
+  --color-primary: #54b893;
+  --color-primary-text: #ffffff;
+  --color-surface: #ffffff;
+  --color-surface-muted: #f5f6f8;
+  --color-surface-field: #f3f4f6;
+  --color-stroke: #d9d9d9;
+  --color-text-primary: #000000;
+  --color-text-secondary: #7f7f80;
+}
+
+.dark {
+  --color-surface: #121212;
+  --color-surface-muted: #1e1e1e;
+  --color-surface-field: #2c2c2c;
+  --color-stroke: #3a3b3c;
+  --color-text-primary: #f8fff7;
+  --color-text-secondary: #999a9b;
+}
+
+html,
+body {
+  font-family:
+    'SF Pro',
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    sans-serif;
+}
+
+html {
+  color-scheme: light dark;
+}

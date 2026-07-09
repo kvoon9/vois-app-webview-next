@@ -3,9 +3,10 @@
     "target": "es2023",
     "module": "esnext",
     "lib": ["ES2023", "DOM"],
-    "types": ["vite-plus/client"],
+    "types": ["vite-plus/client", "vue"],
     "allowArbitraryExtensions": true,
     "skipLibCheck": true,
+    "jsx": "preserve",
 
     /* Bundler mode */
     "moduleResolution": "bundler",

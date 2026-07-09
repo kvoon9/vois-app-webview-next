@@ -16,7 +16,9 @@
   },
   "devDependencies": {
     "@unocss/reset": "catalog:",
+    "@vitejs/plugin-legacy": "catalog:",
     "@vitejs/plugin-vue": "catalog:",
+    "terser": "catalog:",
     "typescript": "~6.0.2",
     "unocss": "catalog:",
     "vite": "catalog:",

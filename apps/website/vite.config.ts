@@ -3,6 +3,7 @@ import { createRequire } from 'node:module'
 import { defineConfig } from 'vite-plus'
 import vue from '@vitejs/plugin-vue'
 import unocss from 'unocss/vite'
+import legacy from '@vitejs/plugin-legacy'
 import VueRouter from 'vue-router/vite'
 
 function vconsoleDev(): import('vite-plus').Plugin {
@@ -30,10 +31,23 @@ function vconsoleDev(): import('vite-plus').Plugin {
 }
 
 export default defineConfig({
-  plugins: [vconsoleDev(), VueRouter({ dts: 'src/route-map.d.ts' }), vue(), unocss()],
+  plugins: [
+    vconsoleDev(),
+    VueRouter({ dts: 'src/route-map.d.ts' }),
+    vue(),
+    unocss(),
+    legacy({
+      targets: ['chrome 83'],
+      modernTargets: ['chrome 83'],
+      modernPolyfills: true,
+    }),
+  ],
   resolve: {
     alias: {
       '~/': '/src/',
     },
+  },
+  build: {
+    target: 'chrome83',
   },
 })

@@ -1,5 +1,6 @@
 import { useRouteQuery } from '@vueuse/router'
 import { watch } from 'vue'
+
 import { DEFAULT_LOCALE, SUPPORTED_LOCALES, i18n, type SupportedLocale } from '~/i18n'
 
 function isSupportedLocale(value: unknown): value is SupportedLocale {

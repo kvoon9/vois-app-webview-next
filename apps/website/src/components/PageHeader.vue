@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import { useRouter } from 'vue-router'
 import LanguageSwitcher from '~/components/LanguageSwitcher.vue'
+import { usePageBack } from '~/composables/usePageBack'
 
 defineProps<{
   title: string
 }>()
 
-const router = useRouter()
+const { goBack } = usePageBack()
 </script>
 
 <template>
@@ -17,7 +17,7 @@ const router = useRouter()
       type="button"
       class="absolute left-0 top-1/2 -translate-y-1/2 flex items-center justify-center w-11 h-11"
       :aria-label="$t('nav.back')"
-      @click="router.back()"
+      @click="goBack"
     >
       <svg
         xmlns="http://www.w3.org/2000/svg"

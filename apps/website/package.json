@@ -9,6 +9,7 @@
     "preview": "vp preview --host --port 5173"
   },
   "dependencies": {
+    "@vois/webview-bridge": "^0.1.0",
     "@vueuse/core": "catalog:",
     "@vueuse/router": "catalog:",
     "vconsole": "catalog:",
@@ -21,7 +22,7 @@
     "@vitejs/plugin-legacy": "catalog:",
     "@vitejs/plugin-vue": "catalog:",
     "terser": "catalog:",
-    "typescript": "~6.0.2",
+    "typescript": "~6.0.3",
     "unocss": "catalog:",
     "vite": "catalog:",
     "vite-plus": "catalog:"

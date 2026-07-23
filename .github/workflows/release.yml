@@ -18,6 +18,9 @@ jobs:
       - uses: actions/setup-node@v6
         with:
           node-version: lts/*
-      - run: corepack enable && pnpm dlx changelogithub@14
+      - run: corepack enable && pnpm install --frozen-lockfile
+      - run: pnpm exec vp run website#build
+      - run: cd apps/website/dist && zip -qr "../../../vois-app-webview-${GITHUB_REF_NAME}.zip" .
+      - run: pnpm dlx changelogithub@14 --assets "vois-app-webview-${GITHUB_REF_NAME}.zip"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

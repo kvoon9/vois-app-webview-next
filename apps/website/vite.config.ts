@@ -34,10 +34,22 @@ export default defineConfig({
   server: {
     host: true,
     port: 3021,
+    proxy: {
+      '/v2': {
+        target: 'https://api.voischat.cn',
+        changeOrigin: true,
+      },
+    },
   },
   preview: {
     host: true,
     port: 5173,
+    proxy: {
+      '/v2': {
+        target: 'https://api.voischat.cn',
+        changeOrigin: true,
+      },
+    },
   },
   plugins: [
     vconsoleDev(),

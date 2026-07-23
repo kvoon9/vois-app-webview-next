@@ -1,5 +1,6 @@
 {
   "nav": { "back": "Back" },
+  "modal": { "cancel": "Cancel", "confirm": "Confirm" },
   "error": {
     "title": "Something went wrong",
     "description": "An unexpected error occurred. Please try again.",

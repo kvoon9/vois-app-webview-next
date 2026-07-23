@@ -55,5 +55,6 @@ export default defineConfig({
     'section-title': 'text-subtitle font-semibold text-text-primary',
     'input-field':
       'w-full bg-surface-field rounded-standard p-4 text-body text-text-primary resize-none outline-none focus:ring-2 focus:ring-primary/30',
+    'z-modal': 'z-50',
   },
 })

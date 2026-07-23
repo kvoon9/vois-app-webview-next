@@ -1,5 +1,6 @@
 {
   "nav": { "back": "返回" },
+  "modal": { "cancel": "取消", "confirm": "確認" },
   "error": {
     "title": "出了點問題",
     "description": "發生了意外錯誤，請再試一次。",

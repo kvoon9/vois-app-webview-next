@@ -4,9 +4,19 @@ import { useRouteQuery } from '@vueuse/router'
 import { onErrorCaptured, shallowRef, watch } from 'vue'
 import { RouterView } from 'vue-router'
 import { useLangQuery } from '~/composables/useLangQuery'
+import { accessToken } from '~/constants'
 
 const isDark = useDark({ storage: sessionStorage })
 const theme = useRouteQuery('theme')
+const tokenQuery = useRouteQuery('access-token')
+
+watch(
+  tokenQuery,
+  (value) => {
+    if (typeof value === 'string' && value) accessToken.value = value
+  },
+  { immediate: true },
+)
 
 watch(
   theme,

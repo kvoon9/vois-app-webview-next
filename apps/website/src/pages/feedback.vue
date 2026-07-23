@@ -1,17 +1,37 @@
 <script setup lang="ts">
 import { computed, shallowRef } from 'vue'
 import { useI18n } from 'vue-i18n'
+import BaseModal from '~/components/BaseModal.vue'
 import PageHeader from '~/components/PageHeader.vue'
+import { weilaFetch } from '~/utils/api'
 
 const { tm } = useI18n({ useScope: 'global' })
 
 const categories = computed(() => tm('feedback.categories') as string[])
 const selectedCategoryIndex = shallowRef(0)
 const feedbackText = shallowRef('')
+const isSubmitting = shallowRef(false)
+const modalMessage = shallowRef('')
 const maxLength = 500
 
-function handleSubmit() {
-  // No-op: form submission will be wired up later.
+async function handleSubmit(): Promise<void> {
+  if (isSubmitting.value) return
+
+  isSubmitting.value = true
+  try {
+    const response = await weilaFetch<void>('/v2/feedback/submit-feedback', {
+      body: {
+        type: categories.value[selectedCategoryIndex.value],
+        content: feedbackText.value.trim(),
+      },
+    })
+    feedbackText.value = ''
+    modalMessage.value = response.errmsg
+  } catch (error) {
+    modalMessage.value = error instanceof Error ? error.message : String(error)
+  } finally {
+    isSubmitting.value = false
+  }
 }
 </script>
 
@@ -48,6 +68,7 @@ function handleSubmit() {
           <textarea
             v-model="feedbackText"
             :maxlength="maxLength"
+            required
             rows="6"
             class="input-field"
             :placeholder="$t('feedback.placeholder')"
@@ -57,8 +78,21 @@ function handleSubmit() {
           </p>
         </section>
 
-        <button type="submit" class="btn-primary mt-6">{{ $t('feedback.submit') }}</button>
+        <button type="submit" class="btn-primary mt-6" :disabled="isSubmitting">
+          {{ $t('feedback.submit') }}
+        </button>
       </form>
     </main>
+
+    <BaseModal
+      v-if="modalMessage"
+      :title="$t('feedback.title')"
+      :cancel-text="$t('modal.cancel')"
+      :confirm-text="$t('modal.confirm')"
+      @cancel="modalMessage = ''"
+      @confirm="modalMessage = ''"
+    >
+      {{ modalMessage }}
+    </BaseModal>
   </div>
 </template>

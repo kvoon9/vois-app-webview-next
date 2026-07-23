@@ -1,10 +1,21 @@
 <script setup lang="ts">
-import { useDark } from '@vueuse/core'
-import { shallowRef, onErrorCaptured } from 'vue'
+import { useDark, usePreferredDark } from '@vueuse/core'
+import { useRouteQuery } from '@vueuse/router'
+import { onErrorCaptured, shallowRef, watch } from 'vue'
 import { RouterView } from 'vue-router'
 import { useLangQuery } from '~/composables/useLangQuery'
 
-useDark()
+const isDark = useDark({ storageKey: null })
+const prefersDark = usePreferredDark()
+const theme = useRouteQuery('theme')
+
+watch(
+  [theme, prefersDark],
+  ([value, systemIsDark]) => {
+    isDark.value = value === 'dark' || (value !== 'light' && systemIsDark)
+  },
+  { immediate: true },
+)
 useLangQuery()
 
 const error = shallowRef<Error | null>(null)
@@ -32,7 +43,6 @@ onErrorCaptured((err) => {
 
 <style>
 html {
-  color-scheme: light dark;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -40,7 +50,6 @@ html {
 }
 
 body {
-  color-scheme: light dark;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }

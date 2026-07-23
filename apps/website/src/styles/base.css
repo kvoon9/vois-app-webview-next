@@ -10,6 +10,7 @@
 }
 
 .dark {
+  color-scheme: dark;
   --color-surface: #121212;
   --color-surface-muted: #1e1e1e;
   --color-surface-field: #2c2c2c;
@@ -29,5 +30,5 @@ body {
 }
 
 html {
-  color-scheme: light dark;
+  color-scheme: light;
 }

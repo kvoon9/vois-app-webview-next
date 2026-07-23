@@ -27,6 +27,7 @@
     "typescript": "~7.0.2",
     "unocss": "catalog:",
     "vite": "catalog:",
+    "vite-plugin-vue-devtools": "catalog:",
     "vite-plus": "catalog:"
   }
 }

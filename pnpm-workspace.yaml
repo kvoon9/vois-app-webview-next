@@ -23,6 +23,7 @@ catalog:
   terser: ^5.49.0
   vue-i18n: ^11.4.7
   core-js: ^3.49.0
+  vite-plugin-vue-devtools: ^8.1.5
 overrides:
   vite: 'catalog:'
   vitest: 'catalog:'

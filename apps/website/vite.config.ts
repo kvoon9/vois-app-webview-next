@@ -5,6 +5,7 @@ import vue from '@vitejs/plugin-vue'
 import unocss from 'unocss/vite'
 import legacy from '@vitejs/plugin-legacy'
 import VueRouter from 'vue-router/vite'
+import vueDevtools from 'vite-plugin-vue-devtools'
 
 function vconsoleDev(): import('vite-plus').Plugin {
   const require = createRequire(import.meta.url)
@@ -53,6 +54,7 @@ export default defineConfig({
   },
   plugins: [
     vconsoleDev(),
+    vueDevtools(),
     VueRouter({ dts: 'src/route-map.d.ts' }),
     vue(),
     unocss(),

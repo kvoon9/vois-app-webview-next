@@ -7,21 +7,21 @@ catalogMode: prefer
 
 catalog:
   '@types/node': ^26.1.1
-  taze: ^19.14.1
-  typescript: ^6.0.3
+  taze: ^19.16.0
+  typescript: ^7.0.2
   vite: npm:@voidzero-dev/vite-plus-core@latest
   vitest: 4.1.9
   vite-plus: latest
-  vue: ^3.5.39
+  vue: ^3.5.40
   '@vueuse/core': ^14.3.0
   '@vueuse/router': ^14.3.0
-  '@vitejs/plugin-vue': ^6.0.7
+  '@vitejs/plugin-vue': ^6.0.8
   unocss: ^66.7.5
   '@unocss/reset': ^66.7.5
   vconsole: ^3.15.1
-  '@vitejs/plugin-legacy': ^8.1.0
-  terser: ^5.48.0
-  vue-i18n: ^11.4.6
+  '@vitejs/plugin-legacy': ^8.2.1
+  terser: ^5.49.0
+  vue-i18n: ^11.4.7
   core-js: ^3.49.0
 overrides:
   vite: 'catalog:'

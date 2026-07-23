@@ -11,7 +11,7 @@
     "up": "vpx taze -Ir major"
   },
   "devDependencies": {
-    "bumpp": "^11.1.0",
+    "bumpp": "^12.0.0",
     "taze": "catalog:",
     "vite-plus": "catalog:"
   },

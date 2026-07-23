@@ -22,6 +22,7 @@ export default defineConfig({
       surface: 'var(--color-surface)',
       'surface-muted': 'var(--color-surface-muted)',
       'surface-field': 'var(--color-surface-field)',
+      'surface-selected': 'var(--color-surface-selected)',
       stroke: 'var(--color-stroke)',
       'text-primary': 'var(--color-text-primary)',
       'text-secondary': 'var(--color-text-secondary)',

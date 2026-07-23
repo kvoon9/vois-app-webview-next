@@ -37,6 +37,31 @@
     "placeholder": "描述該問題。",
     "report": "回報"
   },
+  "reportTarget": {
+    "user": {
+      "title": "檢舉使用者",
+      "placeholder": "請告訴我們您檢舉該使用者的原因。"
+    },
+    "group": {
+      "title": "檢舉群組",
+      "placeholder": "請告訴我們您檢舉該群組的原因。"
+    },
+    "selectReasons": "選擇檢舉原因",
+    "reasons": [
+      "色情內容",
+      "虛假資訊",
+      "垃圾行銷",
+      "人身攻擊",
+      "違法內容",
+      "有害內容",
+      "詐騙",
+      "宣揚仇恨",
+      "其他"
+    ],
+    "remark": "備註",
+    "submit": "提交",
+    "invalidId": "檢舉對象無效。"
+  },
   "language": {
     "title": "語言",
     "en": "English",

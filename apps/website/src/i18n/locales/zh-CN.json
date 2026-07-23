@@ -37,6 +37,31 @@
     "placeholder": "描述该问题。",
     "report": "报告"
   },
+  "reportTarget": {
+    "user": {
+      "title": "举报用户",
+      "placeholder": "请告诉我们您举报该用户的原因。"
+    },
+    "group": {
+      "title": "举报群组",
+      "placeholder": "请告诉我们您举报该群组的原因。"
+    },
+    "selectReasons": "选择举报原因",
+    "reasons": [
+      "色情内容",
+      "虚假信息",
+      "垃圾营销",
+      "人身攻击",
+      "违法内容",
+      "有害内容",
+      "欺诈",
+      "宣扬仇恨",
+      "其他"
+    ],
+    "remark": "备注",
+    "submit": "提交",
+    "invalidId": "举报对象无效。"
+  },
   "language": {
     "title": "语言",
     "en": "English",

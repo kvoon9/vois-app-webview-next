@@ -37,6 +37,31 @@
     "placeholder": "Describe the problem.",
     "report": "Report"
   },
+  "reportTarget": {
+    "user": {
+      "title": "Report user",
+      "placeholder": "Tell us why you're reporting this user."
+    },
+    "group": {
+      "title": "Report group",
+      "placeholder": "Tell us why you're reporting this group."
+    },
+    "selectReasons": "Select the reason(s)",
+    "reasons": [
+      "Pornographic content",
+      "False information",
+      "Spam marketing",
+      "Personal attack",
+      "Illegal content",
+      "Harmful content",
+      "Fraud",
+      "Promoting hatred",
+      "Others"
+    ],
+    "remark": "Remark",
+    "submit": "Submit",
+    "invalidId": "The report target is invalid."
+  },
   "language": {
     "title": "Language",
     "en": "English",

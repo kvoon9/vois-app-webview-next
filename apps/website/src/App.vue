@@ -1,18 +1,18 @@
 <script setup lang="ts">
-import { useDark, usePreferredDark } from '@vueuse/core'
+import { useDark } from '@vueuse/core'
 import { useRouteQuery } from '@vueuse/router'
 import { onErrorCaptured, shallowRef, watch } from 'vue'
 import { RouterView } from 'vue-router'
 import { useLangQuery } from '~/composables/useLangQuery'
 
-const isDark = useDark({ storageKey: null })
-const prefersDark = usePreferredDark()
+const isDark = useDark({ storage: sessionStorage })
 const theme = useRouteQuery('theme')
 
 watch(
-  [theme, prefersDark],
-  ([value, systemIsDark]) => {
-    isDark.value = value === 'dark' || (value !== 'light' && systemIsDark)
+  theme,
+  (value) => {
+    if (value === 'dark') isDark.value = true
+    if (value === 'light') isDark.value = false
   },
   { immediate: true },
 )

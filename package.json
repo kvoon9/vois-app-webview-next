@@ -7,9 +7,11 @@
     "ready": "vp check && vp run -r test && vp run -r build",
     "dev": "vp run website#dev",
     "prepare": "vp config",
+    "release": "bumpp --recursive",
     "up": "vpx taze -Ir major"
   },
   "devDependencies": {
+    "bumpp": "^11.1.0",
     "taze": "catalog:",
     "vite-plus": "catalog:"
   },

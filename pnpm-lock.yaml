@@ -250,6 +250,9 @@ importers:
 
   .:
     devDependencies:
+      bumpp:
+        specifier: ^11.1.0
+        version: 11.1.0
       taze:
         specifier: 'catalog:'
         version: 19.14.1
@@ -314,9 +317,6 @@ importers:
       '@typescript/native-preview':
         specifier: 7.0.0-dev.20260509.2
         version: 7.0.0-dev.20260509.2
-      bumpp:
-        specifier: ^11.1.0
-        version: 11.1.0
       typescript:
         specifier: ^7.0.1-rc
         version: 7.0.1-rc

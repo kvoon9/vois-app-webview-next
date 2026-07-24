@@ -27,7 +27,7 @@ const props = defineProps<{
 const route = useRoute()
 const { t, tm } = useI18n({ useScope: 'global' })
 
-const reasons = computed(() => tm('reportTarget.reasons') as string[])
+const reasons = computed(() => Object.values(tm('reportTarget.reasons')) as string[])
 
 const title = computed(() => t(`reportTarget.${props.target}.title`))
 const targetId = computed(() => {
@@ -41,7 +41,12 @@ const targetId = computed(() => {
 const schema = object({
   targetId: pipe(number(), integer(), minValue(1), safeInteger()),
   reasonIndex: pipe(number(), minValue(0), maxValue(reasons.value.length - 1)),
-  content: pipe(string(), trim(), nonEmpty(), maxLength(500)),
+  content: pipe(
+    string(),
+    trim(),
+    nonEmpty(() => t('validation.required')),
+    maxLength(500),
+  ),
 })
 
 const { data, errors, resetErrors, validate, validateField } = useFormValidation(schema, () => ({

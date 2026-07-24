@@ -19,11 +19,16 @@ import { weilaFetch } from '~/utils/api'
 
 const { t, tm } = useI18n({ useScope: 'global' })
 
-const categories = computed(() => tm('feedback.categories') as string[])
+const categories = computed(() => Object.values(tm('feedback.categories')) as string[])
 
 const schema = object({
   categoryIndex: pipe(number(), minValue(0), maxValue(categories.value.length - 1)),
-  content: pipe(string(), trim(), nonEmpty(), maxLength(500)),
+  content: pipe(
+    string(),
+    trim(),
+    nonEmpty(() => t('validation.required')),
+    maxLength(500),
+  ),
 })
 
 const { data, errors, resetErrors, validate, validateField } = useFormValidation(schema, {
@@ -33,7 +38,7 @@ const { data, errors, resetErrors, validate, validateField } = useFormValidation
 
 const isSubmitting = shallowRef(false)
 const modal = shallowRef<{ type: 'success' | 'error'; message: string } | null>(null)
-const maxLength = 500
+const maxContentLength = 500
 
 async function handleSubmit(): Promise<void> {
   if (isSubmitting.value) return
@@ -98,14 +103,14 @@ async function handleSubmit(): Promise<void> {
           <textarea
             id="feedback-content"
             v-model="data.content"
-            :maxlength="maxLength"
+            :maxlength="maxContentLength"
             rows="6"
             class="input-field"
             :placeholder="$t('feedback.placeholder')"
             @blur="validateField('content')"
           />
           <p class="text-right text-small text-text-secondary mt-2">
-            {{ data.content.length }}/{{ maxLength }}
+            {{ data.content.length }}/{{ maxContentLength }}
           </p>
           <p v-if="errors.content" class="mt-1 text-small text-danger">
             {{ errors.content }}

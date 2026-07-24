@@ -69,6 +69,9 @@
     "submit": "提交",
     "invalidId": "檢舉對象無效。"
   },
+  "validation": {
+    "required": "請填寫此欄位。"
+  },
   "language": {
     "title": "語言",
     "en": "English",

@@ -35,7 +35,8 @@ Use this flow when browser tests need the Native App's real `access-token` and U
    agent-browser --session webview-debug wait --load networkidle
    ```
 6. Continue testing in the same browser session. Navigate directly to other localhost routes; the token is already stored by the app.
-7. Run `vp check`, `vp test`, and the relevant build after making changes. Close agent-browser and stop both Herdr servers when finished.
+7. Inspect captured WebView network metadata in `/tmp/vois-webview-debug/events.jsonl`; query values are redacted.
+8. Run `vp check`, `vp test`, and the relevant build after making changes. Close agent-browser and stop both Herdr servers when finished.
 
 The relay expires after 30 minutes and can be opened only once. A `404` from `/debug` means it was missing, expired, or already consumed; ask the user to reopen the preview URL. Never print, log, or paste captured auth parameters.
 

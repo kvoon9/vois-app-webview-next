@@ -4,6 +4,7 @@ import { useRouteQuery } from '@vueuse/router'
 import { onErrorCaptured, shallowRef, watch } from 'vue'
 import { RouterView } from 'vue-router'
 import { useLangQuery } from '~/composables/useLangQuery'
+import { isWebviewDebug, useWebviewDebug } from '~/composables/useWebviewDebug'
 import { accessToken } from '~/constants'
 
 const isDark = useDark({ storage: sessionStorage })
@@ -27,6 +28,8 @@ watch(
   { immediate: true },
 )
 useLangQuery()
+const webviewDebugEnabled = isWebviewDebug()
+useWebviewDebug(webviewDebugEnabled)
 
 const error = shallowRef<Error | null>(null)
 

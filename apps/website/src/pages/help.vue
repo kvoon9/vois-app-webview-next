@@ -93,6 +93,17 @@ function navigateTo(path: string) {
         </svg>
       </a>
 
+      <h2 class="section-title mt-8 mb-4">临时测试</h2>
+      <a
+        href="https://vois-webview-bridge-playground.pages.dev"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="card w-full flex items-center justify-between text-left no-underline text-text-primary"
+      >
+        <span class="text-body">WebView Bridge Playground</span>
+        <span aria-hidden="true">→</span>
+      </a>
+
       <h2 class="section-title mt-8 mb-4">{{ $t('help.contact') }}</h2>
       <div class="space-y-3">
         <button

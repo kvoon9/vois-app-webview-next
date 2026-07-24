@@ -13,7 +13,7 @@ import type { Connect } from 'vite-plus'
 
 const outputDir = resolve(import.meta.dirname, '../../.tmp/vois-webview-debug')
 const eventsFile = resolve(outputDir, 'events.jsonl')
-const envLocalFile = resolve(import.meta.dirname, '../../apps/website/.env.local')
+const envLocalFile = resolve(import.meta.dirname, '../.env.local')
 
 export function debugAuthPlugin(): Plugin {
   const isDebug = process.argv.includes('--debug')

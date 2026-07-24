@@ -1,6 +1,13 @@
 {
   "nav": { "back": "返回" },
-  "modal": { "cancel": "取消", "confirm": "確認" },
+  "modal": {
+    "cancel": "取消",
+    "confirm": "確認",
+    "successTitle": "成功",
+    "errorTitle": "錯誤",
+    "ok": "確定",
+    "close": "關閉"
+  },
   "error": {
     "title": "出了點問題",
     "description": "發生了意外錯誤，請再試一次。",

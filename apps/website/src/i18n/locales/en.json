@@ -1,6 +1,13 @@
 {
   "nav": { "back": "Back" },
-  "modal": { "cancel": "Cancel", "confirm": "Confirm" },
+  "modal": {
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "successTitle": "Success",
+    "errorTitle": "Error",
+    "ok": "OK",
+    "close": "Close"
+  },
   "error": {
     "title": "Something went wrong",
     "description": "An unexpected error occurred. Please try again.",

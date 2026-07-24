@@ -1,6 +1,8 @@
 :root {
   --color-primary: #54b893;
   --color-primary-text: #ffffff;
+  --color-danger: #ef4444;
+  --color-danger-text: #ffffff;
   --color-surface: #ffffff;
   --color-surface-muted: #f5f6f8;
   --color-surface-field: #f3f4f6;

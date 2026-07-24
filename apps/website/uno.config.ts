@@ -19,6 +19,8 @@ export default defineConfig({
     colors: {
       primary: 'var(--color-primary)',
       'primary-text': 'var(--color-primary-text)',
+      danger: 'var(--color-danger)',
+      'danger-text': 'var(--color-danger-text)',
       surface: 'var(--color-surface)',
       'surface-muted': 'var(--color-surface-muted)',
       'surface-field': 'var(--color-surface-field)',

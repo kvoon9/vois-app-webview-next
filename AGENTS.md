@@ -10,35 +10,45 @@
 - Commit messages and PR titles must follow Conventional Commits, e.g. fix(runtime): align Ink parity behavior.
 - Using herdr to start a dev server
 
-## Authenticated WebView testing
+## WebView Testing
 
-Use this flow when browser tests need the Native App's real `access-token` and URL parameters. Do not create a debug login or probe production APIs for authentication.
+Both flows start from a `--debug` preview server. It captures auth, injects debug into all SPA routes, and auto-clears events on restart.
 
-1. Build the latest website when production output changed:
-   ```sh
-   vp run --filter website build
-   ```
-2. In Herdr, start preview with auth capture enabled:
-   ```sh
-   cd apps/website
-   vp preview --host --port 5173 --debug
-   ```
-3. Give the user the LAN preview URL and route, then wait for them to open it in the Native App WebView. The preview server captures the incoming path and query parameters automatically.
-4. In another Herdr pane, start the dev server:
-   ```sh
-   cd apps/website
-   vp dev --host --port 3021
-   ```
-5. Open the one-time relay with a fresh agent-browser session. Suppress `open` output because the redirect URL contains the token:
-   ```sh
-   agent-browser --session webview-debug open 'http://localhost:3021/debug' >/dev/null
-   agent-browser --session webview-debug wait --load networkidle
-   ```
-6. Continue testing in the same browser session. Navigate directly to other localhost routes; the token is already stored by the app.
-7. Inspect captured WebView network metadata in `/tmp/vois-webview-debug/events.jsonl`; query values are redacted.
-8. Run `vp check`, `vp test`, and the relevant build after making changes. Close agent-browser and stop both Herdr servers when finished.
+```sh
+cd apps/website && vp run --filter website build && vp preview --host --port 5173 --debug
+```
 
-The relay expires after 30 minutes and can be opened only once. A `404` from `/debug` means it was missing, expired, or already consumed; ask the user to reopen the preview URL. Never print, log, or paste captured auth parameters.
+### Flow A: Automated (agent-browser)
+
+Headless tests with real `access-token`. Token is refreshed each session — user opens the preview URL once before testing.
+
+1. `cd apps/website && vp dev --host --port 3021` (hot reload in a second Herdr pane)
+2. User opens `http://192.168.1.50:5173/<route>` in Native App WebView → token written to `.env.local`
+3. `agent-browser --session webview-debug open 'http://localhost:3021/<route>'` and test
+
+Never print auth parameters.
+
+### Flow B: Real WebView (event capture)
+
+User operates the phone; agent reads `.tmp/vois-webview-debug/events.jsonl`.
+
+1. User opens `http://192.168.1.50:5173/<route>` in Native App WebView, performs actions
+2. Read: `node apps/website/scripts/parse-events.js` or `curl http://127.0.0.1:5173/__debug/status`
+3. `🟢 WebView debug connected` confirms pipeline; missing → `?debug-reload=1`
+
+| Event       | Trigger                              |
+| ----------- | ------------------------------------ |
+| `lifecycle` | load, SPA nav, foreground/background |
+| `network`   | any `fetch()` (full URL + body)      |
+| `console`   | `log`/`warn`/`error`                 |
+| `error`     | unhandled rejection, `onerror`       |
+
+### Flow C: Debug & fix (B → A)
+
+1. User reproduces bug in real WebView → triggers events captured by [Flow B](#flow-b-real-webview-event-capture)
+2. Agent reads events to diagnose root cause
+3. Agent reproduces with agent-browser → [Flow A](#flow-a-automated-agent-browser)
+4. Fix, verify, repeat
 
 <!--VITE PLUS START-->
 

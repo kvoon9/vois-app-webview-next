@@ -26,7 +26,10 @@ export async function weilaFetch<T>(
   urlWithAuth.searchParams.set('appid', query.appid)
   urlWithAuth.searchParams.set('et', query.et)
   urlWithAuth.searchParams.set('sign', query.sign)
-  urlWithAuth.searchParams.set('token', accessToken.value)
+  urlWithAuth.searchParams.set(
+    'token',
+    accessToken.value || import.meta.env.VITE_ACCESS_TOKEN || '',
+  )
 
   const response = await fetch(urlWithAuth, {
     method: options.method ?? 'POST',

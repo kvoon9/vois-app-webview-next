@@ -35,7 +35,7 @@ export default defineComponent({
         :aria-label="title"
         @keydown.esc="$emit('cancel')"
       >
-        <header class="border-b border-stroke p-4 text-header font-semibold">
+        <header class="p-4 text-header font-semibold">
           <slot name="header"
             ><div>{{ title }}</div></slot
           >
@@ -43,7 +43,7 @@ export default defineComponent({
         <div class="p-4 text-body">
           <slot />
         </div>
-        <footer class="border-t border-stroke p-4">
+        <footer class="p-4">
           <slot name="footer">
             <div class="flex justify-end space-x-3">
               <button

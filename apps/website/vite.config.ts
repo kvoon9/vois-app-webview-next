@@ -1,4 +1,12 @@
-import { appendFileSync, mkdirSync, readFileSync, unlinkSync, writeFileSync } from 'node:fs'
+import {
+  appendFileSync,
+  existsSync,
+  mkdirSync,
+  readFileSync,
+  statSync,
+  unlinkSync,
+  writeFileSync,
+} from 'node:fs'
 import { createRequire } from 'node:module'
 import { tmpdir } from 'node:os'
 import { resolve } from 'node:path'
@@ -16,6 +24,10 @@ const debugAuthFile = resolve(tmpdir(), 'vois-app-webview-next-debug-auth.json')
 const debugAuthTtl = 30 * 60 * 1000
 const debugOutputDir = '/tmp/vois-webview-debug'
 const debugEventsFile = resolve(debugOutputDir, 'events.jsonl')
+const debugSessionStartedAt = Date.now()
+// ponytail: truncate events file at session start so stale data from a previous run doesn't mix in
+mkdirSync(debugOutputDir, { recursive: true, mode: 0o700 })
+writeFileSync(debugEventsFile, '', { mode: 0o600 })
 
 function sendJson(res: ServerResponse, statusCode: number, body: unknown): void {
   res.statusCode = statusCode
@@ -42,12 +54,28 @@ function debugEventsMiddleware(
   next: Connect.NextFunction,
 ): void {
   const pathname = new URL(req.url || '/', 'http://localhost').pathname
-  if (!isDebug || req.method !== 'POST' || !pathname.startsWith('/__debug/')) return next()
+  if (!isDebug || !pathname.startsWith('/__debug/')) return next()
 
   mkdirSync(debugOutputDir, { recursive: true, mode: 0o700 })
 
+  if (req.method === 'GET' && pathname === '/__debug/status') {
+    const fileStat = existsSync(debugEventsFile) ? statSync(debugEventsFile) : null
+    const count = fileStat
+      ? readFileSync(debugEventsFile, 'utf-8').trim().split('\n').filter(Boolean).length
+      : 0
+    sendJson(res, 200, {
+      count,
+      sizeBytes: fileStat?.size ?? 0,
+      sessionStartedAt: debugSessionStartedAt,
+      now: Date.now(),
+    })
+    return
+  }
+
+  if (req.method !== 'POST') return next()
+
   if (pathname === '/__debug/events') {
-    void readRequest(req, 64 * 1024)
+    void readRequest(req, 256 * 1024)
       .then((body) => {
         const event = JSON.parse(body.toString('utf-8')) as Record<string, unknown>
         appendFileSync(
@@ -151,7 +179,8 @@ function vconsoleDev(): Plugin {
           if (req.method !== 'GET') return next()
           let url = (req.url || '').split('?')[0]
           if (!url.startsWith('/')) url = `/${url}`
-          if (url !== '/' && url.split('/').at(-1)?.includes('.')) return next()
+          if (url !== '/' && (url.startsWith('/__debug/') || url.split('/').at(-1)?.includes('.')))
+            return next()
           const outDir = resolve(server.config.root, server.config.build.outDir)
           const pathname =
             url === '/' || !url.endsWith('.html') ? 'index.html' : url.replace(/^\/+/, '')

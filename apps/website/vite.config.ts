@@ -1,5 +1,6 @@
-import { readFileSync } from 'node:fs'
+import { readFileSync, unlinkSync, writeFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
+import { tmpdir } from 'node:os'
 import { resolve } from 'node:path'
 import type { ServerResponse } from 'node:http'
 import { defineConfig } from 'vite-plus'
@@ -9,6 +10,60 @@ import unocss from 'unocss/vite'
 import legacy from '@vitejs/plugin-legacy'
 import VueRouter from 'vue-router/vite'
 import vueDevtools from 'vite-plugin-vue-devtools'
+
+const isDebug = process.argv.includes('--debug')
+const debugAuthFile = resolve(tmpdir(), 'vois-app-webview-next-debug-auth.json')
+const debugAuthTtl = 30 * 60 * 1000
+
+/** Relays one recent WebView URL from preview to the local dev server. */
+function debugAuthRelay(): Plugin {
+  return {
+    name: 'debug-auth-relay',
+    apply: 'serve',
+    configureServer(server) {
+      server.middlewares.use((req, res, next) => {
+        if (
+          req.method !== 'GET' ||
+          new URL(req.url || '/', 'http://localhost').pathname !== '/debug'
+        )
+          return next()
+
+        try {
+          const saved = JSON.parse(readFileSync(debugAuthFile, 'utf-8')) as {
+            capturedAt: number
+            url: string
+          }
+          unlinkSync(debugAuthFile)
+          if (Date.now() - saved.capturedAt > debugAuthTtl) throw new Error('expired')
+
+          res.statusCode = 302
+          res.setHeader('Cache-Control', 'no-store')
+          res.setHeader('Location', saved.url)
+          res.end()
+        } catch {
+          res.statusCode = 404
+          res.setHeader('Cache-Control', 'no-store')
+          res.end('No recent WebView debug auth found')
+        }
+      })
+    },
+    configurePreviewServer(server) {
+      server.middlewares.use((req, _res, next) => {
+        if (req.method === 'GET') {
+          const url = new URL(req.url || '/', 'http://localhost')
+          if (url.searchParams.get('access-token')) {
+            writeFileSync(
+              debugAuthFile,
+              JSON.stringify({ capturedAt: Date.now(), url: `${url.pathname}${url.search}` }),
+              { mode: 0o600 },
+            )
+          }
+        }
+        next()
+      })
+    },
+  }
+}
 
 function vconsoleDev(): Plugin {
   const require = createRequire(import.meta.url)
@@ -91,6 +146,7 @@ export default defineConfig(({ isPreview }) => {
     },
     plugins: [
       ...(isPreview ? [vconsoleDev()] : []),
+      ...(!isPreview || isDebug ? [debugAuthRelay()] : []),
       vueDevtools(),
       VueRouter({ dts: 'src/route-map.d.ts' }),
       vue(),

@@ -10,6 +10,35 @@
 - Commit messages and PR titles must follow Conventional Commits, e.g. fix(runtime): align Ink parity behavior.
 - Using herdr to start a dev server
 
+## Authenticated WebView testing
+
+Use this flow when browser tests need the Native App's real `access-token` and URL parameters. Do not create a debug login or probe production APIs for authentication.
+
+1. Build the latest website when production output changed:
+   ```sh
+   vp run --filter website build
+   ```
+2. In Herdr, start preview with auth capture enabled:
+   ```sh
+   cd apps/website
+   vp preview --host --port 5173 --debug
+   ```
+3. Give the user the LAN preview URL and route, then wait for them to open it in the Native App WebView. The preview server captures the incoming path and query parameters automatically.
+4. In another Herdr pane, start the dev server:
+   ```sh
+   cd apps/website
+   vp dev --host --port 3021
+   ```
+5. Open the one-time relay with a fresh agent-browser session. Suppress `open` output because the redirect URL contains the token:
+   ```sh
+   agent-browser --session webview-debug open 'http://localhost:3021/debug' >/dev/null
+   agent-browser --session webview-debug wait --load networkidle
+   ```
+6. Continue testing in the same browser session. Navigate directly to other localhost routes; the token is already stored by the app.
+7. Run `vp check`, `vp test`, and the relevant build after making changes. Close agent-browser and stop both Herdr servers when finished.
+
+The relay expires after 30 minutes and can be opened only once. A `404` from `/debug` means it was missing, expired, or already consumed; ask the user to reopen the preview URL. Never print, log, or paste captured auth parameters.
+
 <!--VITE PLUS START-->
 
 # Using Vite+, the Unified Toolchain for the Web

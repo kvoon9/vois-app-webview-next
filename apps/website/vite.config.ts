@@ -9,6 +9,7 @@ import { vconsoleDev } from './plugins/vconsole-dev.ts'
 
 export default defineConfig(({ isPreview }) => {
   return {
+    base: './',
     server: {
       host: true,
       port: 3021,

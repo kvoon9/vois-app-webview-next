@@ -9,14 +9,16 @@ function isSupportedLocale(value: unknown): value is SupportedLocale {
 }
 
 export function useLangQuery(): void {
+  const launchLang = new URLSearchParams(window.location.search).get('lang')
   const lang = useRouteQuery('lang')
   const storedLocale = useSessionStorage<SupportedLocale>('locale', DEFAULT_LOCALE)
 
   watch(
     lang,
     (value) => {
-      const locale = isSupportedLocale(value)
-        ? value
+      const requestedLocale = value || launchLang
+      const locale = isSupportedLocale(requestedLocale)
+        ? requestedLocale
         : isSupportedLocale(storedLocale.value)
           ? storedLocale.value
           : DEFAULT_LOCALE

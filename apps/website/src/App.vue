@@ -7,6 +7,7 @@ import { useLangQuery } from '~/composables/useLangQuery'
 import { isWebviewDebug, useWebviewDebug } from '~/composables/useWebviewDebug'
 import { accessToken } from '~/constants'
 
+const launchQuery = new URLSearchParams(window.location.search)
 const isDark = useDark({ storage: sessionStorage })
 const theme = useRouteQuery('theme')
 const tokenQuery = useRouteQuery('access-token')
@@ -14,7 +15,8 @@ const tokenQuery = useRouteQuery('access-token')
 watch(
   tokenQuery,
   (value) => {
-    if (typeof value === 'string' && value) accessToken.value = value
+    const token = typeof value === 'string' && value ? value : launchQuery.get('access-token')
+    if (token) accessToken.value = token
   },
   { immediate: true },
 )
@@ -22,8 +24,9 @@ watch(
 watch(
   theme,
   (value) => {
-    if (value === 'dark') isDark.value = true
-    if (value === 'light') isDark.value = false
+    const selectedTheme = value || launchQuery.get('theme')
+    if (selectedTheme === 'dark') isDark.value = true
+    if (selectedTheme === 'light') isDark.value = false
   },
   { immediate: true },
 )

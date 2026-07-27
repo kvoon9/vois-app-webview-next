@@ -8,6 +8,7 @@
     "dev:app": "vp run website#dev",
     "build:app": "vp run website#build",
     "preview:app": "vp run website#preview",
+    "preview:production": "vp run website#build && docker run --rm --name vois-webview-nginx -p 8080:80 -v \"$PWD/apps/website/dist:/usr/share/nginx/html:ro\" -v \"$PWD/apps/website/nginx.conf:/etc/nginx/conf.d/default.conf:ro\" nginx:alpine",
     "ready": "vp check && vp run -r test && vp run -r build",
     "release": "bumpp --recursive",
     "up": "vpx taze -Ir major"

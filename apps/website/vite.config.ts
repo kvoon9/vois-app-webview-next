@@ -49,8 +49,5 @@ export default defineConfig(({ isPreview }) => {
         '~/': '/src/',
       },
     },
-    build: {
-      target: 'chrome83',
-    },
   }
 })

@@ -55,11 +55,10 @@ function navigateTo(path: string) {
       </div>
 
       <h2 class="section-title mt-8 mb-4">{{ $t('help.backgroundHelp') }}</h2>
-      <a
-        href="http://guide.weila.hk/help.html"
-        target="_blank"
-        rel="noopener noreferrer"
-        class="card w-full flex items-center justify-between text-left no-underline text-text-primary"
+      <button
+        type="button"
+        class="card w-full flex items-center justify-between text-left"
+        @click="navigateTo('/help-guide')"
       >
         <span class="text-body pr-4">{{ $t('help.backgroundHelp') }}</span>
         <svg
@@ -91,18 +90,17 @@ function navigateTo(path: string) {
             stroke-linejoin="round"
           />
         </svg>
-      </a>
+      </button>
 
-      <h2 class="section-title mt-8 mb-4">临时测试</h2>
-      <a
-        href="https://vois-webview-bridge-playground.pages.dev"
-        target="_blank"
-        rel="noopener noreferrer"
-        class="card w-full flex items-center justify-between text-left no-underline text-text-primary"
+      <h2 class="section-title mt-8 mb-4">{{ $t('help.playground') }}</h2>
+      <button
+        type="button"
+        class="card w-full flex items-center justify-between text-left"
+        @click="navigateTo('/playground')"
       >
         <span class="text-body">WebView Bridge Playground</span>
         <span aria-hidden="true">→</span>
-      </a>
+      </button>
 
       <h2 class="section-title mt-8 mb-4">{{ $t('help.contact') }}</h2>
       <div class="space-y-3">

@@ -1,5 +1,7 @@
 {
-  "nav": { "back": "Back" },
+  "nav": {
+    "back": "Back"
+  },
   "modal": {
     "cancel": "Cancel",
     "confirm": "Confirm",
@@ -16,6 +18,7 @@
   "help": {
     "title": "Help",
     "faq": "Frequently asked questions",
+    "playground": "Testing",
     "backgroundHelp": "Mobile background usage help",
     "contact": "Contact us",
     "feedback": "Submit a feedback",

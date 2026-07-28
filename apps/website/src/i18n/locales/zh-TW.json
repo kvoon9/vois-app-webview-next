@@ -1,5 +1,7 @@
 {
-  "nav": { "back": "返回" },
+  "nav": {
+    "back": "返回"
+  },
   "modal": {
     "cancel": "取消",
     "confirm": "確認",
@@ -16,6 +18,7 @@
   "help": {
     "title": "說明",
     "faq": "常見問題",
+    "playground": "臨時測試",
     "backgroundHelp": "手機平台掛後台幫助",
     "contact": "聯絡我們",
     "feedback": "提交意見回饋",

@@ -13,6 +13,7 @@ export default defineConfig(({ isPreview }) => {
     server: {
       host: true,
       port: 3021,
+      forwardConsole: true,
       proxy: {
         '/v2': {
           target: 'https://api.voischat.cn',

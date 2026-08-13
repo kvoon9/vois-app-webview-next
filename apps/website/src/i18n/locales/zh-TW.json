@@ -15,6 +15,13 @@
     "description": "發生了意外錯誤，請再試一次。",
     "retry": "重試"
   },
+  "settings": {
+    "title": "翻譯設定",
+    "friends": "好友翻譯設定",
+    "groups": "群組翻譯設定",
+    "devices": "裝置翻譯設定",
+    "pending": "待實作"
+  },
   "help": {
     "title": "說明",
     "faq": "常見問題",

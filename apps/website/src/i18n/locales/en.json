@@ -15,6 +15,13 @@
     "description": "An unexpected error occurred. Please try again.",
     "retry": "Try again"
   },
+  "settings": {
+    "title": "Translation settings",
+    "friends": "Friend translation",
+    "groups": "Group translation",
+    "devices": "Device translation",
+    "pending": "Coming soon"
+  },
   "help": {
     "title": "Help",
     "faq": "Frequently asked questions",

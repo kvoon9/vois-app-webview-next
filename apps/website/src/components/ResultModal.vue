@@ -33,18 +33,13 @@ const effectiveConfirmText = computed(() => {
 
 const confirmButtonClass = computed(() =>
   props.type === 'success'
-    ? 'rounded-small bg-primary px-4 py-2 text-primary-text'
-    : 'rounded-small bg-danger px-4 py-2 text-danger-text',
+    ? 'rounded-small bg-primary px-4 py-2 text-primary-text focus-visible:ring-2 focus-visible:ring-primary/40'
+    : 'rounded-small bg-danger px-4 py-2 text-danger-text focus-visible:ring-2 focus-visible:ring-danger/40',
 )
 </script>
 
 <template>
-  <BaseModal
-    :title="effectiveTitle"
-    :confirm-text="effectiveConfirmText"
-    @cancel="$emit('close')"
-    @confirm="$emit('close')"
-  >
+  <BaseModal :title="effectiveTitle" :confirm-text="effectiveConfirmText" @cancel="$emit('close')">
     <p>{{ message }}</p>
     <template #footer>
       <div class="flex justify-end">

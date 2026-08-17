@@ -22,6 +22,36 @@
     "devices": "裝置翻譯設定",
     "pending": "待實作"
   },
+  "translation": {
+    "loading": "載入中…",
+    "retry": "重試",
+    "emptyFriends": "暫無好友。",
+    "emptyGroups": "暫無群組。",
+    "emptyMembers": "暫無群組成員。",
+    "invalidLoginId": "登入資訊無效。",
+    "invalidGroupId": "群組資訊無效。",
+    "settingTitle": "設定{name}的翻譯",
+    "memberTitle": "設定{name}的群組成員翻譯",
+    "editSetting": "設定{name}的翻譯",
+    "groupMembers": "群組成員翻譯設定",
+    "enableGroupFirst": "請先開啟群組翻譯，再設定群組成員。",
+    "source": "來源語言",
+    "target": "目標語言",
+    "translateFrom": "翻譯來源語言",
+    "translateTo": "翻譯目標語言",
+    "searchLanguages": "搜尋語言…",
+    "chooseLanguageDescription": "搜尋並選擇一種語言。",
+    "noLanguagesFound": "沒有找到語言。",
+    "mode": "翻譯模式",
+    "languagesMustDiffer": "來源語言和目標語言不能相同。",
+    "saving": "儲存中…",
+    "skills": {
+      "off": "關閉",
+      "basic": "中英互譯",
+      "premiumZhEn": "中英翻譯",
+      "premiumMulti": "多語言翻譯"
+    }
+  },
   "help": {
     "title": "說明",
     "faq": "常見問題",

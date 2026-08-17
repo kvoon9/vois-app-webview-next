@@ -59,5 +59,7 @@ export default defineConfig({
     'input-field':
       'w-full bg-surface-field rounded-standard p-4 text-body text-text-primary resize-none outline-none focus:ring-2 focus:ring-primary/30',
     'z-modal': 'z-50',
+    'z-drawer': 'z-60',
+    'z-drawer-content': 'z-70',
   },
 })

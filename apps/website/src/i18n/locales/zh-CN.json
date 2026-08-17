@@ -22,6 +22,36 @@
     "devices": "设备翻译设置",
     "pending": "待实现"
   },
+  "translation": {
+    "loading": "加载中…",
+    "retry": "重试",
+    "emptyFriends": "暂无好友。",
+    "emptyGroups": "暂无群组。",
+    "emptyMembers": "暂无群成员。",
+    "invalidLoginId": "登录信息无效。",
+    "invalidGroupId": "群组信息无效。",
+    "settingTitle": "设置{name}的翻译",
+    "memberTitle": "设置{name}的群成员翻译",
+    "editSetting": "设置{name}的翻译",
+    "groupMembers": "群成员翻译设置",
+    "enableGroupFirst": "请先开启群组翻译，再设置群成员。",
+    "source": "源语言",
+    "target": "目标语言",
+    "translateFrom": "翻译源语言",
+    "translateTo": "翻译目标语言",
+    "searchLanguages": "搜索语言…",
+    "chooseLanguageDescription": "搜索并选择一种语言。",
+    "noLanguagesFound": "没有找到语言。",
+    "mode": "翻译模式",
+    "languagesMustDiffer": "源语言和目标语言不能相同。",
+    "saving": "保存中…",
+    "skills": {
+      "off": "关闭",
+      "basic": "中英互译",
+      "premiumZhEn": "中英翻译",
+      "premiumMulti": "多语言翻译"
+    }
+  },
   "help": {
     "title": "帮助",
     "faq": "常见问题",

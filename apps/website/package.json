@@ -14,6 +14,7 @@
     "@vueuse/core": "catalog:",
     "@vueuse/router": "catalog:",
     "md5": "^2.3.0",
+    "reka-ui": "catalog:",
     "valibot": "^1.4.2",
     "vconsole": "catalog:",
     "vue": "catalog:",

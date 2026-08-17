@@ -22,6 +22,36 @@
     "devices": "Device translation",
     "pending": "Coming soon"
   },
+  "translation": {
+    "loading": "Loading…",
+    "retry": "Try again",
+    "emptyFriends": "No friends found.",
+    "emptyGroups": "No groups found.",
+    "emptyMembers": "No group members found.",
+    "invalidLoginId": "The login information is invalid.",
+    "invalidGroupId": "The group is invalid.",
+    "settingTitle": "Translation settings for {name}",
+    "memberTitle": "Member translation for {name}",
+    "editSetting": "Edit translation settings for {name}",
+    "groupMembers": "Group member translation",
+    "enableGroupFirst": "Enable group translation before configuring members.",
+    "source": "Source language",
+    "target": "Target language",
+    "translateFrom": "Translate from",
+    "translateTo": "Translate to",
+    "searchLanguages": "Search languages…",
+    "chooseLanguageDescription": "Search for and select a language.",
+    "noLanguagesFound": "No languages found.",
+    "mode": "Translation mode",
+    "languagesMustDiffer": "Source and target languages must be different.",
+    "saving": "Saving…",
+    "skills": {
+      "off": "Off",
+      "basic": "Chinese ↔ English",
+      "premiumZhEn": "Chinese-English translation",
+      "premiumMulti": "Multilingual translation"
+    }
+  },
   "help": {
     "title": "Help",
     "faq": "Frequently asked questions",

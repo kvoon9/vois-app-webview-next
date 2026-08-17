@@ -1,6 +1,6 @@
 :root {
   --color-primary: #54b893;
-  --color-primary-text: #ffffff;
+  --color-primary-text: #10251d;
   --color-danger: #ef4444;
   --color-danger-text: #ffffff;
   --color-surface: #ffffff;
@@ -9,7 +9,7 @@
   --color-surface-selected: #e4f8e7;
   --color-stroke: #d9d9d9;
   --color-text-primary: #000000;
-  --color-text-secondary: #7f7f80;
+  --color-text-secondary: #6b6b6c;
 }
 
 .dark {

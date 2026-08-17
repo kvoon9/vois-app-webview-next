@@ -1,69 +1,74 @@
-<script lang="ts">
-import { defineComponent } from 'vue'
+<script setup lang="ts">
+import { DialogContent, DialogOverlay, DialogPortal, DialogRoot, DialogTitle } from 'reka-ui'
 
-export default defineComponent({
-  name: 'BaseModal',
-  props: {
-    title: {
-      type: String,
-      required: true,
-    },
-    cancelText: {
-      type: String,
-      default: 'Cancel',
-    },
-    confirmText: {
-      type: String,
-      default: 'Confirm',
-    },
+const props = withDefaults(
+  defineProps<{
+    cancelText?: string
+    confirmText?: string
+    dismissible?: boolean
+    title: string
+  }>(),
+  {
+    cancelText: 'Cancel',
+    confirmText: 'Confirm',
+    dismissible: true,
   },
-  emits: ['cancel', 'confirm'],
-})
+)
+
+const emit = defineEmits<{
+  cancel: []
+  confirm: []
+}>()
+
+function handleOpenChange(open: boolean): void {
+  if (!open && props.dismissible) emit('cancel')
+}
+
+function preventDismiss(event: Event): void {
+  if (!props.dismissible) event.preventDefault()
+}
 </script>
 
 <template>
-  <Teleport to="body">
-    <div
-      class="fixed inset-0 z-modal flex items-center justify-center bg-black/50 p-4"
-      role="presentation"
-      @click.self="$emit('cancel')"
-    >
-      <div
-        class="w-full max-w-sm rounded-large bg-surface text-text-primary shadow-xl"
-        role="dialog"
-        aria-modal="true"
-        :aria-label="title"
-        @keydown.esc="$emit('cancel')"
+  <DialogRoot :open="true" @update:open="handleOpenChange">
+    <DialogPortal>
+      <DialogOverlay
+        class="fixed inset-0 z-modal flex items-center justify-center overflow-y-auto bg-black/50 p-4"
       >
-        <header class="p-4 text-header font-semibold">
-          <slot name="header"
-            ><div>{{ title }}</div></slot
-          >
-        </header>
-        <div class="p-4 text-body">
-          <slot />
-        </div>
-        <footer class="p-4">
-          <slot name="footer">
-            <div class="flex justify-end space-x-3">
-              <button
-                type="button"
-                class="rounded-small px-4 py-2 text-text-secondary"
-                @click="$emit('cancel')"
-              >
-                {{ cancelText }}
-              </button>
-              <button
-                type="button"
-                class="rounded-small bg-primary px-4 py-2 text-primary-text"
-                @click="$emit('confirm')"
-              >
-                {{ confirmText }}
-              </button>
-            </div>
-          </slot>
-        </footer>
-      </div>
-    </div>
-  </Teleport>
+        <DialogContent
+          class="max-h-[calc(100vh-2rem)] w-full max-w-sm flex flex-col overflow-hidden rounded-large bg-surface text-text-primary shadow-xl"
+          :aria-describedby="undefined"
+          @escape-key-down="preventDismiss"
+          @pointer-down-outside="preventDismiss"
+        >
+          <DialogTitle class="flex-none p-4 text-header font-semibold">
+            <slot name="header">{{ title }}</slot>
+          </DialogTitle>
+          <div class="min-h-0 overflow-y-auto p-4 text-body">
+            <slot />
+          </div>
+          <footer class="flex-none p-4">
+            <slot name="footer">
+              <div class="flex justify-end space-x-3">
+                <button
+                  type="button"
+                  class="rounded-small px-4 py-2 text-text-secondary focus-visible:ring-2 focus-visible:ring-primary/40"
+                  @click="$emit('cancel')"
+                >
+                  {{ cancelText }}
+                </button>
+                <button
+                  type="button"
+                  class="rounded-small bg-primary px-4 py-2 text-primary-text focus-visible:ring-2 focus-visible:ring-primary/40"
+                  @click="$emit('confirm')"
+                >
+                  {{ confirmText }}
+                </button>
+              </div>
+            </slot>
+          </footer>
+        </DialogContent>
+      </DialogOverlay>
+    </DialogPortal>
+  </DialogRoot>
 </template>

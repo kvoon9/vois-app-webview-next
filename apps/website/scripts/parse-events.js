@@ -14,6 +14,10 @@ for (const e of lines) {
   byType[e.type] = (byType[e.type] || 0) + 1
 }
 
+function redactUrl(url) {
+  return url.replace(/([?&](?:access-token|token|sign|login-id)=)[^&#]*/gi, '$1REDACTED')
+}
+
 console.log(`Total events: ${lines.length}`)
 for (const [t, n] of Object.entries(byType)) {
   console.log(`  ${t}: ${n}`)
@@ -24,12 +28,12 @@ for (const e of lines) {
   switch (e.type) {
     case 'lifecycle': {
       const v = e.visible === false ? ' (background)' : e.visible === true ? ' (foreground)' : ''
-      console.log(`  ${e.event.padEnd(10)}  ${e.url}${v}`)
+      console.log(`  ${e.event.padEnd(10)}  ${redactUrl(e.url)}${v}`)
       break
     }
     case 'network': {
       const err = e.error ? ` ERROR: ${e.error}` : ''
-      console.log(`  [${e.method} ${e.status} ${e.duration}ms] ${e.url}${err}`)
+      console.log(`  [${e.method} ${e.status} ${e.duration}ms] ${redactUrl(e.url)}${err}`)
       break
     }
     case 'console':

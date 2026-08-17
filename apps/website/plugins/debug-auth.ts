@@ -11,9 +11,12 @@ import type { ServerResponse } from 'node:http'
 import type { Plugin } from 'vite-plus'
 import type { Connect } from 'vite-plus'
 
-const outputDir = resolve(import.meta.dirname, '../../.tmp/vois-webview-debug')
+const outputDir = resolve(import.meta.dirname, '../../../.tmp/vois-webview-debug')
 const eventsFile = resolve(outputDir, 'events.jsonl')
 const envLocalFile = resolve(import.meta.dirname, '../.env.local')
+
+type JsonValue = string | number | boolean | null | JsonValue[] | { [key: string]: JsonValue }
+type JsonObject = Record<string, JsonValue>
 
 export function debugAuthPlugin(): Plugin {
   const isDebug = process.argv.includes('--debug')
@@ -46,7 +49,7 @@ export function debugAuthPlugin(): Plugin {
   }
 }
 
-function replyJson(res: ServerResponse, code: number, body: unknown) {
+function replyJson(res: ServerResponse, code: number, body: JsonObject) {
   res.statusCode = code
   res.setHeader('Content-Type', 'application/json')
   res.end(JSON.stringify(body))
@@ -69,7 +72,7 @@ function countEventsInFile() {
   return readFileSync(eventsFile, 'utf-8').trim().split('\n').filter(Boolean).length
 }
 
-function appendEvent(event: Record<string, unknown>) {
+function appendEvent(event: JsonObject) {
   appendFileSync(eventsFile, `${JSON.stringify({ ...event, receivedAt: Date.now() })}\n`, {
     mode: 0o600,
   })
@@ -88,7 +91,8 @@ function handleStatusRequest(res: ServerResponse, sessionStartedAt: number) {
 function handleEventPost(req: Connect.IncomingMessage, res: ServerResponse) {
   bufferRequest(req, 256 * 1024)
     .then((body) => {
-      appendEvent(JSON.parse(body.toString('utf-8')) as Record<string, unknown>)
+      // SAFETY: debug events are only persisted verbatim to the jsonl log, never read back
+      appendEvent(JSON.parse(body.toString('utf-8')) as JsonObject)
       replyJson(res, 202, { ok: true })
     })
     .catch(() => replyJson(res, 400, { error: 'Invalid debug event' }))

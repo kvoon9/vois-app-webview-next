@@ -25,6 +25,7 @@ catalog:
   core-js: ^3.49.0
   vite-plugin-vue-devtools: ^8.1.5
   reka-ui: ^2.10.3
+  '@oxlint/plugins': 1.73.0
 overrides:
   vite: 'catalog:'
   vitest: 'catalog:'

@@ -1,22 +1,16 @@
 <script setup lang="ts">
-import { computed, shallowRef } from 'vue'
-import { useRouter } from 'vue-router'
-import { useI18n } from 'vue-i18n'
+import { useRoute, useRouter } from 'vue-router'
 import PageHeader from '~/components/PageHeader.vue'
 
+const route = useRoute()
 const router = useRouter()
-const { tm } = useI18n({ useScope: 'global' })
-
-const questions = computed(() => tm('help.questions') as string[])
-
-const expandedIndex = shallowRef<number | null>(null)
-
-function toggleQuestion(index: number) {
-  expandedIndex.value = expandedIndex.value === index ? null : index
-}
 
 function navigateTo(path: string) {
   router.push(path)
+}
+
+function openBackgroundHelp() {
+  router.push({ path: '/help-guide', query: route.query })
 }
 </script>
 
@@ -24,41 +18,12 @@ function navigateTo(path: string) {
   <div class="min-h-svh bg-surface text-text-primary">
     <PageHeader :title="$t('help.title')" />
     <main class="p-4">
-      <h2 class="section-title mb-4">{{ $t('help.faq') }}</h2>
-      <div class="space-y-3">
-        <button
-          v-for="(question, index) in questions"
-          :key="index"
-          type="button"
-          class="card w-full flex items-center justify-between text-left"
-          @click="toggleQuestion(index)"
-        >
-          <span class="text-body pr-4">{{ question }}</span>
-          <svg
-            width="20"
-            height="20"
-            viewBox="0 0 24 24"
-            fill="none"
-            class="flex-shrink-0 transition-transform duration-200"
-            :class="{ 'rotate-90': expandedIndex === index }"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path
-              d="M9 18L15 12L9 6"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            />
-          </svg>
-        </button>
-      </div>
-
-      <h2 class="section-title mt-8 mb-4">{{ $t('help.backgroundHelp') }}</h2>
+      <!-- TODO: temporarily hidden, restore FAQ & playground sections when content is ready -->
+      <h2 class="section-title mb-4">{{ $t('help.backgroundHelp') }}</h2>
       <button
         type="button"
         class="card w-full flex items-center justify-between text-left"
-        @click="navigateTo('/help-guide')"
+        @click="openBackgroundHelp()"
       >
         <span class="text-body pr-4">{{ $t('help.backgroundHelp') }}</span>
         <svg
@@ -90,16 +55,6 @@ function navigateTo(path: string) {
             stroke-linejoin="round"
           />
         </svg>
-      </button>
-
-      <h2 class="section-title mt-8 mb-4">{{ $t('help.playground') }}</h2>
-      <button
-        type="button"
-        class="card w-full flex items-center justify-between text-left"
-        @click="navigateTo('/playground')"
-      >
-        <span class="text-body">WebView Bridge Playground</span>
-        <span aria-hidden="true">→</span>
       </button>
 
       <h2 class="section-title mt-8 mb-4">{{ $t('help.contact') }}</h2>

@@ -22,6 +22,21 @@
     "devices": "Device translation",
     "pending": "Coming soon"
   },
+  "profile": {
+    "media": "Media, links, docs",
+    "location": "Location",
+    "muteNotifications": "Mute notifications",
+    "readReceipts": "Read receipts",
+    "stickOnTop": "Stick on top",
+    "editRemarks": "Edit remarks",
+    "clearHistory": "Clear chat history",
+    "report": "Report",
+    "block": "Block",
+    "exitGroup": "Exit group",
+    "members": "Members",
+    "userId": "User ID: {id}",
+    "notFound": "This conversation could not be found."
+  },
   "translation": {
     "loading": "Loading…",
     "retry": "Try again",

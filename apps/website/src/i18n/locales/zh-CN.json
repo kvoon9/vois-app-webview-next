@@ -116,5 +116,20 @@
     "en": "English",
     "zh-CN": "简体中文",
     "zh-TW": "繁体中文"
+  },
+  "profile": {
+    "media": "媒体、链接和文档",
+    "location": "位置",
+    "muteNotifications": "消息免打扰",
+    "readReceipts": "已读回执",
+    "stickOnTop": "置顶聊天",
+    "editRemarks": "编辑备注",
+    "clearHistory": "清空聊天记录",
+    "report": "举报",
+    "block": "拉黑",
+    "exitGroup": "退出群组",
+    "members": "成员",
+    "userId": "用户 ID：{id}",
+    "notFound": "未找到该会话。"
   }
 }

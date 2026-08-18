@@ -92,7 +92,16 @@ function handleEventPost(req: Connect.IncomingMessage, res: ServerResponse) {
   bufferRequest(req, 256 * 1024)
     .then((body) => {
       // SAFETY: debug events are only persisted verbatim to the jsonl log, never read back
-      appendEvent(JSON.parse(body.toString('utf-8')) as JsonObject)
+      const event = JSON.parse(body.toString('utf-8')) as JsonObject
+      appendEvent(event)
+      // Native WebView passes auth in the URL hash, which never reaches request middleware;
+      // capture it from reported event URLs instead
+      // SAFETY: the injected debug client only reports string URLs
+      const url = event.url as string
+      const queryStart = url.indexOf('?')
+      const token =
+        queryStart === -1 ? null : new URLSearchParams(url.slice(queryStart)).get('access-token')
+      if (token) writeEnvToken(token)
       replyJson(res, 202, { ok: true })
     })
     .catch(() => replyJson(res, 400, { error: 'Invalid debug event' }))

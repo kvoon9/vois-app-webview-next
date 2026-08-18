@@ -1,23 +1,34 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
 import type { TranslationTarget, TranslationTargetKind } from '~/utils/translation-api'
+import { translationLanguageName } from '~/utils/translation-language'
 
-defineProps<{
-  items: TranslationTarget[]
-  kind: TranslationTargetKind
-}>()
+const props = withDefaults(
+  defineProps<{
+    items: TranslationTarget[]
+    kind: TranslationTargetKind
+    memberOnly?: boolean
+  }>(),
+  { memberOnly: false },
+)
 
 const emit = defineEmits<{
   edit: [item: TranslationTarget]
   open: [item: TranslationTarget]
 }>()
 
-const { t } = useI18n({ useScope: 'global' })
+const { locale, t } = useI18n({ useScope: 'global' })
 
 function statusLabel(item: TranslationTarget): string {
+  const languagePair =
+    item.source && item.target
+      ? `${translationLanguageName(item.source, locale.value)} → ${translationLanguageName(item.target, locale.value)}`
+      : ''
+
+  if (props.memberOnly && languagePair) return languagePair
   if (item.skill === 0) return t('translation.skills.off')
   if (item.skill === 1) return t('translation.skills.basic')
-  if (item.source && item.target) return `${item.source} → ${item.target}`
+  if (languagePair) return languagePair
   return t(item.skill === 2 ? 'translation.skills.premiumZhEn' : 'translation.skills.premiumMulti')
 }
 

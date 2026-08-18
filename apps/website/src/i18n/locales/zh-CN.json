@@ -30,8 +30,6 @@
     "emptyMembers": "暂无群成员。",
     "invalidLoginId": "登录信息无效。",
     "invalidGroupId": "群组信息无效。",
-    "settingTitle": "设置{name}的翻译",
-    "memberTitle": "设置{name}的群成员翻译",
     "editSetting": "设置{name}的翻译",
     "groupMembers": "群成员翻译设置",
     "enableGroupFirst": "请先开启群组翻译，再设置群成员。",
@@ -44,6 +42,7 @@
     "noLanguagesFound": "没有找到语言。",
     "mode": "翻译模式",
     "languagesMustDiffer": "源语言和目标语言不能相同。",
+    "swapLanguages": "切换源语言和目标语言",
     "saving": "保存中…",
     "skills": {
       "off": "关闭",

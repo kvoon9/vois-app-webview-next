@@ -29,6 +29,7 @@ const emit = defineEmits<{
 }>()
 
 const { t } = useI18n({ useScope: 'global' })
+const zhEnLanguages = ['zh-CN', 'en-US']
 const skill = shallowRef<TranslationSkill>(props.item.skill)
 const source = shallowRef(props.item.source || 'zh-CN')
 const target = shallowRef(props.item.target || 'en-US')
@@ -41,11 +42,11 @@ const modes = computed(() => [
 ])
 
 const languageOptions = computed(() => {
-  const languages = [...new Set(props.languages.filter(Boolean))]
-  if (skill.value !== 2) return languages
-  return languages.filter((code) => ['zh', 'en'].includes(translationLanguageSubtag(code)))
+  if (skill.value === 2) return zhEnLanguages
+  return [...new Set([...props.languages, source.value, target.value].filter(Boolean))]
 })
 
+const isZhEn = computed(() => skill.value === 2)
 const showsLanguages = computed(() => props.memberOnly || skill.value >= 2)
 const canConfirm = computed(
   () =>
@@ -68,6 +69,11 @@ function selectSkill(nextSkill: TranslationSkill): void {
     target.value = 'en-US'
     return
   }
+  if (nextSkill === 2) {
+    source.value = translationLanguageSubtag(source.value) === 'en' ? 'en-US' : 'zh-CN'
+    target.value = source.value === 'zh-CN' ? 'en-US' : 'zh-CN'
+    return
+  }
 
   const options = languageOptions.value
   if (!options.includes(source.value)) source.value = options[0] ?? ''
@@ -76,12 +82,20 @@ function selectSkill(nextSkill: TranslationSkill): void {
   }
 }
 
+if (skill.value === 2 || (!props.memberOnly && skill.value !== 3)) selectSkill(skill.value)
+
+function swapLanguages(): void {
+  const previousSource = source.value
+  source.value = target.value
+  target.value = previousSource
+}
+
 function confirm(): void {
   if (!canConfirm.value) return
 
   let nextSource = ''
   let nextTarget = ''
-  if (skill.value !== 0) {
+  if (props.memberOnly || skill.value !== 0) {
     nextSource = showsLanguages.value ? source.value : 'zh-CN'
     nextTarget = showsLanguages.value ? target.value : 'en-US'
   }
@@ -95,13 +109,10 @@ function confirm(): void {
 </script>
 
 <template>
-  <BaseModal
-    :title="
-      $t(memberOnly ? 'translation.memberTitle' : 'translation.settingTitle', { name: item.name })
-    "
-    :dismissible="!saving"
-    @cancel="$emit('cancel')"
-  >
+  <BaseModal :title="$t('settings.title')" :dismissible="!saving" @cancel="$emit('cancel')">
+    <template #header>
+      <span class="block text-center">{{ $t('settings.title') }}</span>
+    </template>
     <div v-if="!memberOnly" class="space-y-2" role="group" :aria-label="$t('translation.mode')">
       <button
         v-for="mode in modes"
@@ -114,27 +125,59 @@ function confirm(): void {
             : 'border-stroke bg-surface text-text-secondary'
         "
         :aria-pressed="skill === mode.skill"
+        :disabled="saving"
         @click="selectSkill(mode.skill)"
       >
         {{ mode.label }}
       </button>
     </div>
 
-    <div v-if="showsLanguages" :class="memberOnly ? 'space-y-4' : 'mt-4 space-y-4'">
+    <div v-if="showsLanguages" :class="{ 'mt-4': !memberOnly }">
       <LanguagePickerDrawer
         v-model="source"
+        :disabled="saving || isZhEn"
         :label="$t('translation.source')"
         :languages="languageOptions"
         :title="$t('translation.translateFrom')"
       />
+
+      <div class="my-2 flex justify-center">
+        <button
+          type="button"
+          class="h-11 w-11 touch-manipulation flex items-center justify-center rounded-full bg-surface-muted text-text-secondary focus-visible:ring-2 focus-visible:ring-primary/40 disabled:opacity-50"
+          :aria-label="$t('translation.swapLanguages')"
+          :disabled="saving"
+          @click="swapLanguages"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            aria-hidden="true"
+          >
+            <path d="m3 8 4-4 4 4" />
+            <path d="M7 4v16" />
+            <path d="m21 16-4 4-4-4" />
+            <path d="M17 20V4" />
+          </svg>
+        </button>
+      </div>
+
       <LanguagePickerDrawer
         v-model="target"
+        :disabled="saving || isZhEn"
         :label="$t('translation.target')"
         :languages="languageOptions"
         :title="$t('translation.translateTo')"
       />
 
-      <p v-if="source === target" class="text-small text-danger" role="alert">
+      <p v-if="source === target" class="mt-2 text-small text-danger" role="alert">
         {{ $t('translation.languagesMustDiffer') }}
       </p>
     </div>

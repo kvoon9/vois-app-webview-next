@@ -5,11 +5,10 @@ import PageHeader from '~/components/PageHeader.vue'
 
 const route = useRoute()
 
-// Forward the webview launch params (access-token, lang, device-*) to the platform help page
 const helpUrl = computed(() => {
-  // SAFETY: native app always launches the webview with flat string query params
+  // SAFETY: help.vue forwards the native app's flat string query parameters.
   const params = new URLSearchParams(route.query as Record<string, string>)
-  return `http://guide.weila.hk/help.html?${params}`
+  return `https://api.voischat.cn/help/background/?${params}`
 })
 </script>
 

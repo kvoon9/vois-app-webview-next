@@ -20,6 +20,7 @@ import {
 } from '~/utils/translation-language'
 
 const props = defineProps<{
+  disabled?: boolean
   label: string
   languages: string[]
   title: string
@@ -54,6 +55,7 @@ function selectLanguage(code: string): void {
         type="button"
         class="mt-2 min-h-14 w-full touch-manipulation flex items-center rounded-standard bg-surface-field px-4 text-left text-text-primary focus-visible:ring-2 focus-visible:ring-primary/40"
         :aria-label="`${label}: ${selectedOption?.name ?? model}`"
+        :disabled="disabled"
       >
         <span class="language-flag w-5 flex-none text-header" aria-hidden="true">
           {{ selectedOption?.flag ?? '🌐' }}
@@ -67,6 +69,7 @@ function selectLanguage(code: string): void {
           </span>
         </span>
         <svg
+          v-if="!disabled"
           class="ml-3 flex-none text-text-secondary"
           xmlns="http://www.w3.org/2000/svg"
           width="18"

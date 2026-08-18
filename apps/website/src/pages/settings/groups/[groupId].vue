@@ -112,7 +112,13 @@ async function save(setting: TranslationSetting): Promise<void> {
         {{ $t('translation.emptyMembers') }}
       </p>
 
-      <TranslationTargetList v-else :items="state.items" kind="friends" @edit="selected = $event" />
+      <TranslationTargetList
+        v-else
+        :items="state.items"
+        kind="friends"
+        member-only
+        @edit="selected = $event"
+      />
     </main>
 
     <TranslationSettingModal

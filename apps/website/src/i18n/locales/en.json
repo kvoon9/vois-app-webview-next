@@ -30,8 +30,6 @@
     "emptyMembers": "No group members found.",
     "invalidLoginId": "The login information is invalid.",
     "invalidGroupId": "The group is invalid.",
-    "settingTitle": "Translation settings for {name}",
-    "memberTitle": "Member translation for {name}",
     "editSetting": "Edit translation settings for {name}",
     "groupMembers": "Group member translation",
     "enableGroupFirst": "Enable group translation before configuring members.",
@@ -44,6 +42,7 @@
     "noLanguagesFound": "No languages found.",
     "mode": "Translation mode",
     "languagesMustDiffer": "Source and target languages must be different.",
+    "swapLanguages": "Swap source and target languages",
     "saving": "Saving…",
     "skills": {
       "off": "Off",

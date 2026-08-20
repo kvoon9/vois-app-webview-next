@@ -1,6 +1,7 @@
 # Common Pitfalls & Best Practices
 
-- Always follow `rizumu`, `antfu`, `vue/vueuse best practice` coding styles
+- Always follow `rizumu`, `antfu`, `vue/vueuse best practice` coding style skills
+- Use `@pinia/colada` to manage data fetching (use ctx7 cli to search its docs when needed)
 - Always use defineComponent() to define components. Never use bare { setup() {} } objects — they lack component scope, so inject, watch, and onScopeDispose won't work correctly.
 - Always use Vue's `shallowRef` over `ref` by default. Using ref requires a solid justification and a code comment explaining why deep reactivity is needed.
 - Perfer using `defuddle` to fetch web content, `ast-grep` to search local codebase

@@ -9,30 +9,30 @@
     "preview": "vp preview --host --port 5173"
   },
   "dependencies": {
-    "@pinia/colada": "catalog:",
+    "@pinia/colada": "catalog:vue",
     "@valibot/i18n": "^1.2.0",
     "@vois/webview-bridge": "^0.1.0",
-    "@vueuse/core": "catalog:",
-    "@vueuse/router": "catalog:",
+    "@vueuse/core": "catalog:vue",
+    "@vueuse/router": "catalog:vue",
     "md5": "^2.3.0",
-    "pinia": "catalog:",
-    "reka-ui": "catalog:",
+    "pinia": "catalog:vue",
+    "reka-ui": "catalog:vue",
     "valibot": "^1.4.2",
-    "vconsole": "catalog:",
-    "vue": "catalog:",
-    "vue-i18n": "catalog:",
-    "vue-router": "^5.2.0"
+    "vconsole": "^3.15.1",
+    "vue": "catalog:vue",
+    "vue-i18n": "catalog:vue",
+    "vue-router": "catalog:vue"
   },
   "devDependencies": {
     "@types/md5": "^2.3.6",
-    "@unocss/reset": "catalog:",
-    "@vitejs/plugin-legacy": "catalog:",
-    "@vitejs/plugin-vue": "catalog:",
-    "terser": "catalog:",
-    "typescript": "~7.0.2",
-    "unocss": "catalog:",
-    "vite": "catalog:",
-    "vite-plugin-vue-devtools": "catalog:",
-    "vite-plus": "catalog:"
+    "@unocss/reset": "catalog:build",
+    "@vitejs/plugin-legacy": "catalog:build",
+    "@vitejs/plugin-vue": "catalog:build",
+    "terser": "catalog:build",
+    "typescript": "catalog:tooling",
+    "unocss": "catalog:build",
+    "vite": "catalog:build",
+    "vite-plugin-vue-devtools": "catalog:build",
+    "vite-plus": "catalog:tooling"
   }
 }

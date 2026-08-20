@@ -14,10 +14,10 @@
     "up": "vpx taze -Ir major"
   },
   "devDependencies": {
-    "@oxlint/plugins": "catalog:",
-    "bumpp": "^12.0.0",
-    "taze": "catalog:",
-    "vite-plus": "catalog:"
+    "@oxlint/plugins": "catalog:tooling",
+    "bumpp": "^12.2.1",
+    "taze": "catalog:tooling",
+    "vite-plus": "catalog:tooling"
   },
   "devEngines": {
     "packageManager": {

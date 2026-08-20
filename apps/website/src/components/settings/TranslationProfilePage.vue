@@ -186,7 +186,8 @@ function hideBrokenImage(event: Event): void {
           </span>
         </div>
 
-        <!-- ponytail: media/location/notifications/remarks rows are UI-only placeholders per design; native owns these features -->
+        <!-- Temporarily hidden: non-translation sections; restore by uncommenting -->
+        <!-- ponytail: media/location/notifications/remarks rows are UI-only placeholders per design; native owns these features
         <div class="mt-2 divide-y divide-stroke border border-stroke rounded-standard bg-surface">
           <div
             class="min-h-12 flex items-center justify-between px-4 text-body"
@@ -203,6 +204,7 @@ function hideBrokenImage(event: Event): void {
             <span aria-hidden="true" class="text-text-secondary">›</span>
           </div>
         </div>
+        -->
 
         <div class="mt-4 border border-stroke rounded-standard bg-surface p-4">
           <div class="space-y-2" role="group" :aria-label="$t('translation.mode')">
@@ -273,6 +275,7 @@ function hideBrokenImage(event: Event): void {
           </div>
         </div>
 
+        <!--
         <div class="mt-4 divide-y divide-stroke border border-stroke rounded-standard bg-surface">
           <div
             v-for="row in kind === 'friends'
@@ -298,6 +301,7 @@ function hideBrokenImage(event: Event): void {
             <span aria-hidden="true" class="text-text-secondary">›</span>
           </div>
         </div>
+        -->
 
         <RouterLink
           v-if="kind === 'groups'"
@@ -308,6 +312,7 @@ function hideBrokenImage(event: Event): void {
           <span aria-hidden="true" class="text-text-secondary">›</span>
         </RouterLink>
 
+        <!--
         <div class="mt-4 divide-y divide-stroke border border-stroke rounded-standard bg-surface">
           <div class="min-h-12 flex items-center px-4 text-body" aria-disabled="true">
             {{ $t('profile.clearHistory') }}
@@ -325,6 +330,7 @@ function hideBrokenImage(event: Event): void {
             {{ $t(kind === 'friends' ? 'profile.block' : 'profile.exitGroup') }}
           </div>
         </div>
+        -->
       </template>
     </main>
 

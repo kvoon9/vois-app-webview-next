@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
+import { hideBrokenImage } from '~/utils/image'
 import type { TranslationTarget, TranslationTargetKind } from '~/utils/translation-api'
 import { translationLanguageName } from '~/utils/translation-language'
 
@@ -30,11 +31,6 @@ function statusLabel(item: TranslationTarget): string {
   if (item.skill === 1) return t('translation.skills.basic')
   if (languagePair) return languagePair
   return t(item.skill === 2 ? 'translation.skills.premiumZhEn' : 'translation.skills.premiumMulti')
-}
-
-function hideBrokenImage(event: Event): void {
-  const image = event.currentTarget
-  if (image instanceof HTMLImageElement) image.hidden = true
 }
 </script>
 

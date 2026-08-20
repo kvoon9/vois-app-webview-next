@@ -26,6 +26,8 @@ catalog:
   vite-plugin-vue-devtools: ^8.1.5
   reka-ui: ^2.10.3
   '@oxlint/plugins': 1.73.0
+  pinia: ^4.0.3
+  '@pinia/colada': ^1.4.2
 overrides:
   vite: 'catalog:'
   vitest: 'catalog:'

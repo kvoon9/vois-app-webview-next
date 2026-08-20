@@ -20,11 +20,11 @@ cd apps/website && vp run --filter website build && vp preview --host --port 517
 
 ### Flow A: Automated (agent-browser)
 
-Headless tests with real `access-token`. Token is refreshed each session — user opens the preview URL once before testing.
+Headless tests with real `access-token`. The token persists in `.env.local` — no need to reopen the WebView unless it expires (API returns `授权失效` / errcode 31).
 
 1. `cd apps/website && vp dev --host --port 3021` (hot reload in a second Herdr pane)
-2. User opens `http://192.168.1.50:5173/<route>` in Native App WebView → token written to `.env.local`
-3. `agent-browser --session webview-debug open 'http://localhost:3021/<route>'` and test
+2. Only when the token is missing or expired: user opens `http://<Mac IP>:5173/<route>` (the Network URL printed by `vp preview`) in Native App WebView → token written to `.env.local`
+3. `agent-browser --session webview-debug open 'http://localhost:3021/#/<route>'` (hash routing) and test
 
 Never print auth parameters.
 
@@ -32,7 +32,7 @@ Never print auth parameters.
 
 User operates the phone; agent reads `.tmp/vois-webview-debug/events.jsonl`.
 
-1. User opens `http://192.168.1.50:5173/<route>` in Native App WebView, performs actions
+1. User opens `http://<Mac IP>:5173/<route>` (the Network URL printed by `vp preview`) in Native App WebView, performs actions
 2. Read: `node apps/website/scripts/parse-events.js` or `curl http://127.0.0.1:5173/__debug/status`
 3. `🟢 WebView debug connected` confirms pipeline; missing → `?debug-reload=1`
 

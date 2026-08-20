@@ -6,10 +6,8 @@ import { RouterView } from 'vue-router'
 import { useLangQuery } from '~/composables/useLangQuery'
 import { isWebviewDebug, useWebviewDebug } from '~/composables/useWebviewDebug'
 import { accessToken } from '~/constants'
-import { captureLoginId } from '~/utils/login-id'
 
 const launchQuery = new URLSearchParams(window.location.search)
-captureLoginId(window.location.search, window.location.hash)
 const isDark = useDark({ storage: sessionStorage })
 const theme = useRouteQuery('theme')
 const tokenQuery = useRouteQuery<string | null>('access-token')

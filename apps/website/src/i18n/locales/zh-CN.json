@@ -19,8 +19,7 @@
     "title": "翻译设置",
     "friends": "好友翻译设置",
     "groups": "群组翻译设置",
-    "devices": "设备翻译设置",
-    "pending": "待实现"
+    "devices": "设备翻译设置"
   },
   "translation": {
     "loading": "加载中…",
@@ -28,6 +27,7 @@
     "emptyFriends": "暂无好友。",
     "emptyGroups": "暂无群组。",
     "emptyMembers": "暂无群成员。",
+    "emptyDevices": "暂无设备。",
     "invalidLoginId": "登录信息无效。",
     "invalidGroupId": "群组信息无效。",
     "editSetting": "设置{name}的翻译",

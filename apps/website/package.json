@@ -9,11 +9,13 @@
     "preview": "vp preview --host --port 5173"
   },
   "dependencies": {
+    "@pinia/colada": "catalog:",
     "@valibot/i18n": "^1.2.0",
     "@vois/webview-bridge": "^0.1.0",
     "@vueuse/core": "catalog:",
     "@vueuse/router": "catalog:",
     "md5": "^2.3.0",
+    "pinia": "catalog:",
     "reka-ui": "catalog:",
     "valibot": "^1.4.2",
     "vconsole": "catalog:",

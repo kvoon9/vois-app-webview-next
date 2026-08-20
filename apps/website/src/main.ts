@@ -1,3 +1,5 @@
+import { PiniaColada } from '@pinia/colada'
+import { createPinia } from 'pinia'
 import { createApp } from 'vue'
 import { createRouter, createWebHashHistory } from 'vue-router'
 import { routes } from 'vue-router/auto-routes'
@@ -15,7 +17,9 @@ const router = createRouter({
 const app = createApp(App)
 app.use(router)
 app.use(i18n)
-app.config.errorHandler = (err: unknown) => {
+app.use(createPinia())
+app.use(PiniaColada)
+app.config.errorHandler = (err) => {
   console.error('[app.errorHandler]', err)
   // ponytail: global last-resort handler; ErrorBoundary onErrorCaptured catches per-route first
 }

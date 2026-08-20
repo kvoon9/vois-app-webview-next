@@ -1,12 +1,14 @@
 <script setup lang="ts">
-import { useAsyncState } from '@vueuse/core'
+import { useQuery, useQueryCache } from '@pinia/colada'
 import { computed, shallowRef } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { RouterLink, useRoute } from 'vue-router'
 import PageHeader from '~/components/PageHeader.vue'
 import ResultModal from '~/components/ResultModal.vue'
 import LanguagePickerDrawer from '~/components/settings/LanguagePickerDrawer.vue'
-import { getLoginId } from '~/utils/login-id'
+import QueryState from '~/components/settings/QueryState.vue'
+import { parseAccountId, useAccountId } from '~/composables/useAccountId'
+import { hideBrokenImage } from '~/utils/image'
 import {
   changeTranslationTarget,
   getTranslationLanguages,
@@ -24,7 +26,8 @@ const props = defineProps<{
 
 const route = useRoute()
 const { t } = useI18n({ useScope: 'global' })
-const loginId = getLoginId()
+const { accountId, accountQuery } = useAccountId()
+const queryCache = useQueryCache()
 const saving = shallowRef(false)
 const resultError = shallowRef<string | null>(null)
 
@@ -32,37 +35,29 @@ const zhEnLanguages = ['zh-CN', 'en-US']
 
 const targetId = computed(() => {
   const raw = route.params[props.kind === 'friends' ? 'id' : 'groupId']
-  const value = Array.isArray(raw) ? raw[0] : raw
-  if (!value || !/^[1-9]\d*$/.test(value)) return null
-  const id = Number(value)
-  return Number.isSafeInteger(id) ? id : null
+  return parseAccountId(Array.isArray(raw) ? raw[0] : raw)
 })
 
-async function load(): Promise<{ item: TranslationTarget | null; languages: string[] }> {
-  if (loginId == null) throw new Error(t('translation.invalidLoginId'))
+async function load(): Promise<{ item: TranslationTarget; languages: string[] }> {
+  if (accountId.value == null) throw new Error(t('translation.invalidLoginId'))
   if (targetId.value == null) throw new Error(t('profile.notFound'))
 
   const [items, languages] = await Promise.all([
-    getTranslationTargets(props.kind, loginId),
+    getTranslationTargets(props.kind, accountId.value),
     getTranslationLanguages(),
   ])
-  return { item: items.find((item) => item.id === targetId.value) ?? null, languages }
+  const item = items.find((item) => item.id === targetId.value)
+  if (!item) throw new Error(t('profile.notFound'))
+  return { item, languages }
 }
 
-const {
-  state,
-  isLoading,
-  error,
-  executeImmediate: reload,
-} = useAsyncState(load, { item: null, languages: [] }, { resetOnExecute: false })
-
-const errorMessage = computed(() => {
-  if (error.value) return error.value instanceof Error ? error.value.message : String(error.value)
-  if (!isLoading.value && !state.value.item) return t('profile.notFound')
-  return ''
+const { state, refetch: reload } = useQuery({
+  key: () => ['translation', 'target', props.kind, accountId.value, targetId.value],
+  query: load,
 })
 
-const item = computed(() => state.value.item)
+const item = computed(() => state.value.data?.item ?? null)
+const languages = computed(() => state.value.data?.languages ?? [])
 const isZhEn = computed(() => item.value?.skill === 2)
 const showsLanguages = computed(() => (item.value?.skill ?? 0) >= 2)
 
@@ -74,20 +69,18 @@ const modes = computed(() => [
 ])
 
 const languageOptions = computed(() => {
-  if (!item.value) return state.value.languages
+  if (!item.value) return languages.value
   if (item.value.skill === 2) return zhEnLanguages
-  return [
-    ...new Set([...state.value.languages, item.value.source, item.value.target].filter(Boolean)),
-  ]
+  return [...new Set([...languages.value, item.value.source, item.value.target].filter(Boolean))]
 })
 
 async function save(setting: TranslationSetting): Promise<void> {
-  if (loginId == null || !item.value || saving.value) return
+  if (accountId.value == null || !item.value || saving.value) return
 
   saving.value = true
   try {
-    const updated = await changeTranslationTarget(props.kind, loginId, item.value.id, setting)
-    state.value = { ...state.value, item: updated }
+    await changeTranslationTarget(props.kind, accountId.value, item.value.id, setting)
+    await queryCache.invalidateQueries({ key: ['translation'] })
   } catch (error) {
     resultError.value = error instanceof Error ? error.message : String(error)
   } finally {
@@ -139,11 +132,6 @@ function changeTarget(target: string): void {
   const source = target === item.value.source ? item.value.target : item.value.source
   save({ skill: item.value.skill, source, target })
 }
-
-function hideBrokenImage(event: Event): void {
-  const image = event.currentTarget
-  if (image instanceof HTMLImageElement) image.hidden = true
-}
 </script>
 
 <template>
@@ -151,43 +139,29 @@ function hideBrokenImage(event: Event): void {
     <PageHeader :title="item?.name ?? $t('settings.title')" />
 
     <main class="p-4">
-      <div v-if="isLoading && !item" class="py-12 text-center text-body text-text-secondary">
-        {{ $t('translation.loading') }}
-      </div>
+      <QueryState :status="state.status" :error="state.error" @retry="reload()">
+        <template v-if="item">
+          <div class="flex flex-col items-center py-4 text-center">
+            <span
+              class="relative h-20 w-20 flex items-center justify-center overflow-hidden rounded-full bg-surface-muted text-2xl text-text-secondary"
+            >
+              {{ item.name.slice(0, 1) }}
+              <img
+                v-if="item.avatar"
+                :src="item.avatar"
+                alt=""
+                class="absolute inset-0 h-full w-full object-cover"
+                @error="hideBrokenImage"
+              />
+            </span>
+            <span class="mt-3 text-header font-semibold">{{ item.name }}</span>
+            <span v-if="item.number" class="mt-1 text-small text-text-secondary">
+              {{ $t('profile.userId', { id: item.number }) }}
+            </span>
+          </div>
 
-      <div v-else-if="errorMessage && !item" class="py-12 text-center">
-        <p class="text-body text-danger">{{ errorMessage }}</p>
-        <button
-          type="button"
-          class="mt-4 rounded-small bg-primary px-4 py-2 text-primary-text"
-          @click="reload()"
-        >
-          {{ $t('translation.retry') }}
-        </button>
-      </div>
-
-      <template v-else-if="item">
-        <div class="flex flex-col items-center py-4 text-center">
-          <span
-            class="relative h-20 w-20 flex items-center justify-center overflow-hidden rounded-full bg-surface-muted text-2xl text-text-secondary"
-          >
-            {{ item.name.slice(0, 1) }}
-            <img
-              v-if="item.avatar"
-              :src="item.avatar"
-              alt=""
-              class="absolute inset-0 h-full w-full object-cover"
-              @error="hideBrokenImage"
-            />
-          </span>
-          <span class="mt-3 text-header font-semibold">{{ item.name }}</span>
-          <span v-if="item.number" class="mt-1 text-small text-text-secondary">
-            {{ $t('profile.userId', { id: item.number }) }}
-          </span>
-        </div>
-
-        <!-- Temporarily hidden: non-translation sections; restore by uncommenting -->
-        <!-- ponytail: media/location/notifications/remarks rows are UI-only placeholders per design; native owns these features
+          <!-- Temporarily hidden: non-translation sections; restore by uncommenting -->
+          <!-- ponytail: media/location/notifications/remarks rows are UI-only placeholders per design; native owns these features
         <div class="mt-2 divide-y divide-stroke border border-stroke rounded-standard bg-surface">
           <div
             class="min-h-12 flex items-center justify-between px-4 text-body"
@@ -206,76 +180,76 @@ function hideBrokenImage(event: Event): void {
         </div>
         -->
 
-        <div class="mt-4 border border-stroke rounded-standard bg-surface p-4">
-          <div class="space-y-2" role="group" :aria-label="$t('translation.mode')">
-            <button
-              v-for="mode in modes"
-              :key="mode.skill"
-              type="button"
-              class="min-h-11 w-full rounded-standard border px-4 text-left text-2nd-body transition-colors"
-              :class="
-                item.skill === mode.skill
-                  ? 'border-primary bg-surface-selected text-text-primary'
-                  : 'border-stroke bg-surface text-text-secondary'
-              "
-              :aria-pressed="item.skill === mode.skill"
-              :disabled="saving"
-              @click="selectSkill(mode.skill)"
-            >
-              {{ mode.label }}
-            </button>
-          </div>
-
-          <div v-if="showsLanguages" class="mt-4">
-            <LanguagePickerDrawer
-              :model-value="item.source"
-              :disabled="saving || isZhEn"
-              :label="$t('translation.translateFrom')"
-              :languages="languageOptions"
-              :title="$t('translation.translateFrom')"
-              @update:model-value="changeSource"
-            />
-
-            <div class="my-2 flex justify-center">
+          <div class="mt-4 border border-stroke rounded-standard bg-surface p-4">
+            <div class="space-y-2" role="group" :aria-label="$t('translation.mode')">
               <button
+                v-for="mode in modes"
+                :key="mode.skill"
                 type="button"
-                class="h-11 w-11 touch-manipulation flex items-center justify-center rounded-full bg-surface-muted text-text-secondary focus-visible:ring-2 focus-visible:ring-primary/40 disabled:opacity-50"
-                :aria-label="$t('translation.swapLanguages')"
+                class="min-h-11 w-full rounded-standard border px-4 text-left text-2nd-body transition-colors"
+                :class="
+                  item.skill === mode.skill
+                    ? 'border-primary bg-surface-selected text-text-primary'
+                    : 'border-stroke bg-surface text-text-secondary'
+                "
+                :aria-pressed="item.skill === mode.skill"
                 :disabled="saving"
-                @click="swapLanguages"
+                @click="selectSkill(mode.skill)"
               >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="20"
-                  height="20"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  aria-hidden="true"
-                >
-                  <path d="m3 8 4-4 4 4" />
-                  <path d="M7 4v16" />
-                  <path d="m21 16-4 4-4-4" />
-                  <path d="M17 20V4" />
-                </svg>
+                {{ mode.label }}
               </button>
             </div>
 
-            <LanguagePickerDrawer
-              :model-value="item.target"
-              :disabled="saving || isZhEn"
-              :label="$t('translation.translateTo')"
-              :languages="languageOptions"
-              :title="$t('translation.translateTo')"
-              @update:model-value="changeTarget"
-            />
-          </div>
-        </div>
+            <div v-if="showsLanguages" class="mt-4">
+              <LanguagePickerDrawer
+                :model-value="item.source"
+                :disabled="saving || isZhEn"
+                :label="$t('translation.translateFrom')"
+                :languages="languageOptions"
+                :title="$t('translation.translateFrom')"
+                @update:model-value="changeSource"
+              />
 
-        <!--
+              <div class="my-2 flex justify-center">
+                <button
+                  type="button"
+                  class="h-11 w-11 touch-manipulation flex items-center justify-center rounded-full bg-surface-muted text-text-secondary focus-visible:ring-2 focus-visible:ring-primary/40 disabled:opacity-50"
+                  :aria-label="$t('translation.swapLanguages')"
+                  :disabled="saving"
+                  @click="swapLanguages"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    aria-hidden="true"
+                  >
+                    <path d="m3 8 4-4 4 4" />
+                    <path d="M7 4v16" />
+                    <path d="m21 16-4 4-4-4" />
+                    <path d="M17 20V4" />
+                  </svg>
+                </button>
+              </div>
+
+              <LanguagePickerDrawer
+                :model-value="item.target"
+                :disabled="saving || isZhEn"
+                :label="$t('translation.translateTo')"
+                :languages="languageOptions"
+                :title="$t('translation.translateTo')"
+                @update:model-value="changeTarget"
+              />
+            </div>
+          </div>
+
+          <!--
         <div class="mt-4 divide-y divide-stroke border border-stroke rounded-standard bg-surface">
           <div
             v-for="row in kind === 'friends'
@@ -290,7 +264,7 @@ function hideBrokenImage(event: Event): void {
               class="relative h-7 w-12 flex-none rounded-full bg-surface-muted"
               aria-hidden="true"
             >
-              <span class="absolute left-0.5 top-0.5 h-6 w-6 rounded-full bg-white shadow" />
+          <span class="absolute left-0.5 top-0.5 h-6 w-6 rounded-full bg-white shadow" />
             </span>
           </div>
           <div
@@ -303,16 +277,19 @@ function hideBrokenImage(event: Event): void {
         </div>
         -->
 
-        <RouterLink
-          v-if="kind === 'groups'"
-          :to="{ path: `/settings/groups/${item.id}/members`, query: { name: item.name } }"
-          class="mt-4 min-h-12 flex items-center justify-between border border-stroke rounded-standard bg-surface px-4 text-body"
-        >
-          {{ $t('profile.members') }}
-          <span aria-hidden="true" class="text-text-secondary">›</span>
-        </RouterLink>
+          <RouterLink
+            v-if="kind === 'groups'"
+            :to="{
+              path: `/settings/groups/${item.id}/members`,
+              query: { ...accountQuery, name: item.name },
+            }"
+            class="mt-4 min-h-12 flex items-center justify-between border border-stroke rounded-standard bg-surface px-4 text-body"
+          >
+            {{ $t('profile.members') }}
+            <span aria-hidden="true" class="text-text-secondary">›</span>
+          </RouterLink>
 
-        <!--
+          <!--
         <div class="mt-4 divide-y divide-stroke border border-stroke rounded-standard bg-surface">
           <div class="min-h-12 flex items-center px-4 text-body" aria-disabled="true">
             {{ $t('profile.clearHistory') }}
@@ -331,7 +308,8 @@ function hideBrokenImage(event: Event): void {
           </div>
         </div>
         -->
-      </template>
+        </template>
+      </QueryState>
     </main>
 
     <ResultModal

@@ -47,6 +47,36 @@ export interface GroupMembers {
   members: TranslationTarget[]
 }
 
+export interface SmartDevice {
+  userId: number
+  userNum: string
+  nick: string
+  avatar: string
+  product: string
+  imei: string
+}
+
+interface SmartDeviceDto {
+  user_id: number
+  user_num: string
+  nick: string
+  avatar: string
+  product: string
+  imei: string
+}
+
+export async function getSmartDevices(): Promise<SmartDevice[]> {
+  const response = await weilaFetch<{ devices: SmartDeviceDto[] }>('/v2/account/get-smart-devices')
+  return response.data.devices.map((device) => ({
+    userId: device.user_id,
+    userNum: device.user_num,
+    nick: device.nick,
+    avatar: device.avatar,
+    product: device.product,
+    imei: device.imei,
+  }))
+}
+
 export async function getTranslationLanguages(): Promise<string[]> {
   const response = await weilaFetch<{ langs: string[] }>('/v2/account/translate/get-countries-lang')
   return response.data.langs

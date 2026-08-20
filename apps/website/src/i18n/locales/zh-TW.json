@@ -19,8 +19,7 @@
     "title": "翻譯設定",
     "friends": "好友翻譯設定",
     "groups": "群組翻譯設定",
-    "devices": "裝置翻譯設定",
-    "pending": "待實作"
+    "devices": "裝置翻譯設定"
   },
   "translation": {
     "loading": "載入中…",
@@ -28,6 +27,7 @@
     "emptyFriends": "暫無好友。",
     "emptyGroups": "暫無群組。",
     "emptyMembers": "暫無群組成員。",
+    "emptyDevices": "暫無裝置。",
     "invalidLoginId": "登入資訊無效。",
     "invalidGroupId": "群組資訊無效。",
     "editSetting": "設定{name}的翻譯",

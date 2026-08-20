@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import { RouterLink, RouterView, useRoute } from 'vue-router'
 import PageHeader from '~/components/PageHeader.vue'
+import { useAccountId } from '~/composables/useAccountId'
 
 const route = useRoute()
+const { accountQuery } = useAccountId()
 </script>
 
 <template>
@@ -13,25 +15,14 @@ const route = useRoute()
     <main class="p-4">
       <div class="space-y-3">
         <RouterLink
-          v-for="item in ['friends', 'groups']"
+          v-for="item in ['friends', 'groups', 'devices']"
           :key="item"
-          :to="`/settings/${item}`"
+          :to="{ path: `/settings/${item}`, query: accountQuery }"
           class="card min-h-16 w-full flex items-center justify-between text-left"
         >
           <span class="text-body font-medium">{{ $t(`settings.${item}`) }}</span>
           <span aria-hidden="true" class="text-text-secondary">›</span>
         </RouterLink>
-
-        <button
-          type="button"
-          class="card min-h-16 w-full flex items-center justify-between text-left disabled:cursor-default"
-          disabled
-        >
-          <span class="text-body font-medium">{{ $t('settings.devices') }}</span>
-          <span class="rounded-small bg-surface-muted px-2 py-1 text-small text-text-secondary">
-            {{ $t('settings.pending') }}
-          </span>
-        </button>
       </div>
     </main>
   </div>

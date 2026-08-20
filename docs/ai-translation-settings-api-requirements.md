@@ -32,8 +32,6 @@
 ### 设备
 
 - 展示绑定设备并进入该设备下的好友/群组翻译设置
-- 展示设备流量卡、卡号、到期时间与状态
-- 支持勾选多台设备，统一续费一年
 
 ## 2. 最小 API 集合
 
@@ -78,7 +76,6 @@ GET /v2/ai-translation/account
 ```http
 GET /v2/ai-translation/products?scene=vip
 GET /v2/ai-translation/products?scene=token
-GET /v2/ai-translation/products?scene=sim_renewal
 ```
 
 ```json
@@ -110,18 +107,7 @@ Content-Type: application/json
 
 {
   "scene": "token",
-  "productId": "token_10000",
-  "deviceIds": []
-}
-```
-
-流量卡批量续费示例：
-
-```json
-{
-  "scene": "sim_renewal",
-  "productId": "sim_1y",
-  "deviceIds": ["device_1", "device_2"]
+  "productId": "token_10000"
 }
 ```
 
@@ -187,10 +173,8 @@ GET /v2/ai-translation/languages
 ### 2.6 好友列表
 
 ```http
-GET /v2/ai-translation/friends?deviceId={deviceId}&cursor={cursor}&limit=50
+GET /v2/ai-translation/friends?cursor={cursor}&limit=50
 ```
-
-`deviceId` 可选：为空时查询账号级好友；从设备入口进入时限定该设备。
 
 ```json
 {
@@ -221,7 +205,6 @@ PUT /v2/ai-translation/friends/{friendId}/setting
 Content-Type: application/json
 
 {
-  "deviceId": null,
   "mode": "premium_multi",
   "sourceLanguage": "ru-RU",
   "targetLanguage": "de-DE"
@@ -233,7 +216,7 @@ Content-Type: application/json
 ### 2.8 群组列表
 
 ```http
-GET /v2/ai-translation/groups?deviceId={deviceId}&cursor={cursor}&limit=50
+GET /v2/ai-translation/groups?cursor={cursor}&limit=50
 ```
 
 ```json
@@ -265,7 +248,6 @@ PUT /v2/ai-translation/groups/{groupId}/setting
 Content-Type: application/json
 
 {
-  "deviceId": null,
   "mode": "basic_zh_en",
   "sourceLanguage": null,
   "targetLanguage": null
@@ -277,7 +259,7 @@ Content-Type: application/json
 ### 2.10 群成员列表
 
 ```http
-GET /v2/ai-translation/groups/{groupId}/members?deviceId={deviceId}&cursor={cursor}&limit=50
+GET /v2/ai-translation/groups/{groupId}/members?cursor={cursor}&limit=50
 ```
 
 ```json
@@ -307,43 +289,40 @@ PUT /v2/ai-translation/groups/{groupId}/members/{memberId}/setting
 Content-Type: application/json
 
 {
-  "deviceId": null,
   "mode": "off"
 }
 ```
 
 成员设置按演示功能只需支持 `off | basic_zh_en`。
 
-### 2.12 设备列表
+### 2.12 设备列表（已实现）
 
 ```http
-GET /v2/ai-translation/devices
+POST /v2/account/get-smart-devices?appid=&et=&sign=&token=
 ```
+
+无请求体，用户身份从 token 鉴权上下文确定。设备本质上是机主名下的微喇用户账号：
 
 ```json
 {
   "errcode": 0,
-  "errmsg": "ok",
+  "errmsg": "请求成功",
   "data": {
-    "items": [
+    "devices": [
       {
-        "id": "device_1",
-        "model": "OP03",
-        "name": "微喇耳机Pro",
-        "voisId": "OP03",
-        "sim": {
-          "cardNoMasked": "******0002",
-          "status": "expired",
-          "expiresAt": "2026-08-01T00:00:00Z",
-          "renewable": true
-        }
+        "user_id": 1254025,
+        "user_num": "300000010187",
+        "nick": "wl300000010187",
+        "avatar": "https://cdn.voischat.cn/weila/avatar/user.png",
+        "product": "CF02S",
+        "imei": "866507071045100"
       }
     ]
   }
 }
 ```
 
-流量卡批量续费可直接复用 2.2 商品列表和 2.3 订单接口，不需要单独再造支付接口。
+设备下的好友/群组翻译设置复用现有 `/v2/account/translate/*` 接口，把 `user_id` 换成设备的 `user_id` 即可。流量卡续费暂无接口支撑，首版不做。
 
 ## 3. 公共数据模型
 
@@ -361,24 +340,21 @@ interface TranslationSetting {
 
 ## 4. 后端必须处理的规则
 
-- 校验当前用户是否拥有目标好友、群组、群成员和设备；禁止仅凭 ID 修改他人配置。
+- 校验 token 对请求中 `user_id` 的管辖权（本人或名下设备）；禁止仅凭 ID 读写他人配置。
 - 校验 VIP/Token 权益是否允许 `premium_zh_en` 与 `premium_multi`。
 - 校验语言代码和可用语言对，不信任客户端传值。
 - 更新设置需幂等，并返回最终服务端状态。
 - 列表支持分页、空状态和已删除对象。
 - 商品价格由服务端计算；创建订单时忽略客户端金额。
-- 批量流量卡续费由服务端重新校验设备归属、可续费状态和总价。
 - 支付订单使用幂等键；权益发放依赖支付平台回调并防止重复发放。
-- 卡号只返回脱敏值；完整卡号如无业务必要不要下发。
-- 建议使用明确业务错误码：无权限、权益不足、Token 不足、非法语言对、群翻译未开启、设备不可续费、订单状态异常。
+- 建议使用明确业务错误码：无权限、权益不足、Token 不足、非法语言对、群翻译未开启、订单状态异常。
 
 ## 5. 待产品/后端确认
 
-1. 设置是账号级还是设备级？演示同时提供两个入口，API 上用可选 `deviceId` 表达，但最终优先级需要确定。
+1. ~~设置是账号级还是设备级？~~ 已确定：双入口并存。设备 = 机主名下用户账号，设备入口用设备 `user_id` 调同一组接口。
 2. “中英互译”和“精品中英翻译”的计费及能力差异是什么？
 3. 群成员配置是否只允许关闭/中英互译，还是也应支持精品多国语言？
 4. 多国语言是否允许源/目标语言相同，以及是否支持所有 30×29 个方向？
 5. Token 消耗单位、扣费时机和余额不足时的行为是什么？
-6. 流量卡续费周期、单价是否固定，是否允许不同设备选择不同套餐？
-7. 支付渠道、WebView 拉起支付协议及支付结果通知方式需要与原生端确认。
-8. 是否需要搜索好友/群组、批量设置和修改审计记录？演示页未体现，首版可不做。
+6. 支付渠道、WebView 拉起支付协议及支付结果通知方式需要与原生端确认。
+7. 是否需要搜索好友/群组、批量设置和修改审计记录？演示页未体现，首版可不做。

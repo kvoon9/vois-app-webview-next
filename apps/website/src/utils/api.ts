@@ -11,7 +11,7 @@ interface WeilaResponse<T> {
 
 interface RequestOptions {
   method?: 'GET' | 'POST'
-  body?: Record<string, unknown>
+  body?: Record<string, string | number>
 }
 
 const APP_ID = import.meta.env.VITE_APP_ID
@@ -39,13 +39,14 @@ export async function weilaFetch<T>(
 
   if (!response.ok) throw new Error(`HTTP错误: ${response.status}`)
 
+  // SAFETY: the server contract guarantees the { errcode, errmsg, data } envelope; data shape is the per-endpoint T
   const data = (await response.json()) as WeilaResponse<T>
   if (data.errcode !== 0) throw new Error(`${data.errcode}: ${data.errmsg}`)
 
   return data
 }
 
-export function generateV2Query(appid: string, appkey: string): Record<string, string> {
+export function generateV2Query(appid: string, appkey: string) {
   const et = Math.floor(Date.now() / 1000)
   const appSign = md5(`${et}${appkey}`)
 

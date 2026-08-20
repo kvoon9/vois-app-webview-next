@@ -2,15 +2,11 @@ import { useSessionStorage } from '@vueuse/core'
 import { useRouteQuery } from '@vueuse/router'
 import { watch } from 'vue'
 
-import { DEFAULT_LOCALE, SUPPORTED_LOCALES, i18n, type SupportedLocale } from '~/i18n'
-
-function isSupportedLocale(value: unknown): value is SupportedLocale {
-  return SUPPORTED_LOCALES.includes(value as SupportedLocale)
-}
+import { DEFAULT_LOCALE, i18n, isSupportedLocale, type SupportedLocale } from '~/i18n'
 
 export function useLangQuery(): void {
   const launchLang = new URLSearchParams(window.location.search).get('lang')
-  const lang = useRouteQuery('lang')
+  const lang = useRouteQuery<string | null>('lang')
   const storedLocale = useSessionStorage<SupportedLocale>('locale', DEFAULT_LOCALE)
 
   watch(

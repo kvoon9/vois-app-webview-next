@@ -1,3 +1,4 @@
+import { safeParse, string } from 'valibot'
 import { onScopeDispose } from 'vue'
 
 type DebugEvent = NetworkEvent | ConsoleEvent | ErrorEvent | LifecycleEvent
@@ -154,11 +155,12 @@ export function useWebviewDebug(enabled: boolean): void {
 
     let requestBody: unknown
     if (init?.body) {
-      if (typeof init.body === 'string') {
+      const bodyText = safeParse(string(), init.body)
+      if (bodyText.success) {
         try {
-          requestBody = JSON.parse(init.body)
+          requestBody = JSON.parse(bodyText.output)
         } catch {
-          requestBody = init.body
+          requestBody = bodyText.output
         }
       }
     }

@@ -2,7 +2,6 @@ import { ref, shallowRef, toValue, type MaybeRefOrGetter, type Ref } from 'vue'
 import {
   getDotPath,
   safeParseAsync,
-  type BaseIssue,
   type GenericSchema,
   type GenericSchemaAsync,
   type InferInput,
@@ -11,9 +10,7 @@ import {
 /**
  * Generic form schema whose input shape is an object keyed by field names.
  */
-type FormSchema =
-  | GenericSchema<Record<string, unknown>, unknown, BaseIssue<unknown>>
-  | GenericSchemaAsync<Record<string, unknown>, unknown, BaseIssue<unknown>>
+type FormSchema = GenericSchema | GenericSchemaAsync
 
 /**
  * Reusable form validation powered by valibot.
@@ -25,9 +22,9 @@ type FormSchema =
  */
 export function useFormValidation<TSchema extends FormSchema>(
   schema: TSchema,
-  initialData: MaybeRefOrGetter<InferInput<TSchema>>,
+  initialData: MaybeRefOrGetter<InferInput<TSchema> & object>,
 ) {
-  type Data = InferInput<TSchema>
+  type Data = InferInput<TSchema> & object
 
   // `ref` is used here because form fields are bound deeply in templates and
   // need fine-grained updates when individual properties change.
@@ -92,6 +89,7 @@ export function useFormValidation<TSchema extends FormSchema>(
   }
 
   return {
+    // SAFETY: form data is a plain object of primitives, so UnwrapRef<Data> is structurally Data
     data: data as Ref<Data>,
     errors,
     resetErrors,

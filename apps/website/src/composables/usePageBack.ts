@@ -4,6 +4,7 @@ import { useWebviewBridge } from '~/composables/useWebviewBridge'
 
 /** Vue Router stores previous location on `history.state.back` when one exists. */
 function canGoBackInHistory(): boolean {
+  // SAFETY: vue-router maintains history.state as an object with an optional back field
   const state = window.history.state as { back?: unknown } | null
   return state != null && state.back != null
 }

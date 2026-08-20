@@ -19,6 +19,7 @@ import { weilaFetch } from '~/utils/api'
 
 const { t, tm } = useI18n({ useScope: 'global' })
 
+// SAFETY: locale JSON defines feedback.categories as a flat string map
 const categories = computed(() => Object.values(tm('feedback.categories')) as string[])
 
 const schema = object({

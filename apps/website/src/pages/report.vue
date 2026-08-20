@@ -19,6 +19,7 @@ import { weilaFetch } from '~/utils/api'
 
 const { t, tm } = useI18n({ useScope: 'global' })
 
+// SAFETY: locale JSON defines report.types as a flat string map
 const problemTypes = computed(() => Object.values(tm('report.types')) as string[])
 
 const schema = object({

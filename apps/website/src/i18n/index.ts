@@ -21,8 +21,8 @@ export const messages = {
   'zh-TW': zhTW,
 }
 
-function isSupportedLocale(locale: string): locale is SupportedLocale {
-  return SUPPORTED_LOCALES.includes(locale as SupportedLocale)
+export function isSupportedLocale(locale: string | null | undefined): locale is SupportedLocale {
+  return SUPPORTED_LOCALES.some((supported) => supported === locale)
 }
 
 function syncValibotLocale(locale: string): void {

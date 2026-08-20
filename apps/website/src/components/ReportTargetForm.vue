@@ -17,6 +17,7 @@ import {
 } from 'valibot'
 import PageHeader from '~/components/PageHeader.vue'
 import ResultModal from '~/components/ResultModal.vue'
+import { parseAccountId } from '~/composables/useAccountId'
 import { useFormValidation } from '~/composables/useFormValidation'
 import { weilaFetch } from '~/utils/api'
 
@@ -27,15 +28,13 @@ const props = defineProps<{
 const route = useRoute()
 const { t, tm } = useI18n({ useScope: 'global' })
 
+// SAFETY: locale JSON defines reportTarget.reasons as a flat string map
 const reasons = computed(() => Object.values(tm('reportTarget.reasons')) as string[])
 
 const title = computed(() => t(`reportTarget.${props.target}.title`))
 const targetId = computed(() => {
   const rawId = route.query.id
-  if (typeof rawId !== 'string' || !/^[1-9]\d*$/.test(rawId)) return null
-
-  const id = Number(rawId)
-  return Number.isSafeInteger(id) ? id : null
+  return parseAccountId(Array.isArray(rawId) ? rawId[0] : rawId)
 })
 
 const schema = object({

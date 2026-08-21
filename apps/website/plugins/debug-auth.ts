@@ -21,8 +21,11 @@ type JsonObject = Record<string, JsonValue>
 export function debugAuthPlugin(): Plugin {
   const isDebug = process.argv.includes('--debug')
   const sessionStartedAt = Date.now()
-  mkdirSync(outputDir, { recursive: true, mode: 0o700 })
-  writeFileSync(eventsFile, '', { mode: 0o600 })
+  // Only claim the events file in debug mode; a plain dev server must not wipe captured events
+  if (isDebug) {
+    mkdirSync(outputDir, { recursive: true, mode: 0o700 })
+    writeFileSync(eventsFile, '', { mode: 0o600 })
+  }
 
   const events = createEventsMiddleware(sessionStartedAt)
 

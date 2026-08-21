@@ -20,6 +20,10 @@ jobs:
           node-version: lts/*
       - run: corepack enable && pnpm install --frozen-lockfile
       - run: pnpm exec vp run website#build
+        env:
+          VITE_APP_ID: ${{ secrets.VITE_APP_ID }}
+          VITE_APP_KEY: ${{ secrets.VITE_APP_KEY }}
+          VITE_SENTRY_DSN: ${{ secrets.VITE_SENTRY_DSN }}
       - run: cd apps/website/dist && zip -qr "../../../vois-app-webview-${GITHUB_REF_NAME}.zip" .
       - run: pnpm dlx changelogithub@14 --assets "vois-app-webview-${GITHUB_REF_NAME}.zip"
         env:

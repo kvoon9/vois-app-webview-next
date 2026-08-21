@@ -19,6 +19,7 @@ import PageHeader from '~/components/PageHeader.vue'
 import ResultModal from '~/components/ResultModal.vue'
 import { parseAccountId } from '~/composables/useAccountId'
 import { useFormValidation } from '~/composables/useFormValidation'
+import { useWebviewBridge } from '~/composables/useWebviewBridge'
 import { weilaFetch } from '~/utils/api'
 
 const props = defineProps<{
@@ -89,6 +90,12 @@ async function handleSubmit(): Promise<void> {
     isSubmitting.value = false
   }
 }
+
+/** Success confirm dismisses the page via native bridge; error just closes the modal. */
+function closeModal(): void {
+  if (modal.value?.type === 'success') useWebviewBridge()?.send('close-page')
+  modal.value = null
+}
 </script>
 
 <template>
@@ -146,6 +153,6 @@ async function handleSubmit(): Promise<void> {
       </form>
     </main>
 
-    <ResultModal v-if="modal" :type="modal.type" :message="modal.message" @close="modal = null" />
+    <ResultModal v-if="modal" :type="modal.type" :message="modal.message" @close="closeModal" />
   </div>
 </template>

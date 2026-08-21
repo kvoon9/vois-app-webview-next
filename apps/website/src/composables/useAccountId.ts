@@ -8,27 +8,21 @@ export function parseAccountId(value: string | null | undefined): number | null 
 }
 
 /**
- * Current translation account: the device `user-id` when inside the device flow,
- * otherwise the owner's `login-id`.
+ * Current translation account: the owner's `login-id`, or the device's id
+ * passed as `login-id` when inside the device flow.
  */
 export function useAccountId() {
   const loginIdQuery = useRouteQuery<string | null>('login-id')
-  const userIdQuery = useRouteQuery<string | null>('user-id')
 
   // Hash routing never touches the outer ?search, so launch-time login-id stays readable there
   const launchLoginId = parseAccountId(new URLSearchParams(window.location.search).get('login-id'))
 
-  const loginId = computed(() => parseAccountId(loginIdQuery.value) ?? launchLoginId)
-  const userId = computed(() => parseAccountId(userIdQuery.value))
-  const accountId = computed(() => userId.value ?? loginId.value)
+  const accountId = computed(() => parseAccountId(loginIdQuery.value) ?? launchLoginId)
 
   // Spread into router.push/RouterLink query to keep the account context across navigation
-  const accountQuery = computed(() => {
-    const query: Record<string, string> = {}
-    if (loginId.value != null) query['login-id'] = String(loginId.value)
-    if (userId.value != null) query['user-id'] = String(userId.value)
-    return query
-  })
+  const accountQuery = computed(() =>
+    accountId.value == null ? {} : { 'login-id': String(accountId.value) },
+  )
 
-  return { accountId, userId, accountQuery }
+  return { accountId, accountQuery }
 }

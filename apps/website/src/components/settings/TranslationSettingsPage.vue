@@ -22,7 +22,7 @@ const router = useRouter()
 const route = useRoute()
 const { accountId, accountQuery } = useAccountId()
 
-// Device flow enters here directly with ?user-id&name; show the device name as title
+// Device flow enters here directly with ?login-id&name; show the device name as title
 const deviceName = computed(() => {
   const name = route.query.name
   return (Array.isArray(name) ? name[0] : name) || ''

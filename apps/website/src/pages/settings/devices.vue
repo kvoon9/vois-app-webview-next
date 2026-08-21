@@ -19,7 +19,7 @@ function openDevice(device: SmartDevice): void {
   // 设备没有群组（后端确认），直接进入该设备的好友翻译设置
   router.push({
     path: '/settings/friends',
-    query: { ...accountQuery.value, 'user-id': String(device.userId), name: device.nick },
+    query: { ...accountQuery.value, 'login-id': String(device.userId), name: device.nick },
   })
 }
 </script>

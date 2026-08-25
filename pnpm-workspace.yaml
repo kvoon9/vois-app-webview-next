@@ -8,11 +8,12 @@ catalogMode: prefer
 catalogs:
   vue:
     '@pinia/colada': ^1.4.2
+    '@vue/runtime-vapor': 3.6.0-rc.5
     '@vueuse/core': ^14.4.0
     '@vueuse/router': ^14.4.0
     pinia: ^4.0.3
     reka-ui: ^2.10.3
-    vue: ^3.5.41
+    vue: 3.6.0-rc.5
     vue-i18n: ^11.4.8
     vue-router: ^5.2.0
   build:
@@ -43,3 +44,16 @@ peerDependencyRules:
 allowBuilds:
   core-js: true
   vue-demi: true
+minimumReleaseAgeExclude:
+  - '@vue/compiler-core@3.6.0-rc.5'
+  - '@vue/compiler-dom@3.6.0-rc.5'
+  - '@vue/compiler-sfc@3.6.0-rc.5'
+  - '@vue/compiler-ssr@3.6.0-rc.5'
+  - '@vue/reactivity@3.6.0-rc.5'
+  - '@vue/runtime-core@3.6.0-rc.5'
+  - '@vue/runtime-dom@3.6.0-rc.5'
+  - '@vue/runtime-vapor@3.6.0-rc.5'
+  - '@vue/server-renderer@3.6.0-rc.5'
+  - '@vue/shared@3.6.0-rc.5'
+  - vue@3.6.0-rc.5
+  - '@vue/compiler-vapor@3.6.0-rc.5'

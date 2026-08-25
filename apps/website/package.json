@@ -12,6 +12,7 @@
     "@pinia/colada": "catalog:vue",
     "@valibot/i18n": "^1.2.0",
     "@vois/webview-bridge": "^0.1.0",
+    "@vue/runtime-vapor": "catalog:vue",
     "@vueuse/core": "catalog:vue",
     "@vueuse/router": "catalog:vue",
     "md5": "^2.3.0",

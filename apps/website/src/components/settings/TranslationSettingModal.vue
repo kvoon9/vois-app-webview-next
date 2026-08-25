@@ -3,12 +3,12 @@ import { computed, shallowRef } from 'vue'
 import { useI18n } from 'vue-i18n'
 import BaseModal from '~/components/BaseModal.vue'
 import LanguagePickerDrawer from '~/components/settings/LanguagePickerDrawer.vue'
+import { nextSettingForSkill, swapLanguagePair, ZH_EN_LANGUAGES } from '~/utils/translation-setting'
 import type {
   TranslationSetting,
   TranslationSkill,
   TranslationTarget,
 } from '~/utils/translation-api'
-import { translationLanguageSubtag } from '~/utils/translation-language'
 
 const props = withDefaults(
   defineProps<{
@@ -29,7 +29,6 @@ const emit = defineEmits<{
 }>()
 
 const { t } = useI18n({ useScope: 'global' })
-const zhEnLanguages = ['zh-CN', 'en-US']
 const skill = shallowRef<TranslationSkill>(props.item.skill)
 const source = shallowRef(props.item.source || 'zh-CN')
 const target = shallowRef(props.item.target || 'en-US')
@@ -42,7 +41,7 @@ const modes = computed(() => [
 ])
 
 const languageOptions = computed(() => {
-  if (skill.value === 2) return zhEnLanguages
+  if (skill.value === 2) return [...ZH_EN_LANGUAGES]
   return [...new Set([...props.languages, source.value, target.value].filter(Boolean))]
 })
 
@@ -59,35 +58,27 @@ const canConfirm = computed(
 
 function selectSkill(nextSkill: TranslationSkill): void {
   skill.value = nextSkill
-  if (nextSkill === 0) {
-    source.value = ''
-    target.value = ''
-    return
-  }
-  if (nextSkill === 1) {
-    source.value = 'zh-CN'
-    target.value = 'en-US'
-    return
-  }
-  if (nextSkill === 2) {
-    source.value = translationLanguageSubtag(source.value) === 'en' ? 'en-US' : 'zh-CN'
-    target.value = source.value === 'zh-CN' ? 'en-US' : 'zh-CN'
-    return
-  }
-
-  const options = languageOptions.value
-  if (!options.includes(source.value)) source.value = options[0] ?? ''
-  if (!options.includes(target.value) || target.value === source.value) {
-    target.value = options.find((code) => code !== source.value) ?? ''
+  const next = nextSettingForSkill(
+    { skill: skill.value, source: source.value, target: target.value },
+    nextSkill,
+    languageOptions.value,
+  )
+  if (next) {
+    source.value = next.source
+    target.value = next.target
   }
 }
 
 if (skill.value === 2 || (!props.memberOnly && skill.value !== 3)) selectSkill(skill.value)
 
 function swapLanguages(): void {
-  const previousSource = source.value
-  source.value = target.value
-  target.value = previousSource
+  const swapped = swapLanguagePair({
+    skill: skill.value,
+    source: source.value,
+    target: target.value,
+  })
+  source.value = swapped.source
+  target.value = swapped.target
 }
 
 function confirm(): void {

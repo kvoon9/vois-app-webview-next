@@ -17,6 +17,7 @@ import {
 } from 'valibot'
 import PageHeader from '~/components/PageHeader.vue'
 import ResultModal from '~/components/ResultModal.vue'
+import { MAX_REPORT_CONTENT_LENGTH } from '~/constants'
 import { parseAccountId } from '~/composables/useAccountId'
 import { useFormValidation } from '~/composables/useFormValidation'
 import { useWebviewBridge } from '~/composables/useWebviewBridge'
@@ -45,7 +46,7 @@ const schema = object({
     string(),
     trim(),
     nonEmpty(() => t('validation.required')),
-    maxLength(500),
+    maxLength(MAX_REPORT_CONTENT_LENGTH),
   ),
 })
 
@@ -137,7 +138,7 @@ function closeModal(): void {
         <textarea
           id="report-remark"
           v-model="data.content"
-          :maxlength="500"
+          :maxlength="MAX_REPORT_CONTENT_LENGTH"
           rows="5"
           class="input-field min-h-29 text-2nd-body"
           :placeholder="$t(`reportTarget.${target}.placeholder`)"

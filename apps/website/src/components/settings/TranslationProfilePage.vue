@@ -8,6 +8,12 @@ import ResultModal from '~/components/ResultModal.vue'
 import LanguagePickerDrawer from '~/components/settings/LanguagePickerDrawer.vue'
 import QueryState from '~/components/settings/QueryState.vue'
 import { parseAccountId, useAccountId } from '~/composables/useAccountId'
+import {
+  pickLanguagePair,
+  nextSettingForSkill,
+  swapLanguagePair,
+  ZH_EN_LANGUAGES,
+} from '~/utils/translation-setting'
 import { hideBrokenImage } from '~/utils/image'
 import {
   changeTranslationTarget,
@@ -18,7 +24,6 @@ import {
   type TranslationTarget,
   type TranslationTargetKind,
 } from '~/utils/translation-api'
-import { translationLanguageSubtag } from '~/utils/translation-language'
 
 const props = defineProps<{
   kind: TranslationTargetKind
@@ -30,8 +35,6 @@ const { accountId, accountQuery } = useAccountId()
 const queryCache = useQueryCache()
 const saving = shallowRef(false)
 const resultError = shallowRef<string | null>(null)
-
-const zhEnLanguages = ['zh-CN', 'en-US']
 
 const targetId = computed(() => {
   const raw = route.params[props.kind === 'friends' ? 'id' : 'groupId']
@@ -70,7 +73,7 @@ const modes = computed(() => [
 
 const languageOptions = computed(() => {
   if (!item.value) return languages.value
-  if (item.value.skill === 2) return zhEnLanguages
+  if (item.value.skill === 2) return [...ZH_EN_LANGUAGES]
   return [...new Set([...languages.value, item.value.source, item.value.target].filter(Boolean))]
 })
 
@@ -89,48 +92,24 @@ async function save(setting: TranslationSetting): Promise<void> {
 }
 
 function selectSkill(skill: TranslationSkill): void {
-  if (!item.value || item.value.skill === skill) return
-
-  let source = item.value.source
-  let target = item.value.target
-
-  if (skill === 0) {
-    source = ''
-    target = ''
-  } else if (skill === 1) {
-    source = 'zh-CN'
-    target = 'en-US'
-  } else if (skill === 2) {
-    source = translationLanguageSubtag(source) === 'en' ? 'en-US' : 'zh-CN'
-    target = source === 'zh-CN' ? 'en-US' : 'zh-CN'
-  } else {
-    const options = languageOptions.value
-    if (!options.includes(source)) source = options[0] ?? ''
-    if (!options.includes(target) || target === source) {
-      target = options.find((code) => code !== source) ?? ''
-    }
-    if (!source || !target) return
-  }
-
-  save({ skill, source, target })
+  if (!item.value) return
+  const next = nextSettingForSkill(item.value, skill, languageOptions.value)
+  if (next) save(next)
 }
 
 function swapLanguages(): void {
   if (!item.value) return
-  save({ skill: item.value.skill, source: item.value.target, target: item.value.source })
+  save(swapLanguagePair(item.value))
 }
 
 function changeSource(source: string): void {
   if (!item.value) return
-  // Picking the current target swaps the pair instead of saving an invalid same-language setting
-  const target = source === item.value.target ? item.value.source : item.value.target
-  save({ skill: item.value.skill, source, target })
+  save(pickLanguagePair(item.value, 'source', source))
 }
 
 function changeTarget(target: string): void {
   if (!item.value) return
-  const source = target === item.value.source ? item.value.target : item.value.source
-  save({ skill: item.value.skill, source, target })
+  save(pickLanguagePair(item.value, 'target', target))
 }
 </script>
 

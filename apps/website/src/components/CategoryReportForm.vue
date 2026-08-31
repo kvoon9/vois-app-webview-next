@@ -102,11 +102,11 @@ function closeModal(): void {
 
 <template>
   <div class="min-h-svh bg-surface text-text-primary">
-    <PageHeader :title="$t(`${i18nNamespace}.title`)" />
+    <PageHeader :title="t(`${i18nNamespace}.title`)" />
     <main class="p-4">
       <form novalidate @submit.prevent="handleSubmit">
         <section>
-          <h2 class="section-title mb-4">{{ $t(`${i18nNamespace}.${sectionLabelKey}`) }}</h2>
+          <h2 class="section-title mb-4">{{ t(`${i18nNamespace}.${sectionLabelKey}`) }}</h2>
           <div class="space-y-3">
             <div v-for="i in Math.ceil(items.length / 2)" :key="i" class="flex">
               <button
@@ -130,13 +130,13 @@ function closeModal(): void {
         </section>
 
         <section>
-          <h2 class="section-title mt-6 mb-4">{{ $t(`${i18nNamespace}.${textareaLabelKey}`) }}</h2>
+          <h2 class="section-title mt-6 mb-4">{{ t(`${i18nNamespace}.${textareaLabelKey}`) }}</h2>
           <textarea
             v-model="data.content"
             :maxlength="MAX_REPORT_CONTENT_LENGTH"
             rows="6"
             class="input-field"
-            :placeholder="$t(`${i18nNamespace}.${placeholderKey}`)"
+            :placeholder="t(`${i18nNamespace}.${placeholderKey}`)"
             @blur="validateField('content')"
           />
           <p class="text-right text-small text-text-secondary mt-2">
@@ -148,7 +148,7 @@ function closeModal(): void {
         </section>
 
         <button type="submit" class="btn-primary mt-6" :disabled="isSubmitting">
-          {{ $t(`${i18nNamespace}.${submitKey}`) }}
+          {{ t(`${i18nNamespace}.${submitKey}`) }}
         </button>
       </form>
     </main>

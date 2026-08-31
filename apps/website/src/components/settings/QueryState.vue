@@ -1,5 +1,8 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 
 const props = defineProps<{
   status: 'pending' | 'error' | 'success'
@@ -17,7 +20,7 @@ const errorMessage = computed(() => props.error?.message ?? '')
 
 <template>
   <div v-if="status === 'pending'" class="py-12 text-center text-body text-text-secondary">
-    {{ $t('translation.loading') }}
+    {{ t('translation.loading') }}
   </div>
 
   <div v-else-if="status === 'error'" class="py-12 text-center">
@@ -27,7 +30,7 @@ const errorMessage = computed(() => props.error?.message ?? '')
       class="mt-4 rounded-small bg-primary px-4 py-2 text-primary-text"
       @click="$emit('retry')"
     >
-      {{ $t('translation.retry') }}
+      {{ t('translation.retry') }}
     </button>
   </div>
 

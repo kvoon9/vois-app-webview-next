@@ -86,7 +86,7 @@ async function save(setting: TranslationSetting): Promise<void> {
         :status="state.status"
         :error="state.error"
         :empty="items.length === 0"
-        :empty-text="$t('translation.emptyMembers')"
+        :empty-text="t('translation.emptyMembers')"
         @retry="reload()"
       >
         <TranslationTargetList

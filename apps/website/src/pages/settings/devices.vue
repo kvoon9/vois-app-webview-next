@@ -1,12 +1,14 @@
 <script setup lang="ts">
 import { useQuery } from '@pinia/colada'
 import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import PageHeader from '~/components/PageHeader.vue'
 import QueryState from '~/components/settings/QueryState.vue'
 import { useAccountId } from '~/composables/useAccountId'
 import { hideBrokenImage } from '~/utils/image'
 import { getSmartDevices, type SmartDevice } from '~/utils/translation-api'
 
+const { t } = useI18n()
 const router = useRouter()
 const { accountQuery } = useAccountId()
 
@@ -26,14 +28,14 @@ function openDevice(device: SmartDevice): void {
 
 <template>
   <div class="min-h-screen min-h-svh bg-surface text-text-primary">
-    <PageHeader :title="$t('settings.devices')" />
+    <PageHeader :title="t('settings.devices')" />
 
     <main class="p-4">
       <QueryState
         :status="state.status"
         :error="state.error"
         :empty="state.data?.length === 0"
-        :empty-text="$t('translation.emptyDevices')"
+        :empty-text="t('translation.emptyDevices')"
         @retry="reload()"
       >
         <ul class="space-y-3">

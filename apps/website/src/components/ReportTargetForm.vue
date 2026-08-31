@@ -107,7 +107,7 @@ function closeModal(): void {
       <form novalidate @submit.prevent="handleSubmit">
         <fieldset>
           <legend class="mb-3 text-2nd-body font-semibold">
-            {{ $t('reportTarget.selectReasons') }}
+            {{ t('reportTarget.selectReasons') }}
           </legend>
           <div class="overflow-hidden rounded-standard bg-surface-field">
             <label
@@ -133,7 +133,7 @@ function closeModal(): void {
         </fieldset>
 
         <label class="mt-8 mb-3 block text-2nd-body font-semibold" for="report-remark">
-          {{ $t('reportTarget.remark') }}
+          {{ t('reportTarget.remark') }}
         </label>
         <textarea
           id="report-remark"
@@ -141,7 +141,7 @@ function closeModal(): void {
           :maxlength="MAX_REPORT_CONTENT_LENGTH"
           rows="5"
           class="input-field min-h-29 text-2nd-body"
-          :placeholder="$t(`reportTarget.${target}.placeholder`)"
+          :placeholder="t(`reportTarget.${target}.placeholder`)"
           @blur="validateField('content')"
         />
         <p v-if="errors.content" class="mt-2 text-small text-danger">
@@ -149,7 +149,7 @@ function closeModal(): void {
         </p>
 
         <button type="submit" class="btn-primary mt-4" :disabled="isSubmitting">
-          {{ $t('reportTarget.submit') }}
+          {{ t('reportTarget.submit') }}
         </button>
       </form>
     </main>

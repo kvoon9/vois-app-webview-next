@@ -115,7 +115,7 @@ function changeTarget(target: string): void {
 
 <template>
   <div class="min-h-screen min-h-svh bg-surface text-text-primary">
-    <PageHeader :title="item?.name ?? $t('settings.title')" />
+    <PageHeader :title="item?.name ?? t('settings.title')" />
 
     <main class="p-4">
       <QueryState :status="state.status" :error="state.error" @retry="reload()">
@@ -135,7 +135,7 @@ function changeTarget(target: string): void {
             </span>
             <span class="mt-3 text-header font-semibold">{{ item.name }}</span>
             <span v-if="item.number" class="mt-1 text-small text-text-secondary">
-              {{ $t('profile.userId', { id: item.number }) }}
+              {{ t('profile.userId', { id: item.number }) }}
             </span>
           </div>
 
@@ -146,21 +146,21 @@ function changeTarget(target: string): void {
             class="min-h-12 flex items-center justify-between px-4 text-body"
             aria-disabled="true"
           >
-            {{ $t('profile.media') }}
+            {{ t('profile.media') }}
             <span aria-hidden="true" class="text-text-secondary">›</span>
           </div>
           <div
             class="min-h-12 flex items-center justify-between px-4 text-body"
             aria-disabled="true"
           >
-            {{ $t('profile.location') }}
+            {{ t('profile.location') }}
             <span aria-hidden="true" class="text-text-secondary">›</span>
           </div>
         </div>
         -->
 
           <div class="mt-4 border border-stroke rounded-standard bg-surface p-4">
-            <div class="space-y-2" role="group" :aria-label="$t('translation.mode')">
+            <div class="space-y-2" role="group" :aria-label="t('translation.mode')">
               <button
                 v-for="mode in modes"
                 :key="mode.skill"
@@ -183,9 +183,9 @@ function changeTarget(target: string): void {
               <LanguagePickerDrawer
                 :model-value="item.source"
                 :disabled="saving || isZhEn"
-                :label="$t('translation.translateFrom')"
+                :label="t('translation.translateFrom')"
                 :languages="languageOptions"
-                :title="$t('translation.translateFrom')"
+                :title="t('translation.translateFrom')"
                 @update:model-value="changeSource"
               />
 
@@ -193,7 +193,7 @@ function changeTarget(target: string): void {
                 <button
                   type="button"
                   class="h-11 w-11 touch-manipulation flex items-center justify-center rounded-full bg-surface-muted text-text-secondary focus-visible:ring-2 focus-visible:ring-primary/40 disabled:opacity-50"
-                  :aria-label="$t('translation.swapLanguages')"
+                  :aria-label="t('translation.swapLanguages')"
                   :disabled="saving"
                   @click="swapLanguages"
                 >
@@ -220,9 +220,9 @@ function changeTarget(target: string): void {
               <LanguagePickerDrawer
                 :model-value="item.target"
                 :disabled="saving || isZhEn"
-                :label="$t('translation.translateTo')"
+                :label="t('translation.translateTo')"
                 :languages="languageOptions"
-                :title="$t('translation.translateTo')"
+                :title="t('translation.translateTo')"
                 @update:model-value="changeTarget"
               />
             </div>
@@ -238,7 +238,7 @@ function changeTarget(target: string): void {
             class="min-h-12 flex items-center justify-between px-4 text-body"
             aria-disabled="true"
           >
-            {{ $t(row) }}
+            {{ t(row) }}
             <span
               class="relative h-7 w-12 flex-none rounded-full bg-surface-muted"
               aria-hidden="true"
@@ -250,7 +250,7 @@ function changeTarget(target: string): void {
             class="min-h-12 flex items-center justify-between px-4 text-body"
             aria-disabled="true"
           >
-            {{ $t('profile.editRemarks') }}
+            {{ t('profile.editRemarks') }}
             <span aria-hidden="true" class="text-text-secondary">›</span>
           </div>
         </div>
@@ -264,14 +264,14 @@ function changeTarget(target: string): void {
             }"
             class="mt-4 min-h-12 flex items-center justify-between border border-stroke rounded-standard bg-surface px-4 text-body"
           >
-            {{ $t('profile.members') }}
+            {{ t('profile.members') }}
             <span aria-hidden="true" class="text-text-secondary">›</span>
           </RouterLink>
 
           <!--
         <div class="mt-4 divide-y divide-stroke border border-stroke rounded-standard bg-surface">
           <div class="min-h-12 flex items-center px-4 text-body" aria-disabled="true">
-            {{ $t('profile.clearHistory') }}
+            {{ t('profile.clearHistory') }}
           </div>
           <RouterLink
             :to="{
@@ -280,10 +280,10 @@ function changeTarget(target: string): void {
             }"
             class="min-h-12 flex items-center px-4 text-body text-danger"
           >
-            {{ $t('profile.report') }}
+            {{ t('profile.report') }}
           </RouterLink>
           <div class="min-h-12 flex items-center px-4 text-body text-danger" aria-disabled="true">
-            {{ $t(kind === 'friends' ? 'profile.block' : 'profile.exitGroup') }}
+            {{ t(kind === 'friends' ? 'profile.block' : 'profile.exitGroup') }}
           </div>
         </div>
         -->

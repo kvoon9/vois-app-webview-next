@@ -3,10 +3,12 @@ import { useDark } from '@vueuse/core'
 import { useRouteQuery } from '@vueuse/router'
 import { onErrorCaptured, shallowRef, watch } from 'vue'
 import { RouterView } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { useLangQuery } from '~/composables/useLangQuery'
 import { isWebviewDebug, useWebviewDebug } from '~/composables/useWebviewDebug'
 import { accessToken } from '~/constants'
 
+const { t } = useI18n()
 const launchQuery = new URLSearchParams(window.location.search)
 const isDark = useDark({ storage: sessionStorage })
 const theme = useRouteQuery('theme')
@@ -48,11 +50,11 @@ onErrorCaptured((err) => {
     v-if="error"
     class="min-h-svh flex flex-col items-center justify-center p-8 bg-surface text-text-primary"
   >
-    <h1 class="text-lg font-bold mb-2">{{ $t('error.title') }}</h1>
+    <h1 class="text-lg font-bold mb-2">{{ t('error.title') }}</h1>
     <p class="text-body text-text-secondary text-center mb-6">
-      {{ $t('error.description') }}
+      {{ t('error.description') }}
     </p>
-    <button type="button" class="btn-primary" @click="error = null">{{ $t('error.retry') }}</button>
+    <button type="button" class="btn-primary" @click="error = null">{{ t('error.retry') }}</button>
   </div>
   <RouterView v-else />
 </template>

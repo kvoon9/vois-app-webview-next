@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import PageHeader from '~/components/PageHeader.vue'
 
+const { t } = useI18n()
 const route = useRoute()
 
 const helpUrl = computed(() => {
@@ -14,7 +16,7 @@ const helpUrl = computed(() => {
 
 <template>
   <div class="h-svh flex flex-col bg-surface text-text-primary">
-    <PageHeader :title="$t('help.backgroundHelp')" />
-    <iframe :src="helpUrl" :title="$t('help.backgroundHelp')" class="flex-1 w-full border-none" />
+    <PageHeader :title="t('help.backgroundHelp')" />
+    <iframe :src="helpUrl" :title="t('help.backgroundHelp')" class="flex-1 w-full border-none" />
   </div>
 </template>

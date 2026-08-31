@@ -100,11 +100,11 @@ function confirm(): void {
 </script>
 
 <template>
-  <BaseModal :title="$t('settings.title')" :dismissible="!saving" @cancel="$emit('cancel')">
+  <BaseModal :title="t('settings.title')" :dismissible="!saving" @cancel="$emit('cancel')">
     <template #header>
-      <span class="block text-center">{{ $t('settings.title') }}</span>
+      <span class="block text-center">{{ t('settings.title') }}</span>
     </template>
-    <div v-if="!memberOnly" class="space-y-2" role="group" :aria-label="$t('translation.mode')">
+    <div v-if="!memberOnly" class="space-y-2" role="group" :aria-label="t('translation.mode')">
       <button
         v-for="mode in modes"
         :key="mode.skill"
@@ -127,16 +127,16 @@ function confirm(): void {
       <LanguagePickerDrawer
         v-model="source"
         :disabled="saving || isZhEn"
-        :label="$t('translation.source')"
+        :label="t('translation.source')"
         :languages="languageOptions"
-        :title="$t('translation.translateFrom')"
+        :title="t('translation.translateFrom')"
       />
 
       <div class="my-2 flex justify-center">
         <button
           type="button"
           class="h-11 w-11 touch-manipulation flex items-center justify-center rounded-full bg-surface-muted text-text-secondary focus-visible:ring-2 focus-visible:ring-primary/40 disabled:opacity-50"
-          :aria-label="$t('translation.swapLanguages')"
+          :aria-label="t('translation.swapLanguages')"
           :disabled="saving"
           @click="swapLanguages"
         >
@@ -163,13 +163,13 @@ function confirm(): void {
       <LanguagePickerDrawer
         v-model="target"
         :disabled="saving || isZhEn"
-        :label="$t('translation.target')"
+        :label="t('translation.target')"
         :languages="languageOptions"
-        :title="$t('translation.translateTo')"
+        :title="t('translation.translateTo')"
       />
 
       <p v-if="source === target" class="mt-2 text-small text-danger" role="alert">
-        {{ $t('translation.languagesMustDiffer') }}
+        {{ t('translation.languagesMustDiffer') }}
       </p>
     </div>
 
@@ -181,7 +181,7 @@ function confirm(): void {
           :disabled="saving"
           @click="$emit('cancel')"
         >
-          {{ $t('modal.cancel') }}
+          {{ t('modal.cancel') }}
         </button>
         <button
           type="button"
@@ -189,7 +189,7 @@ function confirm(): void {
           :disabled="!canConfirm"
           @click="confirm"
         >
-          {{ saving ? $t('translation.saving') : $t('modal.confirm') }}
+          {{ saving ? t('translation.saving') : t('modal.confirm') }}
         </button>
       </div>
     </template>

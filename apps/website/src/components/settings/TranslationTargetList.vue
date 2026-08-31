@@ -92,7 +92,7 @@ function statusLabel(item: TranslationTarget): string {
         <button
           type="button"
           class="ml-3 min-h-11 max-w-30 flex-none rounded-small bg-surface-muted px-3 text-small text-text-secondary"
-          :aria-label="$t('translation.editSetting', { name: item.name })"
+          :aria-label="t('translation.editSetting', { name: item.name })"
           @click="emit('edit', item)"
         >
           <span class="line-clamp-2">{{ statusLabel(item) }}</span>

@@ -1,6 +1,9 @@
 <script setup lang="ts">
+import { useI18n } from 'vue-i18n'
 import LanguageSwitcher from '~/components/LanguageSwitcher.vue'
 import { usePageBack } from '~/composables/usePageBack'
+
+const { t } = useI18n()
 
 defineProps<{
   title: string
@@ -16,7 +19,7 @@ const { goBack } = usePageBack()
     <button
       type="button"
       class="absolute left-0 top-1/2 -translate-y-1/2 flex items-center justify-center w-11 h-11"
-      :aria-label="$t('nav.back')"
+      :aria-label="t('nav.back')"
       @click="goBack"
     >
       <svg

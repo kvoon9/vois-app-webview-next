@@ -1,0 +1,17 @@
+{
+  "name": "mock-server",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "nitro dev --port 3030",
+    "build": "nitro build",
+    "preview": "nitro preview --port 3030",
+    "start": "NITRO_PORT=3030 node .output/server/index.mjs"
+  },
+  "devDependencies": {
+    "@types/node": "catalog:tooling",
+    "h3": "^1.15.11",
+    "nitropack": "^2.13.4"
+  }
+}

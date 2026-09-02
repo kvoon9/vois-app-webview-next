@@ -19,6 +19,10 @@ function openBackgroundHelp() {
 <template>
   <div class="min-h-svh bg-surface text-text-primary">
     <PageHeader :title="t('help.title')" />
+
+    <!-- WARNING: show removed in prod -->
+    <RouterLink to="/devices">Devices</RouterLink>
+
     <main class="p-4">
       <!-- TODO: temporarily hidden, restore FAQ & playground sections when content is ready -->
       <h2 class="section-title mb-4">{{ t('help.backgroundHelp') }}</h2>

@@ -8,10 +8,12 @@ import { debugAuthPlugin } from './plugins/debug-auth.ts'
 import { vconsoleDev } from './plugins/vconsole-dev.ts'
 
 export default defineConfig(({ isPreview, command, mode }) => {
+  const env = loadEnv(mode, process.cwd(), 'VITE_')
+  const apiTarget = env.VITE_API_TARGET || 'https://api.voischat.cn'
+
   // .env is gitignored, so CI must inject these via secrets; fail loudly instead of
   // shipping a bundle where appid/sign silently become "undefined" (errcode 31)
   if (command === 'build') {
-    const env = loadEnv(mode, process.cwd(), 'VITE_')
     if (!env.VITE_APP_ID || !env.VITE_APP_KEY) {
       throw new Error('VITE_APP_ID and VITE_APP_KEY are required for build (see .env.example)')
     }
@@ -25,7 +27,7 @@ export default defineConfig(({ isPreview, command, mode }) => {
       forwardConsole: true,
       proxy: {
         '/v2': {
-          target: 'https://api.voischat.cn',
+          target: apiTarget,
           changeOrigin: true,
         },
       },
@@ -35,7 +37,7 @@ export default defineConfig(({ isPreview, command, mode }) => {
       port: 5173,
       proxy: {
         '/v2': {
-          target: 'https://api.voischat.cn',
+          target: apiTarget,
           changeOrigin: true,
         },
       },

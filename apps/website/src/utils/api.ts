@@ -11,7 +11,7 @@ interface WeilaResponse<T> {
 
 interface RequestOptions {
   method?: 'GET' | 'POST'
-  body?: Record<string, string | number>
+  body?: Record<string, string | number | readonly (string | number)[] | undefined>
 }
 
 const APP_ID = import.meta.env.VITE_APP_ID

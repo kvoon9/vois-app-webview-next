@@ -4,6 +4,7 @@ import { useRouteQuery } from '@vueuse/router'
 import { onErrorCaptured, shallowRef, watch } from 'vue'
 import { RouterView } from 'vue-router'
 import { useI18n } from 'vue-i18n'
+import ToastHost from '~/components/ToastHost.vue'
 import { useLangQuery } from '~/composables/useLangQuery'
 import { isWebviewDebug, useWebviewDebug } from '~/composables/useWebviewDebug'
 import { accessToken } from '~/constants'
@@ -56,7 +57,10 @@ onErrorCaptured((err) => {
     </p>
     <button type="button" class="btn-primary" @click="error = null">{{ t('error.retry') }}</button>
   </div>
-  <RouterView v-else />
+  <template v-else>
+    <RouterView />
+    <ToastHost />
+  </template>
 </template>
 
 <style>

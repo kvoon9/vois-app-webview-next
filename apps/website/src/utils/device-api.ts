@@ -91,6 +91,13 @@ export interface RechargeOrder {
   totalPrice: number
 }
 
+export interface RechargeRecord {
+  orderId: number
+  amount: number
+  status: string
+  createdAt: string
+}
+
 interface DeviceDto {
   user_id: number
   user_num: string
@@ -165,6 +172,13 @@ interface RechargeOrderDto {
   total_price: number
 }
 
+interface RechargeRecordDto {
+  order_id: number
+  amount: number
+  status: string
+  created_at: string
+}
+
 type EmptyData = Record<string, never>
 type DeviceUpdateBody = { device_id: number; nick: string; avatar?: string }
 interface SettingsBody {
@@ -211,6 +225,14 @@ export async function createRechargeOrder(deviceIds: readonly number[]): Promise
     body: { device_ids: deviceIds },
   })
   return toRechargeOrder(response.data.order)
+}
+
+export async function getRechargeRecords(deviceId: number): Promise<RechargeRecord[]> {
+  const response = await weilaFetch<{ records: RechargeRecordDto[] }>(
+    '/v2/device/recharge-records',
+    { body: { device_id: deviceId } },
+  )
+  return response.data.records.map(toRechargeRecord)
 }
 
 export async function updateDevice(
@@ -482,6 +504,15 @@ function toRechargeOrder(order: RechargeOrderDto): RechargeOrder {
     orderId: order.order_id,
     deviceCount: order.device_count,
     totalPrice: order.total_price,
+  }
+}
+
+function toRechargeRecord(record: RechargeRecordDto): RechargeRecord {
+  return {
+    orderId: record.order_id,
+    amount: record.amount,
+    status: record.status,
+    createdAt: record.created_at,
   }
 }
 

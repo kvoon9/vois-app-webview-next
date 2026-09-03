@@ -9,6 +9,7 @@ import PageHeader from '~/components/PageHeader.vue'
 import QueryState from '~/components/settings/QueryState.vue'
 import { useToast } from '~/composables/useToast'
 import {
+  getConnectedDevices,
   getDeviceGroups,
   getMyCreatedGroups,
   getMyJoinedGroups,
@@ -20,6 +21,7 @@ interface AddGroupsData {
   created: Group[]
   joined: Group[]
   deviceGroups: Group[]
+  deviceName: string
 }
 
 const { t } = useI18n({ useScope: 'global' })
@@ -38,12 +40,18 @@ const deviceId = computed(() => {
 
 async function load(): Promise<AddGroupsData> {
   if (deviceId.value == null) throw new Error(t('device.invalidId'))
-  const [created, joined, deviceGroups] = await Promise.all([
+  const [created, joined, deviceGroups, devices] = await Promise.all([
     getMyCreatedGroups(),
     getMyJoinedGroups(),
     getDeviceGroups(deviceId.value),
+    getConnectedDevices(),
   ])
-  return { created, joined, deviceGroups }
+  return {
+    created,
+    joined,
+    deviceGroups,
+    deviceName: devices.find((device) => device.userId === deviceId.value)?.nick ?? '',
+  }
 }
 
 const { state, refetch: reload } = useQuery({
@@ -200,7 +208,12 @@ async function confirmJoin(): Promise<void> {
       @cancel="selected = null"
       @confirm="confirmJoin"
     >
-      {{ t('device.confirmAddGroupMessage', { group: selected.name }) }}
+      {{
+        t('device.confirmAddGroupMessage', {
+          device: state.data.deviceName,
+          group: selected.name,
+        })
+      }}
     </BaseModal>
   </div>
 </template>

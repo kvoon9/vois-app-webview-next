@@ -63,7 +63,7 @@ async function removeMember(): Promise<void> {
     confirmationOpen.value = false
     showToast(t('device.memberRemoved'))
     await router.push({
-      path: `/devices/${deviceId.value}/groups/${groupId.value}/members`,
+      path: `/devices/${deviceId.value}/groups/${groupId.value}`,
       query: route.query,
     })
     await queryCache.invalidateQueries({ key: ['device-management'] })

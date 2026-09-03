@@ -13,6 +13,19 @@ export interface Device {
   online: boolean
 }
 
+/** Settings shared by group and contact conversations. */
+export interface ConversationSettings {
+  muted: boolean
+  shareLocation: boolean
+  broadcast: boolean
+  pinned: boolean
+}
+
+export type GroupSettings = ConversationSettings
+export type ContactSettings = ConversationSettings
+export type GroupSettingsUpdate = Partial<GroupSettings>
+export type ContactSettingsUpdate = Partial<ContactSettings> & { remark?: string }
+
 /** The compact group representation used by group and device lists. */
 export interface Group {
   groupId: number
@@ -25,6 +38,7 @@ export interface GroupInfo extends Group {
   intro: string
   createdAt: string
   memberCount: number
+  settings: GroupSettings
 }
 
 export type GroupMemberRole = 'owner' | 'admin' | 'member'
@@ -45,6 +59,36 @@ export interface Friend {
   nick: string
   avatar: string
   online: boolean
+  /** Registration timestamp returned by the upgraded friend/user endpoint. */
+  registeredAt?: string
+  /** Some user/contact responses include the profile signature. */
+  signature?: string
+}
+
+/** A friend that has been added to a device's contacts. */
+export interface DeviceContact extends Friend {
+  registeredAt: string
+  settings: ContactSettings
+  remark: string
+}
+
+/** Short domain alias for code that is already scoped to contacts. */
+export type Contact = DeviceContact
+
+export interface RechargeDevice {
+  userId: number
+  nick: string
+  product: string
+  imei: string
+  iccid: string
+  expireAt: string
+  price: number
+}
+
+export interface RechargeOrder {
+  orderId: number
+  deviceCount: number
+  totalPrice: number
 }
 
 interface DeviceDto {
@@ -66,10 +110,18 @@ interface GroupDto {
   avatar: string
 }
 
+interface GroupSettingsDto {
+  muted?: boolean
+  share_location?: boolean
+  broadcast?: boolean
+  pinned?: boolean
+}
+
 interface GroupInfoDto extends GroupDto {
   intro: string
   created_at: string
   member_count: number
+  settings?: GroupSettingsDto
 }
 
 interface GroupMemberDto {
@@ -88,15 +140,77 @@ interface FriendDto {
   nick: string
   avatar: string
   online: boolean
+  registered_at?: string
+  signature?: string
+}
+
+interface ContactDto extends FriendDto {
+  settings?: GroupSettingsDto
+  remark?: string
+}
+
+interface RechargeDeviceDto {
+  user_id: number
+  nick: string
+  product: string
+  imei: string
+  iccid: string
+  expire_at: string
+  price: number
+}
+
+interface RechargeOrderDto {
+  order_id: number
+  device_count: number
+  total_price: number
 }
 
 type EmptyData = Record<string, never>
 type DeviceUpdateBody = { device_id: number; nick: string; avatar?: string }
+interface SettingsBody {
+  muted?: boolean
+  share_location?: boolean
+  broadcast?: boolean
+  pinned?: boolean
+}
+
+type SettingsRequestBody = SettingsBody & {
+  group_id?: number
+  device_id?: number
+  contact_id?: number
+  remark?: string
+}
+type WeilaBody = NonNullable<Parameters<typeof weilaFetch>[1]>['body']
+
+/**
+ * The shared fetch helper's original body type predates the boolean settings
+ * fields. Keep that compatibility shim local to the device API rather than
+ * broadening the request type used by unrelated APIs.
+ */
+function asWeilaBody(body: SettingsRequestBody): WeilaBody {
+  // SAFETY: SettingsRequestBody contains the same JSON scalar fields as the
+  // shared helper; boolean settings are required by these endpoint contracts.
+  return body as WeilaBody
+}
 
 /** Return all devices connected to the current account. */
 export async function getConnectedDevices(): Promise<Device[]> {
   const response = await weilaFetch<{ devices: DeviceDto[] }>('/v2/device/list-connected')
   return response.data.devices.map(toDevice)
+}
+
+/** Return the connected devices that can be renewed. */
+export async function getRechargeDevices(): Promise<RechargeDevice[]> {
+  const response = await weilaFetch<{ devices: RechargeDeviceDto[] }>('/v2/device/recharge-list')
+  return response.data.devices.map(toRechargeDevice)
+}
+
+/** Create one renewal order for the selected devices. */
+export async function createRechargeOrder(deviceIds: readonly number[]): Promise<RechargeOrder> {
+  const response = await weilaFetch<{ order: RechargeOrderDto }>('/v2/recharge/create-order', {
+    body: { device_ids: deviceIds },
+  })
+  return toRechargeOrder(response.data.order)
 }
 
 export async function updateDevice(
@@ -156,6 +270,23 @@ export async function getGroupInfo(groupId: number): Promise<GroupInfo> {
   return toGroupInfo(response.data.group)
 }
 
+export async function dissolveGroup(groupId: number): Promise<EmptyData> {
+  const response = await weilaFetch<EmptyData>('/v2/group/dissolve', {
+    body: { group_id: groupId },
+  })
+  return response.data
+}
+
+export async function updateGroupSettings(
+  groupId: number,
+  settings: GroupSettingsUpdate,
+): Promise<EmptyData> {
+  const response = await weilaFetch<EmptyData>('/v2/group/update-settings', {
+    body: asWeilaBody({ group_id: groupId, ...toSettingsBody(settings) }),
+  })
+  return response.data
+}
+
 export async function getGroupMembers(groupId: number): Promise<GroupMember[]> {
   const response = await weilaFetch<{ members: GroupMemberDto[] }>('/v2/group/members', {
     body: { group_id: groupId },
@@ -194,6 +325,61 @@ export async function getFriends(): Promise<Friend[]> {
   return response.data.friends.map(toFriend)
 }
 
+export async function getDeviceContacts(deviceId: number): Promise<Contact[]> {
+  const response = await weilaFetch<{ contacts: ContactDto[] }>('/v2/device/contacts', {
+    body: { device_id: deviceId },
+  })
+  return response.data.contacts.map(toContact)
+}
+
+export async function addDeviceContacts(
+  deviceId: number,
+  contactIds: readonly number[],
+): Promise<EmptyData> {
+  const response = await weilaFetch<EmptyData>('/v2/device/add-contacts', {
+    body: { device_id: deviceId, contact_ids: contactIds },
+  })
+  return response.data
+}
+
+export async function removeDeviceContact(deviceId: number, contactId: number): Promise<EmptyData> {
+  const response = await weilaFetch<EmptyData>('/v2/device/remove-contact', {
+    body: { device_id: deviceId, contact_id: contactId },
+  })
+  return response.data
+}
+
+export async function searchUsers(keyword: string): Promise<Friend[]> {
+  const response = await weilaFetch<{ users: FriendDto[] }>('/v2/user/search', {
+    body: { keyword },
+  })
+  return response.data.users.map(toFriend)
+}
+
+export async function updateDeviceContactSettings(
+  deviceId: number,
+  contactId: number,
+  settings: ContactSettingsUpdate,
+): Promise<EmptyData> {
+  const body: SettingsRequestBody = {
+    device_id: deviceId,
+    contact_id: contactId,
+    ...toSettingsBody(settings),
+  }
+  if (settings.remark !== undefined) body.remark = settings.remark
+  const response = await weilaFetch<EmptyData>('/v2/device/update-contact-settings', {
+    body: asWeilaBody(body),
+  })
+  return response.data
+}
+
+export async function clearDeviceMessages(deviceId: number, contactId: number): Promise<EmptyData> {
+  const response = await weilaFetch<EmptyData>('/v2/device/clear-messages', {
+    body: { device_id: deviceId, contact_id: contactId },
+  })
+  return response.data
+}
+
 function toDevice(device: DeviceDto): Device {
   return {
     userId: device.user_id,
@@ -223,6 +409,7 @@ function toGroupInfo(group: GroupInfoDto): GroupInfo {
     intro: group.intro,
     createdAt: group.created_at,
     memberCount: group.member_count,
+    settings: toSettings(group.settings),
   }
 }
 
@@ -239,11 +426,73 @@ function toGroupMember(member: GroupMemberDto): GroupMember {
 }
 
 function toFriend(friend: FriendDto): Friend {
-  return {
+  const mapped: Friend = {
     userId: friend.user_id,
     userNum: friend.user_num,
     nick: friend.nick,
     avatar: friend.avatar,
     online: friend.online,
   }
+  if (friend.registered_at !== undefined) mapped.registeredAt = friend.registered_at
+  if (friend.signature !== undefined) mapped.signature = friend.signature
+  return mapped
 }
+
+function toContact(contact: ContactDto): Contact {
+  return {
+    ...toFriend(contact),
+    registeredAt: contact.registered_at ?? '',
+    settings: toSettings(contact.settings),
+    remark: contact.remark ?? '',
+  }
+}
+
+function toSettings(settings?: GroupSettingsDto): GroupSettings {
+  return {
+    muted: settings?.muted ?? false,
+    shareLocation: settings?.share_location ?? false,
+    broadcast: settings?.broadcast ?? false,
+    pinned: settings?.pinned ?? false,
+  }
+}
+
+function toSettingsBody(settings: Partial<ConversationSettings>): SettingsBody {
+  const body: SettingsBody = {}
+  if (settings.muted !== undefined) body.muted = settings.muted
+  if (settings.shareLocation !== undefined) body.share_location = settings.shareLocation
+  if (settings.broadcast !== undefined) body.broadcast = settings.broadcast
+  if (settings.pinned !== undefined) body.pinned = settings.pinned
+  return body
+}
+
+function toRechargeDevice(device: RechargeDeviceDto): RechargeDevice {
+  return {
+    userId: device.user_id,
+    nick: device.nick,
+    product: device.product,
+    imei: device.imei,
+    iccid: device.iccid,
+    expireAt: device.expire_at,
+    price: device.price,
+  }
+}
+
+function toRechargeOrder(order: RechargeOrderDto): RechargeOrder {
+  return {
+    orderId: order.order_id,
+    deviceCount: order.device_count,
+    totalPrice: order.total_price,
+  }
+}
+
+// These aliases are intentionally small compatibility conveniences for code
+// that names the operation from the endpoint rather than the device scope.
+export const getDeviceRechargeList = getRechargeDevices
+export const getRechargeList = getRechargeDevices
+export const createDeviceRechargeOrder = createRechargeOrder
+export const getContacts = getDeviceContacts
+export const addContacts = addDeviceContacts
+export const removeContact = removeDeviceContact
+export const updateContactSettings = updateDeviceContactSettings
+export const clearMessages = clearDeviceMessages
+export const clearContactMessages = clearDeviceMessages

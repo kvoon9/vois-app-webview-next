@@ -79,3 +79,57 @@
    - 起 mock server（3030）+ `vp dev --host --port 3021`（website `.env.local` 配好 `VITE_API_TARGET=http://localhost:3030`，token 已有）
    - `agent-browser --session webview-debug open 'http://localhost:3021/#/devices'` 起，把 9 个页面全部点一遍：列表→详情→群组管理→两个添加入口（含确认弹窗、禁选态）→群详情（改名/改介绍/退群）→成员列表→添加成员（tab 切换、禁选、全选、批量提交）→成员详情（踢人）
    - 每个写操作后回到对应列表确认状态变化；截图留证
+
+---
+
+# 二期变更（2026-09-02 确认）
+
+## 1. 群详情页重构（替代原"前 5 成员 + 跳转"设计）
+
+单页结构：**顶部**群资料卡（头像/群名/群号/创建时间/群昵称/群介绍，昵称介绍仍可 BaseModal 编辑）→ **中间**完整群成员列表（不再截断前 5，列表上方有「添加成员」按钮，仍跳 members/add 页）→ **底部**红色「退出群组」+ 其下红色「解散群组」（仅群主可见，普通二次确认，解散后返回群组管理页）。
+
+- **删除独立路由 `/devices/[id]/groups/[groupId]/members`**（完整列表并入详情页），members/add 和 members/[memberId] 保留
+- 新接口 13：`POST /v2/group/dissolve` `{ group_id }` → `{}`
+- 群详情补回 4 个开关（静音/共享我的位置/文字语音播报/置顶聊天），**真 mock**：接口 7 `group/info` 返回加 `settings: { muted, share_location, broadcast, pinned }`；新接口 18 `POST /v2/group/update-settings` `{ group_id, ...settings }` → `{}`
+
+## 2. 联系人管理（设备详情新增「联系人管理」真实入口）
+
+```
+/devices/[id]/contacts                 两个添加入口 + 已添加联系人列表
+/devices/[id]/contacts/add             从好友添加(已在联系人的灰色禁选,批量)
+/devices/[id]/contacts/search          按微喇号 substring 搜索用户添加
+/devices/[id]/contacts/[contactId]     联系人详情
+```
+
+新接口：
+
+| 接口              | 路径                                 | body                                                                               | data                                                         |
+| ----------------- | ------------------------------------ | ---------------------------------------------------------------------------------- | ------------------------------------------------------------ |
+| 14 设备联系人列表 | `/v2/device/contacts`                | `{ device_id }`                                                                    | `{ contacts: [Friend + registered_at + settings + remark] }` |
+| 15 添加联系人     | `/v2/device/add-contacts`            | `{ device_id, contact_ids: [] }`                                                   | `{}`                                                         |
+| 16 删除联系人     | `/v2/device/remove-contact`          | `{ device_id, contact_id }`                                                        | `{}`                                                         |
+| 17 搜索用户       | `/v2/user/search`                    | `{ keyword }`                                                                      | `{ users: [Friend] }`，微喇号 substring                      |
+| 19 更新联系人设置 | `/v2/device/update-contact-settings` | `{ device_id, contact_id, muted?, share_location?, broadcast?, pinned?, remark? }` | `{}`                                                         |
+| (假) 清除聊天记录 | `/v2/device/clear-messages`          | `{ device_id, contact_id }`                                                        | `{}`，直接成功                                               |
+
+接口 12 `friend/list` 的 Friend 也补 `registered_at`。
+
+**联系人详情页**（对齐 native 截图 screenshot_20260902_174713）：头像/名字/微喇号/注册日期/签名；4 个开关（真 mock，接口 19）；备注（真编辑，BaseModal + remark 字段）；清除聊天记录（假接口真 toast）；举报（跳现有 `report-user.vue`）；红色「删除联系人」（二次确认 → 接口 16 → 返回列表刷新）。**只缺「发起聊天」不渲染**。
+
+## 3. 充值续费
+
+- 设备详情：原「流量卡充值记录」行替换为「充值续费」link item → 点击弹确认窗（设备信息+金额）→ 创建订单 → toast「充值成功」
+- 设备列表：顶部加「批量续费」link item → `/devices/recharge`：设备行（型号/名称/IMEI/卡 ICCID/卡到期时间/续费单价 + 勾选框）+ 底部全选/合计总价/提交 → 确认弹窗 → 创建订单 → toast「充值成功」。无订单详情页
+
+新接口：
+
+| 接口            | 路径                        | body                 | data                                                                       |
+| --------------- | --------------------------- | -------------------- | -------------------------------------------------------------------------- |
+| 20 续费设备列表 | `/v2/device/recharge-list`  | -                    | `{ devices: [{ user_id, nick, product, imei, iccid, expire_at, price }] }` |
+| 21 创建充值订单 | `/v2/recharge/create-order` | `{ device_ids: [] }` | `{ order: { order_id, device_count, total_price } }`                       |
+
+## 验收补充
+
+- i18n 三语言、vp check/test、agent-browser Flow A 全页面验证（含二期新页面和群详情新结构）
+- **上线前必须删除 `help.vue` 里的临时 `/devices` 入口链接**（代码里有 WARNING 注释）
+- commit 按 Conventional Commits，不要 WIP 提交

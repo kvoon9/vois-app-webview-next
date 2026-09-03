@@ -9,17 +9,20 @@ import PageHeader from '~/components/PageHeader.vue'
 import QueryState from '~/components/settings/QueryState.vue'
 import { useToast } from '~/composables/useToast'
 import {
-  getConnectedDevices,
-  getDeviceGroups,
-  joinDeviceGroup,
-  searchGroups,
-  type Group,
+  addDeviceContacts,
+  getDeviceContacts,
+  searchUsers,
+  type Contact,
+  type Friend,
 } from '~/utils/device-api'
 
-interface SearchData {
-  groups: Group[]
-  deviceGroups: Group[]
-  deviceName: string
+type RouteParam = string | string[] | undefined
+
+function routeNumber(value: RouteParam): number | null {
+  const raw = Array.isArray(value) ? value[0] : value
+  if (!raw || raw.trim() === '') return null
+  const number = Number(raw)
+  return Number.isSafeInteger(number) && number > 0 ? number : null
 }
 
 const { t } = useI18n({ useScope: 'global' })
@@ -27,68 +30,64 @@ const route = useRoute()
 const router = useRouter()
 const queryCache = useQueryCache()
 const { showToast } = useToast()
+const deviceId = computed(() => routeNumber(route.params.id))
 const keyword = shallowRef('')
 const searchedKeyword = shallowRef('')
-const selected = shallowRef<Group | null>(null)
+const selected = shallowRef<Friend | null>(null)
 
-const deviceId = computed(() => {
-  const value = Array.isArray(route.params.id) ? route.params.id[0] : route.params.id
-  const parsed = Number(value)
-  return Number.isInteger(parsed) ? parsed : null
-})
+interface SearchData {
+  users: Friend[]
+  contacts: Contact[]
+}
 
 async function load(): Promise<SearchData> {
   if (deviceId.value == null) throw new Error(t('device.invalidId'))
-  const [groups, deviceGroups, devices] = await Promise.all([
-    searchGroups(searchedKeyword.value),
-    getDeviceGroups(deviceId.value),
-    getConnectedDevices(),
+  const [users, contacts] = await Promise.all([
+    searchedKeyword.value ? searchUsers(searchedKeyword.value) : Promise.resolve([]),
+    getDeviceContacts(deviceId.value),
   ])
-  return {
-    groups,
-    deviceGroups,
-    deviceName: devices.find((device) => device.userId === deviceId.value)?.nick ?? '',
-  }
+  return { users, contacts }
 }
 
 const { state, refetch: reload } = useQuery({
-  key: () => ['device-management', 'group-search', deviceId.value, searchedKeyword.value],
+  key: () => ['device-management', 'contact-search', deviceId.value, searchedKeyword.value],
   query: load,
 })
 
-const { mutateAsync: joinGroup, isLoading: joining } = useMutation({
-  mutation: (groupId: number) => {
+const results = computed(() => state.value.data?.users ?? [])
+const existingIds = computed(
+  () => new Set((state.value.data?.contacts ?? []).map((contact) => contact.userId)),
+)
+
+const addMutation = useMutation({
+  mutation: (contactId: number) => {
     if (deviceId.value == null) throw new Error(t('device.invalidId'))
-    return joinDeviceGroup(deviceId.value, groupId)
+    return addDeviceContacts(deviceId.value, [contactId])
   },
 })
 
-const results = computed(() => state.value.data?.groups ?? [])
-
-function isJoined(groupId: number): boolean {
-  return state.value.data?.deviceGroups.some((group) => group.groupId === groupId) ?? false
+function isExisting(userId: number): boolean {
+  return existingIds.value.has(userId)
 }
 
 function search(): void {
   searchedKeyword.value = keyword.value.trim()
 }
 
-function choose(group: Group): void {
-  if (!isJoined(group.groupId)) selected.value = group
+function choose(user: Friend): void {
+  if (!isExisting(user.userId)) selected.value = user
 }
 
-async function confirmJoin(): Promise<void> {
-  if (!selected.value || joining.value) return
-  const group = selected.value
+async function confirmAdd(): Promise<void> {
+  if (!selected.value || addMutation.isLoading.value) return
+  const user = selected.value
   try {
-    await joinGroup(group.groupId)
+    await addMutation.mutateAsync(user.userId)
     selected.value = null
-    await Promise.all([
-      queryCache.invalidateQueries({ key: ['device-management', 'groups'] }),
-      queryCache.invalidateQueries({ key: ['device-management', 'group-search'] }),
-    ])
-    showToast(t('device.groupAdded'))
-    router.back()
+    await queryCache.invalidateQueries({ key: ['device-management', 'contacts'] })
+    await queryCache.invalidateQueries({ key: ['device-management', 'contact-search'] })
+    showToast(t('device.contactsAdded'))
+    await router.push({ path: `/devices/${deviceId.value}/contacts`, query: route.query })
   } catch (error) {
     showToast(error instanceof Error ? error.message : String(error), { type: 'error' })
   }
@@ -97,15 +96,16 @@ async function confirmJoin(): Promise<void> {
 
 <template>
   <div class="min-h-screen min-h-svh bg-surface text-text-primary">
-    <PageHeader :title="t('device.searchGroups')" />
+    <PageHeader :title="t('device.searchContacts')" />
+
     <main class="p-4">
       <form class="flex items-center" @submit.prevent="search">
         <input
           v-model="keyword"
           type="search"
           class="input-field min-w-0 flex-1"
-          :placeholder="t('device.groupNumberPlaceholder')"
-          :aria-label="t('device.groupNumber')"
+          :placeholder="t('device.contactNumberPlaceholder')"
+          :aria-label="t('device.contactNumberPlaceholder')"
         />
         <button type="submit" class="ml-3 h-12 rounded-button bg-primary px-4 text-primary-text">
           {{ t('device.search') }}
@@ -123,28 +123,28 @@ async function confirmJoin(): Promise<void> {
           v-if="searchedKeyword.length === 0"
           class="py-12 text-center text-body text-text-secondary"
         >
-          {{ t('device.enterGroupNumber') }}
+          {{ t('device.enterContactNumber') }}
         </p>
         <ul v-else class="mt-6 space-y-3">
-          <li v-for="group in results" :key="group.groupId">
+          <li v-for="user in results" :key="user.userId">
             <button
               type="button"
               class="card w-full flex items-center text-left disabled:opacity-50"
-              :disabled="isJoined(group.groupId)"
-              @click="choose(group)"
+              :disabled="isExisting(user.userId)"
+              @click="choose(user)"
             >
-              <Avatar :name="group.name" :src="group.avatar" />
+              <Avatar :name="user.nick" :src="user.avatar" :online="user.online" show-status />
               <span class="ml-3 min-w-0 flex-1">
-                <span class="block truncate text-body font-medium">{{ group.name }}</span>
+                <span class="block truncate text-body font-medium">{{ user.nick }}</span>
                 <span class="mt-0.5 block truncate text-small text-text-secondary">{{
-                  group.num
+                  user.userNum
                 }}</span>
               </span>
               <span
-                v-if="isJoined(group.groupId)"
+                v-if="isExisting(user.userId)"
                 class="ml-2 flex-none text-small text-text-secondary"
               >
-                {{ t('device.alreadyJoined') }}
+                {{ t('device.alreadyContact') }}
               </span>
               <span v-else aria-hidden="true" class="ml-2 text-text-secondary">›</span>
             </button>
@@ -155,18 +155,14 @@ async function confirmJoin(): Promise<void> {
 
     <BaseModal
       v-if="selected"
-      :title="t('device.confirmAddGroup')"
+      :title="t('device.addContact')"
       :cancel-text="t('modal.cancel')"
-      :confirm-text="joining ? t('device.saving') : t('modal.confirm')"
+      :confirm-text="addMutation.isLoading.value ? t('device.saving') : t('modal.confirm')"
+      :dismissible="!addMutation.isLoading.value"
       @cancel="selected = null"
-      @confirm="confirmJoin"
+      @confirm="confirmAdd"
     >
-      {{
-        t('device.confirmAddGroupMessage', {
-          device: state.data?.deviceName ?? '',
-          group: selected.name,
-        })
-      }}
+      <p>{{ t('device.addContactConfirm', { name: selected.nick }) }}</p>
     </BaseModal>
   </div>
 </template>

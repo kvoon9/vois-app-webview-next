@@ -25,6 +25,16 @@ function openDevice(device: Device): void {
     <PageHeader :title="t('device.title')" />
 
     <main class="p-4">
+      <nav class="mb-4" :aria-label="t('device.recharge')">
+        <router-link
+          to="/devices/recharge"
+          class="min-h-12 flex items-center justify-between rounded-standard border border-stroke bg-surface px-4 text-body"
+        >
+          <span>{{ t('device.batchRecharge') }}</span>
+          <span aria-hidden="true" class="text-text-secondary">›</span>
+        </router-link>
+      </nav>
+
       <QueryState
         :status="state.status"
         :error="state.error"

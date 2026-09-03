@@ -8,7 +8,14 @@ import PageHeader from '~/components/PageHeader.vue'
 import QueryState from '~/components/settings/QueryState.vue'
 import Avatar from '~/components/Avatar.vue'
 import { useToast } from '~/composables/useToast'
-import { getConnectedDevices, updateDevice, type Device } from '~/utils/device-api'
+import {
+  createRechargeOrder,
+  getConnectedDevices,
+  getRechargeDevices,
+  updateDevice,
+  type Device,
+  type RechargeDevice,
+} from '~/utils/device-api'
 
 const { t } = useI18n({ useScope: 'global' })
 const route = useRoute()
@@ -17,6 +24,7 @@ const queryCache = useQueryCache()
 const { showToast } = useToast()
 const editing = shallowRef(false)
 const nick = shallowRef('')
+const recharging = shallowRef(false)
 
 const deviceId = computed(() => {
   const value = Array.isArray(route.params.id) ? route.params.id[0] : route.params.id
@@ -29,6 +37,11 @@ const { state, refetch: reload } = useQuery({
   query: getConnectedDevices,
 })
 
+const { state: rechargeState } = useQuery({
+  key: () => ['device-management', 'recharge-devices'],
+  query: getRechargeDevices,
+})
+
 const device = computed<Device | null>(() => {
   if (deviceId.value == null) return null
   return state.value.data?.find((item) => item.userId === deviceId.value) ?? null
@@ -36,6 +49,19 @@ const device = computed<Device | null>(() => {
 
 const { mutateAsync: saveDevice, isLoading: saving } = useMutation({
   mutation: (value: { deviceId: number; nick: string }) => updateDevice(value.deviceId, value.nick),
+})
+
+const rechargeDevice = computed<RechargeDevice | null>(() => {
+  if (deviceId.value == null) return null
+  return rechargeState.value.data?.find((item) => item.userId === deviceId.value) ?? null
+})
+
+function formatPrice(price: number | undefined): string {
+  return price == null ? t('device.notAvailable') : `¥${price.toFixed(2)}`
+}
+
+const { mutateAsync: createOrder, isLoading: creatingOrder } = useMutation({
+  mutation: (selectedDeviceId: number) => createRechargeOrder([selectedDeviceId]),
 })
 
 function startEditing(): void {
@@ -68,6 +94,25 @@ async function copyDeviceNumber(): Promise<void> {
 
 function openGroups(): void {
   if (deviceId.value != null) router.push(`/devices/${deviceId.value}/groups`)
+}
+
+function openContacts(): void {
+  if (deviceId.value != null) router.push(`/devices/${deviceId.value}/contacts`)
+}
+
+function openRecharge(): void {
+  if (device.value && rechargeDevice.value) recharging.value = true
+}
+
+async function confirmRecharge(): Promise<void> {
+  if (deviceId.value == null || creatingOrder.value) return
+  try {
+    await createOrder(deviceId.value)
+    recharging.value = false
+    showToast(t('device.rechargeSuccess'))
+  } catch (error) {
+    showToast(error instanceof Error ? error.message : String(error), { type: 'error' })
+  }
 }
 </script>
 
@@ -144,14 +189,60 @@ function openGroups(): void {
           <button
             type="button"
             class="mt-4 min-h-12 w-full flex items-center justify-between rounded-standard border border-stroke bg-surface px-4 text-body"
+            @click="openRecharge"
+          >
+            <span>{{ t('device.recharge') }}</span>
+            <span aria-hidden="true" class="text-text-secondary">›</span>
+          </button>
+
+          <button
+            type="button"
+            class="mt-3 min-h-12 w-full flex items-center justify-between rounded-standard border border-stroke bg-surface px-4 text-body"
             @click="openGroups"
           >
             <span>{{ t('device.groups') }}</span>
             <span aria-hidden="true" class="text-text-secondary">›</span>
           </button>
+
+          <button
+            type="button"
+            class="mt-3 min-h-12 w-full flex items-center justify-between rounded-standard border border-stroke bg-surface px-4 text-body"
+            @click="openContacts"
+          >
+            <span>{{ t('device.contacts') }}</span>
+            <span aria-hidden="true" class="text-text-secondary">›</span>
+          </button>
         </template>
       </QueryState>
     </main>
+
+    <BaseModal
+      v-if="recharging && device"
+      :title="t('device.confirmRecharge')"
+      :cancel-text="t('modal.cancel')"
+      :confirm-text="creatingOrder ? t('device.saving') : t('modal.confirm')"
+      :dismissible="!creatingOrder"
+      @cancel="recharging = false"
+      @confirm="confirmRecharge"
+    >
+      <p>
+        {{
+          t('device.rechargeConfirmMessage', {
+            name: device.nick,
+            price: formatPrice(rechargeDevice?.price),
+          })
+        }}
+      </p>
+      <p class="mt-2 text-small text-text-secondary">
+        {{ t('device.model') }}: {{ device.product || t('device.notAvailable') }}
+      </p>
+      <p class="mt-1 text-small text-text-secondary">
+        {{ t('device.deviceNumber') }}: {{ device.imei || t('device.notAvailable') }}
+      </p>
+      <p v-if="rechargeDevice" class="mt-1 text-small text-text-secondary">
+        {{ t('device.iccid') }}: {{ rechargeDevice.iccid }}
+      </p>
+    </BaseModal>
 
     <BaseModal
       v-if="editing"

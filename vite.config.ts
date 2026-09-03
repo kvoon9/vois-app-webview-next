@@ -38,4 +38,9 @@ export default defineConfig({
   run: {
     cache: true,
   },
+  resolve: {
+    alias: {
+      '~/': new URL('./apps/website/src/', import.meta.url).pathname,
+    },
+  },
 })

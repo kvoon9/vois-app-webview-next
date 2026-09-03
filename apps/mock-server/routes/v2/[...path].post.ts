@@ -1,13 +1,18 @@
 import { defineEventHandler, readBody } from 'h3'
 import {
+  createRechargeOrder,
+  deviceContacts,
   deviceGroups,
   devices,
   friends,
   groups,
   meId,
   memberships,
+  rechargeInfo,
   users,
+  type ContactSettings,
   type Device,
+  type DeviceContact,
   type Group,
   type GroupMemberRole,
   type Membership,
@@ -19,11 +24,19 @@ interface RequestBody {
   group_id?: number | string
   member_id?: number | string
   member_ids?: Array<number | string>
+  contact_id?: number | string
+  contact_ids?: Array<number | string>
+  device_ids?: Array<number | string>
   keyword?: string
   nick?: string
   name?: string
   intro?: string
   avatar?: string
+  muted?: boolean
+  share_location?: boolean
+  broadcast?: boolean
+  pinned?: boolean
+  remark?: string
 }
 
 interface CompactGroup {
@@ -43,14 +56,55 @@ interface MemberResponse {
   signature: string
 }
 
+interface FriendResponse {
+  user_id: number
+  user_num: string
+  nick: string
+  avatar: string
+  online: boolean
+  registered_at: string
+  signature?: string
+}
+
+interface ContactResponse extends FriendResponse {
+  settings: ContactSettings
+  remark: string
+}
+
+interface RechargeResponse {
+  user_id: number
+  nick: string
+  product: string
+  imei: string
+  iccid: string
+  expire_at: string
+  price: number
+}
+
+interface OrderResponse {
+  order_id: number
+  device_count: number
+  total_price: number
+}
+
 type EmptyData = Record<never, never>
 type ResponseData =
   | EmptyData
   | { devices: Device[] }
   | { groups: CompactGroup[] }
-  | { group: CompactGroup & Pick<Group, 'intro' | 'created_at'> & { member_count: number } }
+  | {
+      group: CompactGroup &
+        Pick<Group, 'intro' | 'created_at'> & {
+          member_count: number
+          settings: Group['settings']
+        }
+    }
   | { members: MemberResponse[] }
-  | { friends: User[] }
+  | { friends: FriendResponse[] }
+  | { users: FriendResponse[] }
+  | { contacts: ContactResponse[] }
+  | { devices: RechargeResponse[] }
+  | { order: OrderResponse }
 type ApiResponse = { errcode: number; errmsg: string; data: ResponseData }
 
 const ok = (data: ResponseData): ApiResponse => ({ errcode: 0, errmsg: '', data })
@@ -73,6 +127,10 @@ function compactGroup(group: Group): CompactGroup {
 
 function getGroup(groupId: number): Group | undefined {
   return groups.find((group) => group.group_id === groupId)
+}
+
+function getDevice(deviceId: number): Device | undefined {
+  return devices.find((device) => device.user_id === deviceId)
 }
 
 function getUser(userId: number): User | undefined {
@@ -106,8 +164,30 @@ function groupsForDevice(deviceId: number): CompactGroup[] {
     .map(compactGroup)
 }
 
+function friendData(user: User): FriendResponse {
+  return {
+    user_id: user.user_id,
+    user_num: user.user_num,
+    nick: user.nick,
+    avatar: user.avatar,
+    online: user.online,
+    registered_at: user.registered_at,
+    signature: user.signature,
+  }
+}
+
+function contactData(contact: DeviceContact): ContactResponse | undefined {
+  const user = getUser(contact.user_id)
+  if (!user) return undefined
+  return {
+    ...friendData(user),
+    settings: { ...contact.settings },
+    remark: contact.remark,
+  }
+}
+
 function updateDevice(body: RequestBody): ResponseData {
-  const device = devices.find((item) => item.user_id === id(body.device_id))
+  const device = getDevice(id(body.device_id))
   if (!device) return fail('设备不存在')
   if (body.nick !== undefined) device.nick = body.nick
   if (body.avatar !== undefined) device.avatar = body.avatar
@@ -126,11 +206,16 @@ function updateGroup(body: RequestBody): ResponseData {
 function joinGroup(body: RequestBody): ResponseData {
   const deviceId = id(body.device_id)
   const groupId = id(body.group_id)
-  if (!devices.some((device) => device.user_id === deviceId)) return fail('设备不存在')
+  if (!getDevice(deviceId)) return fail('设备不存在')
   if (!getGroup(groupId)) return fail('群组不存在')
   const joined = deviceGroups.get(deviceId) ?? []
   deviceGroups.set(deviceId, joined)
   if (!joined.includes(groupId)) joined.push(groupId)
+  const members = memberships.get(groupId) ?? []
+  memberships.set(groupId, members)
+  if (!members.some((member) => member.user_id === deviceId)) {
+    members.push({ user_id: deviceId, role: 'member' })
+  }
   return {}
 }
 
@@ -142,6 +227,12 @@ function leaveGroup(body: RequestBody): ResponseData {
     deviceGroups.set(
       deviceId,
       joined.filter((item) => item !== groupId),
+    )
+  const members = memberships.get(groupId)
+  if (members)
+    memberships.set(
+      groupId,
+      members.filter((member) => member.user_id !== deviceId),
     )
   return {}
 }
@@ -172,6 +263,109 @@ function removeMember(body: RequestBody): ResponseData {
   return {}
 }
 
+function dissolveGroup(body: RequestBody): ResponseData {
+  const groupId = id(body.group_id)
+  const group = getGroup(groupId)
+  if (!group) return fail('群组不存在')
+
+  // Authentication is intentionally ignored, but the current account can only
+  // dissolve a group it created or owns.
+  const isOwner =
+    group.created_by === meId ||
+    memberships.get(groupId)?.some((member) => member.user_id === meId && member.role === 'owner')
+  if (!isOwner) return fail('仅群主可以解散群组')
+
+  const index = groups.indexOf(group)
+  if (index !== -1) groups.splice(index, 1)
+  memberships.delete(groupId)
+  for (const [deviceId, groupIds] of deviceGroups) {
+    deviceGroups.set(
+      deviceId,
+      groupIds.filter((candidate) => candidate !== groupId),
+    )
+  }
+  return {}
+}
+
+function updateGroupSettings(body: RequestBody): ResponseData {
+  const group = getGroup(id(body.group_id))
+  if (!group) return fail('群组不存在')
+  for (const key of ['muted', 'share_location', 'broadcast', 'pinned'] as const) {
+    const value = body[key]
+    if (value !== undefined) group.settings[key] = value
+  }
+  return {}
+}
+
+function addContacts(body: RequestBody): ResponseData {
+  const deviceId = id(body.device_id)
+  if (!getDevice(deviceId)) return fail('设备不存在')
+  const current = deviceContacts.get(deviceId) ?? []
+  deviceContacts.set(deviceId, current)
+  for (const contactId of (body.contact_ids ?? []).map(id)) {
+    const user = getUser(contactId)
+    if (user && !current.some((contact) => contact.user_id === contactId)) {
+      current.push({
+        user_id: contactId,
+        registered_at: user.registered_at,
+        settings: { muted: false, share_location: false, broadcast: false, pinned: false },
+        remark: '',
+      })
+    }
+  }
+  return {}
+}
+
+function removeContact(body: RequestBody): ResponseData {
+  const deviceId = id(body.device_id)
+  if (!getDevice(deviceId)) return fail('设备不存在')
+  const current = deviceContacts.get(deviceId)
+  if (current)
+    deviceContacts.set(
+      deviceId,
+      current.filter((contact) => contact.user_id !== id(body.contact_id)),
+    )
+  return {}
+}
+
+function updateContactSettings(body: RequestBody): ResponseData {
+  const deviceId = id(body.device_id)
+  const contactId = id(body.contact_id)
+  if (!getDevice(deviceId)) return fail('设备不存在')
+  const contact = deviceContacts.get(deviceId)?.find((item) => item.user_id === contactId)
+  if (!contact) return fail('联系人不存在')
+  for (const key of ['muted', 'share_location', 'broadcast', 'pinned'] as const) {
+    const value = body[key]
+    if (value !== undefined) contact.settings[key] = value
+  }
+  if (body.remark !== undefined) contact.remark = body.remark
+  return {}
+}
+
+function contactsForDevice(deviceId: number): ContactResponse[] {
+  return (deviceContacts.get(deviceId) ?? [])
+    .map(contactData)
+    .filter((contact): contact is ContactResponse => contact !== undefined)
+}
+
+function rechargeDevices(): RechargeResponse[] {
+  return rechargeInfo
+    .map((info) => {
+      const device = getDevice(info.user_id)
+      if (!device) return undefined
+      return {
+        user_id: device.user_id,
+        nick: device.nick,
+        product: device.product,
+        imei: device.imei,
+        iccid: info.iccid,
+        expire_at: info.expire_at,
+        price: info.price,
+      }
+    })
+    .filter((device): device is RechargeResponse => device !== undefined)
+}
+
 export default defineEventHandler(async (event) => {
   const path = event.context.params?.path ?? ''
   const body = (await readBody<RequestBody>(event)) ?? {}
@@ -187,6 +381,20 @@ export default defineEventHandler(async (event) => {
       return response(joinGroup(body))
     case 'device/leave-group':
       return response(leaveGroup(body))
+    case 'device/contacts': {
+      if (!getDevice(id(body.device_id))) return fail('设备不存在')
+      return ok({ contacts: contactsForDevice(id(body.device_id)) })
+    }
+    case 'device/add-contacts':
+      return response(addContacts(body))
+    case 'device/remove-contact':
+      return response(removeContact(body))
+    case 'device/update-contact-settings':
+      return response(updateContactSettings(body))
+    case 'device/clear-messages':
+      return ok({})
+    case 'device/recharge-list':
+      return ok({ devices: rechargeDevices() })
     case 'group/my-created':
       return ok({ groups: groups.filter((group) => group.created_by === meId).map(compactGroup) })
     case 'group/my-joined':
@@ -214,6 +422,7 @@ export default defineEventHandler(async (event) => {
           intro: group.intro,
           created_at: group.created_at,
           member_count: memberships.get(group.group_id)?.length ?? 0,
+          settings: { ...group.settings },
         },
       })
     }
@@ -225,16 +434,22 @@ export default defineEventHandler(async (event) => {
       return response(removeMember(body))
     case 'group/update':
       return response(updateGroup(body))
-    case 'friend/list':
+    case 'group/dissolve':
+      return response(dissolveGroup(body))
+    case 'group/update-settings':
+      return response(updateGroupSettings(body))
+    case 'user/search': {
+      const keyword = body.keyword ?? ''
       return ok({
-        friends: friends.map((friend) => ({
-          user_id: friend.user_id,
-          user_num: friend.user_num,
-          nick: friend.nick,
-          avatar: friend.avatar,
-          online: friend.online,
-        })),
+        users: friends.filter((user) => user.user_num.includes(keyword)).map(friendData),
       })
+    }
+    case 'friend/list':
+      return ok({ friends: friends.map(friendData) })
+    case 'recharge/create-order': {
+      const deviceIds = (body.device_ids ?? []).map(id)
+      return ok({ order: createRechargeOrder(deviceIds) })
+    }
     default:
       return fail('接口不存在')
   }

@@ -72,6 +72,13 @@ export interface RechargeOrder {
   total_price: number
 }
 
+export interface RechargeRecord {
+  order_id: number
+  amount: number
+  status: string
+  created_at: string
+}
+
 const avatar = (id: number) => `https://api.dicebear.com/9.x/initials/svg?seed=${id}`
 const defaultSettings = (): GroupSettings => ({
   muted: false,
@@ -294,6 +301,23 @@ export const rechargeInfo: RechargeInfo[] = [
 ]
 
 export const rechargeOrders: RechargeOrder[] = []
+export const rechargeRecords = new Map<number, RechargeRecord[]>([
+  [
+    101,
+    [
+      { order_id: 8001, amount: 30, status: '已完成', created_at: '2026-08-18 14:38:01' },
+      { order_id: 8002, amount: 30, status: '已完成', created_at: '2026-05-18 10:12:20' },
+    ],
+  ],
+  [
+    102,
+    [
+      { order_id: 8011, amount: 20, status: '已完成', created_at: '2026-07-01 09:08:12' },
+      { order_id: 8012, amount: 20, status: '处理中', created_at: '2026-04-01 11:25:33' },
+      { order_id: 8013, amount: 20, status: '已完成', created_at: '2026-01-01 08:01:05' },
+    ],
+  ],
+])
 let nextRechargeOrderId = 9001
 
 export function createRechargeOrder(deviceIds: number[]): RechargeOrder {

@@ -133,3 +133,10 @@
 - i18n 三语言、vp check/test、agent-browser Flow A 全页面验证（含二期新页面和群详情新结构）
 - **上线前必须删除 `help.vue` 里的临时 `/devices` 入口链接**（代码里有 WARNING 注释）
 - commit 按 Conventional Commits，不要 WIP 提交
+
+## 二期补充：设备详情页充值区重构（2026-09-03 确认）
+
+- 设备详情页新增**流量卡信息 card section**：卡 ICCID / 卡到期时间 / 续费单价（数据来自接口 20 recharge-list）；card 右上角放「充值缴费」按钮 → 仍走确认弹窗 → 创建订单 → toast「充值成功」
+- card 下方加「流量卡充值记录」block link → 新页面 `/devices/[id]/recharge-records`
+- 新接口 22：`POST /v2/device/recharge-records` `{ device_id }` → `{ records: [{ order_id, amount, status, created_at }] }`，种子数据每台设备 2-3 条
+- 记录页就是简单列表：订单号/金额/状态/时间，沿用现有列表卡片样式

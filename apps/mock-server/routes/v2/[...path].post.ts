@@ -9,6 +9,7 @@ import {
   meId,
   memberships,
   rechargeInfo,
+  rechargeRecords,
   users,
   type ContactSettings,
   type Device,
@@ -87,6 +88,13 @@ interface OrderResponse {
   total_price: number
 }
 
+interface RechargeRecordResponse {
+  order_id: number
+  amount: number
+  status: string
+  created_at: string
+}
+
 type EmptyData = Record<never, never>
 type ResponseData =
   | EmptyData
@@ -105,6 +113,7 @@ type ResponseData =
   | { contacts: ContactResponse[] }
   | { devices: RechargeResponse[] }
   | { order: OrderResponse }
+  | { records: RechargeRecordResponse[] }
 type ApiResponse = { errcode: number; errmsg: string; data: ResponseData }
 
 const ok = (data: ResponseData): ApiResponse => ({ errcode: 0, errmsg: '', data })
@@ -395,6 +404,11 @@ export default defineEventHandler(async (event) => {
       return ok({})
     case 'device/recharge-list':
       return ok({ devices: rechargeDevices() })
+    case 'device/recharge-records': {
+      const deviceId = id(body.device_id)
+      if (!getDevice(deviceId)) return fail('设备不存在')
+      return ok({ records: rechargeRecords.get(deviceId) ?? [] })
+    }
     case 'group/my-created':
       return ok({ groups: groups.filter((group) => group.created_by === meId).map(compactGroup) })
     case 'group/my-joined':

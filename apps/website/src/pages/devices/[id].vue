@@ -186,14 +186,42 @@ async function confirmRecharge(): Promise<void> {
             </div>
           </dl>
 
-          <button
-            type="button"
-            class="mt-4 min-h-12 w-full flex items-center justify-between rounded-standard border border-stroke bg-surface px-4 text-body"
-            @click="openRecharge"
+          <section
+            v-if="rechargeDevice"
+            class="mt-4 rounded-standard border border-stroke bg-surface p-4"
           >
-            <span>{{ t('device.recharge') }}</span>
+            <div class="flex items-start justify-between">
+              <h2 class="text-body font-medium">{{ t('device.recharge') }}</h2>
+              <button
+                type="button"
+                class="rounded-button bg-primary px-3 py-2 text-small font-medium text-primary-text"
+                @click="openRecharge"
+              >
+                {{ t('device.rechargePay') }}
+              </button>
+            </div>
+            <dl class="mt-4 space-y-3 text-2nd-body">
+              <div class="flex items-center justify-between">
+                <dt class="text-text-secondary">{{ t('device.iccid') }}</dt>
+                <dd class="ml-4 text-right">{{ rechargeDevice.iccid }}</dd>
+              </div>
+              <div class="flex items-center justify-between">
+                <dt class="text-text-secondary">{{ t('device.expireAt') }}</dt>
+                <dd class="ml-4 text-right">{{ rechargeDevice.expireAt }}</dd>
+              </div>
+              <div class="flex items-center justify-between">
+                <dt class="text-text-secondary">{{ t('device.price') }}</dt>
+                <dd class="ml-4 text-right font-medium">{{ formatPrice(rechargeDevice.price) }}</dd>
+              </div>
+            </dl>
+          </section>
+          <RouterLink
+            :to="`/devices/${deviceId}/recharge-records`"
+            class="mt-3 min-h-12 w-full flex items-center justify-between rounded-standard border border-stroke bg-surface px-4 text-body"
+          >
+            <span>{{ t('device.rechargeRecords') }}</span>
             <span aria-hidden="true" class="text-text-secondary">›</span>
-          </button>
+          </RouterLink>
 
           <button
             type="button"
@@ -232,15 +260,6 @@ async function confirmRecharge(): Promise<void> {
             price: formatPrice(rechargeDevice?.price),
           })
         }}
-      </p>
-      <p class="mt-2 text-small text-text-secondary">
-        {{ t('device.model') }}: {{ device.product || t('device.notAvailable') }}
-      </p>
-      <p class="mt-1 text-small text-text-secondary">
-        {{ t('device.deviceNumber') }}: {{ device.imei || t('device.notAvailable') }}
-      </p>
-      <p v-if="rechargeDevice" class="mt-1 text-small text-text-secondary">
-        {{ t('device.iccid') }}: {{ rechargeDevice.iccid }}
       </p>
     </BaseModal>
 

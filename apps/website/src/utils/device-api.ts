@@ -32,6 +32,7 @@ export interface Group {
   num: string
   name: string
   avatar: string
+  createdByMe: boolean
 }
 
 export interface GroupInfo extends Group {
@@ -139,6 +140,7 @@ interface GroupDto {
   num: string
   name: string
   avatar: string
+  created_by_me?: boolean
 }
 
 interface GroupSettingsDto {
@@ -503,6 +505,7 @@ function toGroup(group: GroupDto): Group {
     num: group.num,
     name: group.name,
     avatar: group.avatar,
+    createdByMe: group.created_by_me ?? false,
   }
 }
 

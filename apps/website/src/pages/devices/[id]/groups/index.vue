@@ -25,6 +25,9 @@ const { state, refetch: reload } = useQuery({
   },
 })
 
+const createdGroups = computed(() => state.value.data?.filter((group) => group.createdByMe) ?? [])
+const joinedGroups = computed(() => state.value.data?.filter((group) => !group.createdByMe) ?? [])
+
 function openGroup(group: Group): void {
   if (deviceId.value != null) router.push(`/devices/${deviceId.value}/groups/${group.groupId}`)
 }
@@ -51,9 +54,6 @@ function openGroup(group: Group): void {
         </router-link>
       </nav>
 
-      <h2 class="mt-6 mb-3 text-2nd-body font-semibold text-text-secondary">
-        {{ t('device.joinedGroups') }}
-      </h2>
       <QueryState
         :status="state.status"
         :error="state.error"
@@ -61,24 +61,65 @@ function openGroup(group: Group): void {
         :empty-text="t('device.emptyGroups')"
         @retry="reload()"
       >
-        <ul class="space-y-3">
-          <li v-for="group in state.data" :key="group.groupId" class="card">
-            <button
-              type="button"
-              class="w-full flex items-center text-left"
-              @click="openGroup(group)"
-            >
-              <Avatar :name="group.name" :src="group.avatar" />
-              <span class="ml-3 min-w-0 flex-1">
-                <span class="block truncate text-body font-medium">{{ group.name }}</span>
-                <span class="mt-0.5 block truncate text-small text-text-secondary">{{
-                  group.num
-                }}</span>
-              </span>
-              <span aria-hidden="true" class="ml-2 text-text-secondary">›</span>
-            </button>
-          </li>
-        </ul>
+        <section class="mt-6">
+          <h2 class="mb-3 text-2nd-body font-semibold text-text-secondary">
+            {{ t('device.createdGroups') }}
+          </h2>
+          <p
+            v-if="createdGroups.length === 0"
+            class="py-4 text-center text-2nd-body text-text-secondary"
+          >
+            {{ t('device.noMatchingGroups') }}
+          </p>
+          <ul v-else class="space-y-3">
+            <li v-for="group in createdGroups" :key="`created-${group.groupId}`">
+              <button
+                type="button"
+                class="card w-full flex items-center text-left"
+                @click="openGroup(group)"
+              >
+                <Avatar :name="group.name" :src="group.avatar" />
+                <span class="ml-3 min-w-0 flex-1">
+                  <span class="block truncate text-body font-medium">{{ group.name }}</span>
+                  <span class="mt-0.5 block truncate text-small text-text-secondary">{{
+                    group.num
+                  }}</span>
+                </span>
+                <span aria-hidden="true" class="ml-2 text-text-secondary">›</span>
+              </button>
+            </li>
+          </ul>
+        </section>
+
+        <section class="mt-8">
+          <h2 class="mb-3 text-2nd-body font-semibold text-text-secondary">
+            {{ t('device.joinedGroups') }}
+          </h2>
+          <p
+            v-if="joinedGroups.length === 0"
+            class="py-4 text-center text-2nd-body text-text-secondary"
+          >
+            {{ t('device.noMatchingGroups') }}
+          </p>
+          <ul v-else class="space-y-3">
+            <li v-for="group in joinedGroups" :key="`joined-${group.groupId}`">
+              <button
+                type="button"
+                class="card w-full flex items-center text-left"
+                @click="openGroup(group)"
+              >
+                <Avatar :name="group.name" :src="group.avatar" />
+                <span class="ml-3 min-w-0 flex-1">
+                  <span class="block truncate text-body font-medium">{{ group.name }}</span>
+                  <span class="mt-0.5 block truncate text-small text-text-secondary">{{
+                    group.num
+                  }}</span>
+                </span>
+                <span aria-hidden="true" class="ml-2 text-text-secondary">›</span>
+              </button>
+            </li>
+          </ul>
+        </section>
       </QueryState>
     </main>
   </div>

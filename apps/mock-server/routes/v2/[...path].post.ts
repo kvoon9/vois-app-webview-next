@@ -53,6 +53,7 @@ interface CompactGroup {
   num: string
   name: string
   avatar: string
+  created_by_me: boolean
 }
 
 interface MemberResponse {
@@ -145,6 +146,7 @@ function compactGroup(group: Group): CompactGroup {
     num: group.num,
     name: group.name,
     avatar: group.avatar,
+    created_by_me: group.created_by === meId,
   }
 }
 

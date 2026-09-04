@@ -188,3 +188,8 @@ mock 数据:设备 101 造**最近 3 天**轨迹(深圳坂田一带折线),围�
 
 - i18n 三语言、vp check + vp test 全绿、双构建通过
 - agent-browser Flow A:成员列表独立页(从群详情 link item 进)、群名/群昵称/群介绍权限差异(群主 vs 非群主群)、三个地图页面渲染、日历选日期画轨迹、上报频率切换后位置页提示条联动
+
+## 三期补充:设备群列表区分「我创建的/我加入的」(2026-09-04 确认)
+
+- 接口 1 `/v2/device/groups` 的 group 项加 `created_by_me: boolean`(mock 按 `created_by === meId` 计算)
+- 群组管理页 `/devices/[id]/groups` 的群列表改为两个 section:「我创建的」「我加入的」(参照从通讯录添加页的两段样式)

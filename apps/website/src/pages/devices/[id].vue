@@ -2,7 +2,7 @@
 import { useMutation, useQuery, useQueryCache } from '@pinia/colada'
 import { computed, shallowRef } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { RouterView, useRoute, useRouter } from 'vue-router'
+import { RouterLink, RouterView, useRoute, useRouter } from 'vue-router'
 import BaseModal from '~/components/BaseModal.vue'
 import PageHeader from '~/components/PageHeader.vue'
 import QueryState from '~/components/settings/QueryState.vue'
@@ -240,6 +240,30 @@ async function confirmRecharge(): Promise<void> {
             <span>{{ t('device.contacts') }}</span>
             <span aria-hidden="true" class="text-text-secondary">›</span>
           </button>
+
+          <nav class="mt-3 space-y-3" :aria-label="t('device.locationFeatures')">
+            <RouterLink
+              :to="`/devices/${deviceId}/location`"
+              class="min-h-12 w-full flex items-center justify-between rounded-standard border border-stroke bg-surface px-4 text-body"
+            >
+              <span>{{ t('device.locationAndFence') }}</span>
+              <span aria-hidden="true" class="text-text-secondary">›</span>
+            </RouterLink>
+            <RouterLink
+              :to="`/devices/${deviceId}/track`"
+              class="min-h-12 w-full flex items-center justify-between rounded-standard border border-stroke bg-surface px-4 text-body"
+            >
+              <span>{{ t('device.trackRecords') }}</span>
+              <span aria-hidden="true" class="text-text-secondary">›</span>
+            </RouterLink>
+            <RouterLink
+              :to="`/devices/${deviceId}/track-setting`"
+              class="min-h-12 w-full flex items-center justify-between rounded-standard border border-stroke bg-surface px-4 text-body"
+            >
+              <span>{{ t('device.trackSetting') }}</span>
+              <span aria-hidden="true" class="text-text-secondary">›</span>
+            </RouterLink>
+          </nav>
         </template>
       </QueryState>
     </main>

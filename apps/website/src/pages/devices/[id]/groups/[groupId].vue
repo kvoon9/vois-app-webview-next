@@ -10,24 +10,24 @@ import { useToast } from '~/composables/useToast'
 import {
   dissolveGroup as dissolveDeviceGroup,
   getGroupInfo,
-  getGroupMembers,
   getMyCreatedGroups,
   leaveDeviceGroup,
   updateGroup,
   updateGroupSettings,
+  updateMyGroupNickname,
   type GroupInfo,
-  type GroupMember,
   type GroupSettings,
 } from '~/utils/device-api'
 import { hideBrokenImage } from '~/utils/image'
+
+type RouteParam = string | string[] | undefined
+type EditableField = 'name' | 'intro' | 'nickname'
 
 const route = useRoute()
 const router = useRouter()
 const { t } = useI18n({ useScope: 'global' })
 const queryCache = useQueryCache()
 const { showToast } = useToast()
-
-type RouteParam = string | string[] | undefined
 
 const defaultGroupSettings: GroupSettings = {
   muted: false,
@@ -45,26 +45,18 @@ function routeNumber(value: RouteParam): number | null {
 
 const deviceId = computed(() => routeNumber(route.params.id))
 const groupId = computed(() => routeNumber(route.params.groupId))
-const editing = shallowRef<'name' | 'intro' | null>(null)
+const editing = shallowRef<EditableField | null>(null)
 const editValue = shallowRef('')
-const search = shallowRef('')
 const leaveConfirmation = shallowRef(false)
 const dissolveConfirmation = shallowRef(false)
 
-async function load(): Promise<{
-  group: GroupInfo
-  members: GroupMember[]
-  ownedGroupIds: number[]
-}> {
-  if (deviceId.value == null) throw new Error(t('error.description'))
+async function load(): Promise<{ group: GroupInfo; ownedGroupIds: number[] }> {
   if (groupId.value == null) throw new Error(t('error.description'))
-
-  const [group, members, ownedGroups] = await Promise.all([
+  const [group, ownedGroups] = await Promise.all([
     getGroupInfo(groupId.value),
-    getGroupMembers(groupId.value),
     getMyCreatedGroups(),
   ])
-  return { group, members, ownedGroupIds: ownedGroups.map((item) => item.groupId) }
+  return { group, ownedGroupIds: ownedGroups.map((item) => item.groupId) }
 }
 
 const { state, refetch: reload } = useQuery({
@@ -73,36 +65,28 @@ const { state, refetch: reload } = useQuery({
 })
 
 const group = computed(() => state.value.data?.group ?? null)
-const members = computed(() => state.value.data?.members ?? [])
-const totalMembers = computed(() => members.value.length)
 const groupSettings = computed(() => group.value?.settings ?? defaultGroupSettings)
-
-// The created-groups query identifies the current account for the owner-only action.
 const isOwner = computed(
   () => state.value.data?.ownedGroupIds.includes(groupId.value ?? 0) ?? false,
 )
-const editingTitle = computed(() =>
-  editing.value === 'name' ? t('device.groupNickname') : t('device.groupIntroduction'),
-)
-const filteredMembers = computed(() => {
-  const keyword = search.value.trim().toLocaleLowerCase()
-  if (!keyword) return members.value
-  return members.value.filter((member) =>
-    [member.nick, member.userNum, member.signature].some((value) =>
-      value.toLocaleLowerCase().includes(keyword),
-    ),
-  )
+const editingTitle = computed(() => {
+  if (editing.value === 'name') return t('device.groupName')
+  if (editing.value === 'intro') return t('device.groupIntroduction')
+  return t('device.groupNickname')
 })
-const groupedMembers = computed(() => ({
-  owner: filteredMembers.value.filter((member) => member.role === 'owner'),
-  admin: filteredMembers.value.filter((member) => member.role === 'admin'),
-  member: filteredMembers.value.filter((member) => member.role === 'member'),
-}))
+const myNickname = computed(() => group.value?.myNickname || t('device.groupNicknameUnset'))
 
 const updateMutation = useMutation({
   mutation: (input: { name?: string; intro?: string }) => {
     if (groupId.value == null) throw new Error(t('error.description'))
     return updateGroup(groupId.value, input)
+  },
+})
+
+const nicknameMutation = useMutation({
+  mutation: (nickname: string) => {
+    if (groupId.value == null) throw new Error(t('error.description'))
+    return updateMyGroupNickname(groupId.value, nickname)
   },
 })
 
@@ -115,8 +99,9 @@ const settingsMutation = useMutation({
 
 const leaveMutation = useMutation({
   mutation: () => {
-    if (deviceId.value == null) throw new Error(t('error.description'))
-    if (groupId.value == null) throw new Error(t('error.description'))
+    if (deviceId.value == null || groupId.value == null) {
+      throw new Error(t('error.description'))
+    }
     return leaveDeviceGroup(deviceId.value, groupId.value)
   },
 })
@@ -128,27 +113,36 @@ const dissolveMutation = useMutation({
   },
 })
 
-function openEditor(kind: 'name' | 'intro'): void {
+function openEditor(kind: EditableField): void {
   const current = group.value
-  if (!current) return
+  if (!current || (kind !== 'nickname' && !isOwner.value)) return
   editing.value = kind
-  editValue.value = kind === 'name' ? current.name : current.intro
+  editValue.value =
+    kind === 'name' ? current.name : kind === 'intro' ? current.intro : current.myNickname
 }
 
 function closeEditor(): void {
-  if (!updateMutation.isLoading.value) editing.value = null
+  if (!updateMutation.isLoading.value && !nicknameMutation.isLoading.value) editing.value = null
 }
 
 async function saveGroupField(): Promise<void> {
-  if (!editing.value || updateMutation.isLoading.value) return
+  if (!editing.value) return
   const value = editValue.value.trim()
   if (editing.value === 'name' && value === '') {
     showToast(t('device.groupNameRequired'), { type: 'error' })
     return
   }
+  if (editing.value === 'nickname' && value === '') {
+    showToast(t('device.groupNicknameRequired'), { type: 'error' })
+    return
+  }
 
   try {
-    await updateMutation.mutateAsync(editing.value === 'name' ? { name: value } : { intro: value })
+    if (editing.value === 'nickname') await nicknameMutation.mutateAsync(value)
+    else
+      await updateMutation.mutateAsync(
+        editing.value === 'name' ? { name: value } : { intro: value },
+      )
     editing.value = null
     await queryCache.invalidateQueries({ key: ['device-management'] })
     await reload()
@@ -160,7 +154,6 @@ async function saveGroupField(): Promise<void> {
 
 async function toggleSetting(key: keyof GroupSettings): Promise<void> {
   if (settingsMutation.isLoading.value || !group.value) return
-
   const changes: Partial<GroupSettings> = { [key]: !groupSettings.value[key] }
   try {
     await settingsMutation.mutateAsync(changes)
@@ -172,16 +165,8 @@ async function toggleSetting(key: keyof GroupSettings): Promise<void> {
   }
 }
 
-function openMember(member: GroupMember): void {
-  router.push({
-    path: `/devices/${deviceId.value}/groups/${groupId.value}/members/${member.userId}`,
-    query: route.query,
-  })
-}
-
 async function leaveGroup(): Promise<void> {
   if (leaveMutation.isLoading.value) return
-
   try {
     await leaveMutation.mutateAsync()
     leaveConfirmation.value = false
@@ -195,7 +180,6 @@ async function leaveGroup(): Promise<void> {
 
 async function dissolveGroup(): Promise<void> {
   if (!isOwner.value || dissolveMutation.isLoading.value) return
-
   try {
     await dissolveMutation.mutateAsync()
     dissolveConfirmation.value = false
@@ -216,7 +200,7 @@ async function dissolveGroup(): Promise<void> {
     <main class="p-4">
       <QueryState :status="state.status" :error="state.error" @retry="reload()">
         <template v-if="group">
-          <section class="border border-stroke rounded-standard bg-surface">
+          <section class="overflow-hidden rounded-standard border border-stroke bg-surface">
             <div class="flex flex-col items-center px-4 py-5 text-center">
               <span
                 class="relative h-20 w-20 flex items-center justify-center overflow-hidden rounded-full bg-surface-muted text-2xl text-text-secondary"
@@ -241,17 +225,26 @@ async function dissolveGroup(): Promise<void> {
 
             <div class="divide-y divide-stroke border-t border-stroke">
               <button
+                v-if="isOwner"
                 type="button"
                 class="min-h-14 w-full flex items-center justify-between px-4 py-3 text-left"
                 @click="openEditor('name')"
               >
                 <span>
-                  <span class="block text-body">{{ t('device.groupNickname') }}</span>
+                  <span class="block text-body">{{ t('device.groupName') }}</span>
                   <span class="mt-0.5 block text-small text-text-secondary">{{ group.name }}</span>
                 </span>
                 <span aria-hidden="true" class="ml-3 text-text-secondary">›</span>
               </button>
+              <div v-else class="min-h-14 flex items-center justify-between px-4 py-3">
+                <span>
+                  <span class="block text-body">{{ t('device.groupName') }}</span>
+                  <span class="mt-0.5 block text-small text-text-secondary">{{ group.name }}</span>
+                </span>
+              </div>
+
               <button
+                v-if="isOwner"
                 type="button"
                 class="min-h-14 w-full flex items-center justify-between px-4 py-3 text-left"
                 @click="openEditor('intro')"
@@ -259,16 +252,36 @@ async function dissolveGroup(): Promise<void> {
                 <span class="min-w-0">
                   <span class="block text-body">{{ t('device.groupIntroduction') }}</span>
                   <span class="mt-0.5 block truncate text-small text-text-secondary">
-                    {{ group.intro || t('error.description') }}
+                    {{ group.intro || t('device.notAvailable') }}
                   </span>
                 </span>
                 <span aria-hidden="true" class="ml-3 flex-none text-text-secondary">›</span>
+              </button>
+              <div v-else class="min-h-14 flex items-center justify-between px-4 py-3">
+                <span class="min-w-0">
+                  <span class="block text-body">{{ t('device.groupIntroduction') }}</span>
+                  <span class="mt-0.5 block truncate text-small text-text-secondary">
+                    {{ group.intro || t('device.notAvailable') }}
+                  </span>
+                </span>
+              </div>
+
+              <button
+                type="button"
+                class="min-h-14 w-full flex items-center justify-between px-4 py-3 text-left"
+                @click="openEditor('nickname')"
+              >
+                <span>
+                  <span class="block text-body">{{ t('device.groupNickname') }}</span>
+                  <span class="mt-0.5 block text-small text-text-secondary">{{ myNickname }}</span>
+                </span>
+                <span aria-hidden="true" class="ml-3 text-text-secondary">›</span>
               </button>
             </div>
           </section>
 
           <section
-            class="mt-4 divide-y divide-stroke border border-stroke rounded-standard bg-surface"
+            class="mt-4 divide-y divide-stroke rounded-standard border border-stroke bg-surface"
           >
             <div class="min-h-12 flex items-center justify-between px-4 text-body">
               <span>{{ t('device.muteNotifications') }}</span>
@@ -344,93 +357,16 @@ async function dissolveGroup(): Promise<void> {
             </div>
           </section>
 
-          <section class="mt-4">
-            <div class="flex items-center justify-between px-1">
-              <h2 class="text-body font-medium">
-                {{ t('device.membersCount', { count: totalMembers }) }}
-              </h2>
-              <RouterLink
-                :to="{
-                  path: `/devices/${deviceId}/groups/${groupId}/members/add`,
-                  query: route.query,
-                }"
-                class="text-body text-primary"
-              >
-                {{ t('device.addMember') }}
-              </RouterLink>
-            </div>
-
-            <label class="relative mt-3 block">
-              <span class="sr-only">{{ t('device.searchMembers') }}</span>
-              <input
-                v-model="search"
-                type="search"
-                class="input-field pr-10"
-                :placeholder="t('device.searchMembers')"
-              />
-              <button
-                v-if="search"
-                type="button"
-                class="absolute right-2 top-1/2 h-9 w-9 -translate-y-1/2 text-text-secondary"
-                :aria-label="t('modal.close')"
-                @click="search = ''"
-              >
-                ×
-              </button>
-            </label>
-
-            <div
-              v-if="filteredMembers.length === 0"
-              class="py-12 text-center text-body text-text-secondary"
-            >
-              {{ t('device.noMatchingMembers') }}
-            </div>
-            <div v-else class="mt-4 space-y-4">
-              <section v-for="section in ['owner', 'admin', 'member'] as const" :key="section">
-                <template v-if="groupedMembers[section].length">
-                  <h3 class="mb-2 px-1 text-small font-medium text-text-secondary">
-                    {{ t(`device.roles.${section}`) }}
-                  </h3>
-                  <div
-                    class="divide-y divide-stroke border border-stroke rounded-standard bg-surface"
-                  >
-                    <button
-                      v-for="member in groupedMembers[section]"
-                      :key="member.userId"
-                      type="button"
-                      class="min-h-16 w-full flex items-center px-4 text-left"
-                      @click="openMember(member)"
-                    >
-                      <span
-                        class="relative h-11 w-11 flex-none flex items-center justify-center overflow-hidden rounded-full bg-surface-muted text-text-secondary"
-                      >
-                        {{ member.nick.slice(0, 1) }}
-                        <img
-                          v-if="member.avatar"
-                          :src="member.avatar"
-                          alt=""
-                          class="absolute inset-0 h-full w-full object-cover"
-                          @error="hideBrokenImage"
-                        />
-                        <span
-                          class="absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-surface"
-                          :class="member.online ? 'bg-primary' : 'bg-text-secondary'"
-                          :aria-label="member.online ? t('device.online') : t('device.offline')"
-                        />
-                      </span>
-                      <span class="min-w-0 ml-3 flex-1">
-                        <span class="block truncate text-body">{{ member.nick }}</span>
-                        <span class="mt-0.5 block truncate text-small text-text-secondary">{{
-                          member.userNum
-                        }}</span>
-                      </span>
-                      <span aria-hidden="true" class="ml-2 text-text-secondary">›</span>
-                    </button>
-                  </div>
-                </template>
-              </section>
-            </div>
-          </section>
+          <RouterLink
+            :to="{
+              path: `/devices/${deviceId}/groups/${groupId}/members`,
+              query: route.query,
+            }"
+            class="mt-4 min-h-14 w-full flex items-center justify-between rounded-standard border border-stroke bg-surface px-4 text-body"
+          >
+            <span>{{ t('device.membersCount', { count: group.memberCount }) }}</span>
+            <span aria-hidden="true" class="ml-3 text-text-secondary">›</span>
+          </RouterLink>
 
           <div class="mt-8 space-y-3">
             <button
@@ -459,8 +395,12 @@ async function dissolveGroup(): Promise<void> {
       v-if="editing"
       :title="editingTitle"
       :cancel-text="t('modal.cancel')"
-      :confirm-text="updateMutation.isLoading.value ? t('device.saving') : t('modal.confirm')"
-      :dismissible="!updateMutation.isLoading.value"
+      :confirm-text="
+        updateMutation.isLoading.value || nicknameMutation.isLoading.value
+          ? t('device.saving')
+          : t('modal.confirm')
+      "
+      :dismissible="!updateMutation.isLoading.value && !nicknameMutation.isLoading.value"
       @cancel="closeEditor"
       @confirm="saveGroupField"
     >
@@ -470,7 +410,7 @@ async function dissolveGroup(): Promise<void> {
           v-model="editValue"
           class="input-field mt-2 min-h-24"
           :aria-label="editingTitle"
-          :disabled="updateMutation.isLoading.value"
+          :disabled="updateMutation.isLoading.value || nicknameMutation.isLoading.value"
           rows="3"
         />
       </label>

@@ -9,6 +9,8 @@
     "preview": "vp preview --host --port 5173 --debug"
   },
   "dependencies": {
+    "@amap/amap-jsapi-loader": "catalog:",
+    "@internationalized/date": "catalog:",
     "@pinia/colada": "catalog:vue",
     "@valibot/i18n": "^1.2.0",
     "@vois/webview-bridge": "^0.1.0",

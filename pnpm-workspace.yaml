@@ -57,3 +57,6 @@ minimumReleaseAgeExclude:
   - '@vue/shared@3.6.0-rc.5'
   - vue@3.6.0-rc.5
   - '@vue/compiler-vapor@3.6.0-rc.5'
+catalog:
+  '@amap/amap-jsapi-loader': ^1.0.1
+  '@internationalized/date': ^3.12.3

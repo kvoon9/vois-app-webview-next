@@ -1,4 +1,5 @@
 export type GroupMemberRole = 'owner' | 'admin' | 'member'
+export type TrackFrequency = 'off' | 'low' | 'mid' | 'high'
 
 export interface GroupSettings {
   muted: boolean
@@ -50,6 +51,25 @@ export interface User {
 export interface Membership {
   user_id: number
   role: GroupMemberRole
+  nickname: string
+}
+
+export interface DeviceLocation {
+  lng: number
+  lat: number
+  updated_at: string
+  report_frequency: TrackFrequency
+  fence: {
+    lng: number
+    lat: number
+    radius: number
+  } | null
+}
+
+export interface TrackPoint {
+  lng: number
+  lat: number
+  time: string
 }
 
 export interface DeviceContact {
@@ -215,36 +235,36 @@ export const memberships = new Map<number, Membership[]>([
   [
     1001,
     [
-      { user_id: 1, role: 'owner' },
-      { user_id: 2, role: 'admin' },
-      { user_id: 2001, role: 'member' },
-      { user_id: 2002, role: 'member' },
-      { user_id: 2003, role: 'member' },
-      { user_id: 2004, role: 'member' },
-      { user_id: 2005, role: 'member' },
-      { user_id: 2006, role: 'member' },
-      { user_id: 101, role: 'member' },
+      { user_id: 1, role: 'owner', nickname: '林舟' },
+      { user_id: 2, role: 'admin', nickname: '周宁' },
+      { user_id: 2001, role: 'member', nickname: '小满' },
+      { user_id: 2002, role: 'member', nickname: '' },
+      { user_id: 2003, role: 'member', nickname: '清风' },
+      { user_id: 2004, role: 'member', nickname: '' },
+      { user_id: 2005, role: 'member', nickname: '' },
+      { user_id: 2006, role: 'member', nickname: '夏至' },
+      { user_id: 101, role: 'member', nickname: '工作手机' },
     ],
   ],
   [
     1002,
     [
-      { user_id: 2, role: 'owner' },
-      { user_id: 3, role: 'admin' },
-      { user_id: 1, role: 'member' },
-      { user_id: 102, role: 'member' },
-      { user_id: 2007, role: 'member' },
-      { user_id: 2008, role: 'member' },
+      { user_id: 2, role: 'owner', nickname: '周宁' },
+      { user_id: 3, role: 'admin', nickname: '陈默' },
+      { user_id: 1, role: 'member', nickname: '小舟' },
+      { user_id: 102, role: 'member', nickname: '备用手机' },
+      { user_id: 2007, role: 'member', nickname: '' },
+      { user_id: 2008, role: 'member', nickname: '安然' },
     ],
   ],
   [
     1003,
     [
-      { user_id: 1, role: 'owner' },
-      { user_id: 3, role: 'admin' },
-      { user_id: 101, role: 'member' },
-      { user_id: 2009, role: 'member' },
-      { user_id: 2010, role: 'member' },
+      { user_id: 1, role: 'owner', nickname: '林舟' },
+      { user_id: 3, role: 'admin', nickname: '陈默' },
+      { user_id: 101, role: 'member', nickname: '工作手机' },
+      { user_id: 2009, role: 'member', nickname: '星河' },
+      { user_id: 2010, role: 'member', nickname: '' },
     ],
   ],
 ])
@@ -317,6 +337,69 @@ export const rechargeRecords = new Map<number, RechargeRecord[]>([
       { order_id: 8013, amount: 20, status: '已完成', created_at: '2026-01-01 08:01:05' },
     ],
   ],
+])
+
+export const deviceLocations = new Map<number, DeviceLocation>([
+  [
+    101,
+    {
+      lng: 114.0684,
+      lat: 22.6295,
+      updated_at: '2026-09-04 10:28:00',
+      report_frequency: 'off',
+      fence: { lng: 114.0668, lat: 22.6305, radius: 980 },
+    },
+  ],
+  [
+    102,
+    {
+      lng: 114.0557,
+      lat: 22.6172,
+      updated_at: '2026-09-03 18:06:00',
+      report_frequency: 'low',
+      fence: null,
+    },
+  ],
+])
+
+export const deviceTracks = new Map<number, Map<string, TrackPoint[]>>([
+  [
+    101,
+    new Map([
+      [
+        '2026-09-02',
+        [
+          { lng: 114.0612, lat: 22.6344, time: '08:12:00' },
+          { lng: 114.0638, lat: 22.6322, time: '09:04:00' },
+          { lng: 114.0671, lat: 22.6334, time: '10:16:00' },
+          { lng: 114.0702, lat: 22.6308, time: '11:28:00' },
+          { lng: 114.0684, lat: 22.6279, time: '13:45:00' },
+        ],
+      ],
+      [
+        '2026-09-03',
+        [
+          { lng: 114.0712, lat: 22.6264, time: '07:58:00' },
+          { lng: 114.0685, lat: 22.6284, time: '08:42:00' },
+          { lng: 114.0653, lat: 22.6272, time: '10:18:00' },
+          { lng: 114.0627, lat: 22.6299, time: '12:06:00' },
+          { lng: 114.0649, lat: 22.6321, time: '15:22:00' },
+          { lng: 114.0688, lat: 22.6302, time: '17:10:00' },
+        ],
+      ],
+      [
+        '2026-09-04',
+        [
+          { lng: 114.0631, lat: 22.6258, time: '08:06:00' },
+          { lng: 114.0646, lat: 22.6282, time: '08:54:00' },
+          { lng: 114.0678, lat: 22.6297, time: '09:32:00' },
+          { lng: 114.0708, lat: 22.6286, time: '10:04:00' },
+          { lng: 114.0684, lat: 22.6295, time: '10:28:00' },
+        ],
+      ],
+    ]),
+  ],
+  [102, new Map()],
 ])
 let nextRechargeOrderId = 9001
 

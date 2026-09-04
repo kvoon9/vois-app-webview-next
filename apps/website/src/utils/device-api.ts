@@ -39,6 +39,7 @@ export interface GroupInfo extends Group {
   createdAt: string
   memberCount: number
   settings: GroupSettings
+  myNickname: string
 }
 
 export type GroupMemberRole = 'owner' | 'admin' | 'member'
@@ -51,6 +52,29 @@ export interface GroupMember {
   role: GroupMemberRole
   online: boolean
   signature: string
+  nickname: string
+}
+
+export type TrackFrequency = 'off' | 'low' | 'mid' | 'high'
+
+export interface DeviceFence {
+  lng: number
+  lat: number
+  radius: number
+}
+
+export interface DeviceLocation {
+  lng: number
+  lat: number
+  updatedAt: string
+  reportFrequency: TrackFrequency
+  fence: DeviceFence | null
+}
+
+export interface TrackPoint {
+  lng: number
+  lat: number
+  time: string
 }
 
 export interface Friend {
@@ -129,6 +153,7 @@ interface GroupInfoDto extends GroupDto {
   created_at: string
   member_count: number
   settings?: GroupSettingsDto
+  my_nickname?: string
 }
 
 interface GroupMemberDto {
@@ -139,6 +164,27 @@ interface GroupMemberDto {
   role: GroupMemberRole
   online: boolean
   signature: string
+  nickname?: string
+}
+
+interface DeviceFenceDto {
+  lng: number
+  lat: number
+  radius: number
+}
+
+interface DeviceLocationDto {
+  lng: number
+  lat: number
+  updated_at: string
+  report_frequency: TrackFrequency
+  fence: DeviceFenceDto | null
+}
+
+interface TrackPointDto {
+  lng: number
+  lat: number
+  time: string
 }
 
 interface FriendDto {
@@ -342,6 +388,41 @@ export async function updateGroup(
   return response.data
 }
 
+/** Update the current account's in-group card name. */
+export async function updateMyGroupNickname(groupId: number, nickname: string): Promise<EmptyData> {
+  const response = await weilaFetch<EmptyData>('/v2/group/update-my-nickname', {
+    body: { group_id: groupId, nickname },
+  })
+  return response.data
+}
+
+/** Load the device's latest location and its read-only fence. */
+export async function getDeviceLocation(deviceId: number): Promise<DeviceLocation> {
+  const response = await weilaFetch<DeviceLocationDto>('/v2/device/location', {
+    body: { device_id: deviceId },
+  })
+  return toDeviceLocation(response.data)
+}
+
+/** Load one day's track points in chronological order. */
+export async function getDeviceTrack(deviceId: number, date: string): Promise<TrackPoint[]> {
+  const response = await weilaFetch<{ points: TrackPointDto[] }>('/v2/device/track', {
+    body: { device_id: deviceId, date },
+  })
+  return response.data.points.map(toTrackPoint)
+}
+
+/** Persist the device's track reporting frequency. */
+export async function updateDeviceTrackSetting(
+  deviceId: number,
+  frequency: TrackFrequency,
+): Promise<EmptyData> {
+  const response = await weilaFetch<EmptyData>('/v2/device/update-track-setting', {
+    body: { device_id: deviceId, frequency },
+  })
+  return response.data
+}
+
 export async function getFriends(): Promise<Friend[]> {
   const response = await weilaFetch<{ friends: FriendDto[] }>('/v2/friend/list')
   return response.data.friends.map(toFriend)
@@ -432,6 +513,7 @@ function toGroupInfo(group: GroupInfoDto): GroupInfo {
     createdAt: group.created_at,
     memberCount: group.member_count,
     settings: toSettings(group.settings),
+    myNickname: group.my_nickname ?? '',
   }
 }
 
@@ -444,6 +526,7 @@ function toGroupMember(member: GroupMemberDto): GroupMember {
     role: member.role,
     online: member.online,
     signature: member.signature,
+    nickname: member.nickname ?? '',
   }
 }
 
@@ -513,6 +596,30 @@ function toRechargeRecord(record: RechargeRecordDto): RechargeRecord {
     amount: record.amount,
     status: record.status,
     createdAt: record.created_at,
+  }
+}
+
+function toDeviceLocation(location: DeviceLocationDto): DeviceLocation {
+  return {
+    lng: location.lng,
+    lat: location.lat,
+    updatedAt: location.updated_at,
+    reportFrequency: location.report_frequency,
+    fence: location.fence
+      ? {
+          lng: location.fence.lng,
+          lat: location.fence.lat,
+          radius: location.fence.radius,
+        }
+      : null,
+  }
+}
+
+function toTrackPoint(point: TrackPointDto): TrackPoint {
+  return {
+    lng: point.lng,
+    lat: point.lat,
+    time: point.time,
   }
 }
 

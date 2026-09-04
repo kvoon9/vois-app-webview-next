@@ -63,7 +63,7 @@ async function removeMember(): Promise<void> {
     confirmationOpen.value = false
     showToast(t('device.memberRemoved'))
     await router.push({
-      path: `/devices/${deviceId.value}/groups/${groupId.value}`,
+      path: `/devices/${deviceId.value}/groups/${groupId.value}/members`,
       query: route.query,
     })
     await queryCache.invalidateQueries({ key: ['device-management'] })
@@ -108,6 +108,9 @@ async function removeMember(): Promise<void> {
                 {{ t('device.groupNickname') }}
               </p>
               <p class="mt-1 text-body">{{ member.nick }}</p>
+              <p v-if="member.nickname" class="mt-1 text-small text-text-secondary">
+                {{ member.nickname }}
+              </p>
             </div>
             <div class="min-h-14 px-4 py-3">
               <p class="text-small text-text-secondary">

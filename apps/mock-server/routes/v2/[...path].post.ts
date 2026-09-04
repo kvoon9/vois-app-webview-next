@@ -10,14 +10,19 @@ import {
   memberships,
   rechargeInfo,
   rechargeRecords,
+  deviceLocations,
+  deviceTracks,
   users,
   type ContactSettings,
   type Device,
+  type DeviceLocation,
   type DeviceContact,
   type Group,
   type GroupMemberRole,
   type Membership,
   type User,
+  type TrackFrequency,
+  type TrackPoint,
 } from '../../server/data.js'
 
 interface RequestBody {
@@ -38,6 +43,9 @@ interface RequestBody {
   broadcast?: boolean
   pinned?: boolean
   remark?: string
+  nickname?: string
+  date?: string
+  frequency?: TrackFrequency
 }
 
 interface CompactGroup {
@@ -55,6 +63,7 @@ interface MemberResponse {
   role: GroupMemberRole
   online: boolean
   signature: string
+  nickname: string
 }
 
 interface FriendResponse {
@@ -95,6 +104,8 @@ interface RechargeRecordResponse {
   created_at: string
 }
 
+interface LocationResponse extends DeviceLocation {}
+
 type EmptyData = Record<never, never>
 type ResponseData =
   | EmptyData
@@ -105,6 +116,7 @@ type ResponseData =
         Pick<Group, 'intro' | 'created_at'> & {
           member_count: number
           settings: Group['settings']
+          my_nickname: string
         }
     }
   | { members: MemberResponse[] }
@@ -114,6 +126,8 @@ type ResponseData =
   | { devices: RechargeResponse[] }
   | { order: OrderResponse }
   | { records: RechargeRecordResponse[] }
+  | LocationResponse
+  | { points: TrackPoint[] }
 type ApiResponse = { errcode: number; errmsg: string; data: ResponseData }
 
 const ok = (data: ResponseData): ApiResponse => ({ errcode: 0, errmsg: '', data })
@@ -157,6 +171,7 @@ function memberData(membership: Membership): MemberResponse | undefined {
     role: membership.role,
     online: user.online,
     signature: user.signature,
+    nickname: membership.nickname,
   }
 }
 
@@ -203,12 +218,35 @@ function updateDevice(body: RequestBody): ResponseData {
   return {}
 }
 
+function isCurrentUserGroupOwner(groupId: number): boolean {
+  const group = getGroup(groupId)
+  return (
+    group?.created_by === meId ||
+    memberships
+      .get(groupId)
+      ?.some((member) => member.user_id === meId && member.role === 'owner') === true
+  )
+}
+
 function updateGroup(body: RequestBody): ResponseData {
-  const group = getGroup(id(body.group_id))
+  const groupId = id(body.group_id)
+  const group = getGroup(groupId)
   if (!group) return fail('群组不存在')
+  if (!isCurrentUserGroupOwner(groupId)) return fail('仅群主可以修改群信息')
   if (body.name !== undefined) group.name = body.name
   if (body.intro !== undefined) group.intro = body.intro
   if (body.avatar !== undefined) group.avatar = body.avatar
+  return {}
+}
+
+function updateMyNickname(body: RequestBody): ResponseData {
+  const groupId = id(body.group_id)
+  const nickname = body.nickname?.trim()
+  if (!getGroup(groupId)) return fail('群组不存在')
+  if (nickname === undefined) return fail('群昵称不能为空')
+  const membership = memberships.get(groupId)?.find((member) => member.user_id === meId)
+  if (!membership) return fail('你不是群成员')
+  membership.nickname = nickname
   return {}
 }
 
@@ -223,7 +261,7 @@ function joinGroup(body: RequestBody): ResponseData {
   const members = memberships.get(groupId) ?? []
   memberships.set(groupId, members)
   if (!members.some((member) => member.user_id === deviceId)) {
-    members.push({ user_id: deviceId, role: 'member' })
+    members.push({ user_id: deviceId, role: 'member', nickname: getDevice(deviceId)?.nick ?? '' })
   }
   return {}
 }
@@ -254,7 +292,7 @@ function addMembers(body: RequestBody): ResponseData {
   memberships.set(groupId, current)
   for (const memberId of memberIds) {
     if (getUser(memberId) && !current.some((member) => member.user_id === memberId)) {
-      current.push({ user_id: memberId, role: 'member' })
+      current.push({ user_id: memberId, role: 'member', nickname: getUser(memberId)?.nick ?? '' })
     }
   }
   return {}
@@ -409,6 +447,27 @@ export default defineEventHandler(async (event) => {
       if (!getDevice(deviceId)) return fail('设备不存在')
       return ok({ records: rechargeRecords.get(deviceId) ?? [] })
     }
+    case 'device/location': {
+      const location = deviceLocations.get(id(body.device_id))
+      if (!location) return fail('设备位置不存在')
+      return ok({
+        ...location,
+        fence: location.fence ? { ...location.fence } : null,
+      })
+    }
+    case 'device/track': {
+      const deviceId = id(body.device_id)
+      if (!deviceLocations.has(deviceId)) return fail('设备位置不存在')
+      return ok({ points: deviceTracks.get(deviceId)?.get(body.date ?? '') ?? [] })
+    }
+    case 'device/update-track-setting': {
+      const deviceId = id(body.device_id)
+      const location = deviceLocations.get(deviceId)
+      if (!location) return fail('设备位置不存在')
+      if (!body.frequency) return fail('上报频率无效')
+      location.report_frequency = body.frequency
+      return ok({})
+    }
     case 'group/my-created':
       return ok({ groups: groups.filter((group) => group.created_by === meId).map(compactGroup) })
     case 'group/my-joined':
@@ -437,6 +496,9 @@ export default defineEventHandler(async (event) => {
           created_at: group.created_at,
           member_count: memberships.get(group.group_id)?.length ?? 0,
           settings: { ...group.settings },
+          my_nickname:
+            memberships.get(group.group_id)?.find((member) => member.user_id === meId)?.nickname ??
+            '',
         },
       })
     }
@@ -448,6 +510,8 @@ export default defineEventHandler(async (event) => {
       return response(removeMember(body))
     case 'group/update':
       return response(updateGroup(body))
+    case 'group/update-my-nickname':
+      return response(updateMyNickname(body))
     case 'group/dissolve':
       return response(dissolveGroup(body))
     case 'group/update-settings':

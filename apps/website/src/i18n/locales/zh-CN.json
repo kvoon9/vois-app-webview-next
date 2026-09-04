@@ -2,6 +2,11 @@
   "nav": {
     "back": "返回"
   },
+  "home": {
+    "title": "导航",
+    "helpCenter": "帮助中心",
+    "deviceManagement": "设备管理"
+  },
   "modal": {
     "cancel": "取消",
     "confirm": "确认",

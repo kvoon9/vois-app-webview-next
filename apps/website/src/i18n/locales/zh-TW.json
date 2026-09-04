@@ -2,6 +2,11 @@
   "nav": {
     "back": "返回"
   },
+  "home": {
+    "title": "導航",
+    "helpCenter": "說明中心",
+    "deviceManagement": "裝置管理"
+  },
   "modal": {
     "cancel": "取消",
     "confirm": "確認",

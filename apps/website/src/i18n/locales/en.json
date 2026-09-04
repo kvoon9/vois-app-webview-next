@@ -2,6 +2,11 @@
   "nav": {
     "back": "Back"
   },
+  "home": {
+    "title": "Navigation",
+    "helpCenter": "Help center",
+    "deviceManagement": "Device management"
+  },
   "modal": {
     "cancel": "Cancel",
     "confirm": "Confirm",

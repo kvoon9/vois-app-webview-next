@@ -8,7 +8,7 @@ const { dismissToast, toast } = useToast()
 
 <template>
   <div
-    class="pointer-events-none fixed inset-x-4 bottom-4 z-modal flex justify-center"
+    class="pointer-events-none fixed inset-x-4 top-20 z-modal flex justify-center"
     aria-live="polite"
     aria-atomic="true"
   >

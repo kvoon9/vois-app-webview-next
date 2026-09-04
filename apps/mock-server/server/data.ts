@@ -113,6 +113,8 @@ const defaultContactSettings = (): ContactSettings => ({
   pinned: false,
 })
 
+export const meId = 1
+
 export const devices: Device[] = [
   {
     user_id: 101,
@@ -415,5 +417,3 @@ export function createRechargeOrder(deviceIds: number[]): RechargeOrder {
 }
 
 export const friends = users.filter((user) => user.user_id >= 2001 && user.user_id <= 2010)
-
-export const meId = 1

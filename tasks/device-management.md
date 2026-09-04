@@ -193,3 +193,8 @@ mock 数据:设备 101 造**最近 3 天**轨迹(深圳坂田一带折线),围�
 
 - 接口 1 `/v2/device/groups` 的 group 项加 `created_by_me: boolean`(mock 按 `created_by === meId` 计算)
 - 群组管理页 `/devices/[id]/groups` 的群列表改为两个 section:「我创建的」「我加入的」(参照从通讯录添加页的两段样式)
+
+## 三期补充 2(2026-09-04 确认)
+
+- Toast 位置太低:ToastHost 从底部 `bottom-4` 调整到页头下方的顶部区域
+- 根路由 `/` 不再重定向到 `/help`,改为导航页:link item 列表,目前两项「帮助中心(/help)」「设备管理(/devices)」,沿用现有 link item 卡片样式

@@ -140,3 +140,51 @@
 - card 下方加「流量卡充值记录」block link → 新页面 `/devices/[id]/recharge-records`
 - 新接口 22：`POST /v2/device/recharge-records` `{ device_id }` → `{ records: [{ order_id, amount, status, created_at }] }`，种子数据每台设备 2-3 条
 - 记录页就是简单列表：订单号/金额/状态/时间，沿用现有列表卡片样式
+
+---
+
+# 三期变更(2026-09-04 确认)
+
+## 1. 群成员列表回退为独立页面(长列表考虑)
+
+- 恢复 `/devices/[id]/groups/[groupId]/members` 独立页(群主/群管理员/成员三段分组 + 搜索框,同一期)
+- 群详情页撤掉完整成员列表和「添加成员」按钮,**只保留一条 link item「群成员(N人) ›」**指向成员列表页;头像预览条也不要
+- 「添加成员」入口改到**成员列表页顶部**,仍跳 members/add 页
+
+## 2. 群管理功能补全
+
+- **群名变更(仅群主)**:群详情「群名」link item,群主可点编辑(走现有 `/v2/group/update` name 字段),非群主纯展示不可点
+- **群介绍**:同样仅群主可编辑
+- **群昵称变更**(我的群内名片,任何人可改):新接口 26 `POST /v2/group/update-my-nickname` `{ group_id, nickname }` → `{}`;成员数据加 `nickname` 字段;群详情「群昵称」显示当前值,未设置显示「暂未设置」
+- 群成员添加/删除、退群、解散:已存在,确保链路完整即可
+
+## 3. 地图与轨迹(高德地图 + reka ui 日历)
+
+三个新页面,入口 = 设备详情页三个 link item(位置和围栏 / 轨迹记录 / 轨迹上报设置):
+
+| 路由                          | 页面         | 要点                                                                                                                                                                                                                                                        |
+| ----------------------------- | ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `/devices/[id]/location`      | 位置和围栏   | 高德地图:设备位置 marker + 围栏绿色圆圈(只读展示,mock 数据);`report_frequency === 'off'` 时顶部显示提示条「当前轨迹上报已关闭电子围栏无法生效,可点击修改轨迹上报频率」,点击跳轨迹上报设置;右侧「围栏」按钮不做,「共享」不做;截图 screenshot_20260904_103326 |
+| `/devices/[id]/track`         | 轨迹记录     | 高德地图 + 右上角日历图标 → 日期选择弹窗(reka-ui Calendar + unocss,样式对齐截图 screenshot_20260904_103335:头部「选择日期」、月切换箭头、选中绿色圆点、底部取消/确定);确定后画当天轨迹 polyline;空数据 toast「当日无轨迹记录」                              |
+| `/devices/[id]/track-setting` | 轨迹上报设置 | 单选列表:关闭/低频上报/中频上报/高频上报(截图 screenshot_20260904_103344,选中为绿色圆点);选中即调接口 25 持久化                                                                                                                                             |
+
+新接口:
+
+| 接口          | 路径                              | body                                         | data                                                                              |
+| ------------- | --------------------------------- | -------------------------------------------- | --------------------------------------------------------------------------------- |
+| 23 位置+围栏  | `/v2/device/location`             | `{ device_id }`                              | `{ lng, lat, updated_at, report_frequency, fence: { lng, lat, radius } \| null }` |
+| 24 轨迹       | `/v2/device/track`                | `{ device_id, date }`(YYYY-MM-DD)            | `{ points: [{ lng, lat, time }] }`,空数组=无轨迹                                  |
+| 25 改上报频率 | `/v2/device/update-track-setting` | `{ device_id, frequency }`(off/low/mid/high) | `{}`                                                                              |
+
+mock 数据:设备 101 造**最近 3 天**轨迹(深圳坂田一带折线),围栏圆心+半径随便定;其他日期返回空。
+
+## 高德接入(已确认)
+
+- 加依赖 `@amap/amap-jsapi-loader`;加载模式参考 `~/weila/weila-work-webview/src/composables/useAMap.ts`(`window._AMapSecurityConfig` + `AMapLoader.load`,plugins: Scale、ToolBar)
+- key 已配进 `apps/website/.env.local`:`VITE_AMAP_KEY` / `VITE_AMAP_SECURITY_CODE`(该文件 gitignored,不要把 key 写进源码)
+- reka-ui 已是依赖,直接用
+
+## 验收
+
+- i18n 三语言、vp check + vp test 全绿、双构建通过
+- agent-browser Flow A:成员列表独立页(从群详情 link item 进)、群名/群昵称/群介绍权限差异(群主 vs 非群主群)、三个地图页面渲染、日历选日期画轨迹、上报频率切换后位置页提示条联动

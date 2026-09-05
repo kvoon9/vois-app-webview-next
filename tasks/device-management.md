@@ -198,3 +198,60 @@ mock 数据:设备 101 造**最近 3 天**轨迹(深圳坂田一带折线),围�
 
 - Toast 位置太低:ToastHost 从底部 `bottom-4` 调整到页头下方的顶部区域
 - 根路由 `/` 不再重定向到 `/help`,改为导航页:link item 列表,目前两项「帮助中心(/help)」「设备管理(/devices)」,沿用现有 link item 卡片样式
+
+---
+
+# 四期变更(2026-09-05 确认)
+
+## 1. 设备资料页:位置共享开关 + 两个新入口
+
+- 设备资料页「位置共享」switch 行(样式复用群详情开关),放在设备信息卡下方;mock: `Device` 加 `share_location` 种子字段,`device/update` 接受该字段,`list-connected` 一并返回
+- 新增 2 个 link item:「紧急联系人」「提醒」,放在「联系人管理」之后
+
+## 2. 紧急联系人(截图 screenshot_20260905_173157/173200/173203)
+
+```
+/devices/[id]/emergency-contacts           温馨提示 + 联系人行(红➖删除,BaseModal 确认)+ 添加好友 ➕ / 添加电话联系人 ➕
+/devices/[id]/emergency-contacts/add-friend 选择页:复用 /v2/friend/list,已添加灰显,点行即加(toast+返回)
+/devices/[id]/emergency-contacts/add-phone  电话+姓名+保存(必填+手机号基本校验)+ 底部提示句
+```
+
+新接口(设备维度,quota 由接口返回):
+
+| 路径                                  | body                             | data                                                                                                                                                         |
+| ------------------------------------- | -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `/v2/device/emergency-contacts`       | `{ device_id }`                  | `{ contacts: [{ contact_id, type: 'friend'\|'phone', user_id?, user_num?, nick?, avatar?, name, phone }], quota: { friend_max, phone_max, sos_remaining } }` |
+| `/v2/device/add-emergency-friends`    | `{ device_id, contact_ids: [] }` | `{}`,超上限 fail                                                                                                                                             |
+| `/v2/device/add-emergency-phone`      | `{ device_id, name, phone }`     | `{}`,超上限 fail                                                                                                                                             |
+| `/v2/device/remove-emergency-contact` | `{ device_id, contact_id }`      | `{}`                                                                                                                                                         |
+
+## 3. 提醒(截图 screenshot_20260905_173217/173231)
+
+```
+/devices/[id]/reminders            卡片列表(大号时间/内容/重复文案)+ 绿色 FAB
+/devices/[id]/reminders/[reminderId] 新建与编辑同一表单(reminderId 为 'new' 时新建):
+                                   顶部 reka-ui TimeField(12h 中文,分段输入);行:重复(once/daily/weekdays)、
+                                   内容(BaseModal 文本)、响铃时长、重复响铃次数、重复响铃间隔(reka-ui Select);
+                                   头部「确定」提交;编辑页另有红色「删除提醒」(BaseModal 确认)
+```
+
+字段取值(mock 校验 + UI 同一组常量,时间存 HH:mm):
+
+- `repeat`: `once` / `daily` / `weekdays`
+- `ring_duration`(秒): 30 / 60 / 120 / 180 / 300 / 600,默认 30
+- `repeat_count`(次): 0 / 1 / 2 / 3 / 5 / 10,默认 3
+- `repeat_interval`(分钟): 1 / 2 / 3 / 5 / 10,默认 5
+
+| 路径                         | body                           | data                        |
+| ---------------------------- | ------------------------------ | --------------------------- |
+| `/v2/device/reminders`       | `{ device_id }`                | `{ reminders: [Reminder] }` |
+| `/v2/device/create-reminder` | `{ device_id, ...Reminder }`   | `{ reminder_id }`           |
+| `/v2/device/update-reminder` | `{ reminder_id, ...Reminder }` | `{}`                        |
+| `/v2/device/remove-reminder` | `{ reminder_id }`              | `{}`                        |
+
+种子数据:设备 101 一条好友紧急联系人、一条提醒 `17:32 / 123 / 只响一次 / 30秒 / 3次 / 5分钟`。
+
+## 四期验收
+
+- i18n 三语言、`vp check` + `vp test` 全绿
+- agent-browser Flow A:设备资料开关与两个新入口、紧急联系人三页全链路(添加/删除/上限灰显)、提醒列表+新建+编辑+删除、各字段 Select 取值

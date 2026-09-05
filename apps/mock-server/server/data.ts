@@ -25,6 +25,7 @@ export interface Device {
   version: string
   activated_at: string
   online: boolean
+  share_location: boolean
 }
 
 export interface Group {
@@ -99,6 +100,35 @@ export interface RechargeRecord {
   created_at: string
 }
 
+export type EmergencyContactType = 'friend' | 'phone'
+
+export interface EmergencyContact {
+  contact_id: number
+  type: EmergencyContactType
+  /** friend contacts point at a seeded user; phone contacts store raw fields */
+  user_id?: number
+  name: string
+  phone: string
+}
+
+export interface EmergencyQuota {
+  friend_max: number
+  phone_max: number
+  sos_remaining: number
+}
+
+export type ReminderRepeat = 'once' | 'daily' | 'weekdays'
+
+export interface Reminder {
+  reminder_id: number
+  time: string
+  content: string
+  repeat: ReminderRepeat
+  ring_duration: number
+  repeat_count: number
+  repeat_interval: number
+}
+
 const avatar = (id: number) => `https://api.dicebear.com/9.x/initials/svg?seed=${id}`
 const defaultSettings = (): GroupSettings => ({
   muted: false,
@@ -126,6 +156,7 @@ export const devices: Device[] = [
     version: '3.6.1',
     activated_at: '2025-01-18 09:30:00',
     online: true,
+    share_location: true,
   },
   {
     user_id: 102,
@@ -137,6 +168,7 @@ export const devices: Device[] = [
     version: '3.5.8',
     activated_at: '2024-11-06 14:10:00',
     online: false,
+    share_location: false,
   },
 ]
 
@@ -417,3 +449,44 @@ export function createRechargeOrder(deviceIds: number[]): RechargeOrder {
 }
 
 export const friends = users.filter((user) => user.user_id >= 2001 && user.user_id <= 2010)
+
+export const emergencyQuota: EmergencyQuota = {
+  friend_max: 3,
+  phone_max: 2,
+  sos_remaining: 5,
+}
+
+// Seeded rows consume 5001; allocation continues after it.
+let nextEmergencyContactId = 5002
+
+export function allocateEmergencyContactId(): number {
+  return nextEmergencyContactId++
+}
+
+export const deviceEmergencyContacts = new Map<number, EmergencyContact[]>([
+  [101, [{ contact_id: 5001, type: 'friend', user_id: 2001, name: '小满', phone: '13800002001' }]],
+])
+
+// Seeded rows consume 6001; allocation continues after it.
+let nextReminderId = 6002
+
+export function allocateReminderId(): number {
+  return nextReminderId++
+}
+
+export const deviceReminders = new Map<number, Reminder[]>([
+  [
+    101,
+    [
+      {
+        reminder_id: 6001,
+        time: '17:32',
+        content: '123',
+        repeat: 'once',
+        ring_duration: 30,
+        repeat_count: 3,
+        repeat_interval: 5,
+      },
+    ],
+  ],
+])

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useMutation, useQuery, useQueryCache } from '@pinia/colada'
-import { computed, shallowRef } from 'vue'
+import { computed, shallowRef, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { RouterLink, RouterView, useRoute, useRouter } from 'vue-router'
 import BaseModal from '~/components/BaseModal.vue'
@@ -13,6 +13,7 @@ import {
   getConnectedDevices,
   getRechargeDevices,
   updateDevice,
+  updateDeviceShareLocation,
   type Device,
   type RechargeDevice,
 } from '~/utils/device-api'
@@ -25,6 +26,7 @@ const { showToast } = useToast()
 const editing = shallowRef(false)
 const nick = shallowRef('')
 const recharging = shallowRef(false)
+const shareLocation = shallowRef(false)
 
 const deviceId = computed(() => {
   const value = Array.isArray(route.params.id) ? route.params.id[0] : route.params.id
@@ -46,6 +48,35 @@ const device = computed<Device | null>(() => {
   if (deviceId.value == null) return null
   return state.value.data?.find((item) => item.userId === deviceId.value) ?? null
 })
+
+watch(
+  device,
+  (value) => {
+    if (value) shareLocation.value = value.shareLocation
+  },
+  { immediate: true },
+)
+
+const shareLocationMutation = useMutation({
+  mutation: (value: boolean) => {
+    if (deviceId.value == null) throw new Error(t('device.invalidId'))
+    return updateDeviceShareLocation(deviceId.value, value)
+  },
+})
+
+async function toggleShareLocation(): Promise<void> {
+  if (shareLocationMutation.isLoading.value || !device.value) return
+  const previous = shareLocation.value
+  shareLocation.value = !previous
+  try {
+    await shareLocationMutation.mutateAsync(!previous)
+    await queryCache.invalidateQueries({ key: ['device-management', 'devices'] })
+    showToast(t('device.shareLocationUpdated'))
+  } catch (error) {
+    shareLocation.value = previous
+    showToast(error instanceof Error ? error.message : String(error), { type: 'error' })
+  }
+}
 
 const { mutateAsync: saveDevice, isLoading: saving } = useMutation({
   mutation: (value: { deviceId: number; nick: string }) => updateDevice(value.deviceId, value.nick),
@@ -186,6 +217,29 @@ async function confirmRecharge(): Promise<void> {
             </div>
           </dl>
 
+          <section class="mt-4 overflow-hidden rounded-standard border border-stroke bg-surface">
+            <button
+              type="button"
+              role="switch"
+              class="min-h-12 w-full flex items-center justify-between px-4 text-left disabled:opacity-50"
+              :aria-checked="shareLocation"
+              :disabled="shareLocationMutation.isLoading.value"
+              @click="toggleShareLocation"
+            >
+              <span class="text-body">{{ t('device.shareLocationSwitch') }}</span>
+              <span
+                class="relative h-6 w-10 rounded-full transition-colors"
+                :class="shareLocation ? 'bg-primary' : 'bg-stroke'"
+                aria-hidden="true"
+              >
+                <span
+                  class="absolute top-1 h-4 w-4 rounded-full bg-white shadow transition-transform"
+                  :class="shareLocation ? 'translate-x-5' : 'translate-x-1'"
+                />
+              </span>
+            </button>
+          </section>
+
           <section
             v-if="rechargeDevice"
             class="mt-4 rounded-standard border border-stroke bg-surface p-4"
@@ -240,6 +294,22 @@ async function confirmRecharge(): Promise<void> {
             <span>{{ t('device.contacts') }}</span>
             <span aria-hidden="true" class="text-text-secondary">›</span>
           </button>
+
+          <RouterLink
+            :to="`/devices/${deviceId}/emergency-contacts`"
+            class="mt-3 min-h-12 w-full flex items-center justify-between rounded-standard border border-stroke bg-surface px-4 text-body"
+          >
+            <span>{{ t('device.emergencyContacts') }}</span>
+            <span aria-hidden="true" class="text-text-secondary">›</span>
+          </RouterLink>
+
+          <RouterLink
+            :to="`/devices/${deviceId}/reminders`"
+            class="mt-3 min-h-12 w-full flex items-center justify-between rounded-standard border border-stroke bg-surface px-4 text-body"
+          >
+            <span>{{ t('device.reminders') }}</span>
+            <span aria-hidden="true" class="text-text-secondary">›</span>
+          </RouterLink>
 
           <nav class="mt-3 space-y-3" :aria-label="t('device.locationFeatures')">
             <RouterLink

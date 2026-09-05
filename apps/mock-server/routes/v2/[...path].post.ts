@@ -1,9 +1,14 @@
 import { defineEventHandler, readBody } from 'h3'
 import {
+  allocateEmergencyContactId,
+  allocateReminderId,
   createRechargeOrder,
   deviceContacts,
+  deviceEmergencyContacts,
   deviceGroups,
+  deviceReminders,
   devices,
+  emergencyQuota,
   friends,
   groups,
   meId,
@@ -17,9 +22,12 @@ import {
   type Device,
   type DeviceLocation,
   type DeviceContact,
+  type EmergencyContact,
+  type EmergencyQuota,
   type Group,
   type GroupMemberRole,
   type Membership,
+  type Reminder,
   type User,
   type TrackFrequency,
   type TrackPoint,
@@ -46,6 +54,14 @@ interface RequestBody {
   nickname?: string
   date?: string
   frequency?: TrackFrequency
+  time?: string
+  content?: string
+  repeat?: Reminder['repeat']
+  ring_duration?: number
+  repeat_count?: number
+  repeat_interval?: number
+  reminder_id?: number | string
+  phone?: string
 }
 
 interface CompactGroup {
@@ -105,6 +121,28 @@ interface RechargeRecordResponse {
   created_at: string
 }
 
+interface EmergencyContactResponse {
+  contact_id: number
+  type: EmergencyContact['type']
+  user_id?: number
+  user_num?: string
+  nick?: string
+  avatar?: string
+  name: string
+  phone: string
+}
+
+interface EmergencyListResponse {
+  contacts: EmergencyContactResponse[]
+  quota: EmergencyQuota
+}
+
+interface ReminderResponse extends Reminder {}
+
+interface ReminderCreatedResponse {
+  reminder_id: number
+}
+
 interface LocationResponse extends DeviceLocation {}
 
 type EmptyData = Record<never, never>
@@ -129,6 +167,9 @@ type ResponseData =
   | { records: RechargeRecordResponse[] }
   | LocationResponse
   | { points: TrackPoint[] }
+  | EmergencyListResponse
+  | { reminders: ReminderResponse[] }
+  | ReminderCreatedResponse
 type ApiResponse = { errcode: number; errmsg: string; data: ResponseData }
 
 const ok = (data: ResponseData): ApiResponse => ({ errcode: 0, errmsg: '', data })
@@ -217,6 +258,7 @@ function updateDevice(body: RequestBody): ResponseData {
   if (!device) return fail('设备不存在')
   if (body.nick !== undefined) device.nick = body.nick
   if (body.avatar !== undefined) device.avatar = body.avatar
+  if (body.share_location !== undefined) device.share_location = body.share_location
   return {}
 }
 
@@ -397,6 +439,159 @@ function contactsForDevice(deviceId: number): ContactResponse[] {
     .filter((contact): contact is ContactResponse => contact !== undefined)
 }
 
+function emergencyContactData(contact: EmergencyContact): EmergencyContactResponse {
+  const user = contact.user_id !== undefined ? getUser(contact.user_id) : undefined
+  return user
+    ? {
+        contact_id: contact.contact_id,
+        type: contact.type,
+        user_id: user.user_id,
+        user_num: user.user_num,
+        nick: user.nick,
+        avatar: user.avatar,
+        name: contact.name,
+        phone: contact.phone,
+      }
+    : {
+        contact_id: contact.contact_id,
+        type: contact.type,
+        name: contact.name,
+        phone: contact.phone,
+      }
+}
+
+function emergencyContactsForDevice(deviceId: number): EmergencyListResponse {
+  const contacts = deviceEmergencyContacts.get(deviceId) ?? []
+  return {
+    contacts: contacts.map(emergencyContactData),
+    quota: { ...emergencyQuota },
+  }
+}
+
+function addEmergencyFriends(body: RequestBody): ResponseData {
+  const deviceId = id(body.device_id)
+  if (!getDevice(deviceId)) return fail('设备不存在')
+  const current = deviceEmergencyContacts.get(deviceId) ?? []
+  deviceEmergencyContacts.set(deviceId, current)
+  const newIds = (body.contact_ids ?? []).map(id)
+  for (const userId of newIds) {
+    const user = getUser(userId)
+    if (!user) return fail('用户不存在')
+    if (current.some((contact) => contact.user_id === userId)) continue
+    if (
+      current.filter((contact) => contact.type === 'friend').length >= emergencyQuota.friend_max
+    ) {
+      return fail(`最多添加${emergencyQuota.friend_max}个好友紧急联系人`)
+    }
+    current.push({
+      contact_id: allocateEmergencyContactId(),
+      type: 'friend',
+      user_id: userId,
+      name: user.nick,
+      phone: '',
+    })
+  }
+  return {}
+}
+
+function addEmergencyPhone(body: RequestBody): ResponseData {
+  const deviceId = id(body.device_id)
+  if (!getDevice(deviceId)) return fail('设备不存在')
+  const name = body.name?.trim()
+  const phone = body.phone?.trim()
+  if (!name) return fail('请输入姓名')
+  if (!phone) return fail('请输入电话')
+  const current = deviceEmergencyContacts.get(deviceId) ?? []
+  deviceEmergencyContacts.set(deviceId, current)
+  if (current.filter((contact) => contact.type === 'phone').length >= emergencyQuota.phone_max) {
+    return fail(`最多添加${emergencyQuota.phone_max}个电话联系人`)
+  }
+  current.push({
+    contact_id: allocateEmergencyContactId(),
+    type: 'phone',
+    name,
+    phone,
+  })
+  return {}
+}
+
+function removeEmergencyContact(body: RequestBody): ResponseData {
+  const deviceId = id(body.device_id)
+  const current = deviceEmergencyContacts.get(deviceId)
+  if (current) {
+    deviceEmergencyContacts.set(
+      deviceId,
+      current.filter((contact) => contact.contact_id !== id(body.contact_id)),
+    )
+  }
+  return {}
+}
+
+const REMINDER_REPEATS = new Set(['once', 'daily', 'weekdays'])
+const RING_DURATIONS = new Set([30, 60, 120, 180, 300, 600])
+const REPEAT_COUNTS = new Set([0, 1, 2, 3, 5, 10])
+const REPEAT_INTERVALS = new Set([1, 2, 3, 5, 10])
+
+/** Parse and validate the reminder body fields; null when any field is invalid. */
+function parseReminderFields(body: RequestBody): Omit<Reminder, 'reminder_id'> | null {
+  if (!body.time || !/^\d{2}:\d{2}$/.test(body.time)) return null
+  if (body.content === undefined) return null
+  if (!body.repeat || !REMINDER_REPEATS.has(body.repeat)) return null
+  const ring_duration = Number(body.ring_duration)
+  const repeat_count = Number(body.repeat_count)
+  const repeat_interval = Number(body.repeat_interval)
+  if (!RING_DURATIONS.has(ring_duration)) return null
+  if (!REPEAT_COUNTS.has(repeat_count)) return null
+  if (!REPEAT_INTERVALS.has(repeat_interval)) return null
+  return {
+    time: body.time,
+    content: body.content,
+    repeat: body.repeat,
+    ring_duration,
+    repeat_count,
+    repeat_interval,
+  }
+}
+
+function createReminder(body: RequestBody): ResponseData {
+  const deviceId = id(body.device_id)
+  if (!getDevice(deviceId)) return fail('设备不存在')
+  const fields = parseReminderFields(body)
+  if (!fields) return fail('提醒字段无效')
+  const current = deviceReminders.get(deviceId) ?? []
+  deviceReminders.set(deviceId, current)
+  const reminder: Reminder = { reminder_id: allocateReminderId(), ...fields }
+  current.push(reminder)
+  return { reminder_id: reminder.reminder_id }
+}
+
+function updateReminder(body: RequestBody): ResponseData {
+  const fields = parseReminderFields(body)
+  if (!fields) return fail('提醒字段无效')
+  const reminderId = id(body.reminder_id)
+  for (const reminders of deviceReminders.values()) {
+    const reminder = reminders.find((item) => item.reminder_id === reminderId)
+    if (reminder) {
+      Object.assign(reminder, fields)
+      return {}
+    }
+  }
+  return fail('提醒不存在')
+}
+
+function removeReminder(body: RequestBody): ResponseData {
+  const reminderId = id(body.reminder_id)
+  for (const [deviceId, reminders] of deviceReminders) {
+    const index = reminders.findIndex((item) => item.reminder_id === reminderId)
+    if (index !== -1) {
+      reminders.splice(index, 1)
+      if (reminders.length === 0) deviceReminders.delete(deviceId)
+      return {}
+    }
+  }
+  return fail('提醒不存在')
+}
+
 function rechargeDevices(): RechargeResponse[] {
   return rechargeInfo
     .map((info) => {
@@ -449,6 +644,28 @@ export default defineEventHandler(async (event) => {
       if (!getDevice(deviceId)) return fail('设备不存在')
       return ok({ records: rechargeRecords.get(deviceId) ?? [] })
     }
+    case 'device/emergency-contacts': {
+      const deviceId = id(body.device_id)
+      if (!getDevice(deviceId)) return fail('设备不存在')
+      return ok(emergencyContactsForDevice(deviceId))
+    }
+    case 'device/add-emergency-friends':
+      return response(addEmergencyFriends(body))
+    case 'device/add-emergency-phone':
+      return response(addEmergencyPhone(body))
+    case 'device/remove-emergency-contact':
+      return response(removeEmergencyContact(body))
+    case 'device/reminders': {
+      const deviceId = id(body.device_id)
+      if (!getDevice(deviceId)) return fail('设备不存在')
+      return ok({ reminders: deviceReminders.get(deviceId) ?? [] })
+    }
+    case 'device/create-reminder':
+      return response(createReminder(body))
+    case 'device/update-reminder':
+      return response(updateReminder(body))
+    case 'device/remove-reminder':
+      return response(removeReminder(body))
     case 'device/location': {
       const location = deviceLocations.get(id(body.device_id))
       if (!location) return fail('设备位置不存在')

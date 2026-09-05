@@ -11,6 +11,7 @@ export interface Device {
   version: string
   activatedAt: string
   online: boolean
+  shareLocation: boolean
 }
 
 /** Settings shared by group and contact conversations. */
@@ -123,6 +124,42 @@ export interface RechargeRecord {
   createdAt: string
 }
 
+export type EmergencyContactType = 'friend' | 'phone'
+
+/** One emergency contact of a device: either a Weila friend or a raw phone entry. */
+export interface EmergencyContact {
+  contactId: number
+  type: EmergencyContactType
+  userId?: number
+  userNum?: string
+  nick?: string
+  avatar?: string
+  name: string
+  phone: string
+}
+
+export interface EmergencyQuota {
+  friendMax: number
+  phoneMax: number
+  sosRemaining: number
+}
+
+export type ReminderRepeat = 'once' | 'daily' | 'weekdays'
+
+export interface DeviceReminder {
+  reminderId: number
+  /** HH:mm */
+  time: string
+  content: string
+  repeat: ReminderRepeat
+  /** Seconds. */
+  ringDuration: number
+  /** Times. */
+  repeatCount: number
+  /** Minutes. */
+  repeatInterval: number
+}
+
 interface DeviceDto {
   user_id: number
   user_num: string
@@ -133,6 +170,7 @@ interface DeviceDto {
   version: string
   activated_at: string
   online: boolean
+  share_location?: boolean
 }
 
 interface GroupDto {
@@ -227,6 +265,33 @@ interface RechargeRecordDto {
   created_at: string
 }
 
+interface EmergencyContactDto {
+  contact_id: number
+  type: EmergencyContactType
+  user_id?: number
+  user_num?: string
+  nick?: string
+  avatar?: string
+  name: string
+  phone: string
+}
+
+interface EmergencyQuotaDto {
+  friend_max: number
+  phone_max: number
+  sos_remaining: number
+}
+
+interface DeviceReminderDto {
+  reminder_id: number
+  time: string
+  content: string
+  repeat: ReminderRepeat
+  ring_duration: number
+  repeat_count: number
+  repeat_interval: number
+}
+
 type EmptyData = Record<string, never>
 type DeviceUpdateBody = { device_id: number; nick: string; avatar?: string }
 interface SettingsBody {
@@ -290,6 +355,16 @@ export async function updateDevice(
 ): Promise<EmptyData> {
   const body: DeviceUpdateBody = { device_id: deviceId, nick }
   if (avatar !== undefined) body.avatar = avatar
+  const response = await weilaFetch<EmptyData>('/v2/device/update', { body })
+  return response.data
+}
+
+/** Toggle the device-level location sharing switch. */
+export async function updateDeviceShareLocation(
+  deviceId: number,
+  shareLocation: boolean,
+): Promise<EmptyData> {
+  const body = asWeilaBody({ device_id: deviceId, share_location: shareLocation })
   const response = await weilaFetch<EmptyData>('/v2/device/update', { body })
   return response.data
 }
@@ -485,6 +560,100 @@ export async function clearDeviceMessages(deviceId: number, contactId: number): 
   return response.data
 }
 
+export interface EmergencyContactList {
+  contacts: EmergencyContact[]
+  quota: EmergencyQuota
+}
+
+export async function getEmergencyContacts(deviceId: number): Promise<EmergencyContactList> {
+  const response = await weilaFetch<{
+    contacts: EmergencyContactDto[]
+    quota: EmergencyQuotaDto
+  }>('/v2/device/emergency-contacts', { body: { device_id: deviceId } })
+  return {
+    contacts: response.data.contacts.map(toEmergencyContact),
+    quota: {
+      friendMax: response.data.quota.friend_max,
+      phoneMax: response.data.quota.phone_max,
+      sosRemaining: response.data.quota.sos_remaining,
+    },
+  }
+}
+
+export async function addEmergencyFriends(
+  deviceId: number,
+  contactIds: readonly number[],
+): Promise<EmptyData> {
+  const response = await weilaFetch<EmptyData>('/v2/device/add-emergency-friends', {
+    body: { device_id: deviceId, contact_ids: contactIds },
+  })
+  return response.data
+}
+
+export async function addEmergencyPhone(
+  deviceId: number,
+  name: string,
+  phone: string,
+): Promise<EmptyData> {
+  const response = await weilaFetch<EmptyData>('/v2/device/add-emergency-phone', {
+    body: { device_id: deviceId, name, phone },
+  })
+  return response.data
+}
+
+export async function removeEmergencyContact(
+  deviceId: number,
+  contactId: number,
+): Promise<EmptyData> {
+  const response = await weilaFetch<EmptyData>('/v2/device/remove-emergency-contact', {
+    body: { device_id: deviceId, contact_id: contactId },
+  })
+  return response.data
+}
+
+export async function getDeviceReminders(deviceId: number): Promise<DeviceReminder[]> {
+  const response = await weilaFetch<{ reminders: DeviceReminderDto[] }>('/v2/device/reminders', {
+    body: { device_id: deviceId },
+  })
+  return response.data.reminders.map(toReminder)
+}
+
+export interface ReminderInput {
+  time: string
+  content: string
+  repeat: ReminderRepeat
+  ringDuration: number
+  repeatCount: number
+  repeatInterval: number
+}
+
+export async function createDeviceReminder(
+  deviceId: number,
+  input: ReminderInput,
+): Promise<number> {
+  const response = await weilaFetch<{ reminder_id: number }>('/v2/device/create-reminder', {
+    body: { device_id: deviceId, ...toReminderBody(input) },
+  })
+  return response.data.reminder_id
+}
+
+export async function updateDeviceReminder(
+  reminderId: number,
+  input: ReminderInput,
+): Promise<EmptyData> {
+  const response = await weilaFetch<EmptyData>('/v2/device/update-reminder', {
+    body: { reminder_id: reminderId, ...toReminderBody(input) },
+  })
+  return response.data
+}
+
+export async function removeDeviceReminder(reminderId: number): Promise<EmptyData> {
+  const response = await weilaFetch<EmptyData>('/v2/device/remove-reminder', {
+    body: { reminder_id: reminderId },
+  })
+  return response.data
+}
+
 function toDevice(device: DeviceDto): Device {
   return {
     userId: device.user_id,
@@ -496,6 +665,7 @@ function toDevice(device: DeviceDto): Device {
     version: device.version,
     activatedAt: device.activated_at,
     online: device.online,
+    shareLocation: device.share_location ?? false,
   }
 }
 
@@ -623,6 +793,43 @@ function toTrackPoint(point: TrackPointDto): TrackPoint {
     lng: point.lng,
     lat: point.lat,
     time: point.time,
+  }
+}
+
+function toEmergencyContact(contact: EmergencyContactDto): EmergencyContact {
+  const mapped: EmergencyContact = {
+    contactId: contact.contact_id,
+    type: contact.type,
+    name: contact.name,
+    phone: contact.phone,
+  }
+  if (contact.user_id !== undefined) mapped.userId = contact.user_id
+  if (contact.user_num !== undefined) mapped.userNum = contact.user_num
+  if (contact.nick !== undefined) mapped.nick = contact.nick
+  if (contact.avatar !== undefined) mapped.avatar = contact.avatar
+  return mapped
+}
+
+function toReminder(reminder: DeviceReminderDto): DeviceReminder {
+  return {
+    reminderId: reminder.reminder_id,
+    time: reminder.time,
+    content: reminder.content,
+    repeat: reminder.repeat,
+    ringDuration: reminder.ring_duration,
+    repeatCount: reminder.repeat_count,
+    repeatInterval: reminder.repeat_interval,
+  }
+}
+
+function toReminderBody(input: ReminderInput): Omit<DeviceReminderDto, 'reminder_id'> {
+  return {
+    time: input.time,
+    content: input.content,
+    repeat: input.repeat,
+    ring_duration: input.ringDuration,
+    repeat_count: input.repeatCount,
+    repeat_interval: input.repeatInterval,
   }
 }
 

@@ -38,6 +38,8 @@ const { goBack } = usePageBack()
       </svg>
     </button>
     <h1 class="page-title">{{ title }}</h1>
-    <LanguageSwitcher class="absolute right-2 top-1/2 -translate-y-1/2" />
+    <slot name="action">
+      <LanguageSwitcher class="absolute right-2 top-1/2 -translate-y-1/2" />
+    </slot>
   </header>
 </template>

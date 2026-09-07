@@ -225,7 +225,9 @@
     "reminderDelete": "Delete Reminder",
     "reminderDeleteConfirm": "Delete this reminder?",
     "emergencyContactAdd": "Add emergency contact",
-    "reminderTime": "Time"
+    "reminderTime": "Time",
+    "reminderAM": "AM",
+    "reminderPM": "PM"
   },
   "profile": {
     "media": "Media, links, docs",

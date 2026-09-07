@@ -48,6 +48,14 @@ function currentTime(): string {
 
 /** HH:mm (24h), straight from <input type="time">. */
 const time = shallowRef(currentTime())
+
+/** 12-hour display like the native app, e.g. 下午 5:32. */
+const timeLabel = computed(() => {
+  const [hours, minutes] = time.value.split(':').map(Number)
+  const hour12 = hours % 12 === 0 ? 12 : hours % 12
+  const period = hours < 12 ? t('device.reminderAM') : t('device.reminderPM')
+  return `${period} ${hour12}:${String(minutes).padStart(2, '0')}`
+})
 const content = shallowRef('')
 const repeat = shallowRef<ReminderRepeat>('once')
 const ringDuration = shallowRef(30)
@@ -251,12 +259,16 @@ const headerTitle = computed(() =>
 
     <main class="p-4">
       <QueryState :status="state.status" :error="state.error" @retry="reload()">
-        <section class="card flex items-center justify-center py-6">
+        <section class="card relative flex items-center justify-center py-6">
+          <span class="text-title">{{ timeLabel }}</span>
+          <!-- Transparent overlay: the tap opens the system time picker (no IME),
+               while the visible text stays fully custom-styled. -->
           <input
             v-model="time"
             type="time"
             :aria-label="t('device.reminderTime')"
-            class="bg-transparent text-title text-text-primary outline-none"
+            class="absolute inset-0 h-full w-full opacity-0"
+            tabindex="-1"
           />
         </section>
 

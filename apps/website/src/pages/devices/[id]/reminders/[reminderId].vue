@@ -1,17 +1,5 @@
 <script setup lang="ts">
 import { useMutation, useQuery, useQueryCache } from '@pinia/colada'
-import { Time } from '@internationalized/date'
-import {
-  SelectContent,
-  SelectItem,
-  SelectPortal,
-  SelectRoot,
-  SelectTrigger,
-  SelectValue,
-  TimeFieldInput,
-  TimeFieldRoot,
-  type AcceptableValue,
-} from 'reka-ui'
 import { computed, shallowRef, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
@@ -53,12 +41,13 @@ const editingContent = shallowRef(false)
 const contentDraft = shallowRef('')
 const deleteConfirmation = shallowRef(false)
 
-function currentTime(): Time {
+function currentTime(): string {
   const now = new Date()
-  return new Time(now.getHours(), now.getMinutes())
+  return `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`
 }
 
-const time = shallowRef<Time | undefined>(currentTime())
+/** HH:mm (24h), straight from <input type="time">. */
+const time = shallowRef(currentTime())
 const content = shallowRef('')
 const repeat = shallowRef<ReminderRepeat>('once')
 const ringDuration = shallowRef(30)
@@ -79,8 +68,7 @@ watch(
     if (!isEdit.value || !reminders) return
     const reminder = reminders.find((item) => item.reminderId === reminderId.value)
     if (!reminder) return
-    const [hours, minutes] = reminder.time.split(':').map(Number)
-    time.value = new Time(hours, minutes)
+    time.value = reminder.time
     content.value = reminder.content
     repeat.value = reminder.repeat
     ringDuration.value = reminder.ringDuration
@@ -92,9 +80,8 @@ watch(
 
 const saveMutation = useMutation({
   mutation: () => {
-    if (time.value == null) throw new Error(t('device.invalidReminder'))
     const payload = {
-      time: time.value.toString().slice(0, 5),
+      time: time.value,
       content: content.value,
       repeat: repeat.value,
       ringDuration: ringDuration.value,
@@ -145,16 +132,6 @@ async function removeReminder(): Promise<void> {
   }
 }
 
-function openContentEditor(): void {
-  contentDraft.value = content.value
-  editingContent.value = true
-}
-
-function saveContent(): void {
-  content.value = contentDraft.value
-  editingContent.value = false
-}
-
 function repeatText(value: ReminderRepeat): string {
   if (value === 'daily') return t('device.reminderDaily')
   if (value === 'weekdays') return t('device.reminderWeekdays')
@@ -170,81 +147,91 @@ function timesLabel(count: number): string {
   return t('device.reminderTimes', { n: count })
 }
 
-/** reka's dayPeriod segment only holds AM/PM internally; display localized text. */
-function dayPeriodText(value: string): string {
-  return value.startsWith('P') ? t('device.reminderPM') : t('device.reminderAM')
+interface OptionRow {
+  key: 'repeat' | 'ringDuration' | 'repeatCount' | 'repeatInterval'
+  label: string
+  options: Array<{ value: string | number; text: string }>
+  current: () => string | number
+  text: (value: string | number) => string
+  choose: (value: string | number) => void
+}
+
+const optionRows: OptionRow[] = [
+  {
+    key: 'repeat',
+    label: t('device.reminderRepeat'),
+    options: REPEATS.map((value) => ({ value, text: repeatText(value) })),
+    current: () => repeat.value,
+    text: repeatText,
+    choose: (value) => {
+      const match = REPEATS.find((option) => option === value)
+      if (match !== undefined) repeat.value = match
+    },
+  },
+  {
+    key: 'ringDuration',
+    label: t('device.reminderRingDuration'),
+    options: RING_DURATIONS.map((value) => ({ value, text: durationLabel(value) })),
+    current: () => ringDuration.value,
+    text: durationLabel,
+    choose: (value) => {
+      const match = RING_DURATIONS.find((option) => option === value)
+      if (match !== undefined) ringDuration.value = match
+    },
+  },
+  {
+    key: 'repeatCount',
+    label: t('device.reminderRepeatCount'),
+    options: REPEAT_COUNTS.map((value) => ({ value, text: timesLabel(value) })),
+    current: () => repeatCount.value,
+    text: timesLabel,
+    choose: (value) => {
+      const match = REPEAT_COUNTS.find((option) => option === value)
+      if (match !== undefined) repeatCount.value = match
+    },
+  },
+  {
+    key: 'repeatInterval',
+    label: t('device.reminderRepeatInterval'),
+    options: REPEAT_INTERVALS.map((value) => ({
+      value,
+      text: t('device.reminderMinutes', { n: value }),
+    })),
+    current: () => repeatInterval.value,
+    text: (value) => t('device.reminderMinutes', { n: value }),
+    choose: (value) => {
+      const match = REPEAT_INTERVALS.find((option) => option === value)
+      if (match !== undefined) repeatInterval.value = match
+    },
+  },
+]
+
+/** Which option row's picker sheet is open, if any. */
+const activeRow = shallowRef<OptionRow | null>(null)
+
+function currentText(row: OptionRow): string {
+  const match = row.options.find((option) => option.value === row.current())
+  return match ? match.text : t('device.notAvailable')
+}
+
+function chooseOption(value: string | number): void {
+  if (activeRow.value) activeRow.value.choose(value)
+  activeRow.value = null
+}
+
+function openContentEditor(): void {
+  contentDraft.value = content.value
+  editingContent.value = true
+}
+
+function saveContent(): void {
+  content.value = contentDraft.value
+  editingContent.value = false
 }
 
 const headerTitle = computed(() =>
   isEdit.value ? t('device.reminderEdit') : t('device.reminderNew'),
 )
-
-interface SelectRow {
-  label: string
-  value: string | number
-  display: string
-  options: Array<{ value: string | number; text: string }>
-  apply: (raw: AcceptableValue) => void
-}
-
-/** Build one select row; apply only accepts values from the option list. */
-function selectRow<T extends string | number>(args: {
-  label: string
-  value: T
-  options: readonly T[]
-  text: (value: T) => string
-  apply: (value: T) => void
-}): SelectRow {
-  return {
-    label: args.label,
-    value: args.value,
-    display: args.text(args.value),
-    options: args.options.map((value) => ({ value, text: args.text(value) })),
-    apply: (raw) => {
-      const match = args.options.find((option) => option === raw)
-      if (match !== undefined) args.apply(match)
-    },
-  }
-}
-
-const selectRows = computed<SelectRow[]>(() => [
-  selectRow<ReminderRepeat>({
-    label: t('device.reminderRepeat'),
-    value: repeat.value,
-    options: REPEATS,
-    text: repeatText,
-    apply: (value) => {
-      repeat.value = value
-    },
-  }),
-  selectRow<number>({
-    label: t('device.reminderRingDuration'),
-    value: ringDuration.value,
-    options: RING_DURATIONS,
-    text: durationLabel,
-    apply: (value) => {
-      ringDuration.value = value
-    },
-  }),
-  selectRow<number>({
-    label: t('device.reminderRepeatCount'),
-    value: repeatCount.value,
-    options: REPEAT_COUNTS,
-    text: timesLabel,
-    apply: (value) => {
-      repeatCount.value = value
-    },
-  }),
-  selectRow<number>({
-    label: t('device.reminderRepeatInterval'),
-    value: repeatInterval.value,
-    options: REPEAT_INTERVALS,
-    text: (value) => t('device.reminderMinutes', { n: value }),
-    apply: (value) => {
-      repeatInterval.value = value
-    },
-  }),
-])
 </script>
 
 <template>
@@ -264,26 +251,13 @@ const selectRows = computed<SelectRow[]>(() => [
 
     <main class="p-4">
       <QueryState :status="state.status" :error="state.error" @retry="reload()">
-        <section class="card flex items-center justify-center py-8">
-          <TimeFieldRoot
+        <section class="card flex items-center justify-center py-6">
+          <input
             v-model="time"
-            v-slot="{ segments }"
-            granularity="minute"
-            :hour-cycle="12"
-            locale="en"
-            class="flex items-center space-x-2 text-title"
-          >
-            <template v-for="segment in segments" :key="segment.part">
-              <TimeFieldInput
-                v-if="segment.part !== 'literal'"
-                :part="segment.part"
-                class="rounded-small px-1 tabular-nums outline-none focus:bg-surface-selected"
-              >
-                {{ segment.part === 'dayPeriod' ? dayPeriodText(segment.value) : segment.value }}
-              </TimeFieldInput>
-              <span v-else class="px-0.5 text-text-secondary">{{ segment.value }}</span>
-            </template>
-          </TimeFieldRoot>
+            type="time"
+            :aria-label="t('device.reminderTime')"
+            class="bg-transparent text-title text-text-primary outline-none"
+          />
         </section>
 
         <button
@@ -299,39 +273,19 @@ const selectRows = computed<SelectRow[]>(() => [
         </button>
 
         <div class="mt-3 space-y-3">
-          <SelectRoot
-            v-for="row in selectRows"
-            :key="row.label"
-            :model-value="row.value"
-            @update:model-value="row.apply"
+          <button
+            v-for="row in optionRows"
+            :key="row.key"
+            type="button"
+            class="min-h-14 w-full flex items-center justify-between rounded-standard border border-stroke bg-surface px-4 text-body"
+            @click="activeRow = row"
           >
-            <SelectTrigger
-              class="min-h-14 w-full flex items-center justify-between rounded-standard border border-stroke bg-surface px-4 text-body"
-              :aria-label="row.label"
-            >
-              <span>{{ row.label }}</span>
-              <span class="ml-3 flex items-center text-text-secondary">
-                <SelectValue>{{ row.display }}</SelectValue>
-                <span aria-hidden="true" class="ml-2">›</span>
-              </span>
-            </SelectTrigger>
-            <SelectPortal>
-              <SelectContent
-                position="popper"
-                :side-offset="4"
-                class="z-modal rounded-standard border border-stroke bg-surface shadow-lg"
-              >
-                <SelectItem
-                  v-for="option in row.options"
-                  :key="option.value"
-                  :value="option.value"
-                  class="min-h-12 cursor-pointer px-4 outline-none data-[highlighted]:bg-surface-selected"
-                >
-                  {{ option.text }}
-                </SelectItem>
-              </SelectContent>
-            </SelectPortal>
-          </SelectRoot>
+            <span>{{ row.label }}</span>
+            <span class="ml-3 min-w-0 flex items-center text-text-secondary">
+              <span class="truncate">{{ currentText(row) }}</span>
+              <span aria-hidden="true" class="ml-2">›</span>
+            </span>
+          </button>
         </div>
 
         <button
@@ -345,6 +299,45 @@ const selectRows = computed<SelectRow[]>(() => [
         </button>
       </QueryState>
     </main>
+
+    <BaseModal
+      v-if="activeRow"
+      :title="activeRow.label"
+      :cancel-text="t('modal.close')"
+      @cancel="activeRow = null"
+    >
+      <template #footer>
+        <button
+          type="button"
+          class="min-h-10 w-full rounded-small bg-surface-muted px-4 text-body text-text-primary"
+          @click="activeRow = null"
+        >
+          {{ t('modal.close') }}
+        </button>
+      </template>
+      <div class="divide-y divide-stroke" role="radiogroup" :aria-label="activeRow.label">
+        <button
+          v-for="option in activeRow.options"
+          :key="option.value"
+          type="button"
+          role="radio"
+          class="min-h-14 w-full flex items-center justify-between px-1 text-left"
+          :aria-checked="option.value === activeRow?.current()"
+          @click="chooseOption(option.value)"
+        >
+          <span class="text-body">{{ option.text }}</span>
+          <span
+            class="h-5 w-5 flex-none rounded-full border-2"
+            :class="
+              option.value === activeRow?.current()
+                ? 'border-primary bg-primary'
+                : 'border-stroke bg-surface-muted'
+            "
+            aria-hidden="true"
+          />
+        </button>
+      </div>
+    </BaseModal>
 
     <BaseModal
       v-if="editingContent"

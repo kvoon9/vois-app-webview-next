@@ -230,8 +230,8 @@ mock 数据:设备 101 造**最近 3 天**轨迹(深圳坂田一带折线),围�
 ```
 /devices/[id]/reminders            卡片列表(大号时间/内容/重复文案)+ 绿色 FAB
 /devices/[id]/reminders/[reminderId] 新建与编辑同一表单(reminderId 为 'new' 时新建):
-                                   顶部 reka-ui TimeField(12h 中文,分段输入);行:重复(once/daily/weekdays)、
-                                   内容(BaseModal 文本)、响铃时长、重复响铃次数、重复响铃间隔(reka-ui Select);
+                                   顶部原生 <input type="time">(点按弹系统时间选择器,不弹输入法);行:重复(once/daily/weekdays)、
+                                   内容(BaseModal 文本)、响铃时长、重复响铃次数、重复响铃间隔(点行弹 BaseModal 单选列表,选中绿点,同 track-setting 样式);
                                    头部「确定」提交;编辑页另有红色「删除提醒」(BaseModal 确认)
 ```
 

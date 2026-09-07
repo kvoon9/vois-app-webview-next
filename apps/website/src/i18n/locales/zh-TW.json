@@ -225,8 +225,7 @@
     "reminderDelete": "刪除提醒",
     "reminderDeleteConfirm": "確定要刪除該提醒嗎？",
     "emergencyContactAdd": "添加緊急聯絡人",
-    "reminderAM": "上午",
-    "reminderPM": "下午"
+    "reminderTime": "時間"
   },
   "translation": {
     "loading": "載入中…",

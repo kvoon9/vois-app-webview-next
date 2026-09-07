@@ -105,7 +105,7 @@ async function save(): Promise<void> {
 
       <button
         type="button"
-        class="min-h-14 mt-4 w-full bg-surface text-header font-medium disabled:opacity-50"
+        class="btn-primary mt-6"
         :disabled="addMutation.isLoading.value"
         @click="save"
       >

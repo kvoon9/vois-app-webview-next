@@ -34,6 +34,7 @@ catalogs:
     vite-plus: latest
 overrides:
   vite: 'catalog:build'
+  vite-plugin-vois-webview-debug: link:../weila-webview-realname-auth/packages/vite-plugin-vois-webview-debug
   vitest: 'catalog:build'
 peerDependencyRules:
   allowAny:

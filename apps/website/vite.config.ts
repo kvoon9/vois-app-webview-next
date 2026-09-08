@@ -4,7 +4,8 @@ import unocss from 'unocss/vite'
 import legacy from '@vitejs/plugin-legacy'
 import VueRouter from 'vue-router/vite'
 import vueDevtools from 'vite-plugin-vue-devtools'
-import { debugAuthPlugin } from './plugins/debug-auth.ts'
+import { resolve } from 'node:path'
+import { voisWebviewDebug } from 'vite-plugin-vois-webview-debug'
 import { vconsoleDev } from './plugins/vconsole-dev.ts'
 
 export default defineConfig(({ isPreview, command, mode }) => {
@@ -44,7 +45,10 @@ export default defineConfig(({ isPreview, command, mode }) => {
     },
     plugins: [
       ...(isPreview ? [vconsoleDev()] : []),
-      ...(!isPreview || process.argv.includes('--debug') ? [debugAuthPlugin()] : []),
+      voisWebviewDebug({
+        preview: process.argv.includes('--debug'),
+        envFile: resolve(process.cwd(), '.env.local'),
+      }),
       vueDevtools(),
       VueRouter({ dts: 'src/route-map.d.ts' }),
       vue({

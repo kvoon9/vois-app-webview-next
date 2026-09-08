@@ -13,6 +13,9 @@
     "release": "bumpp --recursive",
     "up": "vpx taze -Ir major"
   },
+  "dependencies": {
+    "vite-plugin-vois-webview-debug": "link:../weila-webview-realname-auth/packages/vite-plugin-vois-webview-debug"
+  },
   "devDependencies": {
     "@oxlint/plugins": "catalog:tooling",
     "bumpp": "^12.2.1",

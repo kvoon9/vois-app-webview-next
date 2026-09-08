@@ -90,10 +90,6 @@ const addMutation = useMutation({
   },
 })
 
-function isSelected(id: number): boolean {
-  return selectedIds.value.includes(id)
-}
-
 function isDisabled(candidate: Candidate): boolean {
   return existingIds.value.has(candidate.userId)
 }
@@ -104,7 +100,7 @@ function setTab(tab: CandidateTab): void {
 
 function toggleCandidate(candidate: Candidate): void {
   if (isDisabled(candidate)) return
-  selectedIds.value = isSelected(candidate.userId)
+  selectedIds.value = selectedIds.value.includes(candidate.userId)
     ? selectedIds.value.filter((id) => id !== candidate.userId)
     : [...selectedIds.value, candidate.userId]
 }
@@ -216,13 +212,13 @@ async function submit(): Promise<void> {
                 v-else
                 class="ml-3 h-5 w-5 flex items-center justify-center rounded-small border"
                 :class="
-                  isSelected(candidate.userId)
+                  selectedIds.includes(candidate.userId)
                     ? 'border-primary bg-primary text-primary-text'
                     : 'border-stroke'
                 "
                 aria-hidden="true"
               >
-                <span v-if="isSelected(candidate.userId)">✓</span>
+                <span v-if="selectedIds.includes(candidate.userId)">✓</span>
               </span>
             </button>
           </div>

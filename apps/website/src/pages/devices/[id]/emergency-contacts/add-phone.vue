@@ -32,15 +32,11 @@ const addMutation = useMutation({
   },
 })
 
-function validPhone(value: string): boolean {
-  return /^\+?\d{5,15}$/.test(value)
-}
-
 async function save(): Promise<void> {
   if (addMutation.isLoading.value) return
   const trimmedPhone = phone.value.trim()
   const trimmedName = name.value.trim()
-  if (!validPhone(trimmedPhone)) {
+  if (!/^\+?\d{5,15}$/.test(trimmedPhone)) {
     showToast(t('device.emergencyPhoneInvalid'), { type: 'error' })
     return
   }

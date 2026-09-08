@@ -16,6 +16,7 @@
   "devDependencies": {
     "@oxlint/plugins": "catalog:tooling",
     "bumpp": "^12.2.1",
+    "eslint-plugin-slop": "catalog:tooling",
     "taze": "catalog:tooling",
     "vite-plus": "catalog:tooling"
   },

@@ -13,9 +13,23 @@ export default defineConfig({
     jsPlugins: [
       { name: 'vite-plus', specifier: 'vite-plus/oxlint-plugin' },
       { name: 'anti-slop', specifier: './tools/oxlint/anti-slop/index.ts' },
+      { name: 'slop', specifier: 'eslint-plugin-slop' },
     ],
+    settings: {
+      slop: {
+        inspection: { mode: 'recent-changes', tracebackCommits: 5 },
+      },
+    },
     rules: {
       'vite-plus/prefer-vite-plus-imports': 'error',
+      'slop/max-comment-length': 'error',
+      'slop/no-chained-type-assertions': 'error',
+      'slop/no-em-dash': 'error',
+      'slop/no-jargon': 'error',
+      'slop/no-static-only-class': 'error',
+      'slop/no-trivial-functions': 'error',
+      'slop/no-trivial-type-aliases': 'error',
+      'slop/prefer-jsdoc': 'error',
       'anti-slop/no-chained-type-assertions': 'error',
       'anti-slop/no-conditional-empty-object-spread': 'error',
       'anti-slop/no-known-value-widening': 'error',

@@ -28,6 +28,7 @@ catalogs:
   tooling:
     '@oxlint/plugins': 1.73.0
     '@types/node': ^26.2.0
+    eslint-plugin-slop: ^0.1.3
     taze: ^21.1.0
     typescript: ^7.0.2
     vite-plus: latest

@@ -70,17 +70,9 @@ const addMutation = useMutation({
   },
 })
 
-function isSelected(userId: number): boolean {
-  return selectedIds.value.includes(userId)
-}
-
-function isExisting(userId: number): boolean {
-  return existingIds.value.has(userId)
-}
-
 function toggleFriend(friend: Friend): void {
-  if (isExisting(friend.userId)) return
-  selectedIds.value = isSelected(friend.userId)
+  if (existingIds.value.has(friend.userId)) return
+  selectedIds.value = selectedIds.value.includes(friend.userId)
     ? selectedIds.value.filter((id) => id !== friend.userId)
     : [...selectedIds.value, friend.userId]
 }
@@ -143,7 +135,7 @@ async function submit(): Promise<void> {
               :key="friend.userId"
               type="button"
               class="min-h-16 w-full flex items-center px-4 text-left disabled:opacity-50"
-              :disabled="isExisting(friend.userId)"
+              :disabled="existingIds.has(friend.userId)"
               @click="toggleFriend(friend)"
             >
               <Avatar
@@ -158,20 +150,23 @@ async function submit(): Promise<void> {
                   friend.userNum
                 }}</span>
               </span>
-              <span v-if="isExisting(friend.userId)" class="ml-2 text-small text-text-secondary">
+              <span
+                v-if="existingIds.has(friend.userId)"
+                class="ml-2 text-small text-text-secondary"
+              >
                 {{ t('device.alreadyContact') }}
               </span>
               <span
                 v-else
                 class="ml-3 h-5 w-5 flex items-center justify-center rounded-small border"
                 :class="
-                  isSelected(friend.userId)
+                  selectedIds.includes(friend.userId)
                     ? 'border-primary bg-primary text-primary-text'
                     : 'border-stroke'
                 "
                 aria-hidden="true"
               >
-                <span v-if="isSelected(friend.userId)">✓</span>
+                <span v-if="selectedIds.includes(friend.userId)">✓</span>
               </span>
             </button>
           </div>

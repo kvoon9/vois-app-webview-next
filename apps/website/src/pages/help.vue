@@ -7,10 +7,6 @@ const { t } = useI18n()
 const route = useRoute()
 const router = useRouter()
 
-function navigateTo(path: string) {
-  router.push(path)
-}
-
 function openBackgroundHelp() {
   router.push({ path: '/help-guide', query: route.query })
 }
@@ -65,7 +61,7 @@ function openBackgroundHelp() {
         <button
           type="button"
           class="card w-full flex items-center justify-between text-left"
-          @click="navigateTo('/feedback')"
+          @click="router.push('/feedback')"
         >
           <span class="text-body">{{ t('help.feedback') }}</span>
           <svg
@@ -101,7 +97,7 @@ function openBackgroundHelp() {
         <button
           type="button"
           class="card w-full flex items-center justify-between text-left"
-          @click="navigateTo('/report')"
+          @click="router.push('/report')"
         >
           <span class="text-body">{{ t('help.report') }}</span>
           <svg

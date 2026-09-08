@@ -833,8 +833,7 @@ function toReminderBody(input: ReminderInput): Omit<DeviceReminderDto, 'reminder
   }
 }
 
-// These aliases are intentionally small compatibility conveniences for code
-// that names the operation from the endpoint rather than the device scope.
+/** Compatibility aliases for callers using endpoint names instead of device-scoped names. */
 export const getDeviceRechargeList = getRechargeDevices
 export const getRechargeList = getRechargeDevices
 export const createDeviceRechargeOrder = createRechargeOrder

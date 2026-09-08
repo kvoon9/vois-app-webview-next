@@ -66,16 +66,12 @@ const addMutation = useMutation({
   },
 })
 
-function isExisting(userId: number): boolean {
-  return existingIds.value.has(userId)
-}
-
 function search(): void {
   searchedKeyword.value = keyword.value.trim()
 }
 
 function choose(user: Friend): void {
-  if (!isExisting(user.userId)) selected.value = user
+  if (!existingIds.value.has(user.userId)) selected.value = user
 }
 
 async function confirmAdd(): Promise<void> {
@@ -130,7 +126,7 @@ async function confirmAdd(): Promise<void> {
             <button
               type="button"
               class="card w-full flex items-center text-left disabled:opacity-50"
-              :disabled="isExisting(user.userId)"
+              :disabled="existingIds.has(user.userId)"
               @click="choose(user)"
             >
               <Avatar :name="user.nick" :src="user.avatar" :online="user.online" show-status />
@@ -141,7 +137,7 @@ async function confirmAdd(): Promise<void> {
                 }}</span>
               </span>
               <span
-                v-if="isExisting(user.userId)"
+                v-if="existingIds.has(user.userId)"
                 class="ml-2 flex-none text-small text-text-secondary"
               >
                 {{ t('device.alreadyContact') }}

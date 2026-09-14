@@ -114,29 +114,13 @@ async function submit(): Promise<void> {
   <div class="page">
     <PageHeader :title="t('device.addMember')" />
 
-    <main class="p-4">
+    <main class="p-4 pb-40">
       <QueryState :status="state.status" :error="state.error" @retry="reload()">
         <template v-if="state.data">
-          <button
-            type="button"
-            class="mt-4 flex w-full items-center justify-between py-3 text-left"
-            :disabled="selectableIds.length === 0"
-            @click="toggleAll"
-          >
-            <span class="text-body">{{ t('device.selectAll') }}</span>
-            <span
-              class="checkbox"
-              :class="allSelected ? 'checkbox-on' : 'checkbox-off'"
-              aria-hidden="true"
-            >
-              <span v-if="allSelected" class="i-ph-check" />
-            </span>
-          </button>
-
           <p v-if="candidates.length === 0" class="py-12 text-center text-body text-text-secondary">
             {{ t('device.noCandidates') }}
           </p>
-          <div v-else class="mt-2 panel">
+          <div v-else class="panel">
             <button
               v-for="candidate in candidates"
               :key="candidate.userId"
@@ -176,22 +160,43 @@ async function submit(): Promise<void> {
               </span>
             </button>
           </div>
-
-          <button
-            type="button"
-            class="btn-primary mt-6"
-            :disabled="selectedCount === 0 || addMutation.isLoading.value"
-            @click="confirmationOpen = true"
-          >
-            {{
-              addMutation.isLoading.value
-                ? t('device.saving')
-                : t('device.confirmAdd', { count: selectedCount })
-            }}
-          </button>
         </template>
       </QueryState>
     </main>
+
+    <footer
+      v-if="state.data && candidates.length > 0"
+      class="fixed inset-x-0 bottom-0 bg-surface-elevated px-4 pb-[calc(env(safe-area-inset-bottom,0px)+1rem)] pt-3"
+    >
+      <button
+        type="button"
+        class="flex w-full items-center py-2 text-left disabled:opacity-50"
+        :disabled="selectableIds.length === 0"
+        @click="toggleAll"
+      >
+        <span
+          class="checkbox"
+          :class="allSelected ? 'checkbox-on' : 'checkbox-off'"
+          aria-hidden="true"
+        >
+          <span v-if="allSelected" class="i-ph-check" />
+        </span>
+        <span class="ml-2 text-body">{{ t('device.selectAll') }}</span>
+      </button>
+
+      <button
+        type="button"
+        class="btn-primary mt-2 w-full"
+        :disabled="selectedCount === 0 || addMutation.isLoading.value"
+        @click="confirmationOpen = true"
+      >
+        {{
+          addMutation.isLoading.value
+            ? t('device.saving')
+            : t('device.confirmAdd', { count: selectedCount })
+        }}
+      </button>
+    </footer>
 
     <BaseModal
       v-if="confirmationOpen"

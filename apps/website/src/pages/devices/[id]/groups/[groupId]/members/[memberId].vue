@@ -148,6 +148,13 @@ async function transferOwner(): Promise<void> {
               </p>
               <p class="mt-1 text-body">{{ member.nickname || t('device.groupNicknameUnset') }}</p>
             </div>
+            <RouterLink
+              :to="{ path: '/report-user', query: { id: String(memberId) } }"
+              class="min-h-14 flex items-center justify-between px-4 text-body text-danger"
+            >
+              <span>{{ t('profile.report') }}</span>
+              <span class="row-chevron" aria-hidden="true" />
+            </RouterLink>
           </div>
 
           <div v-if="canManage" class="mt-8 space-y-3">
@@ -168,14 +175,6 @@ async function transferOwner(): Promise<void> {
               {{ t('device.removeMember') }}
             </button>
           </div>
-
-          <RouterLink
-            :to="{ path: '/report-user', query: { id: String(memberId) } }"
-            class="mt-4 min-h-14 nav-item text-danger"
-          >
-            <span>{{ t('profile.report') }}</span>
-            <span class="row-chevron" aria-hidden="true" />
-          </RouterLink>
         </template>
       </QueryState>
     </main>

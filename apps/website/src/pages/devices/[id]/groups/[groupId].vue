@@ -194,16 +194,21 @@ async function dissolveGroup(): Promise<void> {
 
 <template>
   <RouterView v-if="route.name !== '/devices/[id]/groups/[groupId]'" />
-  <div v-else class="min-h-screen min-h-svh bg-surface text-text-primary">
+  <div v-else class="page">
     <PageHeader :title="group?.name ?? t('device.groupDetail')" />
 
     <main class="p-4">
       <QueryState :status="state.status" :error="state.error" @retry="reload()">
         <template v-if="group">
-          <section class="overflow-hidden rounded-standard border border-stroke bg-surface">
+          <section class="overflow-hidden rounded-standard bg-surface-elevated">
             <div class="flex flex-col items-center px-4 py-5 text-center">
-              <span
-                class="relative h-20 w-20 flex items-center justify-center overflow-hidden rounded-full bg-surface-muted text-2xl text-text-secondary"
+              <button
+                type="button"
+                class="relative h-20 w-20 flex items-center justify-center overflow-hidden rounded-full bg-surface-muted text-2xl text-text-secondary disabled:cursor-default"
+                :class="avatarUploading ? 'opacity-50' : ''"
+                :disabled="!isOwner || avatarUploading"
+                :aria-label="isOwner ? t('device.changeAvatar') : undefined"
+                @click="pickAvatar"
               >
                 {{ group.name.slice(0, 1) }}
                 <img
@@ -213,21 +218,21 @@ async function dissolveGroup(): Promise<void> {
                   class="absolute inset-0 h-full w-full object-cover"
                   @error="hideBrokenImage"
                 />
-              </span>
+              </button>
               <h2 class="mt-3 text-header font-semibold">{{ group.name }}</h2>
               <p class="mt-1 text-small text-text-secondary">
                 {{ t('device.groupNumber', { number: group.num }) }}
               </p>
               <p class="mt-1 text-small text-text-secondary">
-                {{ t('device.createdAt', { date: group.createdAt }) }}
+                {{ t('device.createdAt', { date: group.createdAt || t('device.notAvailable') }) }}
               </p>
             </div>
 
-            <div class="divide-y divide-stroke border-t border-stroke">
+            <div>
               <button
                 v-if="isOwner"
                 type="button"
-                class="min-h-14 w-full flex items-center justify-between px-4 py-3 text-left"
+                class="panel-row min-h-14 w-full py-3 text-left"
                 @click="openEditor('name')"
               >
                 <span>
@@ -236,7 +241,7 @@ async function dissolveGroup(): Promise<void> {
                 </span>
                 <span aria-hidden="true" class="ml-3 text-text-secondary">›</span>
               </button>
-              <div v-else class="min-h-14 flex items-center justify-between px-4 py-3">
+              <div v-else class="panel-row min-h-14 py-3">
                 <span>
                   <span class="block text-body">{{ t('device.groupName') }}</span>
                   <span class="mt-0.5 block text-small text-text-secondary">{{ group.name }}</span>
@@ -244,9 +249,9 @@ async function dissolveGroup(): Promise<void> {
               </div>
 
               <button
-                v-if="isOwner"
+                v-if="isOwner && group.infoAvailable"
                 type="button"
-                class="min-h-14 w-full flex items-center justify-between px-4 py-3 text-left"
+                class="panel-row min-h-14 w-full py-3 text-left"
                 @click="openEditor('intro')"
               >
                 <span class="min-w-0">
@@ -257,7 +262,7 @@ async function dissolveGroup(): Promise<void> {
                 </span>
                 <span aria-hidden="true" class="ml-3 flex-none text-text-secondary">›</span>
               </button>
-              <div v-else class="min-h-14 flex items-center justify-between px-4 py-3">
+              <div v-else class="panel-row min-h-14 py-3">
                 <span class="min-w-0">
                   <span class="block text-body">{{ t('device.groupIntroduction') }}</span>
                   <span class="mt-0.5 block truncate text-small text-text-secondary">
@@ -268,7 +273,7 @@ async function dissolveGroup(): Promise<void> {
 
               <button
                 type="button"
-                class="min-h-14 w-full flex items-center justify-between px-4 py-3 text-left"
+                class="panel-row min-h-14 w-full py-3 text-left"
                 @click="openEditor('nickname')"
               >
                 <span>
@@ -280,18 +285,16 @@ async function dissolveGroup(): Promise<void> {
             </div>
           </section>
 
-          <section
-            class="mt-4 divide-y divide-stroke rounded-standard border border-stroke bg-surface"
-          >
-            <div class="min-h-12 flex items-center justify-between px-4 text-body">
+          <section class="mt-4 panel">
+            <div class="panel-row min-h-12 text-body">
               <span>{{ t('device.muteNotifications') }}</span>
               <button
                 type="button"
                 role="switch"
                 class="relative h-7 w-12 flex-none rounded-full disabled:opacity-50"
-                :class="groupSettings.muted ? 'bg-primary' : 'bg-surface-muted'"
+                :class="groupSettings.muted ? 'bg-primary' : 'bg-fill'"
                 :aria-checked="groupSettings.muted"
-                :disabled="settingsMutation.isLoading.value"
+                :disabled="settingsMutation.isLoading.value || !group.infoAvailable"
                 :aria-label="t('device.muteNotifications')"
                 @click="toggleSetting('muted')"
               >
@@ -301,15 +304,15 @@ async function dissolveGroup(): Promise<void> {
                 />
               </button>
             </div>
-            <div class="min-h-12 flex items-center justify-between px-4 text-body">
+            <div class="panel-row min-h-12 text-body">
               <span>{{ t('device.shareLocation') }}</span>
               <button
                 type="button"
                 role="switch"
                 class="relative h-7 w-12 flex-none rounded-full disabled:opacity-50"
-                :class="groupSettings.shareLocation ? 'bg-primary' : 'bg-surface-muted'"
+                :class="groupSettings.shareLocation ? 'bg-primary' : 'bg-fill'"
                 :aria-checked="groupSettings.shareLocation"
-                :disabled="settingsMutation.isLoading.value"
+                :disabled="settingsMutation.isLoading.value || !group.infoAvailable"
                 :aria-label="t('device.shareLocation')"
                 @click="toggleSetting('shareLocation')"
               >
@@ -319,15 +322,15 @@ async function dissolveGroup(): Promise<void> {
                 />
               </button>
             </div>
-            <div class="min-h-12 flex items-center justify-between px-4 text-body">
+            <div class="panel-row min-h-12 text-body">
               <span>{{ t('device.voiceBroadcast') }}</span>
               <button
                 type="button"
                 role="switch"
                 class="relative h-7 w-12 flex-none rounded-full disabled:opacity-50"
-                :class="groupSettings.broadcast ? 'bg-primary' : 'bg-surface-muted'"
+                :class="groupSettings.broadcast ? 'bg-primary' : 'bg-fill'"
                 :aria-checked="groupSettings.broadcast"
-                :disabled="settingsMutation.isLoading.value"
+                :disabled="settingsMutation.isLoading.value || !group.infoAvailable"
                 :aria-label="t('device.voiceBroadcast')"
                 @click="toggleSetting('broadcast')"
               >
@@ -337,15 +340,15 @@ async function dissolveGroup(): Promise<void> {
                 />
               </button>
             </div>
-            <div class="min-h-12 flex items-center justify-between px-4 text-body">
+            <div class="panel-row min-h-12 text-body">
               <span>{{ t('device.stickOnTop') }}</span>
               <button
                 type="button"
                 role="switch"
                 class="relative h-7 w-12 flex-none rounded-full disabled:opacity-50"
-                :class="groupSettings.pinned ? 'bg-primary' : 'bg-surface-muted'"
+                :class="groupSettings.pinned ? 'bg-primary' : 'bg-fill'"
                 :aria-checked="groupSettings.pinned"
-                :disabled="settingsMutation.isLoading.value"
+                :disabled="settingsMutation.isLoading.value || !group.infoAvailable"
                 :aria-label="t('device.stickOnTop')"
                 @click="toggleSetting('pinned')"
               >
@@ -362,7 +365,7 @@ async function dissolveGroup(): Promise<void> {
               path: `/devices/${deviceId}/groups/${groupId}/members`,
               query: route.query,
             }"
-            class="mt-4 min-h-14 w-full flex items-center justify-between rounded-standard border border-stroke bg-surface px-4 text-body"
+            class="mt-4 min-h-14 w-full nav-item"
           >
             <span>{{ t('device.membersCount', { count: group.memberCount }) }}</span>
             <span aria-hidden="true" class="ml-3 text-text-secondary">›</span>
@@ -371,20 +374,11 @@ async function dissolveGroup(): Promise<void> {
           <div class="mt-8 space-y-3">
             <button
               type="button"
-              class="w-full rounded-button border border-danger px-4 py-3 text-body text-danger disabled:opacity-50"
-              :disabled="leaveMutation.isLoading.value"
-              @click="leaveConfirmation = true"
+              class="btn-danger"
+              :disabled="exitMutation.isLoading.value"
+              @click="exitConfirmation = true"
             >
-              {{ t('device.leaveGroup') }}
-            </button>
-            <button
-              v-if="isOwner"
-              type="button"
-              class="w-full rounded-button border border-danger px-4 py-3 text-body text-danger disabled:opacity-50"
-              :disabled="dissolveMutation.isLoading.value"
-              @click="dissolveConfirmation = true"
-            >
-              {{ t('device.dissolveGroup') }}
+              {{ isOwner ? t('device.dissolveGroup') : t('device.leaveGroup') }}
             </button>
           </div>
         </template>

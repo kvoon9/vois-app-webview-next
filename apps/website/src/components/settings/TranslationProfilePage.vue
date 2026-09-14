@@ -114,7 +114,7 @@ function changeTarget(target: string): void {
 </script>
 
 <template>
-  <div class="min-h-screen min-h-svh bg-surface text-text-primary">
+  <div class="page">
     <PageHeader :title="item?.name ?? t('settings.title')" />
 
     <main class="p-4">
@@ -141,16 +141,16 @@ function changeTarget(target: string): void {
 
           <!-- Temporarily hidden: non-translation sections; restore by uncommenting -->
           <!-- ponytail: media/location/notifications/remarks rows are UI-only placeholders per design; native owns these features
-        <div class="mt-2 divide-y divide-stroke border border-stroke rounded-standard bg-surface">
+        <div class="mt-2 panel">
           <div
-            class="min-h-12 flex items-center justify-between px-4 text-body"
+            class="panel-row min-h-12 text-body"
             aria-disabled="true"
           >
             {{ t('profile.media') }}
             <span aria-hidden="true" class="text-text-secondary">›</span>
           </div>
           <div
-            class="min-h-12 flex items-center justify-between px-4 text-body"
+            class="panel-row min-h-12 text-body"
             aria-disabled="true"
           >
             {{ t('profile.location') }}
@@ -159,17 +159,17 @@ function changeTarget(target: string): void {
         </div>
         -->
 
-          <div class="mt-4 border border-stroke rounded-standard bg-surface p-4">
+          <div class="mt-4 card">
             <div class="space-y-2" role="group" :aria-label="t('translation.mode')">
               <button
                 v-for="mode in modes"
                 :key="mode.skill"
                 type="button"
-                class="min-h-11 w-full rounded-standard border px-4 text-left text-2nd-body transition-colors"
+                class="min-h-11 w-full rounded-standard px-4 text-left text-2nd-body transition-colors"
                 :class="
                   item.skill === mode.skill
-                    ? 'border-primary bg-surface-selected text-text-primary'
-                    : 'border-stroke bg-surface text-text-secondary'
+                    ? 'bg-surface-selected text-text-primary'
+                    : 'bg-surface-muted text-text-secondary'
                 "
                 :aria-pressed="item.skill === mode.skill"
                 :disabled="saving"
@@ -229,25 +229,25 @@ function changeTarget(target: string): void {
           </div>
 
           <!--
-        <div class="mt-4 divide-y divide-stroke border border-stroke rounded-standard bg-surface">
+        <div class="mt-4 panel">
           <div
             v-for="row in kind === 'friends'
               ? ['profile.muteNotifications', 'profile.readReceipts', 'profile.stickOnTop']
               : ['profile.muteNotifications', 'profile.readReceipts']"
             :key="row"
-            class="min-h-12 flex items-center justify-between px-4 text-body"
+            class="panel-row min-h-12 text-body"
             aria-disabled="true"
           >
             {{ t(row) }}
             <span
-              class="relative h-7 w-12 flex-none rounded-full bg-surface-muted"
+              class="relative h-7 w-12 flex-none rounded-full bg-fill"
               aria-hidden="true"
             >
           <span class="absolute left-0.5 top-0.5 h-6 w-6 rounded-full bg-white shadow" />
             </span>
           </div>
           <div
-            class="min-h-12 flex items-center justify-between px-4 text-body"
+            class="panel-row min-h-12 text-body"
             aria-disabled="true"
           >
             {{ t('profile.editRemarks') }}
@@ -262,14 +262,14 @@ function changeTarget(target: string): void {
               path: `/settings/groups/${item.id}/members`,
               query: { ...accountQuery, name: item.name },
             }"
-            class="mt-4 min-h-12 flex items-center justify-between border border-stroke rounded-standard bg-surface px-4 text-body"
+            class="mt-4 min-h-12 nav-item"
           >
             {{ t('profile.members') }}
             <span aria-hidden="true" class="text-text-secondary">›</span>
           </RouterLink>
 
           <!--
-        <div class="mt-4 divide-y divide-stroke border border-stroke rounded-standard bg-surface">
+        <div class="mt-4 panel">
           <div class="min-h-12 flex items-center px-4 text-body" aria-disabled="true">
             {{ t('profile.clearHistory') }}
           </div>

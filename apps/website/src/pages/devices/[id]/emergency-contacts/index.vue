@@ -95,7 +95,7 @@ async function removeContact(): Promise<void> {
 </script>
 
 <template>
-  <div class="min-h-screen min-h-svh bg-surface text-text-primary">
+  <div class="page">
     <PageHeader :title="t('device.emergencyContactSettings')" />
 
     <main class="p-4">
@@ -119,12 +119,8 @@ async function removeContact(): Promise<void> {
             </ul>
           </section>
 
-          <ul class="mt-4 overflow-hidden rounded-standard border border-stroke bg-surface">
-            <li
-              v-for="contact in contacts"
-              :key="contact.contactId"
-              class="flex items-center border-b border-stroke px-4 py-3 last:border-b-0"
-            >
+          <ul class="mt-4 overflow-hidden panel">
+            <li v-for="contact in contacts" :key="contact.contactId" class="flex items-center">
               <Avatar :name="displayName(contact)" :src="contact.avatar" />
               <span class="ml-3 min-w-0 flex-1">
                 <span class="block truncate text-body font-medium">{{ displayName(contact) }}</span>
@@ -151,7 +147,7 @@ async function removeContact(): Promise<void> {
           <nav class="mt-4 space-y-3" :aria-label="t('device.emergencyContactAdd')">
             <button
               type="button"
-              class="min-h-14 w-full flex items-center justify-between rounded-standard border border-stroke bg-surface px-4 text-body disabled:opacity-50"
+              class="min-h-14 w-full nav-item disabled:opacity-50"
               :disabled="friendsFull"
               @click="openAddFriend"
             >
@@ -160,7 +156,7 @@ async function removeContact(): Promise<void> {
             </button>
             <button
               type="button"
-              class="min-h-14 w-full flex items-center justify-between rounded-standard border border-stroke bg-surface px-4 text-body disabled:opacity-50"
+              class="min-h-14 w-full nav-item disabled:opacity-50"
               :disabled="phonesFull"
               @click="openAddPhone"
             >

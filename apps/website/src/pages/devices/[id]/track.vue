@@ -67,7 +67,7 @@ function confirmDate(date: string): void {
 </script>
 
 <template>
-  <div class="min-h-screen min-h-svh bg-surface text-text-primary">
+  <div class="page">
     <PageHeader :title="t('device.trackRecords')" />
     <main class="relative h-[calc(100svh-3.5rem)]">
       <button

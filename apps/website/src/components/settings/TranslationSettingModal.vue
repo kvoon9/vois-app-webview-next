@@ -109,11 +109,11 @@ function confirm(): void {
         v-for="mode in modes"
         :key="mode.skill"
         type="button"
-        class="min-h-11 w-full rounded-standard border px-4 text-left text-2nd-body transition-colors"
+        class="min-h-11 w-full rounded-standard px-4 text-left text-2nd-body transition-colors"
         :class="
           skill === mode.skill
-            ? 'border-primary bg-surface-selected text-text-primary'
-            : 'border-stroke bg-surface text-text-secondary'
+            ? 'bg-surface-selected text-text-primary'
+            : 'bg-surface-muted text-text-secondary'
         "
         :aria-pressed="skill === mode.skill"
         :disabled="saving"

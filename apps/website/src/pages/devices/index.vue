@@ -21,15 +21,12 @@ function openDevice(device: Device): void {
 </script>
 
 <template>
-  <div class="min-h-screen min-h-svh bg-surface text-text-primary">
+  <div class="page">
     <PageHeader :title="t('device.title')" />
 
     <main class="p-4">
       <nav class="mb-4" :aria-label="t('device.recharge')">
-        <router-link
-          to="/devices/recharge"
-          class="min-h-12 flex items-center justify-between rounded-standard border border-stroke bg-surface px-4 text-body"
-        >
+        <router-link to="/devices/recharge" class="min-h-12 nav-item">
           <span>{{ t('device.batchRecharge') }}</span>
           <span aria-hidden="true" class="text-text-secondary">›</span>
         </router-link>
@@ -46,12 +43,8 @@ function openDevice(device: Device): void {
           <li
             v-for="device in state.data"
             :key="device.userId"
-            class="rounded-standard border p-4"
-            :class="
-              device.online
-                ? 'border-primary/40 bg-surface-selected'
-                : 'border-stroke bg-surface-muted opacity-70'
-            "
+            class="rounded-standard p-4"
+            :class="device.online ? 'bg-surface-selected' : 'bg-surface-muted opacity-70'"
           >
             <button
               type="button"
@@ -70,8 +63,8 @@ function openDevice(device: Device): void {
                   @error="hideBrokenImage"
                 />
                 <span
-                  class="absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-surface"
-                  :class="device.online ? 'bg-blue-500' : 'bg-stroke'"
+                  class="status-dot"
+                  :class="device.online ? 'bg-blue-500' : 'bg-fill'"
                   :aria-label="t(device.online ? 'device.online' : 'device.offline')"
                   role="img"
                 />

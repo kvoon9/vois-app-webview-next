@@ -11,7 +11,7 @@ const { accountQuery } = useAccountId()
 
 <template>
   <RouterView v-if="route.name !== '/settings'" />
-  <div v-else class="min-h-screen min-h-svh bg-surface text-text-primary">
+  <div v-else class="page">
     <PageHeader :title="t('settings.title')" />
 
     <main class="p-4">

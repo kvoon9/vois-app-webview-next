@@ -161,7 +161,7 @@ async function removeContact(): Promise<void> {
 </script>
 
 <template>
-  <div class="min-h-screen min-h-svh bg-surface text-text-primary">
+  <div class="page">
     <PageHeader :title="contact?.nick ?? t('device.contactDetail')" />
 
     <main class="p-4">
@@ -179,8 +179,8 @@ async function removeContact(): Promise<void> {
             <p class="mt-1 text-small text-text-secondary">{{ contact.userNum }}</p>
           </section>
 
-          <dl class="mt-2 overflow-hidden rounded-standard border border-stroke bg-surface">
-            <div class="flex items-center justify-between border-b border-stroke px-4 py-3">
+          <dl class="mt-2 overflow-hidden panel">
+            <div class="flex items-center justify-between px-4 py-3">
               <dt class="text-2nd-body text-text-secondary">{{ t('device.registeredAt') }}</dt>
               <dd class="ml-4 text-right text-2nd-body">
                 {{ contact.registeredAt || t('device.notAvailable') }}
@@ -194,13 +194,13 @@ async function removeContact(): Promise<void> {
             </div>
           </dl>
 
-          <section class="mt-4 overflow-hidden rounded-standard border border-stroke bg-surface">
+          <section class="mt-4 overflow-hidden panel">
             <button
               v-for="item in settingItems"
               :key="item.key"
               type="button"
               role="switch"
-              class="min-h-14 w-full flex items-center justify-between border-b border-stroke px-4 text-left last:border-b-0 disabled:opacity-50"
+              class="min-h-14 w-full flex items-center justify-between px-4 text-left disabled:opacity-50"
               :aria-checked="settings[item.key]"
               :disabled="updateMutation.isLoading.value"
               @click="toggleSetting(item.key)"
@@ -208,7 +208,7 @@ async function removeContact(): Promise<void> {
               <span class="text-body">{{ item.label }}</span>
               <span
                 class="relative h-6 w-10 rounded-full transition-colors"
-                :class="settings[item.key] ? 'bg-primary' : 'bg-stroke'"
+                :class="settings[item.key] ? 'bg-primary' : 'bg-fill'"
                 aria-hidden="true"
               >
                 <span
@@ -219,7 +219,7 @@ async function removeContact(): Promise<void> {
             </button>
           </section>
 
-          <section class="mt-4 overflow-hidden rounded-standard border border-stroke bg-surface">
+          <section class="mt-4 overflow-hidden panel">
             <button
               type="button"
               class="min-h-14 w-full flex items-center justify-between px-4 text-left"
@@ -235,7 +235,7 @@ async function removeContact(): Promise<void> {
             </button>
             <button
               type="button"
-              class="min-h-14 w-full flex items-center justify-between border-t border-stroke px-4 text-left disabled:opacity-50"
+              class="min-h-14 w-full flex items-center justify-between px-4 text-left disabled:opacity-50"
               :disabled="clearMutation.isLoading.value"
               @click="clearMessages"
             >
@@ -244,7 +244,7 @@ async function removeContact(): Promise<void> {
             </button>
             <RouterLink
               :to="{ path: '/report-user', query: { id: String(contact.userId) } }"
-              class="min-h-14 flex items-center justify-between border-t border-stroke px-4 text-body text-danger"
+              class="min-h-14 flex items-center justify-between px-4 text-body text-danger"
             >
               <span>{{ t('profile.report') }}</span>
               <span aria-hidden="true" class="ml-3 flex-none text-text-secondary">›</span>
@@ -253,7 +253,7 @@ async function removeContact(): Promise<void> {
 
           <button
             type="button"
-            class="mt-8 w-full rounded-button border border-danger px-4 py-3 text-body text-danger disabled:opacity-50"
+            class="mt-8 btn-danger"
             :disabled="removeMutation.isLoading.value"
             @click="removeConfirmation = true"
           >

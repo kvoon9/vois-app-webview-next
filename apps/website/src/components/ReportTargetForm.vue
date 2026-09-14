@@ -100,7 +100,7 @@ function closeModal(): void {
 </script>
 
 <template>
-  <div class="min-h-svh bg-surface text-text-primary">
+  <div class="page">
     <PageHeader :title="title" />
 
     <main class="p-4">
@@ -113,8 +113,8 @@ function closeModal(): void {
             <label
               v-for="(reason, index) in reasons"
               :key="reason"
-              class="min-h-13 flex cursor-pointer items-center border border-transparent px-6 text-2nd-body"
-              :class="index === data.reasonIndex ? 'border-primary bg-surface-selected' : ''"
+              class="min-h-13 flex cursor-pointer items-center px-6 text-2nd-body"
+              :class="index === data.reasonIndex ? 'bg-surface-selected' : ''"
             >
               <input
                 v-model="data.reasonIndex"

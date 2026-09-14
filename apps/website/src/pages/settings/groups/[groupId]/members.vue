@@ -78,7 +78,7 @@ async function save(setting: TranslationSetting): Promise<void> {
 </script>
 
 <template>
-  <div class="min-h-screen min-h-svh bg-surface text-text-primary">
+  <div class="page">
     <PageHeader :title="pageTitle" />
 
     <main class="p-4">

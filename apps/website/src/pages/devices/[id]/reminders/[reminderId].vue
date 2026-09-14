@@ -243,7 +243,7 @@ const headerTitle = computed(() =>
 </script>
 
 <template>
-  <div class="min-h-screen min-h-svh bg-surface text-text-primary">
+  <div class="page">
     <PageHeader :title="headerTitle">
       <template #action>
         <button
@@ -272,11 +272,7 @@ const headerTitle = computed(() =>
           />
         </section>
 
-        <button
-          type="button"
-          class="min-h-14 mt-4 w-full flex items-center justify-between rounded-standard border border-stroke bg-surface px-4 text-body"
-          @click="openContentEditor"
-        >
+        <button type="button" class="min-h-14 mt-4 w-full nav-item" @click="openContentEditor">
           <span>{{ t('device.reminderContent') }}</span>
           <span class="ml-3 min-w-0 flex items-center text-text-secondary">
             <span class="truncate">{{ content || t('device.notAvailable') }}</span>
@@ -289,7 +285,7 @@ const headerTitle = computed(() =>
             v-for="row in optionRows"
             :key="row.key"
             type="button"
-            class="min-h-14 w-full flex items-center justify-between rounded-standard border border-stroke bg-surface px-4 text-body"
+            class="min-h-14 w-full nav-item"
             @click="activeRow = row"
           >
             <span>{{ row.label }}</span>
@@ -303,7 +299,7 @@ const headerTitle = computed(() =>
         <button
           v-if="isEdit"
           type="button"
-          class="mt-8 w-full rounded-button border border-danger px-4 py-3 text-body text-danger disabled:opacity-50"
+          class="mt-8 btn-danger"
           :disabled="removeMutation.isLoading.value"
           @click="deleteConfirmation = true"
         >
@@ -327,7 +323,7 @@ const headerTitle = computed(() =>
           {{ t('modal.close') }}
         </button>
       </template>
-      <div class="divide-y divide-stroke" role="radiogroup" :aria-label="activeRow.label">
+      <div role="radiogroup" :aria-label="activeRow.label">
         <button
           v-for="option in activeRow.options"
           :key="option.value"
@@ -339,12 +335,8 @@ const headerTitle = computed(() =>
         >
           <span class="text-body">{{ option.text }}</span>
           <span
-            class="h-5 w-5 flex-none rounded-full border-2"
-            :class="
-              option.value === activeRow?.current()
-                ? 'border-primary bg-primary'
-                : 'border-stroke bg-surface-muted'
-            "
+            class="radio"
+            :class="option.value === activeRow?.current() ? 'radio-on' : 'radio-off'"
             aria-hidden="true"
           />
         </button>

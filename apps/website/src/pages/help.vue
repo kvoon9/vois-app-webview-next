@@ -13,7 +13,7 @@ function openBackgroundHelp() {
 </script>
 
 <template>
-  <div class="min-h-svh bg-surface text-text-primary">
+  <div class="page">
     <PageHeader :title="t('help.title')" />
 
     <main class="p-4">

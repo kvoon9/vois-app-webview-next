@@ -46,21 +46,21 @@ function openContact(contact: Contact): void {
 </script>
 
 <template>
-  <div class="min-h-screen min-h-svh bg-surface text-text-primary">
+  <div class="page">
     <PageHeader :title="t('device.contacts')" />
 
     <main class="p-4">
       <nav class="space-y-3" :aria-label="t('device.addContact')">
         <router-link
           :to="{ path: `/devices/${deviceId}/contacts/add`, query: route.query }"
-          class="min-h-12 flex items-center justify-between rounded-standard border border-stroke bg-surface px-4 text-body"
+          class="min-h-12 nav-item"
         >
           <span>{{ t('device.addFromFriends') }}</span>
           <span aria-hidden="true" class="text-text-secondary">›</span>
         </router-link>
         <router-link
           :to="{ path: `/devices/${deviceId}/contacts/search`, query: route.query }"
-          class="min-h-12 flex items-center justify-between rounded-standard border border-stroke bg-surface px-4 text-body"
+          class="min-h-12 nav-item"
         >
           <span>{{ t('device.searchContacts') }}</span>
           <span aria-hidden="true" class="text-text-secondary">›</span>

@@ -101,7 +101,7 @@ function closeModal(): void {
 </script>
 
 <template>
-  <div class="min-h-svh bg-surface text-text-primary">
+  <div class="page">
     <PageHeader :title="t(`${i18nNamespace}.title`)" />
     <main class="p-4">
       <form novalidate @submit.prevent="handleSubmit">

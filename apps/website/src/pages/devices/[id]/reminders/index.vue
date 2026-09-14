@@ -52,7 +52,7 @@ function openReminder(reminderId: number): void {
 </script>
 
 <template>
-  <div class="min-h-screen min-h-svh bg-surface text-text-primary">
+  <div class="page">
     <PageHeader :title="t('device.reminders')" />
 
     <main class="p-4 pb-28">
@@ -82,7 +82,7 @@ function openReminder(reminderId: number): void {
 
       <button
         type="button"
-        class="fixed bottom-8 left-1/2 flex h-14 w-14 -translate-x-1/2 items-center justify-center rounded-full border border-stroke bg-surface text-3xl leading-none text-primary shadow-lg"
+        class="fixed bottom-8 left-1/2 -translate-x-1/2 fab"
         :aria-label="t('device.reminderNew')"
         @click="openNew"
       >

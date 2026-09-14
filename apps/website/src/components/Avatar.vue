@@ -46,8 +46,8 @@ const initial = computed(() => props.name.trim().slice(0, 1) || '?')
     />
     <span
       v-if="showStatus && online !== undefined"
-      class="absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-surface"
-      :class="online ? 'bg-blue-500' : 'bg-stroke'"
+      class="status-dot"
+      :class="online ? 'bg-blue-500' : 'bg-fill'"
       :aria-label="statusLabel"
       :role="statusLabel ? 'img' : undefined"
     />

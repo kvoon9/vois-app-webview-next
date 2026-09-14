@@ -32,7 +32,7 @@ const records = computed<RechargeRecord[]>(() => state.value.data ?? [])
 </script>
 
 <template>
-  <div class="min-h-screen min-h-svh bg-surface text-text-primary">
+  <div class="page">
     <PageHeader :title="t('device.rechargeRecords')" />
     <main class="p-4">
       <QueryState

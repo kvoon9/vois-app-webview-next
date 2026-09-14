@@ -74,13 +74,13 @@ async function choose(next: TrackFrequency): Promise<void> {
 </script>
 
 <template>
-  <div class="min-h-screen min-h-svh bg-surface text-text-primary">
+  <div class="page">
     <PageHeader :title="t('device.trackSetting')" />
     <main class="p-4">
       <QueryState :status="state.status" :error="state.error" @retry="reload()">
         <div
           v-if="state.data"
-          class="divide-y divide-stroke overflow-hidden rounded-large border border-stroke bg-surface"
+          class="overflow-hidden rounded-large bg-surface-elevated"
           role="radiogroup"
           :aria-label="t('device.trackSetting')"
         >
@@ -96,12 +96,8 @@ async function choose(next: TrackFrequency): Promise<void> {
           >
             <span class="text-header">{{ t(option.label) }}</span>
             <span
-              class="h-5 w-5 rounded-full border-2"
-              :class="
-                frequency === option.value
-                  ? 'border-primary bg-primary'
-                  : 'border-stroke bg-surface-muted'
-              "
+              class="radio"
+              :class="frequency === option.value ? 'radio-on' : 'radio-off'"
               aria-hidden="true"
             />
           </button>

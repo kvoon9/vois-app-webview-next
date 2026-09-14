@@ -65,7 +65,7 @@ async function addFriend(userId: number): Promise<void> {
 </script>
 
 <template>
-  <div class="min-h-screen min-h-svh bg-surface text-text-primary">
+  <div class="page">
     <PageHeader :title="t('device.emergencyPickFriend')" />
 
     <main class="p-4">
@@ -77,11 +77,11 @@ async function addFriend(userId: number): Promise<void> {
           >
             {{ t('device.noCandidates') }}
           </p>
-          <ul v-else class="overflow-hidden rounded-standard border border-stroke bg-surface">
+          <ul v-else class="overflow-hidden panel">
             <li v-for="friend in state.data.friends" :key="friend.userId">
               <button
                 type="button"
-                class="min-h-16 w-full flex items-center border-b border-stroke px-4 text-left last:border-b-0 disabled:opacity-50"
+                class="min-h-16 w-full flex items-center px-4 text-left disabled:opacity-50"
                 :disabled="existingIds.has(friend.userId) || addMutation.isLoading.value"
                 @click="addFriend(friend.userId)"
               >

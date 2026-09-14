@@ -47,10 +47,7 @@ onErrorCaptured((err) => {
 </script>
 
 <template>
-  <div
-    v-if="error"
-    class="min-h-svh flex flex-col items-center justify-center p-8 bg-surface text-text-primary"
-  >
+  <div v-if="error" class="page flex flex-col items-center justify-center p-8">
     <h1 class="text-lg font-bold mb-2">{{ t('error.title') }}</h1>
     <p class="text-body text-text-secondary text-center mb-6">
       {{ t('error.description') }}

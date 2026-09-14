@@ -37,7 +37,7 @@ const center = computed(() => ({
 </script>
 
 <template>
-  <div class="min-h-screen min-h-svh bg-surface text-text-primary">
+  <div class="page">
     <PageHeader :title="t('device.locationAndFence')" />
     <main class="relative h-[calc(100svh-3.5rem)]">
       <QueryState :status="state.status" :error="state.error" @retry="reload()">

@@ -98,7 +98,7 @@ async function submit(): Promise<void> {
 </script>
 
 <template>
-  <div class="min-h-screen min-h-svh bg-surface text-text-primary">
+  <div class="page">
     <PageHeader :title="t('device.addFromFriends')" />
 
     <main class="p-4">
@@ -106,14 +106,14 @@ async function submit(): Promise<void> {
         <template v-if="state.data">
           <button
             type="button"
-            class="min-h-12 w-full flex items-center justify-between border-b border-stroke py-3 text-left"
+            class="min-h-12 w-full flex items-center justify-between py-3 text-left"
             :disabled="selectableFriends.length === 0"
             @click="toggleAll"
           >
             <span class="text-body">{{ t('device.selectAll') }}</span>
             <span
-              class="h-5 w-5 flex items-center justify-center rounded-small border"
-              :class="allSelected ? 'border-primary bg-primary text-primary-text' : 'border-stroke'"
+              class="checkbox"
+              :class="allSelected ? 'checkbox-on' : 'checkbox-off'"
               aria-hidden="true"
             >
               <span v-if="allSelected">✓</span>
@@ -126,10 +126,7 @@ async function submit(): Promise<void> {
           >
             {{ t('device.noCandidates') }}
           </p>
-          <div
-            v-else
-            class="mt-2 divide-y divide-stroke border border-stroke rounded-standard bg-surface"
-          >
+          <div v-else class="mt-2 panel">
             <button
               v-for="friend in state.data.friends"
               :key="friend.userId"
@@ -158,12 +155,8 @@ async function submit(): Promise<void> {
               </span>
               <span
                 v-else
-                class="ml-3 h-5 w-5 flex items-center justify-center rounded-small border"
-                :class="
-                  selectedIds.includes(friend.userId)
-                    ? 'border-primary bg-primary text-primary-text'
-                    : 'border-stroke'
-                "
+                class="checkbox ml-3"
+                :class="selectedIds.includes(friend.userId) ? 'checkbox-on' : 'checkbox-off'"
                 aria-hidden="true"
               >
                 <span v-if="selectedIds.includes(friend.userId)">✓</span>

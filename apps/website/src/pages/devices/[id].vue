@@ -149,7 +149,7 @@ async function confirmRecharge(): Promise<void> {
 
 <template>
   <RouterView v-if="route.name !== '/devices/[id]'" />
-  <div v-else class="min-h-screen min-h-svh bg-surface text-text-primary">
+  <div v-else class="page">
     <PageHeader :title="device?.nick ?? t('device.title')" />
     <main class="p-4">
       <QueryState
@@ -175,20 +175,20 @@ async function confirmRecharge(): Promise<void> {
             </div>
           </section>
 
-          <dl class="mt-2 overflow-hidden rounded-standard border border-stroke bg-surface">
-            <div class="flex items-center justify-between border-b border-stroke px-4 py-3">
+          <dl class="mt-2 overflow-hidden panel">
+            <div class="flex items-center justify-between px-4 py-3">
               <dt class="text-2nd-body text-text-secondary">{{ t('device.activatedAt') }}</dt>
               <dd class="ml-4 text-right text-2nd-body">
                 {{ device.activatedAt || t('device.notAvailable') }}
               </dd>
             </div>
-            <div class="flex items-center justify-between border-b border-stroke px-4 py-3">
+            <div class="flex items-center justify-between px-4 py-3">
               <dt class="text-2nd-body text-text-secondary">{{ t('device.model') }}</dt>
               <dd class="ml-4 text-right text-2nd-body">
                 {{ device.product || t('device.notAvailable') }}
               </dd>
             </div>
-            <div class="flex items-center justify-between border-b border-stroke px-4 py-3">
+            <div class="flex items-center justify-between px-4 py-3">
               <dt class="text-2nd-body text-text-secondary">{{ t('device.deviceNumber') }}</dt>
               <dd class="ml-4 flex min-w-0 items-center text-right text-2nd-body">
                 <span class="truncate">{{ device.imei || t('device.notAvailable') }}</span>
@@ -203,7 +203,7 @@ async function confirmRecharge(): Promise<void> {
                 </button>
               </dd>
             </div>
-            <div class="flex items-center justify-between border-b border-stroke px-4 py-3">
+            <div class="flex items-center justify-between px-4 py-3">
               <dt class="text-2nd-body text-text-secondary">{{ t('device.version') }}</dt>
               <dd class="ml-4 text-right text-2nd-body">
                 {{ device.version || t('device.notAvailable') }}
@@ -217,7 +217,7 @@ async function confirmRecharge(): Promise<void> {
             </div>
           </dl>
 
-          <section class="mt-4 overflow-hidden rounded-standard border border-stroke bg-surface">
+          <section class="mt-4 overflow-hidden panel">
             <button
               type="button"
               role="switch"
@@ -229,7 +229,7 @@ async function confirmRecharge(): Promise<void> {
               <span class="text-body">{{ t('device.shareLocationSwitch') }}</span>
               <span
                 class="relative h-6 w-10 rounded-full transition-colors"
-                :class="shareLocation ? 'bg-primary' : 'bg-stroke'"
+                :class="shareLocation ? 'bg-primary' : 'bg-fill'"
                 aria-hidden="true"
               >
                 <span
@@ -240,10 +240,7 @@ async function confirmRecharge(): Promise<void> {
             </button>
           </section>
 
-          <section
-            v-if="rechargeDevice"
-            class="mt-4 rounded-standard border border-stroke bg-surface p-4"
-          >
+          <section v-if="rechargeDevice" class="mt-4 card">
             <div class="flex items-start justify-between">
               <h2 class="text-body font-medium">{{ t('device.recharge') }}</h2>
               <button
@@ -271,65 +268,45 @@ async function confirmRecharge(): Promise<void> {
           </section>
           <RouterLink
             :to="`/devices/${deviceId}/recharge-records`"
-            class="mt-3 min-h-12 w-full flex items-center justify-between rounded-standard border border-stroke bg-surface px-4 text-body"
+            class="mt-3 min-h-12 w-full nav-item"
           >
             <span>{{ t('device.rechargeRecords') }}</span>
             <span aria-hidden="true" class="text-text-secondary">›</span>
           </RouterLink>
 
-          <button
-            type="button"
-            class="mt-3 min-h-12 w-full flex items-center justify-between rounded-standard border border-stroke bg-surface px-4 text-body"
-            @click="openGroups"
-          >
+          <button type="button" class="mt-3 min-h-12 w-full nav-item" @click="openGroups">
             <span>{{ t('device.groups') }}</span>
             <span aria-hidden="true" class="text-text-secondary">›</span>
           </button>
 
-          <button
-            type="button"
-            class="mt-3 min-h-12 w-full flex items-center justify-between rounded-standard border border-stroke bg-surface px-4 text-body"
-            @click="openContacts"
-          >
+          <button type="button" class="mt-3 min-h-12 w-full nav-item" @click="openContacts">
             <span>{{ t('device.contacts') }}</span>
             <span aria-hidden="true" class="text-text-secondary">›</span>
           </button>
 
           <RouterLink
             :to="`/devices/${deviceId}/emergency-contacts`"
-            class="mt-3 min-h-12 w-full flex items-center justify-between rounded-standard border border-stroke bg-surface px-4 text-body"
+            class="mt-3 min-h-12 w-full nav-item"
           >
             <span>{{ t('device.emergencyContacts') }}</span>
             <span aria-hidden="true" class="text-text-secondary">›</span>
           </RouterLink>
 
-          <RouterLink
-            :to="`/devices/${deviceId}/reminders`"
-            class="mt-3 min-h-12 w-full flex items-center justify-between rounded-standard border border-stroke bg-surface px-4 text-body"
-          >
+          <RouterLink :to="`/devices/${deviceId}/reminders`" class="mt-3 min-h-12 w-full nav-item">
             <span>{{ t('device.reminders') }}</span>
             <span aria-hidden="true" class="text-text-secondary">›</span>
           </RouterLink>
 
           <nav class="mt-3 space-y-3" :aria-label="t('device.locationFeatures')">
-            <RouterLink
-              :to="`/devices/${deviceId}/location`"
-              class="min-h-12 w-full flex items-center justify-between rounded-standard border border-stroke bg-surface px-4 text-body"
-            >
+            <RouterLink :to="`/devices/${deviceId}/location`" class="min-h-12 w-full nav-item">
               <span>{{ t('device.locationAndFence') }}</span>
               <span aria-hidden="true" class="text-text-secondary">›</span>
             </RouterLink>
-            <RouterLink
-              :to="`/devices/${deviceId}/track`"
-              class="min-h-12 w-full flex items-center justify-between rounded-standard border border-stroke bg-surface px-4 text-body"
-            >
+            <RouterLink :to="`/devices/${deviceId}/track`" class="min-h-12 w-full nav-item">
               <span>{{ t('device.trackRecords') }}</span>
               <span aria-hidden="true" class="text-text-secondary">›</span>
             </RouterLink>
-            <RouterLink
-              :to="`/devices/${deviceId}/track-setting`"
-              class="min-h-12 w-full flex items-center justify-between rounded-standard border border-stroke bg-surface px-4 text-body"
-            >
+            <RouterLink :to="`/devices/${deviceId}/track-setting`" class="min-h-12 w-full nav-item">
               <span>{{ t('device.trackSetting') }}</span>
               <span aria-hidden="true" class="text-text-secondary">›</span>
             </RouterLink>

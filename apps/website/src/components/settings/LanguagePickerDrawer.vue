@@ -96,9 +96,9 @@ function selectLanguage(code: string): void {
         class="language-drawer fixed inset-x-0 bottom-0 z-drawer-content flex flex-col overflow-hidden rounded-t-[20px] bg-surface text-text-primary shadow-xl focus-visible:ring-2 focus-visible:ring-primary/40"
         :class="{ 'language-drawer-animated': animationsEnabled }"
       >
-        <DrawerHandle class="mx-auto mt-2 h-1 w-8 flex-none rounded-full bg-stroke" />
+        <DrawerHandle class="mx-auto mt-2 h-1 w-8 flex-none rounded-full bg-fill" />
 
-        <header class="h-12 flex flex-none items-center border-b border-stroke px-4">
+        <header class="h-12 flex flex-none items-center px-4">
           <DrawerTitle class="min-w-0 flex-1 truncate text-header font-semibold">
             {{ title }}
           </DrawerTitle>
@@ -145,7 +145,7 @@ function selectLanguage(code: string): void {
             <li v-for="option in visibleOptions" :key="option.code">
               <button
                 type="button"
-                class="min-h-14 w-full touch-manipulation flex items-center border-b border-stroke px-4 text-left focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary/40"
+                class="min-h-14 w-full touch-manipulation flex items-center px-4 text-left focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary/40"
                 :class="
                   option.code === model
                     ? 'bg-surface-selected'

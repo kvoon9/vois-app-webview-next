@@ -127,7 +127,7 @@ async function submit(): Promise<void> {
 </script>
 
 <template>
-  <div class="min-h-screen min-h-svh bg-surface text-text-primary">
+  <div class="page">
     <PageHeader :title="t('device.addMember')" />
 
     <main class="p-4">
@@ -158,14 +158,14 @@ async function submit(): Promise<void> {
 
           <button
             type="button"
-            class="mt-4 flex w-full items-center justify-between border-b border-stroke py-3 text-left"
+            class="mt-4 flex w-full items-center justify-between py-3 text-left"
             :disabled="selectableIds.length === 0"
             @click="toggleAll"
           >
             <span class="text-body">{{ t('device.selectAll') }}</span>
             <span
-              class="h-5 w-5 flex items-center justify-center rounded-small border"
-              :class="allSelected ? 'border-primary bg-primary text-primary-text' : 'border-stroke'"
+              class="checkbox"
+              :class="allSelected ? 'checkbox-on' : 'checkbox-off'"
               aria-hidden="true"
             >
               <span v-if="allSelected">✓</span>
@@ -175,10 +175,7 @@ async function submit(): Promise<void> {
           <p v-if="candidates.length === 0" class="py-12 text-center text-body text-text-secondary">
             {{ t('device.noCandidates') }}
           </p>
-          <div
-            v-else
-            class="mt-2 divide-y divide-stroke border border-stroke rounded-standard bg-surface"
-          >
+          <div v-else class="mt-2 panel">
             <button
               v-for="candidate in candidates"
               :key="candidate.userId"
@@ -210,12 +207,8 @@ async function submit(): Promise<void> {
               </span>
               <span
                 v-else
-                class="ml-3 h-5 w-5 flex items-center justify-center rounded-small border"
-                :class="
-                  selectedIds.includes(candidate.userId)
-                    ? 'border-primary bg-primary text-primary-text'
-                    : 'border-stroke'
-                "
+                class="checkbox ml-3"
+                :class="selectedIds.includes(candidate.userId) ? 'checkbox-on' : 'checkbox-off'"
                 aria-hidden="true"
               >
                 <span v-if="selectedIds.includes(candidate.userId)">✓</span>

@@ -59,7 +59,7 @@ function openMember(member: GroupMember): void {
 </script>
 
 <template>
-  <div class="min-h-screen min-h-svh bg-surface text-text-primary">
+  <div class="page">
     <PageHeader :title="t('device.members')" />
     <main class="p-4">
       <RouterLink
@@ -67,7 +67,7 @@ function openMember(member: GroupMember): void {
           path: `/devices/${deviceId}/groups/${groupId}/members/add`,
           query: route.query,
         }"
-        class="min-h-12 w-full flex items-center justify-between rounded-standard border border-stroke bg-surface px-4 text-body"
+        class="min-h-12 w-full nav-item"
       >
         <span>{{ t('device.addMember') }}</span>
         <span aria-hidden="true" class="text-text-secondary">›</span>
@@ -106,14 +106,12 @@ function openMember(member: GroupMember): void {
           {{ t('device.noMatchingMembers') }}
         </div>
         <div v-else class="mt-5 space-y-5">
-          <section v-for="section in ['owner', 'admin', 'member'] as const" :key="section">
+          <section v-for="section in ['admin', 'member'] as const" :key="section">
             <template v-if="groupedMembers[section].length">
               <h2 class="mb-2 px-1 text-small font-medium text-text-secondary">
                 {{ t(`device.roles.${section}`) }}
               </h2>
-              <div
-                class="divide-y divide-stroke overflow-hidden rounded-standard border border-stroke bg-surface"
-              >
+              <div class="overflow-hidden panel">
                 <button
                   v-for="member in groupedMembers[section]"
                   :key="member.userId"

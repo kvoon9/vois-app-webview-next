@@ -34,21 +34,15 @@ function openGroup(group: Group): void {
 </script>
 
 <template>
-  <div class="min-h-screen min-h-svh bg-surface text-text-primary">
+  <div class="page">
     <PageHeader :title="t('device.groups')" />
     <main class="p-4">
       <nav class="space-y-3" :aria-label="t('device.addGroup')">
-        <router-link
-          :to="`/devices/${deviceId}/groups/add`"
-          class="min-h-12 flex items-center justify-between rounded-standard border border-stroke bg-surface px-4 text-body"
-        >
+        <router-link :to="`/devices/${deviceId}/groups/add`" class="min-h-12 nav-item">
           <span>{{ t('device.addFromContacts') }}</span>
           <span aria-hidden="true" class="text-text-secondary">›</span>
         </router-link>
-        <router-link
-          :to="`/devices/${deviceId}/groups/search`"
-          class="min-h-12 flex items-center justify-between rounded-standard border border-stroke bg-surface px-4 text-body"
-        >
+        <router-link :to="`/devices/${deviceId}/groups/search`" class="min-h-12 nav-item">
           <span>{{ t('device.searchGroups') }}</span>
           <span aria-hidden="true" class="text-text-secondary">›</span>
         </router-link>

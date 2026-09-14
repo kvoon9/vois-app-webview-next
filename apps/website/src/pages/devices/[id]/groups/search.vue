@@ -96,7 +96,7 @@ async function confirmJoin(): Promise<void> {
 </script>
 
 <template>
-  <div class="min-h-screen min-h-svh bg-surface text-text-primary">
+  <div class="page">
     <PageHeader :title="t('device.searchGroups')" />
     <main class="p-4">
       <form class="flex items-center" @submit.prevent="search">

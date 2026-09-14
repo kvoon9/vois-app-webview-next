@@ -27,7 +27,7 @@ function openDevice(device: SmartDevice): void {
 </script>
 
 <template>
-  <div class="min-h-screen min-h-svh bg-surface text-text-primary">
+  <div class="page">
     <PageHeader :title="t('settings.devices')" />
 
     <main class="p-4">

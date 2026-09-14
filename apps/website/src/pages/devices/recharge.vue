@@ -66,7 +66,7 @@ async function confirmRecharge(): Promise<void> {
 </script>
 
 <template>
-  <div class="min-h-screen min-h-svh bg-surface text-text-primary">
+  <div class="page">
     <PageHeader :title="t('device.rechargeDevices')" />
 
     <main class="p-4 pb-28">
@@ -80,11 +80,9 @@ async function confirmRecharge(): Promise<void> {
         <ul class="space-y-3">
           <li v-for="device in devices" :key="device.userId">
             <label
-              class="card flex cursor-pointer items-start text-left transition-colors"
+              class="rounded-standard p-4 flex cursor-pointer items-start text-left transition-colors"
               :class="
-                selectedIds.includes(device.userId)
-                  ? 'border-primary bg-surface-selected'
-                  : 'border-stroke'
+                selectedIds.includes(device.userId) ? 'bg-surface-selected' : 'bg-surface-elevated'
               "
             >
               <input
@@ -117,7 +115,7 @@ async function confirmRecharge(): Promise<void> {
           </li>
         </ul>
 
-        <footer class="mt-6 border-t border-stroke pt-4">
+        <footer class="mt-6 pt-4">
           <div class="flex items-center justify-between">
             <label class="flex min-h-11 items-center text-body">
               <input

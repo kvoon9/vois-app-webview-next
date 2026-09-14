@@ -91,7 +91,7 @@ async function confirmAdd(): Promise<void> {
 </script>
 
 <template>
-  <div class="min-h-screen min-h-svh bg-surface text-text-primary">
+  <div class="page">
     <PageHeader :title="t('device.searchContacts')" />
 
     <main class="p-4">

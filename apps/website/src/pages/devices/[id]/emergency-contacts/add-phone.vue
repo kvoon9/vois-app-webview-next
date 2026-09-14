@@ -59,7 +59,7 @@ async function save(): Promise<void> {
 </script>
 
 <template>
-  <div class="min-h-screen min-h-svh bg-surface text-text-primary">
+  <div class="page">
     <PageHeader :title="t('device.emergencyAddPhoneTitle')" />
 
     <main class="p-4">
@@ -72,8 +72,8 @@ async function save(): Promise<void> {
         </span>
       </section>
 
-      <section class="overflow-hidden rounded-standard border border-stroke bg-surface">
-        <label class="flex items-center border-b border-stroke px-4 py-3">
+      <section class="overflow-hidden panel">
+        <label class="flex items-center">
           <span class="text-lg text-text-secondary" aria-hidden="true">📱</span>
           <input
             v-model="phone"

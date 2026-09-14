@@ -71,10 +71,26 @@ async function removeMember(): Promise<void> {
     showToast(error instanceof Error ? error.message : String(error), { type: 'error' })
   }
 }
+
+async function transferOwner(): Promise<void> {
+  if (!canManage.value || transferMutation.isLoading.value) return
+  try {
+    await transferMutation.mutateAsync()
+    transferConfirmationOpen.value = false
+    await queryCache.invalidateQueries({ key: ['device-management'] })
+    showToast(t('device.ownerTransferred'))
+    await router.push({
+      path: `/devices/${deviceId.value}/groups/${groupId.value}`,
+      query: route.query,
+    })
+  } catch (error) {
+    showToast(error instanceof Error ? error.message : String(error), { type: 'error' })
+  }
+}
 </script>
 
 <template>
-  <div class="min-h-screen min-h-svh bg-surface text-text-primary">
+  <div class="page">
     <PageHeader :title="t('device.memberDetail')" />
 
     <main class="p-4">
@@ -92,43 +108,38 @@ async function removeMember(): Promise<void> {
                 class="absolute inset-0 h-full w-full object-cover"
                 @error="hideBrokenImage"
               />
-              <span
-                class="absolute bottom-1 right-1 h-4 w-4 rounded-full border-2 border-surface"
-                :class="member.online ? 'bg-primary' : 'bg-text-secondary'"
-                :aria-label="member.online ? t('device.online') : t('device.offline')"
-              />
             </span>
             <h2 class="mt-3 text-header font-semibold">{{ member.nick }}</h2>
             <p class="mt-1 text-small text-text-secondary">{{ member.userNum }}</p>
           </div>
 
-          <div class="mt-4 divide-y divide-stroke border border-stroke rounded-standard bg-surface">
+          <div class="mt-4 panel">
             <div class="min-h-14 px-4 py-3">
               <p class="text-small text-text-secondary">
                 {{ t('device.groupNickname') }}
               </p>
-              <p class="mt-1 text-body">{{ member.nick }}</p>
-              <p v-if="member.nickname" class="mt-1 text-small text-text-secondary">
-                {{ member.nickname }}
-              </p>
-            </div>
-            <div class="min-h-14 px-4 py-3">
-              <p class="text-small text-text-secondary">
-                {{ t('device.signature') }}
-              </p>
-              <p class="mt-1 text-body">{{ member.signature || t('error.description') }}</p>
+              <p class="mt-1 text-body">{{ member.nickname || t('device.groupNicknameUnset') }}</p>
             </div>
           </div>
 
-          <button
-            v-if="canRemove"
-            type="button"
-            class="mt-8 w-full rounded-button border border-danger px-4 py-3 text-body text-danger disabled:opacity-50"
-            :disabled="removeMutation.isLoading.value"
-            @click="confirmationOpen = true"
-          >
-            {{ t('device.removeMember') }}
-          </button>
+          <div v-if="canManage" class="mt-8 space-y-3">
+            <button
+              type="button"
+              class="btn-secondary"
+              :disabled="transferMutation.isLoading.value"
+              @click="transferConfirmationOpen = true"
+            >
+              {{ t('device.transferOwner') }}
+            </button>
+            <button
+              type="button"
+              class="btn-danger"
+              :disabled="removeMutation.isLoading.value"
+              @click="confirmationOpen = true"
+            >
+              {{ t('device.removeMember') }}
+            </button>
+          </div>
         </template>
       </QueryState>
     </main>

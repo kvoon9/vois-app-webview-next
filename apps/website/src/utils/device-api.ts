@@ -168,8 +168,13 @@ interface DeviceDto {
   product: string
   imei: string
   version: string
-  activated_at: string
+  sdk_version?: string
+  /** The real backend names this `active_at`; the mock used `activated_at`. */
+  active_at?: string
+  activated_at?: string
   online: boolean
+  /** The real backend names this `location_share`; the mock used `share_location`. */
+  location_share?: boolean
   share_location?: boolean
 }
 
@@ -338,9 +343,13 @@ function asWeilaBody(body: SettingsRequestBody): WeilaBody {
   return body as WeilaBody
 }
 
-/** Return all devices connected to the current account. */
+/**
+ * Return every device the current account manages. The real backend exposes
+ * this as `manager-get-all-device` and calls the account a manager, not a
+ * connection, but the page-level shape is identical.
+ */
 export async function getConnectedDevices(): Promise<Device[]> {
-  const response = await weilaFetch<{ devices: DeviceDto[] }>('/v2/device/list-connected')
+  const response = await weilaFetch<{ devices: DeviceDto[] }>('/v2/subuser/manager-get-all-device')
   return response.data.devices.map(toDevice)
 }
 
@@ -742,9 +751,9 @@ function toDevice(device: DeviceDto): Device {
     product: device.product,
     imei: device.imei,
     version: device.version,
-    activatedAt: device.activated_at,
+    activatedAt: device.active_at ?? device.activated_at ?? '',
     online: device.online,
-    shareLocation: device.share_location ?? false,
+    shareLocation: device.location_share ?? device.share_location ?? false,
   }
 }
 

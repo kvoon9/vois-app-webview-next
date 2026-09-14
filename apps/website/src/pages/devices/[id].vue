@@ -1,32 +1,21 @@
 <script setup lang="ts">
 import { useMutation, useQuery, useQueryCache } from '@pinia/colada'
-import { computed, shallowRef, watch } from 'vue'
+import { computed, shallowRef } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { RouterLink, RouterView, useRoute, useRouter } from 'vue-router'
+import { RouterLink, RouterView, useRoute } from 'vue-router'
 import BaseModal from '~/components/BaseModal.vue'
 import PageHeader from '~/components/PageHeader.vue'
 import QueryState from '~/components/settings/QueryState.vue'
 import Avatar from '~/components/Avatar.vue'
 import { useToast } from '~/composables/useToast'
-import {
-  createRechargeOrder,
-  getConnectedDevices,
-  getRechargeDevices,
-  updateDevice,
-  updateDeviceShareLocation,
-  type Device,
-  type RechargeDevice,
-} from '~/utils/device-api'
+import { getConnectedDevices, updateDevice, type Device } from '~/utils/device-api'
 
 const { t } = useI18n({ useScope: 'global' })
 const route = useRoute()
-const router = useRouter()
 const queryCache = useQueryCache()
 const { showToast } = useToast()
 const editing = shallowRef(false)
 const nick = shallowRef('')
-const recharging = shallowRef(false)
-const shareLocation = shallowRef(false)
 
 const deviceId = computed(() => {
   const value = Array.isArray(route.params.id) ? route.params.id[0] : route.params.id
@@ -39,60 +28,13 @@ const { state, refetch: reload } = useQuery({
   query: getConnectedDevices,
 })
 
-const { state: rechargeState } = useQuery({
-  key: () => ['device-management', 'recharge-devices'],
-  query: getRechargeDevices,
-})
-
 const device = computed<Device | null>(() => {
   if (deviceId.value == null) return null
   return state.value.data?.find((item) => item.userId === deviceId.value) ?? null
 })
 
-watch(
-  device,
-  (value) => {
-    if (value) shareLocation.value = value.shareLocation
-  },
-  { immediate: true },
-)
-
-const shareLocationMutation = useMutation({
-  mutation: (value: boolean) => {
-    if (deviceId.value == null) throw new Error(t('device.invalidId'))
-    return updateDeviceShareLocation(deviceId.value, value)
-  },
-})
-
-async function toggleShareLocation(): Promise<void> {
-  if (shareLocationMutation.isLoading.value || !device.value) return
-  const previous = shareLocation.value
-  shareLocation.value = !previous
-  try {
-    await shareLocationMutation.mutateAsync(!previous)
-    await queryCache.invalidateQueries({ key: ['device-management', 'devices'] })
-    showToast(t('device.shareLocationUpdated'))
-  } catch (error) {
-    shareLocation.value = previous
-    showToast(error instanceof Error ? error.message : String(error), { type: 'error' })
-  }
-}
-
 const { mutateAsync: saveDevice, isLoading: saving } = useMutation({
   mutation: (value: { deviceId: number; nick: string }) => updateDevice(value.deviceId, value.nick),
-})
-
-const rechargeDevice = computed<RechargeDevice | null>(() => {
-  if (deviceId.value == null) return null
-  return rechargeState.value.data?.find((item) => item.userId === deviceId.value) ?? null
-})
-
-function formatPrice(price: number | undefined): string {
-  return price == null ? t('device.notAvailable') : `¥${price.toFixed(2)}`
-}
-
-const { mutateAsync: createOrder, isLoading: creatingOrder } = useMutation({
-  mutation: (selectedDeviceId: number) => createRechargeOrder([selectedDeviceId]),
 })
 
 function startEditing(): void {
@@ -122,29 +64,6 @@ async function copyDeviceNumber(): Promise<void> {
     showToast(t('device.copyFailed'), { type: 'error' })
   }
 }
-
-function openGroups(): void {
-  if (deviceId.value != null) router.push(`/devices/${deviceId.value}/groups`)
-}
-
-function openContacts(): void {
-  if (deviceId.value != null) router.push(`/devices/${deviceId.value}/contacts`)
-}
-
-function openRecharge(): void {
-  if (device.value && rechargeDevice.value) recharging.value = true
-}
-
-async function confirmRecharge(): Promise<void> {
-  if (deviceId.value == null || creatingOrder.value) return
-  try {
-    await createOrder(deviceId.value)
-    recharging.value = false
-    showToast(t('device.rechargeSuccess'))
-  } catch (error) {
-    showToast(error instanceof Error ? error.message : String(error), { type: 'error' })
-  }
-}
 </script>
 
 <template>
@@ -166,11 +85,11 @@ async function confirmRecharge(): Promise<void> {
               <h2 class="text-header font-semibold">{{ device.nick }}</h2>
               <button
                 type="button"
-                class="ml-2 rounded-small p-2 text-text-secondary focus-visible:ring-2 focus-visible:ring-primary/40"
+                class="icon-button ml-2 p-2 focus-visible:ring-2 focus-visible:ring-primary/40"
                 :aria-label="t('device.editName')"
                 @click="startEditing"
               >
-                ✎
+                <span class="i-ph-pencil-simple" aria-hidden="true" />
               </button>
             </div>
           </section>
@@ -195,11 +114,11 @@ async function confirmRecharge(): Promise<void> {
                 <button
                   v-if="device.imei"
                   type="button"
-                  class="ml-2 flex-none rounded-small p-1 text-text-secondary focus-visible:ring-2 focus-visible:ring-primary/40"
+                  class="icon-button ml-2 p-1 focus-visible:ring-2 focus-visible:ring-primary/40"
                   :aria-label="t('device.copyDeviceNumber')"
                   @click="copyDeviceNumber"
                 >
-                  ⧉
+                  <span class="i-ph-copy" aria-hidden="true" />
                 </button>
               </dd>
             </div>
@@ -217,122 +136,13 @@ async function confirmRecharge(): Promise<void> {
             </div>
           </dl>
 
-          <section class="mt-4 overflow-hidden panel">
-            <button
-              type="button"
-              role="switch"
-              class="min-h-12 w-full flex items-center justify-between px-4 text-left disabled:opacity-50"
-              :aria-checked="shareLocation"
-              :disabled="shareLocationMutation.isLoading.value"
-              @click="toggleShareLocation"
-            >
-              <span class="text-body">{{ t('device.shareLocationSwitch') }}</span>
-              <span
-                class="relative h-6 w-10 rounded-full transition-colors"
-                :class="shareLocation ? 'bg-primary' : 'bg-fill'"
-                aria-hidden="true"
-              >
-                <span
-                  class="absolute top-1 h-4 w-4 rounded-full bg-white shadow transition-transform"
-                  :class="shareLocation ? 'translate-x-5' : 'translate-x-1'"
-                />
-              </span>
-            </button>
-          </section>
-
-          <section v-if="rechargeDevice" class="mt-4 card">
-            <div class="flex items-start justify-between">
-              <h2 class="text-body font-medium">{{ t('device.recharge') }}</h2>
-              <button
-                type="button"
-                class="rounded-button bg-primary px-3 py-2 text-small font-medium text-primary-text"
-                @click="openRecharge"
-              >
-                {{ t('device.rechargePay') }}
-              </button>
-            </div>
-            <dl class="mt-4 space-y-3 text-2nd-body">
-              <div class="flex items-center justify-between">
-                <dt class="text-text-secondary">{{ t('device.iccid') }}</dt>
-                <dd class="ml-4 text-right">{{ rechargeDevice.iccid }}</dd>
-              </div>
-              <div class="flex items-center justify-between">
-                <dt class="text-text-secondary">{{ t('device.expireAt') }}</dt>
-                <dd class="ml-4 text-right">{{ rechargeDevice.expireAt }}</dd>
-              </div>
-              <div class="flex items-center justify-between">
-                <dt class="text-text-secondary">{{ t('device.price') }}</dt>
-                <dd class="ml-4 text-right font-medium">{{ formatPrice(rechargeDevice.price) }}</dd>
-              </div>
-            </dl>
-          </section>
-          <RouterLink
-            :to="`/devices/${deviceId}/recharge-records`"
-            class="mt-3 min-h-12 w-full nav-item"
-          >
-            <span>{{ t('device.rechargeRecords') }}</span>
-            <span aria-hidden="true" class="text-text-secondary">›</span>
-          </RouterLink>
-
-          <button type="button" class="mt-3 min-h-12 w-full nav-item" @click="openGroups">
+          <RouterLink :to="`/devices/${deviceId}/groups`" class="mt-3 min-h-12 w-full nav-item">
             <span>{{ t('device.groups') }}</span>
-            <span aria-hidden="true" class="text-text-secondary">›</span>
-          </button>
-
-          <button type="button" class="mt-3 min-h-12 w-full nav-item" @click="openContacts">
-            <span>{{ t('device.contacts') }}</span>
-            <span aria-hidden="true" class="text-text-secondary">›</span>
-          </button>
-
-          <RouterLink
-            :to="`/devices/${deviceId}/emergency-contacts`"
-            class="mt-3 min-h-12 w-full nav-item"
-          >
-            <span>{{ t('device.emergencyContacts') }}</span>
-            <span aria-hidden="true" class="text-text-secondary">›</span>
+            <span class="row-chevron" aria-hidden="true" />
           </RouterLink>
-
-          <RouterLink :to="`/devices/${deviceId}/reminders`" class="mt-3 min-h-12 w-full nav-item">
-            <span>{{ t('device.reminders') }}</span>
-            <span aria-hidden="true" class="text-text-secondary">›</span>
-          </RouterLink>
-
-          <nav class="mt-3 space-y-3" :aria-label="t('device.locationFeatures')">
-            <RouterLink :to="`/devices/${deviceId}/location`" class="min-h-12 w-full nav-item">
-              <span>{{ t('device.locationAndFence') }}</span>
-              <span aria-hidden="true" class="text-text-secondary">›</span>
-            </RouterLink>
-            <RouterLink :to="`/devices/${deviceId}/track`" class="min-h-12 w-full nav-item">
-              <span>{{ t('device.trackRecords') }}</span>
-              <span aria-hidden="true" class="text-text-secondary">›</span>
-            </RouterLink>
-            <RouterLink :to="`/devices/${deviceId}/track-setting`" class="min-h-12 w-full nav-item">
-              <span>{{ t('device.trackSetting') }}</span>
-              <span aria-hidden="true" class="text-text-secondary">›</span>
-            </RouterLink>
-          </nav>
         </template>
       </QueryState>
     </main>
-
-    <BaseModal
-      v-if="recharging && device"
-      :title="t('device.confirmRecharge')"
-      :cancel-text="t('modal.cancel')"
-      :confirm-text="creatingOrder ? t('device.saving') : t('modal.confirm')"
-      :dismissible="!creatingOrder"
-      @cancel="recharging = false"
-      @confirm="confirmRecharge"
-    >
-      <p>
-        {{
-          t('device.rechargeConfirmMessage', {
-            name: device.nick,
-            price: formatPrice(rechargeDevice?.price),
-          })
-        }}
-      </p>
-    </BaseModal>
 
     <BaseModal
       v-if="editing"

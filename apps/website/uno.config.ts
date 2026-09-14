@@ -13,7 +13,14 @@ export default defineConfig({
     presetAttributify(),
     presetIcons({
       scale: 1.2,
+      // Mask mode renders every icon as a CSS mask filled with `currentColor`, so
+      // icons inherit text colour instead of baking in the SVG's own colours.
+      mode: 'mask',
       warn: true,
+      extraProperties: {
+        display: 'inline-block',
+        'vertical-align': 'middle',
+      },
     }),
   ],
   preflights: [
@@ -93,6 +100,12 @@ export default defineConfig({
     'chip-unselected': 'bg-surface-muted text-text-primary',
     // Round icon button (floating action button)
     fab: 'h-14 w-14 rounded-full bg-surface-elevated flex items-center justify-center text-3xl leading-none text-primary shadow-lg',
+    // Chevron hint for rows that navigate somewhere. Size matches a body line so
+    // it aligns with the label text instead of the row box.
+    'row-chevron': 'ml-2 flex-none text-xl text-text-secondary i-ph-caret-right',
+    // Square icon button used inside rows (copy, edit, clear).
+    'icon-button':
+      'flex-none flex items-center justify-center rounded-small text-text-secondary disabled:opacity-50',
     'page-title': 'text-title font-semibold text-text-primary',
     'section-title': 'text-subtitle font-semibold text-text-primary',
     'input-field':

@@ -64,7 +64,7 @@ function statusLabel(item: TranslationTarget): string {
         <span class="ml-3 max-w-28 flex-none text-right text-small text-text-secondary">
           <span class="line-clamp-2">{{ statusLabel(item) }}</span>
         </span>
-        <span aria-hidden="true" class="ml-1 flex-none text-text-secondary">›</span>
+        <span class="row-chevron" aria-hidden="true" />
       </button>
 
       <template v-else>

@@ -116,7 +116,7 @@ async function submit(): Promise<void> {
               :class="allSelected ? 'checkbox-on' : 'checkbox-off'"
               aria-hidden="true"
             >
-              <span v-if="allSelected">✓</span>
+              <span v-if="allSelected" class="i-ph-check" />
             </span>
           </button>
 
@@ -159,7 +159,7 @@ async function submit(): Promise<void> {
                 :class="selectedIds.includes(friend.userId) ? 'checkbox-on' : 'checkbox-off'"
                 aria-hidden="true"
               >
-                <span v-if="selectedIds.includes(friend.userId)">✓</span>
+                <span v-if="selectedIds.includes(friend.userId)" class="i-ph-check" />
               </span>
             </button>
           </div>

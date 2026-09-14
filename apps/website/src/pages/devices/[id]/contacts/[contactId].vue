@@ -231,7 +231,7 @@ async function removeContact(): Promise<void> {
                   {{ contact.remark || t('device.remarkPlaceholder') }}
                 </span>
               </span>
-              <span aria-hidden="true" class="ml-3 flex-none text-text-secondary">›</span>
+              <span class="row-chevron" aria-hidden="true" />
             </button>
             <button
               type="button"
@@ -240,14 +240,14 @@ async function removeContact(): Promise<void> {
               @click="clearMessages"
             >
               <span class="text-body">{{ t('device.clearMessages') }}</span>
-              <span aria-hidden="true" class="ml-3 flex-none text-text-secondary">›</span>
+              <span class="row-chevron" aria-hidden="true" />
             </button>
             <RouterLink
               :to="{ path: '/report-user', query: { id: String(contact.userId) } }"
               class="min-h-14 flex items-center justify-between px-4 text-body text-danger"
             >
               <span>{{ t('profile.report') }}</span>
-              <span aria-hidden="true" class="ml-3 flex-none text-text-secondary">›</span>
+              <span class="row-chevron" aria-hidden="true" />
             </RouterLink>
           </section>
 

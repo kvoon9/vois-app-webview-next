@@ -77,13 +77,13 @@ function confirm(): void {
               <CalendarPrev
                 class="h-10 w-10 flex items-center justify-center rounded-full text-2xl text-text-primary hover:bg-surface-muted disabled:opacity-40"
               >
-                ‹
+                <span class="i-ph-caret-left" aria-hidden="true" />
               </CalendarPrev>
               <CalendarHeading class="text-header font-medium" />
               <CalendarNext
                 class="h-10 w-10 flex items-center justify-center rounded-full text-2xl text-text-primary hover:bg-surface-muted disabled:opacity-40"
               >
-                ›
+                <span class="i-ph-caret-right" aria-hidden="true" />
               </CalendarNext>
             </CalendarHeader>
 

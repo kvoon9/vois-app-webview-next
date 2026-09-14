@@ -68,22 +68,7 @@ function selectLanguage(code: string): void {
             {{ selectedOption?.nativeName ?? model }}
           </span>
         </span>
-        <svg
-          v-if="!disabled"
-          class="ml-3 flex-none text-text-secondary"
-          xmlns="http://www.w3.org/2000/svg"
-          width="18"
-          height="18"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          aria-hidden="true"
-        >
-          <path d="m9 18 6-6-6-6" />
-        </svg>
+        <span v-if="!disabled" class="row-chevron ml-3" aria-hidden="true" />
       </button>
     </DrawerTrigger>
 
@@ -111,19 +96,7 @@ function selectLanguage(code: string): void {
               class="ml-3 h-10 w-10 touch-manipulation flex flex-none items-center justify-center rounded-full bg-surface-muted text-text-secondary focus-visible:ring-2 focus-visible:ring-primary/40"
               :aria-label="t('modal.close')"
             >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="18"
-                height="18"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                aria-hidden="true"
-              >
-                <path d="M18 6 6 18M6 6l12 12" />
-              </svg>
+              <span class="i-ph-x" aria-hidden="true" />
             </button>
           </DrawerClose>
         </header>

@@ -23,7 +23,7 @@ const { accountQuery } = useAccountId()
           class="card min-h-16 w-full flex items-center justify-between text-left"
         >
           <span class="text-body font-medium">{{ t(`settings.${item}`) }}</span>
-          <span aria-hidden="true" class="text-text-secondary">›</span>
+          <span class="row-chevron" aria-hidden="true" />
         </RouterLink>
       </div>
     </main>

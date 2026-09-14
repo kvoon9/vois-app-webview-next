@@ -42,7 +42,7 @@ defineEmits<{
           {{ userNum }}
         </span>
       </span>
-      <span aria-hidden="true" class="ml-2 flex-none text-text-secondary">›</span>
+      <span class="row-chevron" aria-hidden="true" />
     </button>
   </li>
 </template>

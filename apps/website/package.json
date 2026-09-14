@@ -28,6 +28,7 @@
     "vue-router": "catalog:vue"
   },
   "devDependencies": {
+    "@iconify-json/ph": "catalog:",
     "@types/md5": "^2.3.6",
     "@unocss/reset": "catalog:build",
     "@vitejs/plugin-legacy": "catalog:build",

@@ -227,6 +227,9 @@ catalogs:
     '@amap/amap-jsapi-loader':
       specifier: ^1.0.1
       version: 1.0.1
+    '@iconify-json/ph':
+      specifier: ^1.2.2
+      version: 1.2.2
     '@internationalized/date':
       specifier: ^3.12.3
       version: 3.12.3
@@ -370,6 +373,9 @@ importers:
         specifier: catalog:vue
         version: 5.2.0(@pinia/colada@1.4.2(pinia@4.0.3(@vue/devtools-api@8.1.5)(typescript@7.0.2)(vue@3.6.0-rc.5(typescript@7.0.2)))(vue@3.6.0-rc.5(typescript@7.0.2)))(@voidzero-dev/vite-plus-core@0.3.0(@types/node@26.2.0)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.50.0)(typescript@7.0.2)(yaml@2.9.0))(@vue/compiler-sfc@3.5.41)(esbuild@0.28.2)(pinia@4.0.3(@vue/devtools-api@8.1.5)(typescript@7.0.2)(vue@3.6.0-rc.5(typescript@7.0.2)))(rolldown@1.1.4)(rollup@4.63.1)(vue@3.6.0-rc.5(typescript@7.0.2))
     devDependencies:
+      '@iconify-json/ph':
+        specifier: 'catalog:'
+        version: 1.2.2
       '@types/md5':
         specifier: ^2.3.6
         version: 2.3.6
@@ -1260,6 +1266,9 @@ packages:
   '@humanwhocodes/retry@0.4.3':
     resolution: {integrity: sha512-bV0Tgo9K4hfPCek+aMAn81RppFKv2ySDQeMoSZuvTASywNTnVJCArCZE2FWqpvIatKu7VMRLWlR1EazvVhDyhQ==}
     engines: {node: '>=18.18'}
+
+  '@iconify-json/ph@1.2.2':
+    resolution: {integrity: sha512-PgkEZNtqa8hBGjHXQa4pMwZa93hmfu8FUSjs/nv4oUU6yLsgv+gh9nu28Kqi8Fz9CCVu4hj1MZs9/60J57IzFw==}
 
   '@iconify/types@2.0.0':
     resolution: {integrity: sha512-+wluvCrRhXrhyOmRDJ3q8mux9JkKy5SJ/v8ol2tu4FVjyYvtEzkc/3pK15ET6RKg4b4w4BmTk1+gsCUhf21Ykg==}
@@ -6001,6 +6010,10 @@ snapshots:
   '@humanwhocodes/module-importer@1.0.1': {}
 
   '@humanwhocodes/retry@0.4.3': {}
+
+  '@iconify-json/ph@1.2.2':
+    dependencies:
+      '@iconify/types': 2.0.0
 
   '@iconify/types@2.0.0': {}
 

@@ -76,22 +76,7 @@ function confirmDate(date: string): void {
         :aria-label="t('device.selectDate')"
         @click="calendarOpen = true"
       >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          width="26"
-          height="26"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          aria-hidden="true"
-        >
-          <rect x="3" y="4" width="18" height="17" rx="2" />
-          <path d="M16 2v4M8 2v4M3 10h18" />
-          <path d="M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01M16 18h.01" />
-        </svg>
+        <span class="i-ph-calendar-blank text-title" aria-hidden="true" />
       </button>
 
       <QueryState

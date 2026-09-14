@@ -40,11 +40,11 @@ function openGroup(group: Group): void {
       <nav class="space-y-3" :aria-label="t('device.addGroup')">
         <router-link :to="`/devices/${deviceId}/groups/add`" class="min-h-12 nav-item">
           <span>{{ t('device.addFromContacts') }}</span>
-          <span aria-hidden="true" class="text-text-secondary">›</span>
+          <span class="row-chevron" aria-hidden="true" />
         </router-link>
         <router-link :to="`/devices/${deviceId}/groups/search`" class="min-h-12 nav-item">
           <span>{{ t('device.searchGroups') }}</span>
-          <span aria-hidden="true" class="text-text-secondary">›</span>
+          <span class="row-chevron" aria-hidden="true" />
         </router-link>
       </nav>
 
@@ -79,7 +79,7 @@ function openGroup(group: Group): void {
                     group.num
                   }}</span>
                 </span>
-                <span aria-hidden="true" class="ml-2 text-text-secondary">›</span>
+                <span class="row-chevron" aria-hidden="true" />
               </button>
             </li>
           </ul>
@@ -109,7 +109,7 @@ function openGroup(group: Group): void {
                     group.num
                   }}</span>
                 </span>
-                <span aria-hidden="true" class="ml-2 text-text-secondary">›</span>
+                <span class="row-chevron" aria-hidden="true" />
               </button>
             </li>
           </ul>

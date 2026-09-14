@@ -13,11 +13,11 @@ const { t } = useI18n({ useScope: 'global' })
       <nav class="space-y-3" :aria-label="t('home.title')">
         <RouterLink to="/help" class="min-h-12 w-full nav-item">
           <span>{{ t('home.helpCenter') }}</span>
-          <span aria-hidden="true" class="text-text-secondary">›</span>
+          <span class="row-chevron" aria-hidden="true" />
         </RouterLink>
         <RouterLink to="/devices" class="min-h-12 w-full nav-item">
           <span>{{ t('home.deviceManagement') }}</span>
-          <span aria-hidden="true" class="text-text-secondary">›</span>
+          <span class="row-chevron" aria-hidden="true" />
         </RouterLink>
       </nav>
     </main>

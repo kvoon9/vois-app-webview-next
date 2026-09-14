@@ -152,7 +152,7 @@ async function removeContact(): Promise<void> {
               @click="openAddFriend"
             >
               <span>{{ t('device.emergencyAddFriend') }}</span>
-              <span class="text-2xl leading-none text-text-secondary" aria-hidden="true">＋</span>
+              <span class="i-ph-plus text-2xl text-text-secondary" aria-hidden="true" />
             </button>
             <button
               type="button"
@@ -161,7 +161,7 @@ async function removeContact(): Promise<void> {
               @click="openAddPhone"
             >
               <span>{{ t('device.emergencyAddPhone') }}</span>
-              <span class="text-2xl leading-none text-text-secondary" aria-hidden="true">＋</span>
+              <span class="i-ph-plus text-2xl text-text-secondary" aria-hidden="true" />
             </button>
           </nav>
         </template>

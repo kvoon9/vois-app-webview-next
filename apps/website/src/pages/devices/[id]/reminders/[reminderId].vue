@@ -276,7 +276,7 @@ const headerTitle = computed(() =>
           <span>{{ t('device.reminderContent') }}</span>
           <span class="ml-3 min-w-0 flex items-center text-text-secondary">
             <span class="truncate">{{ content || t('device.notAvailable') }}</span>
-            <span aria-hidden="true" class="ml-2">›</span>
+            <span class="row-chevron" aria-hidden="true" />
           </span>
         </button>
 
@@ -291,7 +291,7 @@ const headerTitle = computed(() =>
             <span>{{ row.label }}</span>
             <span class="ml-3 min-w-0 flex items-center text-text-secondary">
               <span class="truncate">{{ currentText(row) }}</span>
-              <span aria-hidden="true" class="ml-2">›</span>
+              <span class="row-chevron" aria-hidden="true" />
             </span>
           </button>
         </div>

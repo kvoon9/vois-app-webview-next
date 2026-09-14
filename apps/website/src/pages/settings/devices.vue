@@ -63,7 +63,7 @@ function openDevice(device: SmartDevice): void {
                   {{ device.product }} · IMEI {{ device.imei }}
                 </span>
               </span>
-              <span aria-hidden="true" class="ml-2 flex-none text-text-secondary">›</span>
+              <span class="row-chevron" aria-hidden="true" />
             </button>
           </li>
         </ul>

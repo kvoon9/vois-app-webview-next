@@ -142,7 +142,7 @@ async function confirmAdd(): Promise<void> {
               >
                 {{ t('device.alreadyContact') }}
               </span>
-              <span v-else aria-hidden="true" class="ml-2 text-text-secondary">›</span>
+              <span v-else class="row-chevron" aria-hidden="true" />
             </button>
           </li>
         </ul>

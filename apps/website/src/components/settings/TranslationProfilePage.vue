@@ -147,14 +147,14 @@ function changeTarget(target: string): void {
             aria-disabled="true"
           >
             {{ t('profile.media') }}
-            <span aria-hidden="true" class="text-text-secondary">›</span>
+            <span class="row-chevron" aria-hidden="true" />
           </div>
           <div
             class="panel-row min-h-12 text-body"
             aria-disabled="true"
           >
             {{ t('profile.location') }}
-            <span aria-hidden="true" class="text-text-secondary">›</span>
+            <span class="row-chevron" aria-hidden="true" />
           </div>
         </div>
         -->
@@ -197,23 +197,7 @@ function changeTarget(target: string): void {
                   :disabled="saving"
                   @click="swapLanguages"
                 >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="20"
-                    height="20"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    aria-hidden="true"
-                  >
-                    <path d="m3 8 4-4 4 4" />
-                    <path d="M7 4v16" />
-                    <path d="m21 16-4 4-4-4" />
-                    <path d="M17 20V4" />
-                  </svg>
+                  <span class="i-ph-arrows-down-up text-header" aria-hidden="true" />
                 </button>
               </div>
 
@@ -251,7 +235,7 @@ function changeTarget(target: string): void {
             aria-disabled="true"
           >
             {{ t('profile.editRemarks') }}
-            <span aria-hidden="true" class="text-text-secondary">›</span>
+            <span class="row-chevron" aria-hidden="true" />
           </div>
         </div>
         -->
@@ -265,7 +249,7 @@ function changeTarget(target: string): void {
             class="mt-4 min-h-12 nav-item"
           >
             {{ t('profile.members') }}
-            <span aria-hidden="true" class="text-text-secondary">›</span>
+            <span class="row-chevron" aria-hidden="true" />
           </RouterLink>
 
           <!--

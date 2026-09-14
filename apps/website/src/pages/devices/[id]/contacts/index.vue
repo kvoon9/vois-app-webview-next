@@ -56,14 +56,14 @@ function openContact(contact: Contact): void {
           class="min-h-12 nav-item"
         >
           <span>{{ t('device.addFromFriends') }}</span>
-          <span aria-hidden="true" class="text-text-secondary">›</span>
+          <span class="row-chevron" aria-hidden="true" />
         </router-link>
         <router-link
           :to="{ path: `/devices/${deviceId}/contacts/search`, query: route.query }"
           class="min-h-12 nav-item"
         >
           <span>{{ t('device.searchContacts') }}</span>
-          <span aria-hidden="true" class="text-text-secondary">›</span>
+          <span class="row-chevron" aria-hidden="true" />
         </router-link>
       </nav>
 
@@ -96,7 +96,7 @@ function openContact(contact: Contact): void {
                   {{ contact.userNum }}
                 </span>
               </span>
-              <span aria-hidden="true" class="ml-2 flex-none text-text-secondary">›</span>
+              <span class="row-chevron" aria-hidden="true" />
             </button>
           </li>
         </ul>

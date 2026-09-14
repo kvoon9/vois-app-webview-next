@@ -20,20 +20,7 @@ const { goBack } = usePageBack()
       :aria-label="t('nav.back')"
       @click="goBack"
     >
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        width="24"
-        height="24"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        stroke-width="2"
-        stroke-linecap="round"
-        stroke-linejoin="round"
-        class="text-text-primary"
-      >
-        <path d="m15 18-6-6 6-6" />
-      </svg>
+      <span class="i-ph-caret-left text-2xl text-text-primary" aria-hidden="true" />
     </button>
     <h1 class="page-title">{{ title }}</h1>
     <slot name="action">

@@ -160,7 +160,7 @@ async function confirmJoin(detail: string): Promise<void> {
                 >
                   {{ t('device.pendingApproval') }}
                 </span>
-                <span v-else aria-hidden="true" class="ml-2 text-text-secondary">›</span>
+                <span v-else class="row-chevron" aria-hidden="true" />
               </button>
             </li>
           </ul>
@@ -203,7 +203,7 @@ async function confirmJoin(detail: string): Promise<void> {
                 >
                   {{ t('device.pendingApproval') }}
                 </span>
-                <span v-else aria-hidden="true" class="ml-2 text-text-secondary">›</span>
+                <span v-else class="row-chevron" aria-hidden="true" />
               </button>
             </li>
           </ul>

@@ -86,7 +86,7 @@ function openReminder(reminderId: number): void {
         :aria-label="t('device.reminderNew')"
         @click="openNew"
       >
-        ＋
+        <span class="i-ph-plus" aria-hidden="true" />
       </button>
     </main>
   </div>

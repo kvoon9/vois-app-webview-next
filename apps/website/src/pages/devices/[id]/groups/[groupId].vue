@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { useMutation, useQuery, useQueryCache } from '@pinia/colada'
+import { useFileDialog } from '@vueuse/core'
 import { computed, shallowRef } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { RouterLink, RouterView, useRoute, useRouter } from 'vue-router'
@@ -7,21 +8,38 @@ import BaseModal from '~/components/BaseModal.vue'
 import PageHeader from '~/components/PageHeader.vue'
 import QueryState from '~/components/settings/QueryState.vue'
 import { useToast } from '~/composables/useToast'
+import { weilaUpload } from '~/utils/api'
 import {
-  dissolveGroup as dissolveDeviceGroup,
+  getDeviceGroups,
   getGroupInfo,
-  getMyCreatedGroups,
+  getGroupMembers,
   leaveDeviceGroup,
-  updateGroup,
+  updateGroupAvatar,
+  updateGroupIntro,
+  updateGroupName,
   updateGroupSettings,
   updateMyGroupNickname,
-  type GroupInfo,
   type GroupSettings,
 } from '~/utils/device-api'
 import { hideBrokenImage } from '~/utils/image'
 
 type RouteParam = string | string[] | undefined
 type EditableField = 'name' | 'intro' | 'nickname'
+
+interface GroupDetail {
+  groupId: number
+  num: string
+  name: string
+  avatar: string
+  isCreator: boolean
+  memberCount: number
+  myNickname: string
+  intro: string
+  createdAt: string
+  settings: GroupSettings
+  /** False when the mocked info endpoint is unreachable (real backend). */
+  infoAvailable: boolean
+}
 
 const route = useRoute()
 const router = useRouter()
@@ -47,16 +65,31 @@ const deviceId = computed(() => routeNumber(route.params.id))
 const groupId = computed(() => routeNumber(route.params.groupId))
 const editing = shallowRef<EditableField | null>(null)
 const editValue = shallowRef('')
-const leaveConfirmation = shallowRef(false)
-const dissolveConfirmation = shallowRef(false)
+const exitConfirmation = shallowRef(false)
 
-async function load(): Promise<{ group: GroupInfo; ownedGroupIds: number[] }> {
-  if (groupId.value == null) throw new Error(t('error.description'))
-  const [group, ownedGroups] = await Promise.all([
-    getGroupInfo(groupId.value),
-    getMyCreatedGroups(),
+async function load(): Promise<GroupDetail> {
+  if (deviceId.value == null || groupId.value == null) throw new Error(t('error.description'))
+  const [groups, members, info] = await Promise.all([
+    getDeviceGroups(deviceId.value),
+    getGroupMembers(deviceId.value, groupId.value),
+    // Mock-only endpoint: intro/settings/created_at have no real API yet.
+    getGroupInfo(groupId.value).catch(() => null),
   ])
-  return { group, ownedGroupIds: ownedGroups.map((item) => item.groupId) }
+  const group = groups.find((item) => item.groupId === groupId.value)
+  if (!group) throw new Error(t('device.invalidGroup'))
+  return {
+    groupId: group.groupId,
+    num: group.num,
+    name: group.name,
+    avatar: group.avatar,
+    isCreator: group.isCreator,
+    memberCount: members.length,
+    myNickname: members.find((member) => member.userId === deviceId.value)?.nickname ?? '',
+    intro: info?.intro ?? '',
+    createdAt: info?.createdAt ?? '',
+    settings: info?.settings ?? defaultGroupSettings,
+    infoAvailable: info !== null,
+  }
 }
 
 const { state, refetch: reload } = useQuery({
@@ -64,11 +97,9 @@ const { state, refetch: reload } = useQuery({
   query: load,
 })
 
-const group = computed(() => state.value.data?.group ?? null)
+const group = computed(() => state.value.data ?? null)
 const groupSettings = computed(() => group.value?.settings ?? defaultGroupSettings)
-const isOwner = computed(
-  () => state.value.data?.ownedGroupIds.includes(groupId.value ?? 0) ?? false,
-)
+const isOwner = computed(() => group.value?.isCreator ?? false)
 const editingTitle = computed(() => {
   if (editing.value === 'name') return t('device.groupName')
   if (editing.value === 'intro') return t('device.groupIntroduction')
@@ -76,17 +107,24 @@ const editingTitle = computed(() => {
 })
 const myNickname = computed(() => group.value?.myNickname || t('device.groupNicknameUnset'))
 
-const updateMutation = useMutation({
-  mutation: (input: { name?: string; intro?: string }) => {
+const nameMutation = useMutation({
+  mutation: (name: string) => {
+    if (deviceId.value == null || groupId.value == null) throw new Error(t('error.description'))
+    return updateGroupName(deviceId.value, groupId.value, name)
+  },
+})
+
+const introMutation = useMutation({
+  mutation: (intro: string) => {
     if (groupId.value == null) throw new Error(t('error.description'))
-    return updateGroup(groupId.value, input)
+    return updateGroupIntro(groupId.value, intro)
   },
 })
 
 const nicknameMutation = useMutation({
   mutation: (nickname: string) => {
-    if (groupId.value == null) throw new Error(t('error.description'))
-    return updateMyGroupNickname(groupId.value, nickname)
+    if (deviceId.value == null || groupId.value == null) throw new Error(t('error.description'))
+    return updateMyGroupNickname(deviceId.value, groupId.value, nickname)
   },
 })
 
@@ -97,7 +135,8 @@ const settingsMutation = useMutation({
   },
 })
 
-const leaveMutation = useMutation({
+/** Owner exit dissolves the group server-side; one endpoint serves both roles. */
+const exitMutation = useMutation({
   mutation: () => {
     if (deviceId.value == null || groupId.value == null) {
       throw new Error(t('error.description'))
@@ -106,23 +145,52 @@ const leaveMutation = useMutation({
   },
 })
 
-const dissolveMutation = useMutation({
-  mutation: () => {
-    if (groupId.value == null) throw new Error(t('error.description'))
-    return dissolveDeviceGroup(groupId.value)
-  },
+const avatarUploading = shallowRef(false)
+const { open: openAvatarPicker, onChange: onAvatarPicked } = useFileDialog({
+  accept: 'image/*',
+  reset: true,
 })
+
+onAvatarPicked(async (files) => {
+  const file = files?.[0]
+  if (!file || deviceId.value == null || groupId.value == null || avatarUploading.value) return
+  avatarUploading.value = true
+  try {
+    const url = await weilaUpload(file, file.name)
+    await updateGroupAvatar(deviceId.value, groupId.value, url)
+    await queryCache.invalidateQueries({ key: ['device-management'] })
+    await reload()
+    showToast(t('device.groupUpdated'))
+  } catch (error) {
+    showToast(error instanceof Error ? error.message : String(error), { type: 'error' })
+  } finally {
+    avatarUploading.value = false
+  }
+})
+
+function pickAvatar(): void {
+  if (isOwner.value && !avatarUploading.value) openAvatarPicker()
+}
+
+const savingEdit = computed(
+  () =>
+    nameMutation.isLoading.value ||
+    introMutation.isLoading.value ||
+    nicknameMutation.isLoading.value,
+)
 
 function openEditor(kind: EditableField): void {
   const current = group.value
-  if (!current || (kind !== 'nickname' && !isOwner.value)) return
+  if (!current) return
+  if (kind === 'intro' && (!isOwner.value || !current.infoAvailable)) return
+  if (kind === 'name' && !isOwner.value) return
   editing.value = kind
   editValue.value =
     kind === 'name' ? current.name : kind === 'intro' ? current.intro : current.myNickname
 }
 
 function closeEditor(): void {
-  if (!updateMutation.isLoading.value && !nicknameMutation.isLoading.value) editing.value = null
+  if (!savingEdit.value) editing.value = null
 }
 
 async function saveGroupField(): Promise<void> {
@@ -138,11 +206,9 @@ async function saveGroupField(): Promise<void> {
   }
 
   try {
-    if (editing.value === 'nickname') await nicknameMutation.mutateAsync(value)
-    else
-      await updateMutation.mutateAsync(
-        editing.value === 'name' ? { name: value } : { intro: value },
-      )
+    if (editing.value === 'name') await nameMutation.mutateAsync(value)
+    else if (editing.value === 'intro') await introMutation.mutateAsync(value)
+    else await nicknameMutation.mutateAsync(value)
     editing.value = null
     await queryCache.invalidateQueries({ key: ['device-management'] })
     await reload()
@@ -153,7 +219,7 @@ async function saveGroupField(): Promise<void> {
 }
 
 async function toggleSetting(key: keyof GroupSettings): Promise<void> {
-  if (settingsMutation.isLoading.value || !group.value) return
+  if (settingsMutation.isLoading.value || !group.value?.infoAvailable) return
   const changes: Partial<GroupSettings> = { [key]: !groupSettings.value[key] }
   try {
     await settingsMutation.mutateAsync(changes)
@@ -165,27 +231,17 @@ async function toggleSetting(key: keyof GroupSettings): Promise<void> {
   }
 }
 
-async function leaveGroup(): Promise<void> {
-  if (leaveMutation.isLoading.value) return
+async function exitGroup(): Promise<void> {
+  if (exitMutation.isLoading.value) return
+  const wasOwner = isOwner.value
   try {
-    await leaveMutation.mutateAsync()
-    leaveConfirmation.value = false
-    await queryCache.invalidateQueries({ key: ['device-management'] })
-    showToast(t('device.groupLeft'))
+    await exitMutation.mutateAsync()
+    exitConfirmation.value = false
+    showToast(wasOwner ? t('device.groupDissolved') : t('device.groupLeft'))
+    // Navigate away before invalidating: refetching this page's query after the
+    // exit would fail (the device is no longer a member) and show a bogus error.
     await router.push({ path: `/devices/${deviceId.value}/groups`, query: route.query })
-  } catch (error) {
-    showToast(error instanceof Error ? error.message : String(error), { type: 'error' })
-  }
-}
-
-async function dissolveGroup(): Promise<void> {
-  if (!isOwner.value || dissolveMutation.isLoading.value) return
-  try {
-    await dissolveMutation.mutateAsync()
-    dissolveConfirmation.value = false
-    await queryCache.invalidateQueries({ key: ['device-management'] })
-    showToast(t('device.groupDissolved'))
-    await router.push({ path: `/devices/${deviceId.value}/groups`, query: route.query })
+    queryCache.invalidateQueries({ key: ['device-management'] })
   } catch (error) {
     showToast(error instanceof Error ? error.message : String(error), { type: 'error' })
   }
@@ -389,12 +445,8 @@ async function dissolveGroup(): Promise<void> {
       v-if="editing"
       :title="editingTitle"
       :cancel-text="t('modal.cancel')"
-      :confirm-text="
-        updateMutation.isLoading.value || nicknameMutation.isLoading.value
-          ? t('device.saving')
-          : t('modal.confirm')
-      "
-      :dismissible="!updateMutation.isLoading.value && !nicknameMutation.isLoading.value"
+      :confirm-text="savingEdit ? t('device.saving') : t('modal.confirm')"
+      :dismissible="!savingEdit"
       @cancel="closeEditor"
       @confirm="saveGroupField"
     >
@@ -404,34 +456,28 @@ async function dissolveGroup(): Promise<void> {
           v-model="editValue"
           class="input-field mt-2 min-h-24"
           :aria-label="editingTitle"
-          :disabled="updateMutation.isLoading.value || nicknameMutation.isLoading.value"
+          :disabled="savingEdit"
           rows="3"
         />
       </label>
     </BaseModal>
 
     <BaseModal
-      v-if="leaveConfirmation"
-      :title="t('device.leaveGroup')"
+      v-if="exitConfirmation"
+      :title="isOwner ? t('device.dissolveGroup') : t('device.leaveGroup')"
       :cancel-text="t('modal.cancel')"
-      :confirm-text="leaveMutation.isLoading.value ? t('device.saving') : t('modal.confirm')"
-      :dismissible="!leaveMutation.isLoading.value"
-      @cancel="leaveConfirmation = false"
-      @confirm="leaveGroup"
+      :confirm-text="exitMutation.isLoading.value ? t('device.saving') : t('modal.confirm')"
+      :dismissible="!exitMutation.isLoading.value"
+      @cancel="exitConfirmation = false"
+      @confirm="exitGroup"
     >
-      <p>{{ t('device.leaveGroupConfirm', { name: group?.name ?? '' }) }}</p>
-    </BaseModal>
-
-    <BaseModal
-      v-if="dissolveConfirmation"
-      :title="t('device.dissolveGroup')"
-      :cancel-text="t('modal.cancel')"
-      :confirm-text="dissolveMutation.isLoading.value ? t('device.saving') : t('modal.confirm')"
-      :dismissible="!dissolveMutation.isLoading.value"
-      @cancel="dissolveConfirmation = false"
-      @confirm="dissolveGroup"
-    >
-      <p>{{ t('device.dissolveGroupConfirm', { name: group?.name ?? '' }) }}</p>
+      <p>
+        {{
+          isOwner
+            ? t('device.dissolveGroupConfirm', { name: group?.name ?? '' })
+            : t('device.leaveGroupConfirm', { name: group?.name ?? '' })
+        }}
+      </p>
     </BaseModal>
   </div>
 </template>

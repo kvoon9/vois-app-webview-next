@@ -7,7 +7,13 @@ import BaseModal from '~/components/BaseModal.vue'
 import PageHeader from '~/components/PageHeader.vue'
 import QueryState from '~/components/settings/QueryState.vue'
 import { useToast } from '~/composables/useToast'
-import { getGroupMembers, removeGroupMember, type GroupMember } from '~/utils/device-api'
+import {
+  getDeviceGroups,
+  getGroupMembers,
+  removeGroupMember,
+  transferGroupOwner,
+  type GroupMember,
+} from '~/utils/device-api'
 import { hideBrokenImage } from '~/utils/image'
 
 const route = useRoute()
@@ -16,6 +22,7 @@ const { t } = useI18n({ useScope: 'global' })
 const queryCache = useQueryCache()
 const { showToast } = useToast()
 const confirmationOpen = shallowRef(false)
+const transferConfirmationOpen = shallowRef(false)
 
 type RouteParam = string | string[] | undefined
 
@@ -30,34 +37,55 @@ const deviceId = computed(() => routeNumber(route.params.id))
 const groupId = computed(() => routeNumber(route.params.groupId))
 const memberId = computed(() => routeNumber(route.params.memberId))
 
-async function load(): Promise<GroupMember> {
+async function load(): Promise<{ member: GroupMember; isCreator: boolean }> {
   if (deviceId.value == null) throw new Error(t('error.description'))
   if (groupId.value == null) throw new Error(t('error.description'))
   if (memberId.value == null) throw new Error(t('error.description'))
-  const member = (await getGroupMembers(groupId.value)).find(
-    (item) => item.userId === memberId.value,
-  )
+  const [members, groups] = await Promise.all([
+    getGroupMembers(deviceId.value, groupId.value),
+    getDeviceGroups(deviceId.value),
+  ])
+  const member = members.find((item) => item.userId === memberId.value)
   if (!member) throw new Error(t('device.noMatchingMembers'))
-  return member
+  return {
+    member,
+    isCreator: groups.find((item) => item.groupId === groupId.value)?.isCreator ?? false,
+  }
 }
 
 const { state, refetch: reload } = useQuery({
   key: () => ['device-management', 'group', 'member', groupId.value, memberId.value],
   query: load,
 })
-const member = computed(() => state.value.data ?? null)
-const canRemove = computed(() => member.value?.role !== 'owner')
+const member = computed(() => state.value.data?.member ?? null)
+/** Only the current owner (this device) manages members; never target itself. */
+const canManage = computed(
+  () =>
+    (state.value.data?.isCreator ?? false) &&
+    member.value != null &&
+    member.value.userId !== deviceId.value,
+)
 
 const removeMutation = useMutation({
   mutation: () => {
+    if (deviceId.value == null) throw new Error(t('error.description'))
     if (groupId.value == null) throw new Error(t('error.description'))
     if (memberId.value == null) throw new Error(t('error.description'))
-    return removeGroupMember(groupId.value, memberId.value)
+    return removeGroupMember(deviceId.value, groupId.value, memberId.value)
+  },
+})
+
+const transferMutation = useMutation({
+  mutation: () => {
+    if (deviceId.value == null) throw new Error(t('error.description'))
+    if (groupId.value == null) throw new Error(t('error.description'))
+    if (memberId.value == null) throw new Error(t('error.description'))
+    return transferGroupOwner(deviceId.value, groupId.value, memberId.value)
   },
 })
 
 async function removeMember(): Promise<void> {
-  if (!canRemove.value || removeMutation.isLoading.value) return
+  if (!canManage.value || removeMutation.isLoading.value) return
   try {
     await removeMutation.mutateAsync()
     confirmationOpen.value = false
@@ -154,6 +182,18 @@ async function transferOwner(): Promise<void> {
       @confirm="removeMember"
     >
       <p>{{ t('device.removeMemberConfirm', { name: member?.nick ?? '' }) }}</p>
+    </BaseModal>
+
+    <BaseModal
+      v-if="transferConfirmationOpen"
+      :title="t('device.transferOwner')"
+      :cancel-text="t('modal.cancel')"
+      :confirm-text="transferMutation.isLoading.value ? t('device.saving') : t('modal.confirm')"
+      :dismissible="!transferMutation.isLoading.value"
+      @cancel="transferConfirmationOpen = false"
+      @confirm="transferOwner"
+    >
+      <p>{{ t('device.transferOwnerConfirm', { name: member?.nick ?? '' }) }}</p>
     </BaseModal>
   </div>
 </template>

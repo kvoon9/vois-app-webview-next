@@ -10,7 +10,7 @@ import { useToast } from '~/composables/useToast'
 import {
   addGroupMembers,
   getConnectedDevices,
-  getFriends,
+  getDeviceFriends,
   getGroupMembers,
   type Device,
   type Friend,
@@ -51,9 +51,9 @@ async function load(): Promise<{
   if (deviceId.value == null) throw new Error(t('error.description'))
   if (groupId.value == null) throw new Error(t('error.description'))
   const [friends, devices, members] = await Promise.all([
-    getFriends(),
+    getDeviceFriends(deviceId.value),
     getConnectedDevices(),
-    getGroupMembers(groupId.value),
+    getGroupMembers(deviceId.value, groupId.value),
   ])
   return { friends, devices, members }
 }
@@ -85,8 +85,9 @@ const allSelected = computed(
 
 const addMutation = useMutation({
   mutation: (memberIds: number[]) => {
+    if (deviceId.value == null) throw new Error(t('error.description'))
     if (groupId.value == null) throw new Error(t('error.description'))
-    return addGroupMembers(groupId.value, memberIds)
+    return addGroupMembers(deviceId.value, groupId.value, memberIds)
   },
 })
 

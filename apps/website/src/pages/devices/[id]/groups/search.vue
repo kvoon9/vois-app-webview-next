@@ -3,23 +3,16 @@ import { useMutation, useQuery, useQueryCache } from '@pinia/colada'
 import { computed, shallowRef } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
-import BaseModal from '~/components/BaseModal.vue'
 import Avatar from '~/components/Avatar.vue'
+import JoinGroupModal from '~/components/device/JoinGroupModal.vue'
 import PageHeader from '~/components/PageHeader.vue'
 import QueryState from '~/components/settings/QueryState.vue'
 import { useToast } from '~/composables/useToast'
-import {
-  getConnectedDevices,
-  getDeviceGroups,
-  joinDeviceGroup,
-  searchGroups,
-  type Group,
-} from '~/utils/device-api'
+import { getDeviceGroups, joinDeviceGroup, searchGroups, type Group } from '~/utils/device-api'
 
 interface SearchData {
   groups: Group[]
   deviceGroups: Group[]
-  deviceName: string
 }
 
 const { t } = useI18n({ useScope: 'global' })
@@ -30,6 +23,8 @@ const { showToast } = useToast()
 const keyword = shallowRef('')
 const searchedKeyword = shallowRef('')
 const selected = shallowRef<Group | null>(null)
+/** Groups whose join application was sent from this page; pending state is page-local. */
+const appliedIds = shallowRef<Set<number>>(new Set())
 
 const deviceId = computed(() => {
   const value = Array.isArray(route.params.id) ? route.params.id[0] : route.params.id
@@ -39,16 +34,11 @@ const deviceId = computed(() => {
 
 async function load(): Promise<SearchData> {
   if (deviceId.value == null) throw new Error(t('device.invalidId'))
-  const [groups, deviceGroups, devices] = await Promise.all([
-    searchGroups(searchedKeyword.value),
+  const [groups, deviceGroups] = await Promise.all([
+    searchGroups(deviceId.value, searchedKeyword.value),
     getDeviceGroups(deviceId.value),
-    getConnectedDevices(),
   ])
-  return {
-    groups,
-    deviceGroups,
-    deviceName: devices.find((device) => device.userId === deviceId.value)?.nick ?? '',
-  }
+  return { groups, deviceGroups }
 }
 
 const { state, refetch: reload } = useQuery({
@@ -57,9 +47,9 @@ const { state, refetch: reload } = useQuery({
 })
 
 const { mutateAsync: joinGroup, isLoading: joining } = useMutation({
-  mutation: (groupId: number) => {
+  mutation: (input: { groupId: number; detail: string }) => {
     if (deviceId.value == null) throw new Error(t('device.invalidId'))
-    return joinDeviceGroup(deviceId.value, groupId)
+    return joinDeviceGroup(deviceId.value, input.groupId, input.detail || undefined)
   },
 })
 
@@ -69,20 +59,29 @@ function isJoined(groupId: number): boolean {
   return state.value.data?.deviceGroups.some((group) => group.groupId === groupId) ?? false
 }
 
+function isDisabled(groupId: number): boolean {
+  return isJoined(groupId) || appliedIds.value.has(groupId)
+}
+
 function search(): void {
   searchedKeyword.value = keyword.value.trim()
 }
 
 function choose(group: Group): void {
-  if (!isJoined(group.groupId)) selected.value = group
+  if (!isDisabled(group.groupId)) selected.value = group
 }
 
-async function confirmJoin(): Promise<void> {
+async function confirmJoin(detail: string): Promise<void> {
   if (!selected.value || joining.value) return
   const group = selected.value
   try {
-    await joinGroup(group.groupId)
+    await joinGroup({ groupId: group.groupId, detail })
     selected.value = null
+    if (group.isAudit) {
+      appliedIds.value = new Set([...appliedIds.value, group.groupId])
+      showToast(t('device.applicationSent'))
+      return
+    }
     await Promise.all([
       queryCache.invalidateQueries({ key: ['device-management', 'groups'] }),
       queryCache.invalidateQueries({ key: ['device-management', 'group-search'] }),
@@ -130,7 +129,7 @@ async function confirmJoin(): Promise<void> {
             <button
               type="button"
               class="card w-full flex items-center text-left disabled:opacity-50"
-              :disabled="isJoined(group.groupId)"
+              :disabled="isDisabled(group.groupId)"
               @click="choose(group)"
             >
               <Avatar :name="group.name" :src="group.avatar" />
@@ -146,6 +145,12 @@ async function confirmJoin(): Promise<void> {
               >
                 {{ t('device.alreadyJoined') }}
               </span>
+              <span
+                v-else-if="appliedIds.has(group.groupId)"
+                class="ml-2 flex-none text-small text-text-secondary"
+              >
+                {{ t('device.pendingApproval') }}
+              </span>
               <span v-else aria-hidden="true" class="ml-2 text-text-secondary">›</span>
             </button>
           </li>
@@ -153,20 +158,13 @@ async function confirmJoin(): Promise<void> {
       </QueryState>
     </main>
 
-    <BaseModal
+    <JoinGroupModal
       v-if="selected"
-      :title="t('device.confirmAddGroup')"
-      :cancel-text="t('modal.cancel')"
-      :confirm-text="joining ? t('device.saving') : t('modal.confirm')"
+      :group-name="selected.name"
+      :needs-audit="selected.isAudit"
+      :loading="joining"
       @cancel="selected = null"
       @confirm="confirmJoin"
-    >
-      {{
-        t('device.confirmAddGroupMessage', {
-          device: state.data?.deviceName ?? '',
-          group: selected.name,
-        })
-      }}
-    </BaseModal>
+    />
   </div>
 </template>

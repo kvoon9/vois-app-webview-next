@@ -21,15 +21,7 @@ export async function weilaFetch<T>(
   url: string,
   options: RequestOptions = {},
 ): Promise<WeilaResponse<T>> {
-  const query = generateV2Query(APP_ID, APP_KEY)
-  const urlWithAuth = new URL(url, window.location.origin)
-  urlWithAuth.searchParams.set('appid', query.appid)
-  urlWithAuth.searchParams.set('et', query.et)
-  urlWithAuth.searchParams.set('sign', query.sign)
-  urlWithAuth.searchParams.set(
-    'token',
-    accessToken.value || import.meta.env.VITE_ACCESS_TOKEN || '',
-  )
+  const urlWithAuth = buildAuthUrl(url)
 
   const response = await fetch(urlWithAuth, {
     method: options.method ?? 'POST',
@@ -44,6 +36,37 @@ export async function weilaFetch<T>(
   if (data.errcode !== 0) throw new Error(`${data.errcode}: ${data.errmsg}`)
 
   return data
+}
+
+/** Upload a file via `/v2/common/upload-file`; resolves to the hosted URL. */
+export async function weilaUpload(file: Blob, fileName: string): Promise<string> {
+  const formData = new FormData()
+  formData.append('file', file, fileName)
+
+  // Content-Type must stay unset so the browser emits the multipart boundary
+  const response = await fetch(buildAuthUrl('/v2/common/upload-file'), {
+    method: 'POST',
+    body: formData,
+  })
+  if (!response.ok) throw new Error(`HTTP错误: ${response.status}`)
+
+  // SAFETY: same envelope contract as weilaFetch
+  const data = (await response.json()) as WeilaResponse<{ url: string }>
+  if (data.errcode !== 0) throw new Error(`${data.errcode}: ${data.errmsg}`)
+  return data.data.url
+}
+
+function buildAuthUrl(url: string): URL {
+  const query = generateV2Query(APP_ID, APP_KEY)
+  const urlWithAuth = new URL(url, window.location.origin)
+  urlWithAuth.searchParams.set('appid', query.appid)
+  urlWithAuth.searchParams.set('et', query.et)
+  urlWithAuth.searchParams.set('sign', query.sign)
+  urlWithAuth.searchParams.set(
+    'token',
+    accessToken.value || import.meta.env.VITE_ACCESS_TOKEN || '',
+  )
+  return urlWithAuth
 }
 
 export function generateV2Query(appid: string, appkey: string) {

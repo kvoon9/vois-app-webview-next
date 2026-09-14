@@ -25,8 +25,8 @@ const { state, refetch: reload } = useQuery({
   },
 })
 
-const createdGroups = computed(() => state.value.data?.filter((group) => group.createdByMe) ?? [])
-const joinedGroups = computed(() => state.value.data?.filter((group) => !group.createdByMe) ?? [])
+const createdGroups = computed(() => state.value.data?.filter((group) => group.isCreator) ?? [])
+const joinedGroups = computed(() => state.value.data?.filter((group) => !group.isCreator) ?? [])
 
 function openGroup(group: Group): void {
   if (deviceId.value != null) router.push(`/devices/${deviceId.value}/groups/${group.groupId}`)

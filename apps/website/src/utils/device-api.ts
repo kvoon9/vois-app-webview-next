@@ -33,7 +33,10 @@ export interface Group {
   num: string
   name: string
   avatar: string
-  createdByMe: boolean
+  isCreator: boolean
+  isAdmin: boolean
+  /** Whether joining this group requires owner/admin approval. */
+  isAudit: boolean
 }
 
 export interface GroupInfo extends Group {
@@ -44,16 +47,13 @@ export interface GroupInfo extends Group {
   myNickname: string
 }
 
-export type GroupMemberRole = 'owner' | 'admin' | 'member'
-
 export interface GroupMember {
   userId: number
   userNum: string
   nick: string
   avatar: string
-  role: GroupMemberRole
-  online: boolean
-  signature: string
+  isAdmin: boolean
+  /** The member's in-group card name (`remark` upstream). */
   nickname: string
 }
 
@@ -173,6 +173,16 @@ interface DeviceDto {
   share_location?: boolean
 }
 
+interface SubuserGroupDto {
+  group_id: number
+  num: string
+  name: string
+  avatar: string
+  is_creator?: boolean
+  is_admin?: boolean
+  is_audit?: boolean
+}
+
 interface GroupDto {
   group_id: number
   num: string
@@ -196,15 +206,14 @@ interface GroupInfoDto extends GroupDto {
   my_nickname?: string
 }
 
-interface GroupMemberDto {
+interface SubuserGroupMemberDto {
   user_id: number
   user_num: string
   nick: string
   avatar: string
-  role: GroupMemberRole
-  online: boolean
-  signature: string
-  nickname?: string
+  remark?: string
+  is_admin?: boolean
+  created_at?: string
 }
 
 interface DeviceFenceDto {
@@ -225,6 +234,15 @@ interface TrackPointDto {
   lng: number
   lat: number
   time: string
+}
+
+interface SubuserFriendDto {
+  user_id: number
+  user_num: string
+  nick: string
+  avatar: string
+  remark?: string
+  created_at?: string
 }
 
 interface FriendDto {
@@ -371,41 +389,55 @@ export async function updateDeviceShareLocation(
 
 /** Return the groups joined by a device. */
 export async function getDeviceGroups(deviceId: number): Promise<Group[]> {
-  const response = await weilaFetch<{ groups: GroupDto[] }>('/v2/device/groups', {
-    body: { device_id: deviceId },
+  const response = await weilaFetch<{ groups: SubuserGroupDto[] }>('/v2/subuser/group-get-all', {
+    body: { user_id: deviceId },
   })
   return response.data.groups.map(toGroup)
 }
 
-export async function joinDeviceGroup(deviceId: number, groupId: number): Promise<EmptyData> {
-  const response = await weilaFetch<EmptyData>('/v2/device/join-group', {
-    body: { device_id: deviceId, group_id: groupId },
+export async function joinDeviceGroup(
+  deviceId: number,
+  groupId: number,
+  detail?: string,
+): Promise<EmptyData> {
+  const response = await weilaFetch<EmptyData>('/v2/subuser/group-join', {
+    body: { user_id: deviceId, group_id: groupId, detail },
   })
   return response.data
 }
 
+/** Owner exit dissolves the group server-side; the same endpoint serves both. */
 export async function leaveDeviceGroup(deviceId: number, groupId: number): Promise<EmptyData> {
-  const response = await weilaFetch<EmptyData>('/v2/device/leave-group', {
-    body: { device_id: deviceId, group_id: groupId },
+  const response = await weilaFetch<EmptyData>('/v2/subuser/group-exit', {
+    body: { user_id: deviceId, group_id: groupId },
   })
   return response.data
 }
 
-export async function getMyCreatedGroups(): Promise<Group[]> {
-  const response = await weilaFetch<{ groups: GroupDto[] }>('/v2/group/my-created')
+/** Return all groups the current account (token) manages, for the device join picker. */
+export async function getManagerGroups(): Promise<Group[]> {
+  const response = await weilaFetch<{ groups: SubuserGroupDto[] }>(
+    '/v2/subuser/manager-get-all-group',
+  )
   return response.data.groups.map(toGroup)
 }
 
-export async function getMyJoinedGroups(): Promise<Group[]> {
-  const response = await weilaFetch<{ groups: GroupDto[] }>('/v2/group/my-joined')
-  return response.data.groups.map(toGroup)
-}
-
-export async function searchGroups(keyword: string): Promise<Group[]> {
-  const response = await weilaFetch<{ groups: GroupDto[] }>('/v2/group/search', {
-    body: { keyword },
+export async function searchGroups(deviceId: number, keyword: string): Promise<Group[]> {
+  const response = await weilaFetch<{ groups: SubuserGroupDto[] }>('/v2/subuser/group-search', {
+    body: { user_id: deviceId, key: keyword },
   })
   return response.data.groups.map(toGroup)
+}
+
+/**
+ * Mock-only: no real intro endpoint yet (`/v2/group/update` lives on the mock
+ * server). Call best-effort and degrade gracefully when it fails.
+ */
+export async function updateGroupIntro(groupId: number, intro: string): Promise<EmptyData> {
+  const response = await weilaFetch<EmptyData>('/v2/group/update', {
+    body: { group_id: groupId, intro },
+  })
+  return response.data
 }
 
 export async function getGroupInfo(groupId: number): Promise<GroupInfo> {
@@ -415,9 +447,78 @@ export async function getGroupInfo(groupId: number): Promise<GroupInfo> {
   return toGroupInfo(response.data.group)
 }
 
-export async function dissolveGroup(groupId: number): Promise<EmptyData> {
-  const response = await weilaFetch<EmptyData>('/v2/group/dissolve', {
-    body: { group_id: groupId },
+export async function getGroupMembers(deviceId: number, groupId: number): Promise<GroupMember[]> {
+  const response = await weilaFetch<{ members: SubuserGroupMemberDto[] }>(
+    '/v2/subuser/group-member-get-all',
+    { body: { user_id: deviceId, group_id: groupId } },
+  )
+  return response.data.members.map(toGroupMember)
+}
+
+export async function addGroupMembers(
+  deviceId: number,
+  groupId: number,
+  memberIds: number[],
+): Promise<EmptyData> {
+  const response = await weilaFetch<EmptyData>('/v2/subuser/group-member-invite', {
+    body: { user_id: deviceId, group_id: groupId, member_ids: memberIds },
+  })
+  return response.data
+}
+
+export async function removeGroupMember(
+  deviceId: number,
+  groupId: number,
+  memberId: number,
+): Promise<EmptyData> {
+  const response = await weilaFetch<EmptyData>('/v2/subuser/group-member-delete', {
+    body: { user_id: deviceId, group_id: groupId, member_ids: [memberId] },
+  })
+  return response.data
+}
+
+export async function updateGroupName(
+  deviceId: number,
+  groupId: number,
+  name: string,
+): Promise<EmptyData> {
+  const response = await weilaFetch<EmptyData>('/v2/subuser/group-change-name', {
+    body: { user_id: deviceId, group_id: groupId, name },
+  })
+  return response.data
+}
+
+export async function updateGroupAvatar(
+  deviceId: number,
+  groupId: number,
+  avatar: string,
+): Promise<EmptyData> {
+  const response = await weilaFetch<EmptyData>('/v2/subuser/group-change-avatar', {
+    body: { user_id: deviceId, group_id: groupId, avatar },
+  })
+  return response.data
+}
+
+/** Transfer ownership; the device becomes a plain member afterwards. */
+export async function transferGroupOwner(
+  deviceId: number,
+  groupId: number,
+  ownerId: number,
+): Promise<EmptyData> {
+  const response = await weilaFetch<EmptyData>('/v2/subuser/group-change-owner', {
+    body: { user_id: deviceId, group_id: groupId, owner_id: ownerId },
+  })
+  return response.data
+}
+
+/** Update the device's own in-group card name (`remark` upstream). */
+export async function updateMyGroupNickname(
+  deviceId: number,
+  groupId: number,
+  nickname: string,
+): Promise<EmptyData> {
+  const response = await weilaFetch<EmptyData>('/v2/subuser/group-member-change-remark', {
+    body: { user_id: deviceId, group_id: groupId, remark: nickname },
   })
   return response.data
 }
@@ -428,47 +529,6 @@ export async function updateGroupSettings(
 ): Promise<EmptyData> {
   const response = await weilaFetch<EmptyData>('/v2/group/update-settings', {
     body: asWeilaBody({ group_id: groupId, ...toSettingsBody(settings) }),
-  })
-  return response.data
-}
-
-export async function getGroupMembers(groupId: number): Promise<GroupMember[]> {
-  const response = await weilaFetch<{ members: GroupMemberDto[] }>('/v2/group/members', {
-    body: { group_id: groupId },
-  })
-  return response.data.members.map(toGroupMember)
-}
-
-export async function addGroupMembers(groupId: number, memberIds: number[]): Promise<EmptyData> {
-  const response = await weilaFetch<EmptyData>('/v2/group/add-members', {
-    body: { group_id: groupId, member_ids: memberIds },
-  })
-  return response.data
-}
-
-export async function removeGroupMember(groupId: number, memberId: number): Promise<EmptyData> {
-  const response = await weilaFetch<EmptyData>('/v2/group/remove-member', {
-    body: { group_id: groupId, member_id: memberId },
-  })
-  return response.data
-}
-
-export async function updateGroup(
-  groupId: number,
-  changes: { name?: string; intro?: string; avatar?: string },
-): Promise<EmptyData> {
-  const body = {
-    group_id: groupId,
-    ...changes,
-  }
-  const response = await weilaFetch<EmptyData>('/v2/group/update', { body })
-  return response.data
-}
-
-/** Update the current account's in-group card name. */
-export async function updateMyGroupNickname(groupId: number, nickname: string): Promise<EmptyData> {
-  const response = await weilaFetch<EmptyData>('/v2/group/update-my-nickname', {
-    body: { group_id: groupId, nickname },
   })
   return response.data
 }
@@ -503,6 +563,25 @@ export async function updateDeviceTrackSetting(
 export async function getFriends(): Promise<Friend[]> {
   const response = await weilaFetch<{ friends: FriendDto[] }>('/v2/friend/list')
   return response.data.friends.map(toFriend)
+}
+
+/** Return the device's friends; the group invite check validates against these. */
+export async function getDeviceFriends(deviceId: number): Promise<Friend[]> {
+  const response = await weilaFetch<{ friends: SubuserFriendDto[] }>('/v2/subuser/friend-get-all', {
+    body: { user_id: deviceId },
+  })
+  return response.data.friends.map((friend) => {
+    const mapped: Friend = {
+      userId: friend.user_id,
+      userNum: friend.user_num,
+      // The invite list shows the device's remark when set, else the nick
+      nick: friend.remark || friend.nick,
+      avatar: friend.avatar,
+      online: false,
+    }
+    if (friend.created_at !== undefined) mapped.registeredAt = friend.created_at
+    return mapped
+  })
 }
 
 export async function getDeviceContacts(deviceId: number): Promise<Contact[]> {
@@ -669,13 +748,15 @@ function toDevice(device: DeviceDto): Device {
   }
 }
 
-function toGroup(group: GroupDto): Group {
+function toGroup(group: SubuserGroupDto): Group {
   return {
     groupId: group.group_id,
     num: group.num,
     name: group.name,
     avatar: group.avatar,
-    createdByMe: group.created_by_me ?? false,
+    isCreator: group.is_creator ?? false,
+    isAdmin: group.is_admin ?? false,
+    isAudit: group.is_audit ?? false,
   }
 }
 
@@ -690,16 +771,14 @@ function toGroupInfo(group: GroupInfoDto): GroupInfo {
   }
 }
 
-function toGroupMember(member: GroupMemberDto): GroupMember {
+function toGroupMember(member: SubuserGroupMemberDto): GroupMember {
   return {
     userId: member.user_id,
     userNum: member.user_num,
     nick: member.nick,
     avatar: member.avatar,
-    role: member.role,
-    online: member.online,
-    signature: member.signature,
-    nickname: member.nickname ?? '',
+    isAdmin: member.is_admin ?? false,
+    nickname: member.remark ?? '',
   }
 }
 

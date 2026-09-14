@@ -9,7 +9,7 @@ import { getGroupMembers, type GroupMember } from '~/utils/device-api'
 import { hideBrokenImage } from '~/utils/image'
 
 type RouteParam = string | string[] | undefined
-type MemberRole = GroupMember['role']
+type MemberSection = 'admin' | 'member'
 
 const route = useRoute()
 const router = useRouter()
@@ -29,8 +29,9 @@ const groupId = computed(() => routeNumber(route.params.groupId))
 const { state, refetch: reload } = useQuery({
   key: () => ['device-management', 'group', 'members', groupId.value],
   query: () => {
+    if (deviceId.value == null) throw new Error(t('device.invalidId'))
     if (groupId.value == null) throw new Error(t('device.invalidGroup'))
-    return getGroupMembers(groupId.value)
+    return getGroupMembers(deviceId.value, groupId.value)
   },
 })
 
@@ -38,16 +39,15 @@ const filteredMembers = computed(() => {
   const keyword = search.value.trim().toLocaleLowerCase()
   if (!keyword) return state.value.data ?? []
   return (state.value.data ?? []).filter((member) =>
-    [member.nick, member.nickname, member.userNum, member.signature].some((value) =>
+    [member.nick, member.nickname, member.userNum].some((value) =>
       value.toLocaleLowerCase().includes(keyword),
     ),
   )
 })
 
-const groupedMembers = computed<Record<MemberRole, GroupMember[]>>(() => ({
-  owner: filteredMembers.value.filter((member) => member.role === 'owner'),
-  admin: filteredMembers.value.filter((member) => member.role === 'admin'),
-  member: filteredMembers.value.filter((member) => member.role === 'member'),
+const groupedMembers = computed<Record<MemberSection, GroupMember[]>>(() => ({
+  admin: filteredMembers.value.filter((member) => member.isAdmin),
+  member: filteredMembers.value.filter((member) => !member.isAdmin),
 }))
 
 function openMember(member: GroupMember): void {
@@ -129,11 +129,6 @@ function openMember(member: GroupMember): void {
                       alt=""
                       class="absolute inset-0 h-full w-full object-cover"
                       @error="hideBrokenImage"
-                    />
-                    <span
-                      class="absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-surface"
-                      :class="member.online ? 'bg-primary' : 'bg-text-secondary'"
-                      :aria-label="member.online ? t('device.online') : t('device.offline')"
                     />
                   </span>
                   <span class="ml-3 min-w-0 flex-1">

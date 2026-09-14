@@ -3,25 +3,16 @@ import { useMutation, useQuery, useQueryCache } from '@pinia/colada'
 import { computed, shallowRef } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
-import BaseModal from '~/components/BaseModal.vue'
 import Avatar from '~/components/Avatar.vue'
+import JoinGroupModal from '~/components/device/JoinGroupModal.vue'
 import PageHeader from '~/components/PageHeader.vue'
 import QueryState from '~/components/settings/QueryState.vue'
 import { useToast } from '~/composables/useToast'
-import {
-  getConnectedDevices,
-  getDeviceGroups,
-  getMyCreatedGroups,
-  getMyJoinedGroups,
-  joinDeviceGroup,
-  type Group,
-} from '~/utils/device-api'
+import { getDeviceGroups, getManagerGroups, joinDeviceGroup, type Group } from '~/utils/device-api'
 
 interface AddGroupsData {
-  created: Group[]
-  joined: Group[]
+  managerGroups: Group[]
   deviceGroups: Group[]
-  deviceName: string
 }
 
 const { t } = useI18n({ useScope: 'global' })
@@ -31,6 +22,8 @@ const queryCache = useQueryCache()
 const { showToast } = useToast()
 const keyword = shallowRef('')
 const selected = shallowRef<Group | null>(null)
+/** Groups whose join application was sent from this page; pending state is page-local. */
+const appliedIds = shallowRef<Set<number>>(new Set())
 
 const deviceId = computed(() => {
   const value = Array.isArray(route.params.id) ? route.params.id[0] : route.params.id
@@ -40,18 +33,11 @@ const deviceId = computed(() => {
 
 async function load(): Promise<AddGroupsData> {
   if (deviceId.value == null) throw new Error(t('device.invalidId'))
-  const [created, joined, deviceGroups, devices] = await Promise.all([
-    getMyCreatedGroups(),
-    getMyJoinedGroups(),
+  const [managerGroups, deviceGroups] = await Promise.all([
+    getManagerGroups(),
     getDeviceGroups(deviceId.value),
-    getConnectedDevices(),
   ])
-  return {
-    created,
-    joined,
-    deviceGroups,
-    deviceName: devices.find((device) => device.userId === deviceId.value)?.nick ?? '',
-  }
+  return { managerGroups, deviceGroups }
 }
 
 const { state, refetch: reload } = useQuery({
@@ -59,13 +45,17 @@ const { state, refetch: reload } = useQuery({
   query: load,
 })
 
-const filteredCreated = computed(() => filterGroups(state.value.data?.created ?? []))
-const filteredJoined = computed(() => filterGroups(state.value.data?.joined ?? []))
+const directGroups = computed(() =>
+  filterGroups((state.value.data?.managerGroups ?? []).filter((group) => !group.isAudit)),
+)
+const auditGroups = computed(() =>
+  filterGroups((state.value.data?.managerGroups ?? []).filter((group) => group.isAudit)),
+)
 
 const { mutateAsync: joinGroup, isLoading: joining } = useMutation({
-  mutation: (groupId: number) => {
+  mutation: (input: { groupId: number; detail: string }) => {
     if (deviceId.value == null) throw new Error(t('device.invalidId'))
-    return joinDeviceGroup(deviceId.value, groupId)
+    return joinDeviceGroup(deviceId.value, input.groupId, input.detail || undefined)
   },
 })
 
@@ -83,16 +73,25 @@ function isJoined(groupId: number): boolean {
   return state.value.data?.deviceGroups.some((group) => group.groupId === groupId) ?? false
 }
 
-function choose(group: Group): void {
-  if (!isJoined(group.groupId)) selected.value = group
+function isDisabled(groupId: number): boolean {
+  return isJoined(groupId) || appliedIds.value.has(groupId)
 }
 
-async function confirmJoin(): Promise<void> {
+function choose(group: Group): void {
+  if (!isDisabled(group.groupId)) selected.value = group
+}
+
+async function confirmJoin(detail: string): Promise<void> {
   if (!selected.value || joining.value) return
   const group = selected.value
   try {
-    await joinGroup(group.groupId)
+    await joinGroup({ groupId: group.groupId, detail })
     selected.value = null
+    if (group.isAudit) {
+      appliedIds.value = new Set([...appliedIds.value, group.groupId])
+      showToast(t('device.applicationSent'))
+      return
+    }
     await Promise.all([
       queryCache.invalidateQueries({ key: ['device-management', 'groups'] }),
       queryCache.invalidateQueries({ key: ['device-management', 'group-add'] }),
@@ -120,26 +119,26 @@ async function confirmJoin(): Promise<void> {
       <QueryState
         :status="state.status"
         :error="state.error"
-        :empty="state.data?.created.length === 0 && state.data?.joined.length === 0"
+        :empty="state.data?.managerGroups.length === 0"
         :empty-text="t('device.emptyGroups')"
         @retry="reload()"
       >
         <section class="mt-6">
           <h2 class="mb-3 text-2nd-body font-semibold text-text-secondary">
-            {{ t('device.myCreatedGroups') }}
+            {{ t('device.directJoinGroups') }}
           </h2>
           <p
-            v-if="filteredCreated.length === 0"
+            v-if="directGroups.length === 0"
             class="py-4 text-center text-2nd-body text-text-secondary"
           >
             {{ t('device.noMatchingGroups') }}
           </p>
           <ul v-else class="space-y-3">
-            <li v-for="group in filteredCreated" :key="`created-${group.groupId}`">
+            <li v-for="group in directGroups" :key="`direct-${group.groupId}`">
               <button
                 type="button"
                 class="card w-full flex items-center text-left disabled:opacity-50"
-                :disabled="isJoined(group.groupId)"
+                :disabled="isDisabled(group.groupId)"
                 @click="choose(group)"
               >
                 <Avatar :name="group.name" :src="group.avatar" />
@@ -154,6 +153,12 @@ async function confirmJoin(): Promise<void> {
                   class="ml-2 flex-none text-small text-text-secondary"
                 >
                   {{ t('device.alreadyJoined') }}
+                </span>
+                <span
+                  v-else-if="appliedIds.has(group.groupId)"
+                  class="ml-2 flex-none text-small text-text-secondary"
+                >
+                  {{ t('device.pendingApproval') }}
                 </span>
                 <span v-else aria-hidden="true" class="ml-2 text-text-secondary">›</span>
               </button>
@@ -163,20 +168,20 @@ async function confirmJoin(): Promise<void> {
 
         <section class="mt-8">
           <h2 class="mb-3 text-2nd-body font-semibold text-text-secondary">
-            {{ t('device.myJoinedGroups') }}
+            {{ t('device.auditJoinGroups') }}
           </h2>
           <p
-            v-if="filteredJoined.length === 0"
+            v-if="auditGroups.length === 0"
             class="py-4 text-center text-2nd-body text-text-secondary"
           >
             {{ t('device.noMatchingGroups') }}
           </p>
           <ul v-else class="space-y-3">
-            <li v-for="group in filteredJoined" :key="`joined-${group.groupId}`">
+            <li v-for="group in auditGroups" :key="`audit-${group.groupId}`">
               <button
                 type="button"
                 class="card w-full flex items-center text-left disabled:opacity-50"
-                :disabled="isJoined(group.groupId)"
+                :disabled="isDisabled(group.groupId)"
                 @click="choose(group)"
               >
                 <Avatar :name="group.name" :src="group.avatar" />
@@ -192,6 +197,12 @@ async function confirmJoin(): Promise<void> {
                 >
                   {{ t('device.alreadyJoined') }}
                 </span>
+                <span
+                  v-else-if="appliedIds.has(group.groupId)"
+                  class="ml-2 flex-none text-small text-text-secondary"
+                >
+                  {{ t('device.pendingApproval') }}
+                </span>
                 <span v-else aria-hidden="true" class="ml-2 text-text-secondary">›</span>
               </button>
             </li>
@@ -200,20 +211,13 @@ async function confirmJoin(): Promise<void> {
       </QueryState>
     </main>
 
-    <BaseModal
+    <JoinGroupModal
       v-if="selected"
-      :title="t('device.confirmAddGroup')"
-      :cancel-text="t('modal.cancel')"
-      :confirm-text="joining ? t('device.saving') : t('modal.confirm')"
+      :group-name="selected.name"
+      :needs-audit="selected.isAudit"
+      :loading="joining"
       @cancel="selected = null"
       @confirm="confirmJoin"
-    >
-      {{
-        t('device.confirmAddGroupMessage', {
-          device: state.data.deviceName,
-          group: selected.name,
-        })
-      }}
-    </BaseModal>
+    />
   </div>
 </template>

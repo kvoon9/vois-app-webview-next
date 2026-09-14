@@ -94,7 +94,6 @@
     "removeMemberConfirm": "Remove {name} from the group?",
     "memberType": "Member type",
     "friends": "Friends",
-    "devices": "Devices",
     "selectAll": "Select all",
     "alreadyMember": "Already in group",
     "noCandidates": "No friends or devices available.",

@@ -10,11 +10,6 @@ import QueryState from '~/components/settings/QueryState.vue'
 import { useToast } from '~/composables/useToast'
 import { getDeviceGroups, joinDeviceGroup, searchGroups, type Group } from '~/utils/device-api'
 
-interface SearchData {
-  groups: Group[]
-  deviceGroups: Group[]
-}
-
 const { t } = useI18n({ useScope: 'global' })
 const route = useRoute()
 const router = useRouter()
@@ -32,18 +27,28 @@ const deviceId = computed(() => {
   return Number.isInteger(parsed) ? parsed : null
 })
 
-async function load(): Promise<SearchData> {
+async function loadResults(): Promise<Group[]> {
   if (deviceId.value == null) throw new Error(t('device.invalidId'))
-  const [groups, deviceGroups] = await Promise.all([
-    searchGroups(deviceId.value, searchedKeyword.value),
-    getDeviceGroups(deviceId.value),
-  ])
-  return { groups, deviceGroups }
+  return searchGroups(deviceId.value, searchedKeyword.value)
 }
 
+async function loadJoined(): Promise<Group[]> {
+  if (deviceId.value == null) throw new Error(t('device.invalidId'))
+  return getDeviceGroups(deviceId.value)
+}
+
+// The backend matches the whole group number, and an empty `key` returns every
+// group on the platform, so neither query runs before a search is submitted.
 const { state, refetch: reload } = useQuery({
   key: () => ['device-management', 'group-search', deviceId.value, searchedKeyword.value],
-  query: load,
+  query: loadResults,
+  enabled: () => searchedKeyword.value.length > 0,
+})
+
+const { state: joinedState } = useQuery({
+  key: () => ['device-management', 'groups', deviceId.value],
+  query: loadJoined,
+  enabled: () => searchedKeyword.value.length > 0,
 })
 
 const { mutateAsync: joinGroup, isLoading: joining } = useMutation({
@@ -53,10 +58,10 @@ const { mutateAsync: joinGroup, isLoading: joining } = useMutation({
   },
 })
 
-const results = computed(() => state.value.data?.groups ?? [])
+const results = computed(() => state.value.data ?? [])
 
 function isJoined(groupId: number): boolean {
-  return state.value.data?.deviceGroups.some((group) => group.groupId === groupId) ?? false
+  return joinedState.value.data?.some((group) => group.groupId === groupId) ?? false
 }
 
 function isDisabled(groupId: number): boolean {
@@ -111,20 +116,22 @@ async function confirmJoin(detail: string): Promise<void> {
         </button>
       </form>
 
+      <p
+        v-if="searchedKeyword.length === 0"
+        class="py-12 text-center text-body text-text-secondary"
+      >
+        {{ t('device.enterGroupNumber') }}
+      </p>
+
       <QueryState
+        v-else
         :status="state.status"
         :error="state.error"
-        :empty="searchedKeyword.length > 0 && results.length === 0"
+        :empty="results.length === 0"
         :empty-text="t('device.noSearchResults')"
         @retry="reload()"
       >
-        <p
-          v-if="searchedKeyword.length === 0"
-          class="py-12 text-center text-body text-text-secondary"
-        >
-          {{ t('device.enterGroupNumber') }}
-        </p>
-        <ul v-else class="mt-6 space-y-3">
+        <ul class="mt-6 space-y-3">
           <li v-for="group in results" :key="group.groupId">
             <button
               type="button"
@@ -151,7 +158,7 @@ async function confirmJoin(detail: string): Promise<void> {
               >
                 {{ t('device.pendingApproval') }}
               </span>
-              <span v-else aria-hidden="true" class="ml-2 text-text-secondary">›</span>
+              <span v-else class="row-chevron" aria-hidden="true" />
             </button>
           </li>
         </ul>

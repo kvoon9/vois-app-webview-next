@@ -9,25 +9,18 @@ import QueryState from '~/components/settings/QueryState.vue'
 import { useToast } from '~/composables/useToast'
 import {
   addGroupMembers,
-  getConnectedDevices,
   getDeviceFriends,
   getGroupMembers,
-  type Device,
   type Friend,
   type GroupMember,
 } from '~/utils/device-api'
 import { hideBrokenImage } from '~/utils/image'
-
-type Candidate = Friend | Device
-
-type CandidateTab = 'friends' | 'devices'
 
 const route = useRoute()
 const router = useRouter()
 const { t } = useI18n({ useScope: 'global' })
 const queryCache = useQueryCache()
 const { showToast } = useToast()
-const activeTab = shallowRef<CandidateTab>('friends')
 const selectedIds = shallowRef<number[]>([])
 const confirmationOpen = shallowRef(false)
 
@@ -45,17 +38,15 @@ const groupId = computed(() => routeNumber(route.params.groupId))
 
 async function load(): Promise<{
   friends: Friend[]
-  devices: Device[]
   members: GroupMember[]
 }> {
   if (deviceId.value == null) throw new Error(t('error.description'))
   if (groupId.value == null) throw new Error(t('error.description'))
-  const [friends, devices, members] = await Promise.all([
+  const [friends, members] = await Promise.all([
     getDeviceFriends(deviceId.value),
-    getConnectedDevices(),
     getGroupMembers(deviceId.value, groupId.value),
   ])
-  return { friends, devices, members }
+  return { friends, members }
 }
 
 const { state, refetch: reload } = useQuery({
@@ -66,11 +57,7 @@ const { state, refetch: reload } = useQuery({
 const existingIds = computed(
   () => new Set((state.value.data?.members ?? []).map((member) => member.userId)),
 )
-const candidates = computed<Candidate[]>(() =>
-  activeTab.value === 'friends'
-    ? (state.value.data?.friends ?? [])
-    : (state.value.data?.devices ?? []),
-)
+const candidates = computed<Friend[]>(() => state.value.data?.friends ?? [])
 const selectableIds = computed(() =>
   candidates.value
     .filter((candidate) => !existingIds.value.has(candidate.userId))
@@ -91,15 +78,11 @@ const addMutation = useMutation({
   },
 })
 
-function isDisabled(candidate: Candidate): boolean {
+function isDisabled(candidate: Friend): boolean {
   return existingIds.value.has(candidate.userId)
 }
 
-function setTab(tab: CandidateTab): void {
-  activeTab.value = tab
-}
-
-function toggleCandidate(candidate: Candidate): void {
+function toggleCandidate(candidate: Friend): void {
   if (isDisabled(candidate)) return
   selectedIds.value = selectedIds.value.includes(candidate.userId)
     ? selectedIds.value.filter((id) => id !== candidate.userId)
@@ -134,29 +117,6 @@ async function submit(): Promise<void> {
     <main class="p-4">
       <QueryState :status="state.status" :error="state.error" @retry="reload()">
         <template v-if="state.data">
-          <div class="flex space-x-2" role="tablist" :aria-label="t('device.friends')">
-            <button
-              type="button"
-              class="chip flex-1"
-              :class="activeTab === 'friends' ? 'chip-selected' : 'chip-unselected'"
-              :aria-selected="activeTab === 'friends'"
-              role="tab"
-              @click="setTab('friends')"
-            >
-              {{ t('device.friends') }}
-            </button>
-            <button
-              type="button"
-              class="chip flex-1"
-              :class="activeTab === 'devices' ? 'chip-selected' : 'chip-unselected'"
-              :aria-selected="activeTab === 'devices'"
-              role="tab"
-              @click="setTab('devices')"
-            >
-              {{ t('device.devices') }}
-            </button>
-          </div>
-
           <button
             type="button"
             class="mt-4 flex w-full items-center justify-between py-3 text-left"
@@ -169,7 +129,7 @@ async function submit(): Promise<void> {
               :class="allSelected ? 'checkbox-on' : 'checkbox-off'"
               aria-hidden="true"
             >
-              <span v-if="allSelected">✓</span>
+              <span v-if="allSelected" class="i-ph-check" />
             </span>
           </button>
 
@@ -212,7 +172,7 @@ async function submit(): Promise<void> {
                 :class="selectedIds.includes(candidate.userId) ? 'checkbox-on' : 'checkbox-off'"
                 aria-hidden="true"
               >
-                <span v-if="selectedIds.includes(candidate.userId)">✓</span>
+                <span v-if="selectedIds.includes(candidate.userId)" class="i-ph-check" />
               </span>
             </button>
           </div>

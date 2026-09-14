@@ -37,7 +37,7 @@ interface GroupDetail {
   intro: string
   createdAt: string
   settings: GroupSettings
-  /** False when the mocked info endpoint is unreachable (real backend). */
+  /** False when the group info endpoint is unreachable; gates the settings block. */
   infoAvailable: boolean
 }
 
@@ -72,7 +72,8 @@ async function load(): Promise<GroupDetail> {
   const [groups, members, info] = await Promise.all([
     getDeviceGroups(deviceId.value),
     getGroupMembers(deviceId.value, groupId.value),
-    // Mock-only endpoint: intro/settings/created_at have no real API yet.
+    // Tolerated failure: the group info endpoint is not live yet, so intro,
+    // created_at and settings fall back to their empty defaults below.
     getGroupInfo(groupId.value).catch(() => null),
   ])
   const group = groups.find((item) => item.groupId === groupId.value)
@@ -275,11 +276,18 @@ async function exitGroup(): Promise<void> {
                   @error="hideBrokenImage"
                 />
               </button>
+              <span
+                v-if="isOwner"
+                class="pointer-events-none -mt-6 ml-14 h-7 w-7 flex items-center justify-center rounded-full bg-primary text-primary-text text-small"
+                aria-hidden="true"
+              >
+                <span class="i-ph-pencil-simple" />
+              </span>
               <h2 class="mt-3 text-header font-semibold">{{ group.name }}</h2>
               <p class="mt-1 text-small text-text-secondary">
                 {{ t('device.groupNumber', { number: group.num }) }}
               </p>
-              <p class="mt-1 text-small text-text-secondary">
+              <p v-show="false" class="mt-1 text-small text-text-secondary">
                 {{ t('device.createdAt', { date: group.createdAt || t('device.notAvailable') }) }}
               </p>
             </div>
@@ -295,7 +303,7 @@ async function exitGroup(): Promise<void> {
                   <span class="block text-body">{{ t('device.groupName') }}</span>
                   <span class="mt-0.5 block text-small text-text-secondary">{{ group.name }}</span>
                 </span>
-                <span aria-hidden="true" class="ml-3 text-text-secondary">›</span>
+                <span class="row-chevron" aria-hidden="true" />
               </button>
               <div v-else class="panel-row min-h-14 py-3">
                 <span>
@@ -305,6 +313,7 @@ async function exitGroup(): Promise<void> {
               </div>
 
               <button
+                v-show="false"
                 v-if="isOwner && group.infoAvailable"
                 type="button"
                 class="panel-row min-h-14 w-full py-3 text-left"
@@ -316,9 +325,9 @@ async function exitGroup(): Promise<void> {
                     {{ group.intro || t('device.notAvailable') }}
                   </span>
                 </span>
-                <span aria-hidden="true" class="ml-3 flex-none text-text-secondary">›</span>
+                <span class="row-chevron" aria-hidden="true" />
               </button>
-              <div v-else class="panel-row min-h-14 py-3">
+              <div v-show="false" v-else class="panel-row min-h-14 py-3">
                 <span class="min-w-0">
                   <span class="block text-body">{{ t('device.groupIntroduction') }}</span>
                   <span class="mt-0.5 block truncate text-small text-text-secondary">
@@ -336,12 +345,12 @@ async function exitGroup(): Promise<void> {
                   <span class="block text-body">{{ t('device.groupNickname') }}</span>
                   <span class="mt-0.5 block text-small text-text-secondary">{{ myNickname }}</span>
                 </span>
-                <span aria-hidden="true" class="ml-3 text-text-secondary">›</span>
+                <span class="row-chevron" aria-hidden="true" />
               </button>
             </div>
           </section>
 
-          <section class="mt-4 panel">
+          <section v-show="false" class="mt-4 panel">
             <div class="panel-row min-h-12 text-body">
               <span>{{ t('device.muteNotifications') }}</span>
               <button
@@ -424,7 +433,7 @@ async function exitGroup(): Promise<void> {
             class="mt-4 min-h-14 w-full nav-item"
           >
             <span>{{ t('device.membersCount', { count: group.memberCount }) }}</span>
-            <span aria-hidden="true" class="ml-3 text-text-secondary">›</span>
+            <span class="row-chevron" aria-hidden="true" />
           </RouterLink>
 
           <div class="mt-8 space-y-3">

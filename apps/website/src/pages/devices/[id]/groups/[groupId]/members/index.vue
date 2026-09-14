@@ -45,9 +45,18 @@ const filteredMembers = computed(() => {
   )
 })
 
+function displayName(member: GroupMember): string {
+  return member.nickname || member.nick
+}
+
+/** The server returns members in an unspecified order, so sort for a stable list. */
+function byDisplayName(left: GroupMember, right: GroupMember): number {
+  return displayName(left).localeCompare(displayName(right), 'zh-Hans-CN')
+}
+
 const groupedMembers = computed<Record<MemberSection, GroupMember[]>>(() => ({
-  admin: filteredMembers.value.filter((member) => member.isAdmin),
-  member: filteredMembers.value.filter((member) => !member.isAdmin),
+  admin: filteredMembers.value.filter((member) => member.isAdmin).sort(byDisplayName),
+  member: filteredMembers.value.filter((member) => !member.isAdmin).sort(byDisplayName),
 }))
 
 function openMember(member: GroupMember): void {
@@ -70,7 +79,7 @@ function openMember(member: GroupMember): void {
         class="min-h-12 w-full nav-item"
       >
         <span>{{ t('device.addMember') }}</span>
-        <span aria-hidden="true" class="text-text-secondary">›</span>
+        <span class="row-chevron" aria-hidden="true" />
       </RouterLink>
 
       <label class="relative mt-4 block">
@@ -84,11 +93,11 @@ function openMember(member: GroupMember): void {
         <button
           v-if="search"
           type="button"
-          class="absolute right-2 top-1/2 h-9 w-9 -translate-y-1/2 text-text-secondary"
+          class="icon-button absolute right-2 top-1/2 h-9 w-9 -translate-y-1/2"
           :aria-label="t('device.clearSearch')"
           @click="search = ''"
         >
-          ×
+          <span class="i-ph-x" aria-hidden="true" />
         </button>
       </label>
 
@@ -122,7 +131,7 @@ function openMember(member: GroupMember): void {
                   <span
                     class="relative h-11 w-11 flex-none flex items-center justify-center overflow-hidden rounded-full bg-surface-muted text-text-secondary"
                   >
-                    {{ member.nick.slice(0, 1) }}
+                    {{ displayName(member).slice(0, 1) }}
                     <img
                       v-if="member.avatar"
                       :src="member.avatar"
@@ -132,15 +141,12 @@ function openMember(member: GroupMember): void {
                     />
                   </span>
                   <span class="ml-3 min-w-0 flex-1">
-                    <span class="block truncate text-body">{{ member.nick }}</span>
+                    <span class="block truncate text-body">{{ displayName(member) }}</span>
                     <span class="mt-0.5 block truncate text-small text-text-secondary">
-                      {{ member.nickname || member.userNum }}
+                      {{ member.userNum }}
                     </span>
                   </span>
-                  <span class="ml-2 flex-none text-small text-text-secondary">{{
-                    member.userNum
-                  }}</span>
-                  <span aria-hidden="true" class="ml-2 flex-none text-text-secondary">›</span>
+                  <span class="row-chevron" aria-hidden="true" />
                 </button>
               </div>
             </template>

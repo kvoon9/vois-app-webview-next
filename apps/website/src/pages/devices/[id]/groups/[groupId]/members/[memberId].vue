@@ -2,7 +2,7 @@
 import { useMutation, useQuery, useQueryCache } from '@pinia/colada'
 import { computed, shallowRef } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useRoute, useRouter } from 'vue-router'
+import { RouterLink, useRoute, useRouter } from 'vue-router'
 import BaseModal from '~/components/BaseModal.vue'
 import PageHeader from '~/components/PageHeader.vue'
 import QueryState from '~/components/settings/QueryState.vue'
@@ -168,6 +168,14 @@ async function transferOwner(): Promise<void> {
               {{ t('device.removeMember') }}
             </button>
           </div>
+
+          <RouterLink
+            :to="{ path: '/report-user', query: { id: String(memberId) } }"
+            class="mt-4 min-h-14 nav-item text-danger"
+          >
+            <span>{{ t('profile.report') }}</span>
+            <span class="row-chevron" aria-hidden="true" />
+          </RouterLink>
         </template>
       </QueryState>
     </main>

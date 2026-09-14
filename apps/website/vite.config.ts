@@ -61,13 +61,7 @@ export default defineConfig(({ isPreview, command, mode }) => {
       }),
       vueDevtools(),
       VueRouter({ dts: 'src/route-map.d.ts' }),
-      vue({
-        // Enable Vapor Mode globally for <script setup> SFCs without per-file vapor marker.
-        // Available in Vue 3.6+ and @vitejs/plugin-vue@6.0.8+
-        features: {
-          vapor: true,
-        },
-      }),
+      vue(),
       unocss(),
       legacy({
         targets: ['chrome 83'],

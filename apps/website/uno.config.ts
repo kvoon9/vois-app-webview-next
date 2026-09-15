@@ -1,5 +1,19 @@
 import { defineConfig } from 'unocss'
 import { presetAttributify, presetIcons, presetWind3 } from 'unocss'
+import type { BlocklistRule } from 'unocss'
+
+/**
+ * Both families are unsupported on the Chrome 83 legacy target: flex `gap`
+ * shipped in Chrome 84, and `grid` brings a layout model whose fallback path
+ * is the expensive one on low-end devices. `space-*` and margins produce the
+ * same spacing with no compatibility risk. Blocking at the engine level means
+ * the build emits no CSS for them; `banned-utilities.test.ts` fails the build
+ * instead of dropping the class silently.
+ */
+export const BLOCKED_UTILITIES: BlocklistRule[] = [
+  [/^(inline-)?grid(-|$)/, { message: 'Use flex instead of grid.' }],
+  [/^gap(-|$)/, { message: 'Use space-* or margin instead of gap.' }],
+]
 
 /**
  * Borderless UI: the Figma source barely uses borders. Separate surfaces with
@@ -23,6 +37,7 @@ export default defineConfig({
       },
     }),
   ],
+  blocklist: BLOCKED_UTILITIES,
   preflights: [
     {
       getCSS: () => '.input-field::placeholder { color: var(--color-text-secondary); }',

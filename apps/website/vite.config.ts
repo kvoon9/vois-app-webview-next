@@ -5,10 +5,22 @@ import legacy from '@vitejs/plugin-legacy'
 import VueRouter from 'vue-router/vite'
 import vueDevtools from 'vite-plugin-vue-devtools'
 import { resolve } from 'node:path'
-import { voisWebviewDebug } from 'vite-plugin-vois-webview-debug'
 import { vconsoleDev } from './plugins/vconsole-dev.ts'
 
-export default defineConfig(({ isPreview, command, mode }) => {
+// The debug plugin is pnpm-linked from a sibling repo, so CI (and anyone who has
+// not cloned it) has no resolvable copy. It only ever activates for serve/preview,
+// so a missing copy disables it instead of breaking the build.
+async function webviewDebugPlugin(preview: boolean) {
+  try {
+    const { voisWebviewDebug } = await import('vite-plugin-vois-webview-debug')
+    return voisWebviewDebug({ preview, envFile: resolve(process.cwd(), '.env.local') })
+  } catch {
+    console.warn('[vite] vite-plugin-vois-webview-debug not installed; WebView debug disabled')
+    return undefined
+  }
+}
+
+export default defineConfig(async ({ isPreview, command, mode }) => {
   const env = loadEnv(mode, process.cwd(), 'VITE_')
   const apiTarget = env.VITE_API_TARGET || 'https://api.voischat.cn'
   // Group management went real first; everything else still targets the mock.
@@ -55,10 +67,7 @@ export default defineConfig(({ isPreview, command, mode }) => {
     },
     plugins: [
       ...(isPreview ? [vconsoleDev()] : []),
-      voisWebviewDebug({
-        preview: process.argv.includes('--debug'),
-        envFile: resolve(process.cwd(), '.env.local'),
-      }),
+      await webviewDebugPlugin(process.argv.includes('--debug')),
       vueDevtools(),
       VueRouter({ dts: 'src/route-map.d.ts' }),
       vue(),

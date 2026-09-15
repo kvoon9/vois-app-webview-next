@@ -251,7 +251,7 @@
     "block": "Block",
     "exitGroup": "Exit group",
     "members": "Members",
-    "userId": "User ID: {id}",
+    "userNumber": "Weila number: {id}",
     "notFound": "This conversation could not be found."
   },
   "translation": {
@@ -277,6 +277,11 @@
     "languagesMustDiffer": "Source and target languages must be different.",
     "swapLanguages": "Swap source and target languages",
     "saving": "Saving…",
+    "previousStep": "Previous",
+    "nextStep": "Next",
+    "done": "Done",
+    "allLanguages": "All languages",
+    "enableTranslation": "Enable translation",
     "skills": {
       "off": "Off",
       "basic": "Chinese ↔ English",

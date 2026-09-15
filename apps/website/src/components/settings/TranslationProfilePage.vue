@@ -8,16 +8,10 @@ import ResultModal from '~/components/ResultModal.vue'
 import LanguagePickerDrawer from '~/components/settings/LanguagePickerDrawer.vue'
 import QueryState from '~/components/settings/QueryState.vue'
 import { parseAccountId, useAccountId } from '~/composables/useAccountId'
-import {
-  pickLanguagePair,
-  nextSettingForSkill,
-  swapLanguagePair,
-  ZH_EN_LANGUAGES,
-} from '~/utils/translation-setting'
+import { nextSettingForSkill, swapLanguagePair, ZH_EN_LANGUAGES } from '~/utils/translation-setting'
 import { hideBrokenImage } from '~/utils/image'
 import {
   changeTranslationTarget,
-  getTranslationLanguages,
   getTranslationTargets,
   type TranslationSetting,
   type TranslationSkill,
@@ -41,17 +35,23 @@ const targetId = computed(() => {
   return parseAccountId(Array.isArray(raw) ? raw[0] : raw)
 })
 
-async function load(): Promise<{ item: TranslationTarget; languages: string[] }> {
+// The multi-language editor lives on its own route; build the link once here.
+const multiTranslationLink = computed(() => ({
+  path: `/settings/${props.kind}/multi-translation`,
+  query: {
+    ...accountQuery.value,
+    [props.kind === 'friends' ? 'friend-id' : 'group-id']: String(targetId.value ?? ''),
+  },
+}))
+
+async function load(): Promise<TranslationTarget> {
   if (accountId.value == null) throw new Error(t('translation.invalidLoginId'))
   if (targetId.value == null) throw new Error(t('profile.notFound'))
 
-  const [items, languages] = await Promise.all([
-    getTranslationTargets(props.kind, accountId.value),
-    getTranslationLanguages(),
-  ])
+  const items = await getTranslationTargets(props.kind, accountId.value)
   const item = items.find((item) => item.id === targetId.value)
   if (!item) throw new Error(t('profile.notFound'))
-  return { item, languages }
+  return item
 }
 
 const { state, refetch: reload } = useQuery({
@@ -59,10 +59,12 @@ const { state, refetch: reload } = useQuery({
   query: load,
 })
 
-const item = computed(() => state.value.data?.item ?? null)
-const languages = computed(() => state.value.data?.languages ?? [])
+const item = computed(() => state.value.data ?? null)
+
+// Skill 2 pins the pair to zh-CN <-> en-US but still lets the user flip which
+// side is the source, so only that direction toggle stays inline; the free-form
+// pair lives on the multi-translation page.
 const isZhEn = computed(() => item.value?.skill === 2)
-const showsLanguages = computed(() => (item.value?.skill ?? 0) >= 2)
 
 const modes = computed(() => [
   { skill: 0 as const, label: t('translation.skills.off') },
@@ -70,12 +72,6 @@ const modes = computed(() => [
   { skill: 2 as const, label: t('translation.skills.premiumZhEn') },
   { skill: 3 as const, label: t('translation.skills.premiumMulti') },
 ])
-
-const languageOptions = computed(() => {
-  if (!item.value) return languages.value
-  if (item.value.skill === 2) return [...ZH_EN_LANGUAGES]
-  return [...new Set([...languages.value, item.value.source, item.value.target].filter(Boolean))]
-})
 
 async function save(setting: TranslationSetting): Promise<void> {
   if (accountId.value == null || !item.value || saving.value) return
@@ -93,23 +89,13 @@ async function save(setting: TranslationSetting): Promise<void> {
 
 function selectSkill(skill: TranslationSkill): void {
   if (!item.value) return
-  const next = nextSettingForSkill(item.value, skill, languageOptions.value)
+  const next = nextSettingForSkill(item.value, skill, [])
   if (next) save(next)
 }
 
 function swapLanguages(): void {
   if (!item.value) return
   save(swapLanguagePair(item.value))
-}
-
-function changeSource(source: string): void {
-  if (!item.value) return
-  save(pickLanguagePair(item.value, 'source', source))
-}
-
-function changeTarget(target: string): void {
-  if (!item.value) return
-  save(pickLanguagePair(item.value, 'target', target))
 }
 </script>
 
@@ -135,7 +121,7 @@ function changeTarget(target: string): void {
             </span>
             <span class="mt-3 text-header font-semibold">{{ item.name }}</span>
             <span v-if="item.number" class="mt-1 text-small text-text-secondary">
-              {{ t('profile.userId', { id: item.number }) }}
+              {{ t('profile.userNumber', { id: item.number }) }}
             </span>
           </div>
 
@@ -161,32 +147,41 @@ function changeTarget(target: string): void {
 
           <div class="mt-4 card">
             <div class="space-y-2" role="group" :aria-label="t('translation.mode')">
-              <button
-                v-for="mode in modes"
-                :key="mode.skill"
-                type="button"
-                class="min-h-11 w-full rounded-standard px-4 text-left text-2nd-body transition-colors"
-                :class="
-                  item.skill === mode.skill
-                    ? 'bg-surface-selected text-text-primary'
-                    : 'bg-surface-muted text-text-secondary'
-                "
-                :aria-pressed="item.skill === mode.skill"
-                :disabled="saving"
-                @click="selectSkill(mode.skill)"
-              >
-                {{ mode.label }}
-              </button>
+              <template v-for="mode in modes" :key="mode.skill">
+                <RouterLink
+                  v-if="mode.skill === 3"
+                  :to="multiTranslationLink"
+                  class="min-h-11 w-full flex items-center justify-between rounded-standard px-4 text-2nd-body bg-surface-muted text-text-secondary"
+                  :class="{ 'bg-surface-selected text-text-primary': item.skill === 3 }"
+                >
+                  {{ mode.label }}
+                  <span class="row-chevron" aria-hidden="true" />
+                </RouterLink>
+                <button
+                  v-else
+                  type="button"
+                  class="min-h-11 w-full rounded-standard px-4 text-left text-2nd-body transition-colors"
+                  :class="
+                    item.skill === mode.skill
+                      ? 'bg-surface-selected text-text-primary'
+                      : 'bg-surface-muted text-text-secondary'
+                  "
+                  :aria-pressed="item.skill === mode.skill"
+                  :disabled="saving"
+                  @click="selectSkill(mode.skill)"
+                >
+                  {{ mode.label }}
+                </button>
+              </template>
             </div>
 
-            <div v-if="showsLanguages" class="mt-4">
+            <div v-if="isZhEn" class="mt-4">
               <LanguagePickerDrawer
                 :model-value="item.source"
-                :disabled="saving || isZhEn"
-                :label="t('translation.translateFrom')"
-                :languages="languageOptions"
-                :title="t('translation.translateFrom')"
-                @update:model-value="changeSource"
+                :disabled="true"
+                :label="t('translation.source')"
+                :languages="[...ZH_EN_LANGUAGES]"
+                :title="t('translation.source')"
               />
 
               <div class="my-2 flex justify-center">
@@ -203,11 +198,10 @@ function changeTarget(target: string): void {
 
               <LanguagePickerDrawer
                 :model-value="item.target"
-                :disabled="saving || isZhEn"
-                :label="t('translation.translateTo')"
-                :languages="languageOptions"
-                :title="t('translation.translateTo')"
-                @update:model-value="changeTarget"
+                :disabled="true"
+                :label="t('translation.target')"
+                :languages="[...ZH_EN_LANGUAGES]"
+                :title="t('translation.target')"
               />
             </div>
           </div>

@@ -5,6 +5,18 @@ import { translationLanguageSubtag } from '~/utils/translation-language'
 export const ZH_EN_LANGUAGES: readonly string[] = ['zh-CN', 'en-US']
 
 /**
+ * Seed a language pair for the multi-language editor. The backend stores an
+ * empty pair while translation is off, and only tracks a non-empty one once a
+ * skill is active, so both values need a fallback before the user picks.
+ */
+export function initialLanguagePair(source: string, target: string): TranslationSetting {
+  const from = source || ZH_EN_LANGUAGES[0]
+  const to = target || ZH_EN_LANGUAGES[1]
+  if (from !== to) return { skill: 3, source: from, target: to }
+  return { skill: 3, source: from, target: from === 'zh-CN' ? 'en-US' : 'zh-CN' }
+}
+
+/**
  * Pure helpers shared between the inline profile editor and the modal-driven
  * member editor. Both surfaces need the same language normalization when the
  * user picks a different skill or swaps a source/target, so we keep the rules

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vite-plus/test'
 import {
+  initialLanguagePair,
   nextSettingForSkill,
   pickLanguagePair,
   swapLanguagePair,
@@ -83,5 +84,32 @@ describe('swapLanguagePair', () => {
 describe('ZH_EN_LANGUAGES', () => {
   it('exposes the two fixed zh-en languages', () => {
     expect(ZH_EN_LANGUAGES).toEqual(['zh-CN', 'en-US'])
+  })
+})
+
+describe('initialLanguagePair', () => {
+  it('keeps the stored pair when both languages are set', () => {
+    expect(initialLanguagePair('ja-JP', 'de-DE')).toEqual({
+      skill: 3,
+      source: 'ja-JP',
+      target: 'de-DE',
+    })
+  })
+
+  it('falls back to zh-CN <-> en-US when translation is off', () => {
+    expect(initialLanguagePair('', '')).toEqual({ skill: 3, source: 'zh-CN', target: 'en-US' })
+  })
+
+  it('breaks a duplicate pair apart instead of leaving it equal', () => {
+    expect(initialLanguagePair('ja-JP', 'ja-JP')).toEqual({
+      skill: 3,
+      source: 'ja-JP',
+      target: 'zh-CN',
+    })
+    expect(initialLanguagePair('zh-CN', 'zh-CN')).toEqual({
+      skill: 3,
+      source: 'zh-CN',
+      target: 'en-US',
+    })
   })
 })

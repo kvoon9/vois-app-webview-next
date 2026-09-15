@@ -6,6 +6,6 @@ const route = useRoute()
 </script>
 
 <template>
-  <RouterView v-if="route.name === '/settings/friends/[id]'" />
+  <RouterView v-if="route.name !== '/settings/friends'" />
   <TranslationSettingsPage v-else kind="friends" />
 </template>

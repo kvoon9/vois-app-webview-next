@@ -262,6 +262,11 @@
     "languagesMustDiffer": "來源語言和目標語言不能相同。",
     "swapLanguages": "切換來源語言和目標語言",
     "saving": "儲存中…",
+    "previousStep": "上一步",
+    "nextStep": "下一步",
+    "done": "完成",
+    "allLanguages": "全部語言",
+    "enableTranslation": "啟用翻譯",
     "skills": {
       "off": "關閉",
       "basic": "中英互譯",
@@ -347,7 +352,7 @@
     "block": "封鎖",
     "exitGroup": "退出群組",
     "members": "成員",
-    "userId": "使用者 ID：{id}",
+    "userNumber": "微喇號：{id}",
     "notFound": "找不到該對話。"
   }
 }

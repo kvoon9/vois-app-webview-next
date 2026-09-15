@@ -8,6 +8,7 @@
 - Perfer using existed vueuse functions instead of create a custom composition api
 - Use space, flex instead of gap, grid for styling, since they have compatibility issues
 - Use `agent-browser` to test interactive UI behavior (clicks, form inputs, visual state) in addition to `vp check` and `vp test`
+- Leaving a page after a save or submit ("done" buttons included) must go through `usePageBack().goBack()`, the same path as the header back button. Never call `router.back()` or hand-roll a fallback directly — that is what drops the native `close-page` handshake.
 - Commit messages and PR titles must follow Conventional Commits, e.g. fix(runtime): align Ink parity behavior.
 - Using herdr to start a dev server
 

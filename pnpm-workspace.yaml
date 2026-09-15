@@ -45,6 +45,7 @@ peerDependencyRules:
     vitest: '*'
 allowBuilds:
   core-js: true
+  esbuild: true
   vue-demi: true
 minimumReleaseAgeExclude:
   - '@vue/compiler-core@3.6.0-rc.5'

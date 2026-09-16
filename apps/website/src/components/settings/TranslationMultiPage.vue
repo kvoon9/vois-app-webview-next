@@ -41,10 +41,13 @@ const targetId = computed(() => parseAccountId(idQuery.value))
 
 const step = shallowRef<'source' | 'target'>('source')
 const search = shallowRef('')
-const enabled = shallowRef(true)
 const saving = shallowRef(false)
 const resultError = shallowRef<string | null>(null)
 const draft = shallowRef<TranslationSetting>({ skill: 3, source: 'zh-CN', target: 'en-US' })
+
+// The toggle and the setting are the same fact: skill 0 is off. Deriving it from
+// the draft keeps a reopened page showing the stored skill instead of drifting.
+const enabled = computed(() => draft.value.skill !== 0)
 
 async function load(): Promise<{ item: TranslationTarget; languages: string[] }> {
   if (accountId.value == null) throw new Error(t('translation.invalidLoginId'))
@@ -76,10 +79,9 @@ watch(
     const id = targetId.value
     if (!value || id == null || seededFor === id) return
     seededFor = id
-    draft.value = initialLanguagePair(value.source, value.target)
+    draft.value = initialLanguagePair(value)
     step.value = 'source'
     search.value = ''
-    enabled.value = true
   },
   { immediate: true },
 )
@@ -111,7 +113,7 @@ function swapLanguages(): void {
 }
 
 function toggleEnabled(): void {
-  enabled.value = !enabled.value
+  draft.value = { ...draft.value, skill: enabled.value ? 0 : 3 }
 }
 
 async function done(): Promise<void> {
@@ -120,7 +122,7 @@ async function done(): Promise<void> {
   saving.value = true
   try {
     const setting: TranslationSetting = enabled.value
-      ? { skill: 3, source: draft.value.source, target: draft.value.target }
+      ? { ...draft.value, skill: 3 }
       : { skill: 0, source: '', target: '' }
     await changeTranslationTarget(props.kind, accountId.value, item.value.id, setting)
     await queryCache.invalidateQueries({ key: ['translation'] })

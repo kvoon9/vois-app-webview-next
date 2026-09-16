@@ -89,24 +89,36 @@ describe('ZH_EN_LANGUAGES', () => {
 
 describe('initialLanguagePair', () => {
   it('keeps the stored pair when both languages are set', () => {
-    expect(initialLanguagePair('ja-JP', 'de-DE')).toEqual({
+    expect(initialLanguagePair({ skill: 3, source: 'ja-JP', target: 'de-DE' })).toEqual({
       skill: 3,
       source: 'ja-JP',
       target: 'de-DE',
     })
   })
 
-  it('falls back to zh-CN <-> en-US when translation is off', () => {
-    expect(initialLanguagePair('', '')).toEqual({ skill: 3, source: 'zh-CN', target: 'en-US' })
+  it('keeps the off skill so a reopened page does not claim translation is on', () => {
+    expect(initialLanguagePair({ skill: 0, source: '', target: '' })).toEqual({
+      skill: 0,
+      source: 'zh-CN',
+      target: 'en-US',
+    })
+  })
+
+  it('normalizes a stored non-multi skill to the multi skill this page saves', () => {
+    expect(initialLanguagePair({ skill: 2, source: 'zh-CN', target: 'en-US' })).toEqual({
+      skill: 3,
+      source: 'zh-CN',
+      target: 'en-US',
+    })
   })
 
   it('breaks a duplicate pair apart instead of leaving it equal', () => {
-    expect(initialLanguagePair('ja-JP', 'ja-JP')).toEqual({
+    expect(initialLanguagePair({ skill: 3, source: 'ja-JP', target: 'ja-JP' })).toEqual({
       skill: 3,
       source: 'ja-JP',
       target: 'zh-CN',
     })
-    expect(initialLanguagePair('zh-CN', 'zh-CN')).toEqual({
+    expect(initialLanguagePair({ skill: 3, source: 'zh-CN', target: 'zh-CN' })).toEqual({
       skill: 3,
       source: 'zh-CN',
       target: 'en-US',

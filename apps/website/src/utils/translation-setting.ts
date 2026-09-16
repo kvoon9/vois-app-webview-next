@@ -5,15 +5,17 @@ import { translationLanguageSubtag } from '~/utils/translation-language'
 export const ZH_EN_LANGUAGES: readonly string[] = ['zh-CN', 'en-US']
 
 /**
- * Seed a language pair for the multi-language editor. The backend stores an
- * empty pair while translation is off, and only tracks a non-empty one once a
- * skill is active, so both values need a fallback before the user picks.
+ * Seed the multi-language editor from a stored setting. The backend clears the
+ * pair while translation is off, so source/target need a fallback before the
+ * user picks. `skill` has to survive the seed because the page derives its
+ * enable toggle from it.
  */
-export function initialLanguagePair(source: string, target: string): TranslationSetting {
-  const from = source || ZH_EN_LANGUAGES[0]
-  const to = target || ZH_EN_LANGUAGES[1]
-  if (from !== to) return { skill: 3, source: from, target: to }
-  return { skill: 3, source: from, target: from === 'zh-CN' ? 'en-US' : 'zh-CN' }
+export function initialLanguagePair(setting: TranslationSetting): TranslationSetting {
+  const skill = setting.skill === 0 ? 0 : 3
+  const from = setting.source || ZH_EN_LANGUAGES[0]
+  const to = setting.target || ZH_EN_LANGUAGES[1]
+  if (from !== to) return { skill, source: from, target: to }
+  return { skill, source: from, target: from === 'zh-CN' ? 'en-US' : 'zh-CN' }
 }
 
 /**

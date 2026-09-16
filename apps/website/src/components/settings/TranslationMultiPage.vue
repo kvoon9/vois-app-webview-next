@@ -135,14 +135,14 @@ async function done(): Promise<void> {
 
 <template>
   <div class="page">
-    <PageHeader :title="t('settings.title')" />
+    <PageHeader :title="item?.name ?? t('settings.title')" />
 
     <main class="px-4 pb-28 pt-4">
       <QueryState :status="state.status" :error="state.error" @retry="reload()">
         <template v-if="item">
-          <div class="flex items-center text-body">
+          <div class="flex flex-col items-center py-4 text-center">
             <span
-              class="relative h-8 w-8 flex flex-none items-center justify-center overflow-hidden rounded-full bg-surface-muted text-2nd-body text-text-secondary"
+              class="relative h-20 w-20 flex items-center justify-center overflow-hidden rounded-full bg-surface-muted text-2xl text-text-secondary"
             >
               {{ item.name.slice(0, 1) }}
               <img
@@ -153,132 +153,136 @@ async function done(): Promise<void> {
                 @error="hideBrokenImage"
               />
             </span>
-            <span class="ml-2 min-w-0 truncate font-medium">{{ item.name }}</span>
-            <span v-if="item.number" class="ml-1 flex-none text-text-secondary">
-              · {{ t('profile.userNumber', { id: item.number }) }}
+            <span class="mt-3 text-header font-semibold">{{ item.name }}</span>
+            <span v-if="item.number" class="mt-1 text-small text-text-secondary">
+              {{ t('profile.userNumber', { id: item.number }) }}
             </span>
           </div>
 
-          <div class="mt-4 panel-row min-h-14 text-body">
-            <span>{{ t('translation.enableTranslation') }}</span>
-            <button
-              type="button"
-              role="switch"
-              class="relative h-7 w-12 flex-none rounded-full disabled:opacity-50"
-              :class="enabled ? 'bg-primary' : 'bg-fill'"
-              :aria-checked="enabled"
-              :disabled="saving"
-              :aria-label="t('translation.enableTranslation')"
-              @click="toggleEnabled"
-            >
-              <span
-                class="absolute top-0.5 h-6 w-6 rounded-full bg-white shadow transition-transform"
-                :class="enabled ? 'right-0.5' : 'left-0.5'"
-              />
-            </button>
-          </div>
-
-          <div class="mt-4 flex items-center space-x-2" :class="{ 'opacity-50': !enabled }">
-            <div class="min-w-0 flex-1 rounded-standard bg-surface-elevated px-3 py-2">
-              <span class="block text-small text-text-secondary">{{
-                t('translation.source')
-              }}</span>
-              <span class="block truncate text-2nd-body font-medium">
-                {{ languageName(draft.source) }}
-              </span>
+          <div class="mt-4 card">
+            <div class="min-h-12 flex items-center justify-between text-body">
+              <span>{{ t('translation.enableTranslation') }}</span>
+              <button
+                type="button"
+                role="switch"
+                class="relative h-7 w-12 flex-none rounded-full disabled:opacity-50"
+                :class="enabled ? 'bg-primary' : 'bg-fill'"
+                :aria-checked="enabled"
+                :disabled="saving"
+                :aria-label="t('translation.enableTranslation')"
+                @click="toggleEnabled"
+              >
+                <span
+                  class="absolute top-0.5 h-6 w-6 rounded-full bg-white shadow transition-transform"
+                  :class="enabled ? 'right-0.5' : 'left-0.5'"
+                />
+              </button>
             </div>
 
-            <button
-              type="button"
-              class="h-10 w-10 flex flex-none items-center justify-center rounded-full bg-surface-muted text-text-secondary focus-visible:ring-2 focus-visible:ring-primary/40 disabled:opacity-50"
-              :aria-label="t('translation.swapLanguages')"
-              :disabled="saving || !enabled"
-              @click="swapLanguages"
-            >
-              <span class="i-ph-arrows-left-right" aria-hidden="true" />
-            </button>
+            <div class="mt-4 flex items-center space-x-2" :class="{ 'opacity-50': !enabled }">
+              <div class="min-w-0 flex-1 rounded-standard bg-surface-field px-3 py-2">
+                <span class="block text-small text-text-secondary">{{
+                  t('translation.source')
+                }}</span>
+                <span class="block truncate text-2nd-body font-medium">
+                  {{ languageName(draft.source) }}
+                </span>
+              </div>
 
-            <div class="min-w-0 flex-1 rounded-standard bg-surface-elevated px-3 py-2">
-              <span class="block text-small text-text-secondary">{{
-                t('translation.target')
-              }}</span>
-              <span class="block truncate text-2nd-body font-medium">
-                {{ languageName(draft.target) }}
-              </span>
+              <button
+                type="button"
+                class="h-10 w-10 flex flex-none items-center justify-center rounded-full bg-surface-muted text-text-secondary focus-visible:ring-2 focus-visible:ring-primary/40 disabled:opacity-50"
+                :aria-label="t('translation.swapLanguages')"
+                :disabled="saving || !enabled"
+                @click="swapLanguages"
+              >
+                <span class="i-ph-arrows-left-right" aria-hidden="true" />
+              </button>
+
+              <div class="min-w-0 flex-1 rounded-standard bg-surface-field px-3 py-2">
+                <span class="block text-small text-text-secondary">{{
+                  t('translation.target')
+                }}</span>
+                <span class="block truncate text-2nd-body font-medium">
+                  {{ languageName(draft.target) }}
+                </span>
+              </div>
             </div>
           </div>
 
-          <div class="mt-4 flex rounded-standard bg-surface-muted p-1" role="tablist">
-            <button
-              v-for="tab in ['source', 'target'] as const"
-              :key="tab"
-              type="button"
-              role="tab"
-              class="h-10 flex-1 rounded-small text-2nd-body font-medium transition-colors"
-              :class="
-                step === tab ? 'bg-surface-selected text-text-primary' : 'text-text-secondary'
-              "
-              :aria-selected="step === tab"
-              :disabled="!enabled"
-              @click="step = tab"
-            >
-              {{ t(`translation.${tab}`) }}
-            </button>
-          </div>
+          <div class="mt-4 card overflow-hidden">
+            <div class="flex rounded-standard bg-surface-muted p-1" role="tablist">
+              <button
+                v-for="tab in ['source', 'target'] as const"
+                :key="tab"
+                type="button"
+                role="tab"
+                class="h-10 flex-1 rounded-small text-2nd-body font-medium transition-colors"
+                :class="
+                  step === tab ? 'bg-surface-selected text-text-primary' : 'text-text-secondary'
+                "
+                :aria-selected="step === tab"
+                :disabled="!enabled"
+                @click="step = tab"
+              >
+                {{ t(`translation.${tab}`) }}
+              </button>
+            </div>
 
-          <div class="mt-4">
             <input
               v-model="search"
               type="search"
               name="translation-language-search"
               autocomplete="off"
-              class="h-11 w-full rounded-standard bg-surface-field px-4 text-2nd-body text-text-primary focus-visible:ring-2 focus-visible:ring-primary/40"
+              class="mt-4 h-11 w-full rounded-standard bg-surface-field px-4 text-2nd-body text-text-primary focus-visible:ring-2 focus-visible:ring-primary/40"
               :aria-label="t('translation.searchLanguages')"
               :placeholder="t('translation.searchLanguages')"
               :disabled="!enabled"
             />
-          </div>
 
-          <p class="mt-4 text-2nd-body text-text-secondary">{{ t('translation.allLanguages') }}</p>
+            <p class="mt-4 text-2nd-body text-text-secondary">
+              {{ t('translation.allLanguages') }}
+            </p>
 
-          <ul class="mt-2">
-            <li v-for="option in visibleOptions" :key="option.code">
-              <button
-                type="button"
-                class="min-h-14 w-full flex items-center rounded-standard px-4 text-left focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary/40"
-                :class="
-                  option.code === selectedCode ? 'bg-surface-selected' : 'active:bg-surface-muted'
-                "
-                :aria-pressed="option.code === selectedCode"
-                :disabled="!enabled"
-                @click="selectLanguage(option.code)"
-              >
-                <span class="language-flag w-5 flex-none text-header" aria-hidden="true">
-                  {{ option.flag }}
-                </span>
-                <span class="ml-2 min-w-0 flex-1">
-                  <span class="block truncate text-2nd-body font-medium">{{ option.name }}</span>
-                  <span class="block truncate text-small text-text-secondary">
-                    {{ option.nativeName }}
-                  </span>
-                </span>
-                <span
-                  v-if="option.code === otherCode"
-                  class="ml-2 flex-none text-small text-text-secondary"
+            <ul class="-mx-4 mt-2">
+              <li v-for="option in visibleOptions" :key="option.code">
+                <button
+                  type="button"
+                  class="min-h-14 w-full flex items-center rounded-standard px-4 text-left focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary/40"
+                  :class="
+                    option.code === selectedCode ? 'bg-surface-selected' : 'active:bg-surface-muted'
+                  "
+                  :aria-pressed="option.code === selectedCode"
+                  :disabled="!enabled"
+                  @click="selectLanguage(option.code)"
                 >
-                  {{ otherLabel }}
-                </span>
-              </button>
-            </li>
-          </ul>
+                  <span class="language-flag w-5 flex-none text-header" aria-hidden="true">
+                    {{ option.flag }}
+                  </span>
+                  <span class="ml-2 min-w-0 flex-1">
+                    <span class="block truncate text-2nd-body font-medium">{{ option.name }}</span>
+                    <span class="block truncate text-small text-text-secondary">
+                      {{ option.nativeName }}
+                    </span>
+                  </span>
+                  <span
+                    v-if="option.code === otherCode"
+                    class="ml-2 flex-none text-small text-text-secondary"
+                  >
+                    {{ otherLabel }}
+                  </span>
+                </button>
+              </li>
+            </ul>
 
-          <p
-            v-if="visibleOptions.length === 0"
-            class="py-8 text-center text-2nd-body text-text-secondary"
-            role="status"
-          >
-            {{ t('translation.noLanguagesFound') }}
-          </p>
+            <p
+              v-if="visibleOptions.length === 0"
+              class="py-8 text-center text-2nd-body text-text-secondary"
+              role="status"
+            >
+              {{ t('translation.noLanguagesFound') }}
+            </p>
+          </div>
         </template>
       </QueryState>
     </main>

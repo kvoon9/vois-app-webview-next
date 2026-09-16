@@ -4,8 +4,8 @@ import { createApp } from 'vue'
 import { createRouter, createWebHashHistory } from 'vue-router'
 import { routes } from 'vue-router/auto-routes'
 import App from '~/App.vue'
-import { parseAccountId } from '~/composables/useAccountId'
 import { i18n } from '~/i18n'
+import { deviceGroupsEntryTarget } from '~/utils/device-groups-entry'
 import '@unocss/reset/tailwind.css'
 import 'virtual:uno.css'
 import '~/styles/base.css'
@@ -15,20 +15,9 @@ const router = createRouter({
   routes,
 })
 
-// Native entry `/devices/groups/#/?hardware-id=xxx` lands on `/` because the
-// pathname is invisible to hash routing; forward it to the device groups page.
 router.beforeEach((to) => {
-  const raw = to.query['hardware-id']
-  const hardwareId = Array.isArray(raw) ? raw[0] : raw
-  if (
-    to.path === '/' &&
-    window.location.pathname.startsWith('/devices/groups') &&
-    parseAccountId(hardwareId) != null &&
-    hardwareId != null
-  ) {
-    const { 'hardware-id': _, ...query } = to.query
-    return { path: `/devices/${hardwareId}/groups`, query, replace: true }
-  }
+  const target = deviceGroupsEntryTarget(to.path, to.query)
+  return target ? { ...target, replace: true } : undefined
 })
 
 const app = createApp(App)

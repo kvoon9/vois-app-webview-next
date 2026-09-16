@@ -20,7 +20,7 @@ const { goBack } = usePageBack()
       :aria-label="t('nav.back')"
       @click="goBack"
     >
-      <span class="i-ph-caret-left text-2xl text-text-primary" aria-hidden="true" />
+      <span class="i-ph-arrow-left text-2xl text-text-primary" aria-hidden="true" />
     </button>
     <h1 class="page-title">{{ title }}</h1>
     <slot name="action">

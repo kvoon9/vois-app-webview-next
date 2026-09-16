@@ -15,19 +15,19 @@ const router = createRouter({
   routes,
 })
 
-// Native entry `/devices/groups/#/?device-user-id=xxx` lands on `/` because the
+// Native entry `/devices/groups/#/?hardware-id=xxx` lands on `/` because the
 // pathname is invisible to hash routing; forward it to the device groups page.
 router.beforeEach((to) => {
-  const raw = to.query['device-user-id']
-  const deviceUserId = Array.isArray(raw) ? raw[0] : raw
+  const raw = to.query['hardware-id']
+  const hardwareId = Array.isArray(raw) ? raw[0] : raw
   if (
     to.path === '/' &&
     window.location.pathname.startsWith('/devices/groups') &&
-    parseAccountId(deviceUserId) != null &&
-    deviceUserId != null
+    parseAccountId(hardwareId) != null &&
+    hardwareId != null
   ) {
-    const { 'device-user-id': _, ...query } = to.query
-    return { path: `/devices/${deviceUserId}/groups`, query, replace: true }
+    const { 'hardware-id': _, ...query } = to.query
+    return { path: `/devices/${hardwareId}/groups`, query, replace: true }
   }
 })
 

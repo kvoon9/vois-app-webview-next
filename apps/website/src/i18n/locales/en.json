@@ -1,6 +1,7 @@
 {
   "nav": {
-    "back": "Back"
+    "back": "Back",
+    "backToTop": "Back to top"
   },
   "home": {
     "title": "Navigation",

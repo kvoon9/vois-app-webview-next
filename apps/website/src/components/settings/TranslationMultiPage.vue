@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { useQuery, useQueryCache } from '@pinia/colada'
+import { useWindowScroll } from '@vueuse/core'
 import { useRouteQuery } from '@vueuse/router'
 import { computed, shallowRef, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
@@ -48,6 +49,17 @@ const draft = shallowRef<TranslationSetting>({ skill: 3, source: 'zh-CN', target
 // The toggle and the setting are the same fact: skill 0 is off. Deriving it from
 // the draft keeps a reopened page showing the stored skill instead of drifting.
 const enabled = computed(() => draft.value.skill !== 0)
+
+// The language list runs past 100 rows, so a tap beats a long flick back. The
+// offset clears the fixed footer instead of sitting under it.
+const BACK_TO_TOP_THRESHOLD = 600
+
+const { y: scrollY } = useWindowScroll()
+const showBackToTop = computed(() => scrollY.value > BACK_TO_TOP_THRESHOLD)
+
+function backToTop(): void {
+  window.scrollTo({ top: 0, behavior: 'smooth' })
+}
 
 async function load(): Promise<{ item: TranslationTarget; languages: string[] }> {
   if (accountId.value == null) throw new Error(t('translation.invalidLoginId'))
@@ -288,6 +300,16 @@ async function done(): Promise<void> {
         </template>
       </QueryState>
     </main>
+
+    <button
+      v-if="showBackToTop"
+      type="button"
+      class="fab fixed right-4 bottom-[calc(env(safe-area-inset-bottom,0px)+5.5rem)]"
+      :aria-label="t('nav.backToTop')"
+      @click="backToTop"
+    >
+      <span class="i-ph-arrow-up" aria-hidden="true" />
+    </button>
 
     <footer
       v-if="item"

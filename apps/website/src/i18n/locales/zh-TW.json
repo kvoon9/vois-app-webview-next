@@ -1,6 +1,7 @@
 {
   "nav": {
-    "back": "返回"
+    "back": "返回",
+    "backToTop": "回到頂部"
   },
   "home": {
     "title": "導航",

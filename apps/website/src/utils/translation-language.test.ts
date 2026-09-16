@@ -1,9 +1,21 @@
-import { describe, expect, it } from 'vite-plus/test'
+import { afterEach, describe, expect, it, vi } from 'vite-plus/test'
 import {
   createTranslationLanguageOptions,
   filterTranslationLanguageOptions,
+  translationLanguageName,
   translationLanguageSubtag,
 } from './translation-language'
+
+/** Drop Intl members the way a trimmed low-end Intl build omits them. */
+function withoutIntlMembers(...members: Array<'Locale' | 'DisplayNames'>) {
+  const stub = Object.defineProperties({}, Object.getOwnPropertyDescriptors(Intl))
+  for (const member of members) Reflect.deleteProperty(stub, member)
+  vi.stubGlobal('Intl', stub)
+}
+
+afterEach(() => {
+  vi.unstubAllGlobals()
+})
 
 describe('translation language options', () => {
   const options = createTranslationLanguageOptions(['', 'en-US', 'en-GB', 'zh-CN', 'en-US'], 'en')
@@ -68,5 +80,24 @@ describe('translation language options', () => {
         nativeName: 'invalid_locale',
       },
     ])
+  })
+
+  it('uses the built-in English names when Intl.DisplayNames is missing', () => {
+    withoutIntlMembers('DisplayNames')
+
+    expect(translationLanguageName('zh-CN', 'zh-CN')).toBe('Chinese (Simplified)')
+    expect(translationLanguageName('en-GB', 'zh-CN')).toBe('English (United Kingdom)')
+    expect(createTranslationLanguageOptions(['zh-CN'], 'zh-CN')[0]).toMatchObject({
+      flag: '🇨🇳',
+      name: 'Chinese (Simplified)',
+      nativeName: 'Chinese (Simplified)',
+    })
+  })
+
+  it('uses the built-in English names when Intl.Locale is missing', () => {
+    withoutIntlMembers('Locale')
+
+    expect(translationLanguageName('zh-HK', 'zh-CN')).toBe('Chinese (Traditional)')
+    expect(translationLanguageSubtag('EN-us')).toBe('en')
   })
 })

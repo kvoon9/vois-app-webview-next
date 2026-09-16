@@ -1,3 +1,5 @@
+import { ENGLISH_LANGUAGE_NAMES } from '~/i18n/language-names'
+
 export interface TranslationLanguageOption {
   code: string
   flag: string
@@ -37,8 +39,17 @@ export function translationLanguageSubtag(code: string): string {
   }
 }
 
+/**
+ * Localized language name, falling back to the static English name and finally
+ * to the raw code. Low-end Intl builds omit `Locale`/`DisplayNames` entirely, so
+ * every Intl call sits behind the try/catch instead of assuming the API exists.
+ */
 export function translationLanguageName(code: string, locale: string): string {
-  if (!Intl.DisplayNames) return code
+  return intlLanguageName(code, locale) ?? ENGLISH_LANGUAGE_NAMES.get(code) ?? code
+}
+
+function intlLanguageName(code: string, locale: string): string | null {
+  if (!Intl.DisplayNames || !Intl.Locale) return null
 
   try {
     const codeLocale = new Intl.Locale(code)
@@ -51,7 +62,7 @@ export function translationLanguageName(code: string, locale: string): string {
     const spacing = ['zh', 'ja', 'ko'].includes(displayLanguage) ? '' : ' '
     return `${languageName}${spacing}(${qualifier})`
   } catch {
-    return code
+    return null
   }
 }
 
@@ -70,13 +81,20 @@ function displayLanguageQualifier(codeLocale: Intl.Locale, locale: string): stri
   return ''
 }
 
+/** Regional-indicator flag for the code's region subtag, no Intl required. */
 function localeFlag(code: string): string {
-  try {
-    const region = new Intl.Locale(code).region?.toUpperCase()
-    if (!region || !/^[A-Z]{2}$/.test(region)) return '🌐'
+  const region = localeRegion(code)
+  if (!region || !/^[A-Z]{2}$/.test(region)) return '🌐'
 
-    return String.fromCodePoint(region.charCodeAt(0) + 127397, region.charCodeAt(1) + 127397)
+  return String.fromCodePoint(region.charCodeAt(0) + 127397, region.charCodeAt(1) + 127397)
+}
+
+function localeRegion(code: string): string | null {
+  try {
+    return new Intl.Locale(code).region?.toUpperCase() ?? null
   } catch {
-    return '🌐'
+    // A two-letter second subtag is the region; anything else (`zh-Hans`) is not.
+    const subtag = code.split(/[-_]/)[1]
+    return subtag && /^[A-Za-z]{2}$/.test(subtag) ? subtag.toUpperCase() : null
   }
 }

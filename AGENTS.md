@@ -4,8 +4,8 @@
 - Use `@pinia/colada` to manage data fetching (use ctx7 cli to search its docs when needed)
 - Always use defineComponent() to define components. Never use bare { setup() {} } objects — they lack component scope, so inject, watch, and onScopeDispose won't work correctly.
 - Always use Vue's `shallowRef` over `ref` by default. Using ref requires a solid justification and a code comment explaining why deep reactivity is needed.
-- Perfer using `defuddle` to fetch web content, `ast-grep` to search local codebase
-- Perfer using existed vueuse functions instead of create a custom composition api
+- Prefer using `defuddle` to fetch web content, `ast-grep` to search local codebase
+- Prefer using existed VueUse functions instead of create a custom composition API
 - Use space, flex instead of gap, grid for styling, since they have compatibility issues: `apps/website/uno.config.ts` blocks them, and `vp test` fails on any used in a class attribute
 - Use `agent-browser` to test interactive UI behavior (clicks, form inputs, visual state) in addition to `vp check` and `vp test`
 - Leaving a page after a save or submit ("done" buttons included) must go through `usePageBack().goBack()`, the same path as the header back button. Never call `router.back()` or hand-roll a fallback directly — that is what drops the native `close-page` handshake.

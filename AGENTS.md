@@ -35,8 +35,10 @@ Never print auth parameters.
 User operates the phone; agent reads `.tmp/vois-webview-debug/events.jsonl`.
 
 1. User opens `http://<Mac IP>:5173/<route>` (the Network URL printed by `vp preview`) in Native App WebView, performs actions
-2. Read: `vp run website#debug:logs` (URLs are redacted) or `curl http://127.0.0.1:5173/__debug/status`
+2. Read: `vp run website#debug:logs` or `curl http://127.0.0.1:5173/__debug/status`
 3. `🟢 WebView debug connected` confirms pipeline; missing → `?debug-reload=1`
+
+`debug:logs` prints event URLs and bodies verbatim, auth parameters included. Treat its output as secret.
 
 | Event       | Trigger                              |
 | ----------- | ------------------------------------ |

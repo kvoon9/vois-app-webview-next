@@ -14,7 +14,7 @@
     "up": "vpx taze -Ir major"
   },
   "dependencies": {
-    "vite-plugin-vois-webview-debug": "link:../weila-webview-realname-auth/packages/vite-plugin-vois-webview-debug"
+    "vite-plugin-vois-webview-debug": "^0.1.0"
   },
   "devDependencies": {
     "@oxlint/plugins": "catalog:tooling",

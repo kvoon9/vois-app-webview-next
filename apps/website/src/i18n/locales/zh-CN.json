@@ -30,6 +30,15 @@
     "groups": "群组翻译设置",
     "devices": "设备翻译设置"
   },
+  "bluetoothAiTranslateActive": {
+    "title": "蓝牙 AI 翻译",
+    "queryTitle": "链接参数",
+    "emptyQuery": "打开本页面时没有携带参数。",
+    "paramsTitle": "来自 App 的参数",
+    "unsupported": "当前不在 App 内，无法读取 App 的参数。请在 App 中打开本页面。",
+    "failed": "App 未返回页面参数。",
+    "emptyParams": "App 未返回该页面的参数。"
+  },
   "device": {
     "title": "设备",
     "emptyDevices": "暂无已连接设备",

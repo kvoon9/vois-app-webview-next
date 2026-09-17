@@ -12,3 +12,12 @@ onBridgeReady((b) => {
 export function useWebviewBridge(): WebviewBridge | undefined {
   return bridge
 }
+
+/**
+ * The same wait as a promise, for callers that need the bridge rather than
+ * `undefined`. Never settles on its own when native stays silent, so race it
+ * against a timeout before awaiting.
+ */
+export function whenWebviewBridge(): Promise<WebviewBridge> {
+  return new Promise((resolve) => onBridgeReady(resolve))
+}

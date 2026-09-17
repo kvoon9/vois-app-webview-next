@@ -30,6 +30,15 @@
     "groups": "Group translation",
     "devices": "Device translation"
   },
+  "bluetoothAiTranslateActive": {
+    "title": "Bluetooth AI translation",
+    "queryTitle": "URL parameters",
+    "emptyQuery": "This page was opened without any parameters.",
+    "paramsTitle": "Parameters from the app",
+    "unsupported": "The app is not available here, so its parameters cannot be read. Open this page inside the app.",
+    "failed": "The app did not return the page parameters.",
+    "emptyParams": "The app returned no parameters for this page."
+  },
   "device": {
     "title": "Devices",
     "emptyDevices": "No connected devices.",

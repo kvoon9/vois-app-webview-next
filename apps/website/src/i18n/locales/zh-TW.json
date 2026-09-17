@@ -30,6 +30,15 @@
     "groups": "群組翻譯設定",
     "devices": "裝置翻譯設定"
   },
+  "bluetoothAiTranslateActive": {
+    "title": "藍牙 AI 翻譯",
+    "queryTitle": "連結參數",
+    "emptyQuery": "開啟本頁面時沒有帶上參數。",
+    "paramsTitle": "來自 App 的參數",
+    "unsupported": "目前不在 App 內，無法讀取 App 的參數。請在 App 中開啟本頁面。",
+    "failed": "App 未回傳頁面參數。",
+    "emptyParams": "App 未回傳此頁面的參數。"
+  },
   "device": {
     "title": "裝置",
     "emptyDevices": "暫無已連線裝置",

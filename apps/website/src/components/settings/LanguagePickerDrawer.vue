@@ -78,7 +78,7 @@ function selectLanguage(code: string): void {
         :class="{ 'language-drawer-animated': animationsEnabled }"
       />
       <DrawerContent
-        class="language-drawer fixed inset-x-0 bottom-0 z-drawer-content flex flex-col overflow-hidden rounded-t-[20px] bg-surface text-text-primary shadow-xl focus-visible:ring-2 focus-visible:ring-primary/40"
+        class="language-drawer fixed inset-x-0 bottom-0 z-drawer-content flex flex-col overflow-hidden rounded-t-[20px] bg-surface-elevated text-text-primary shadow-xl focus-visible:ring-2 focus-visible:ring-primary/40"
         :class="{ 'language-drawer-animated': animationsEnabled }"
       >
         <DrawerHandle class="mx-auto mt-2 h-1 w-8 flex-none rounded-full bg-fill" />

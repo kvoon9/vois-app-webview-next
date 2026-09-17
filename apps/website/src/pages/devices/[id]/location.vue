@@ -50,7 +50,7 @@ const center = computed(() => ({
           <RouterLink
             v-if="location.reportFrequency === 'off'"
             :to="`/devices/${deviceId}/track-setting`"
-            class="absolute left-4 right-4 top-4 z-2 rounded-large bg-surface px-5 py-4 shadow-lg"
+            class="absolute left-4 right-4 top-4 z-2 rounded-large bg-surface-elevated px-5 py-4 shadow-lg"
           >
             <span class="flex items-start">
               <span

@@ -36,7 +36,7 @@ function preventDismiss(event: Event): void {
         class="fixed inset-0 z-modal flex items-center justify-center overflow-y-auto bg-black/50 p-4"
       >
         <DialogContent
-          class="max-h-[calc(100vh-2rem)] w-full max-w-sm flex flex-col overflow-hidden rounded-large bg-surface text-text-primary shadow-xl"
+          class="max-h-[calc(100vh-2rem)] w-full max-w-sm flex flex-col overflow-hidden rounded-large bg-surface-elevated text-text-primary shadow-xl"
           :aria-describedby="undefined"
           @escape-key-down="preventDismiss"
           @pointer-down-outside="preventDismiss"

@@ -56,7 +56,7 @@ function confirm(): void {
     <DialogPortal>
       <DialogOverlay class="fixed inset-0 z-modal bg-black/50 p-4">
         <DialogContent
-          class="absolute bottom-0 left-1/2 max-h-[calc(100svh-2rem)] w-full max-w-sm -translate-x-1/2 overflow-y-auto rounded-t-[28px] bg-surface px-5 pb-5 pt-7 text-text-primary shadow-xl"
+          class="absolute bottom-0 left-1/2 max-h-[calc(100svh-2rem)] w-full max-w-sm -translate-x-1/2 overflow-y-auto rounded-t-[28px] bg-surface-elevated px-5 pb-5 pt-7 text-text-primary shadow-xl"
           :aria-describedby="undefined"
           @escape-key-down="handleOpenChange(false)"
         >

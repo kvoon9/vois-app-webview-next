@@ -15,7 +15,7 @@ const { accountQuery } = useAccountId()
       <!-- Decorative hero glyph: the page title already names the screen, so the
            icon is hidden from assistive tech rather than announced twice. -->
       <div class="mb-6 flex justify-center">
-        <span class="i-ph-translate text-6xl text-primary" aria-hidden="true" />
+        <span class="i-ph-compass text-6xl text-primary" aria-hidden="true" />
       </div>
 
       <nav class="space-y-3" :aria-label="t('home.title')">

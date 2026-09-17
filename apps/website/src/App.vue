@@ -24,6 +24,24 @@ watch(
   { immediate: true },
 )
 
+/**
+ * Dev and preview servers expose the worktree-shared token; a production build
+ * has no such endpoint, so a failed probe just leaves the launch query and
+ * `VITE_ACCESS_TOKEN` fallback in charge.
+ */
+async function loadSharedAccessToken(): Promise<void> {
+  try {
+    const response = await fetch('/__auth/token')
+    // SAFETY: the dev server owns the endpoint and always answers { token: string | null }
+    const { token } = (await response.json()) as { token: string | null }
+    // A launch token is fresher than the stored file, so it outranks the response
+    if (token && !tokenQuery.value && !launchQuery.get('access-token')) accessToken.value = token
+  } catch {
+    /* no endpoint outside the dev/preview servers */
+  }
+}
+void loadSharedAccessToken()
+
 watch(
   theme,
   (value) => {

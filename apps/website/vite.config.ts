@@ -4,8 +4,8 @@ import unocss from 'unocss/vite'
 import legacy from '@vitejs/plugin-legacy'
 import VueRouter from 'vue-router/vite'
 import vueDevtools from 'vite-plugin-vue-devtools'
-import { resolve } from 'node:path'
 import { vconsoleDev } from './plugins/vconsole-dev.ts'
+import { accessTokenFile, devAuthToken } from './plugins/dev-auth-token.ts'
 
 // The debug plugin is pnpm-linked from a sibling repo, so CI (and anyone who has
 // not cloned it) has no resolvable copy. It only ever activates for serve/preview,
@@ -13,7 +13,9 @@ import { vconsoleDev } from './plugins/vconsole-dev.ts'
 async function webviewDebugPlugin(preview: boolean) {
   try {
     const { voisWebviewDebug } = await import('vite-plugin-vois-webview-debug')
-    return voisWebviewDebug({ preview, envFile: resolve(process.cwd(), '.env.local') })
+    // One canonical file for every worktree: a token captured in any of them is
+    // visible to all of them, instead of only the worktree the WebView opened.
+    return voisWebviewDebug({ preview, envFile: accessTokenFile })
   } catch {
     console.warn('[vite] vite-plugin-vois-webview-debug not installed; WebView debug disabled')
     return undefined
@@ -67,6 +69,7 @@ export default defineConfig(async ({ isPreview, command, mode }) => {
     },
     plugins: [
       ...(isPreview ? [vconsoleDev()] : []),
+      devAuthToken(),
       await webviewDebugPlugin(process.argv.includes('--debug')),
       vueDevtools(),
       VueRouter({ dts: 'src/route-map.d.ts' }),

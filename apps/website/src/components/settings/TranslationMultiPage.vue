@@ -133,6 +133,10 @@ function languageName(code: string): string {
   return options.value.find((option) => option.code === code)?.name ?? code
 }
 
+function languageFlag(code: string): string {
+  return options.value.find((option) => option.code === code)?.flag ?? '🌐'
+}
+
 function selectLanguage(code: string): void {
   draft.value = pickLanguagePair(draft.value, step.value, code)
 }
@@ -237,8 +241,13 @@ async function done(): Promise<void> {
                 <span class="block text-small text-text-secondary">{{
                   t('translation.source')
                 }}</span>
-                <span class="block truncate text-2nd-body font-medium">
-                  {{ languageName(draft.source) }}
+                <span class="flex items-center">
+                  <span class="language-flag w-5 flex-none text-header" aria-hidden="true">
+                    {{ languageFlag(draft.source) }}
+                  </span>
+                  <span class="ml-1.5 min-w-0 truncate text-2nd-body font-medium">
+                    {{ languageName(draft.source) }}
+                  </span>
                 </span>
               </div>
 
@@ -256,8 +265,13 @@ async function done(): Promise<void> {
                 <span class="block text-small text-text-secondary">{{
                   t('translation.target')
                 }}</span>
-                <span class="block truncate text-2nd-body font-medium">
-                  {{ languageName(draft.target) }}
+                <span class="flex items-center">
+                  <span class="language-flag w-5 flex-none text-header" aria-hidden="true">
+                    {{ languageFlag(draft.target) }}
+                  </span>
+                  <span class="ml-1.5 min-w-0 truncate text-2nd-body font-medium">
+                    {{ languageName(draft.target) }}
+                  </span>
                 </span>
               </div>
             </div>
@@ -272,7 +286,7 @@ async function done(): Promise<void> {
                 role="tab"
                 class="h-10 flex-1 rounded-small text-2nd-body font-medium transition-colors"
                 :class="
-                  step === tab ? 'bg-surface-selected text-text-primary' : 'text-text-secondary'
+                  step === tab ? 'bg-primary-strong text-primary-text' : 'text-text-secondary'
                 "
                 :aria-selected="step === tab"
                 :disabled="!enabled"

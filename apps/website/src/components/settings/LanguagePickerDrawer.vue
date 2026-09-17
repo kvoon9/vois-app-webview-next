@@ -107,7 +107,7 @@ function selectLanguage(code: string): void {
             type="search"
             name="translation-language-search"
             autocomplete="off"
-            class="h-11 w-full rounded-standard bg-surface-field px-4 text-2nd-body text-text-primary focus-visible:ring-2 focus-visible:ring-primary/40"
+            class="h-11 w-full rounded-standard bg-surface-field px-4 text-2nd-body text-text-primary outline-none opacity-75 transition-opacity focus-visible:opacity-100"
             :aria-label="t('translation.searchLanguages')"
             :placeholder="t('translation.searchLanguages')"
           />

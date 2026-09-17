@@ -77,7 +77,7 @@ async function save(): Promise<void> {
           <span class="text-lg text-text-secondary" aria-hidden="true">📱</span>
           <input
             v-model="phone"
-            class="ml-3 min-w-0 flex-1 bg-transparent text-body outline-none placeholder:text-text-secondary"
+            class="ml-3 min-w-0 flex-1 bg-transparent text-body outline-none opacity-75 transition-opacity focus:opacity-100 placeholder:text-text-secondary"
             type="tel"
             inputmode="tel"
             maxlength="16"
@@ -89,7 +89,7 @@ async function save(): Promise<void> {
           <span class="text-lg text-text-secondary" aria-hidden="true">👤</span>
           <input
             v-model="name"
-            class="ml-3 min-w-0 flex-1 bg-transparent text-body outline-none placeholder:text-text-secondary"
+            class="ml-3 min-w-0 flex-1 bg-transparent text-body outline-none opacity-75 transition-opacity focus:opacity-100 placeholder:text-text-secondary"
             type="text"
             maxlength="64"
             :placeholder="t('device.emergencyNamePlaceholder')"

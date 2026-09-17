@@ -40,13 +40,37 @@ export default defineConfig({
   blocklist: BLOCKED_UTILITIES,
   preflights: [
     {
-      getCSS: () => '.input-field::placeholder { color: var(--color-text-secondary); }',
+      getCSS: () => `
+.input-field::placeholder { color: var(--color-text-secondary); }
+
+/*
+ * Text entry reset. The Tailwind preflight only sets font and margin on form
+ * controls, so a browser's own border, focus ring, and search-field chrome
+ * survive it. Scope to text-like inputs and leave checkbox/radio/range alone,
+ * since appearance:none would erase those entirely.
+ */
+input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='file']),
+textarea {
+  appearance: none;
+  border: 0;
+  box-shadow: none;
+  outline: none;
+}
+input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='file']):focus,
+textarea:focus {
+  outline: none;
+  box-shadow: none;
+}
+/* Chrome/Safari draw a native cancel affordance inside type=search. */
+input[type='search']::-webkit-search-cancel-button {
+  appearance: none;
+}
+`,
     },
   ],
   theme: {
     colors: {
       primary: 'var(--color-primary)',
-      'primary-strong': 'var(--color-primary-strong)',
       'primary-text': 'var(--color-primary-text)',
       danger: 'var(--color-danger)',
       'danger-text': 'var(--color-danger-text)',
@@ -112,7 +136,7 @@ export default defineConfig({
     'btn-danger':
       'w-full rounded-button bg-surface-elevated px-4 py-3 text-body text-danger disabled:opacity-50',
     chip: 'h-10 px-4 rounded-standard text-2nd-body font-medium flex items-center justify-center transition-colors',
-    'chip-selected': 'bg-primary-strong text-primary-text',
+    'chip-selected': 'bg-primary text-primary-text',
     'chip-unselected': 'bg-surface-muted text-text-primary',
     // Round icon button (floating action button)
     fab: 'h-14 w-14 rounded-full bg-surface-elevated flex items-center justify-center text-3xl leading-none text-primary shadow-lg',
@@ -124,8 +148,12 @@ export default defineConfig({
       'flex-none flex items-center justify-center rounded-small text-text-secondary disabled:opacity-50',
     'page-title': 'text-title font-semibold text-text-primary',
     'section-title': 'text-subtitle font-semibold text-text-primary',
+    // Text entry reset: no native border, ring, or outline. Focus shows as
+    // opacity alone (75% at rest, full when focused), so keep `outline-none`.
+    // The placeholder colour lives in the preflight above; a `placeholder:`
+    // utility here collides with it as `::placeholder::placeholder`.
     'input-field':
-      'w-full bg-surface-field rounded-standard p-4 text-body text-text-primary resize-none outline-none focus:ring-2 focus:ring-primary/30',
+      'w-full bg-surface-field rounded-standard p-4 text-body text-text-primary resize-none outline-none opacity-75 focus:opacity-100 transition-opacity',
     'z-modal': 'z-50',
     'z-drawer': 'z-60',
     'z-drawer-content': 'z-70',

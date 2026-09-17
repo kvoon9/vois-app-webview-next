@@ -1,6 +1,5 @@
 :root {
   --color-primary: #54b893;
-  --color-primary-strong: #26805f;
   --color-primary-text: #ffffff;
   --color-danger: #ef4444;
   --color-danger-text: #ffffff;
@@ -16,7 +15,6 @@
 
 .dark {
   color-scheme: dark;
-  --color-primary-strong: var(--color-primary);
   --color-surface: #121212;
   --color-surface-elevated: #1e1e1e;
   --color-surface-muted: #262626;

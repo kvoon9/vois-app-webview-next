@@ -1,7 +1,7 @@
 # Common Pitfalls & Best Practices
 
 - Always follow `rizumu`, `antfu`, `vue/vueuse best practice` coding style skills
-- Use `@pinia/colada` to manage data fetching
+- Use `@pinia/colada` to manage data fetching. Search its docs with `ctx7 library @pinia/colada`, then `ctx7 docs <libraryId> "<question>"`.
 - Always use `<script setup>` in SFCs. Never hand-write a bare `{ setup() {} }` component object — it lacks component scope, so inject, watch, and onScopeDispose won't work correctly.
 - Always use Vue's `shallowRef` over `ref` by default. Using ref requires a solid justification and a code comment explaining why deep reactivity is needed.
 - Prefer using `defuddle` to fetch web content, `ast-grep` to search local codebase

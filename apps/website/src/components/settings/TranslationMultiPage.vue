@@ -147,25 +147,38 @@ function settingForDraft(draft: TranslationSetting): TranslationSetting {
   return draft.skill === 0 ? { skill: 0, source: '', target: '' } : { ...draft, skill: 3 }
 }
 
-function toggleEnabled(): void {
-  draft.value = { ...draft.value, skill: enabled.value ? 0 : 3 }
-}
-
-async function done(): Promise<void> {
-  if (accountId.value == null || !item.value || saving.value) return
+async function save(draft: TranslationSetting): Promise<boolean> {
+  if (accountId.value == null || !item.value || saving.value) return false
 
   saving.value = true
   resultError.value = null
   try {
-    const setting: TranslationSetting = settingForDraft(draft.value)
-    await changeTranslationTarget(props.kind, accountId.value, item.value.id, setting)
+    await changeTranslationTarget(
+      props.kind,
+      accountId.value,
+      item.value.id,
+      settingForDraft(draft),
+    )
     await queryCache.invalidateQueries({ key: ['translation'] })
-    goBack()
+    return true
   } catch (error) {
     resultError.value = error instanceof Error ? error.message : String(error)
+    return false
   } finally {
     saving.value = false
   }
+}
+
+// The toggle is a setting of its own, so it persists on the spot instead of
+// waiting for the footer button.
+async function toggleEnabledAndSave(): Promise<void> {
+  const next = { ...draft.value, skill: enabled.value ? 0 : 3 }
+  draft.value = next
+  await save(next)
+}
+
+async function done(): Promise<void> {
+  if (await save(draft.value)) goBack()
 }
 </script>
 
@@ -210,7 +223,7 @@ async function done(): Promise<void> {
                 :aria-checked="enabled"
                 :disabled="saving"
                 :aria-label="t('translation.enableTranslation')"
-                @click="toggleEnabled"
+                @click="toggleEnabledAndSave"
               >
                 <span
                   class="absolute top-0.5 h-6 w-6 rounded-full bg-white shadow transition-transform"

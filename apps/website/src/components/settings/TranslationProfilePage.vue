@@ -36,13 +36,20 @@ const targetId = computed(() => {
 })
 
 // The multi-language editor lives on its own route; build the link once here.
-const multiTranslationLink = computed(() => ({
-  path: `/settings/${props.kind}/multi-translation`,
-  query: {
-    ...accountQuery.value,
-    [props.kind === 'friends' ? 'friend-id' : 'group-id']: String(targetId.value ?? ''),
-  },
-}))
+// `route.query` carries `friend-type` through so the editor can pick its title,
+// and the skill is forced to 3 so this row always opens the editor instead of
+// the tip that the stored Chinese-English skills would show.
+const multiTranslationLink = computed(() => {
+  const isFriend = props.kind === 'friends'
+  return {
+    path: `/settings/${props.kind}/multi-translation`,
+    query: {
+      ...route.query,
+      [isFriend ? 'friend-id' : 'group-id']: String(targetId.value ?? ''),
+      [isFriend ? 'friend-skill' : 'group-skill']: '3',
+    },
+  }
+})
 
 async function load(): Promise<TranslationTarget> {
   if (accountId.value == null) throw new Error(t('translation.invalidLoginId'))

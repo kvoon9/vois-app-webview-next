@@ -283,6 +283,8 @@
     "done": "Done",
     "allLanguages": "All languages",
     "enableTranslation": "Enable translation",
+    "aiTitle": "Mutual translation settings",
+    "unsupported": "This translation mode is not supported yet.",
     "skills": {
       "off": "Off",
       "basic": "Chinese ↔ English",

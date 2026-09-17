@@ -37,8 +37,24 @@ const { accountId } = useAccountId()
 const queryCache = useQueryCache()
 const { goBack } = usePageBack()
 
-const idQuery = useRouteQuery<string | null>(props.kind === 'friends' ? 'friend-id' : 'group-id')
+const prefix = props.kind === 'friends' ? 'friend' : 'group'
+const idQuery = useRouteQuery<string | null>(`${prefix}-id`)
 const targetId = computed(() => parseAccountId(idQuery.value))
+
+// Native sends the target's type and skill. Only skill 3 (multilingual) and
+// skill 0 (translation off) are edited here; the Chinese-English skills have
+// their own editor. A missing param is not treated as 0, so callers that
+// ignore this contract get the tip.
+const typeQuery = useRouteQuery<string | null>(`${prefix}-type`)
+const skillQuery = useRouteQuery<string | null>(`${prefix}-skill`)
+const supported = computed(() => {
+  if (skillQuery.value == null) return false
+  const skill = Number(skillQuery.value)
+  return skill === 0 || skill === 3
+})
+const title = computed(() =>
+  Number(typeQuery.value) === 2 ? t('translation.aiTitle') : t('settings.title'),
+)
 
 const step = shallowRef<'source' | 'target'>('source')
 const search = shallowRef('')
@@ -77,6 +93,7 @@ async function load(): Promise<{ item: TranslationTarget; languages: string[] }>
 const { state, refetch: reload } = useQuery({
   key: () => ['translation', 'multi', props.kind, accountId.value, targetId.value],
   query: load,
+  enabled: supported,
 })
 
 const item = computed(() => state.value.data?.item ?? null)
@@ -124,6 +141,12 @@ function swapLanguages(): void {
   draft.value = swapLanguagePair(draft.value)
 }
 
+// The wire payload for off always clears the pair, mirroring what the backend
+// does when translation is turned off.
+function settingForDraft(draft: TranslationSetting): TranslationSetting {
+  return draft.skill === 0 ? { skill: 0, source: '', target: '' } : { ...draft, skill: 3 }
+}
+
 function toggleEnabled(): void {
   draft.value = { ...draft.value, skill: enabled.value ? 0 : 3 }
 }
@@ -132,10 +155,9 @@ async function done(): Promise<void> {
   if (accountId.value == null || !item.value || saving.value) return
 
   saving.value = true
+  resultError.value = null
   try {
-    const setting: TranslationSetting = enabled.value
-      ? { ...draft.value, skill: 3 }
-      : { skill: 0, source: '', target: '' }
+    const setting: TranslationSetting = settingForDraft(draft.value)
     await changeTranslationTarget(props.kind, accountId.value, item.value.id, setting)
     await queryCache.invalidateQueries({ key: ['translation'] })
     goBack()
@@ -149,10 +171,14 @@ async function done(): Promise<void> {
 
 <template>
   <div class="page">
-    <PageHeader :title="item?.name ?? t('settings.title')" />
+    <PageHeader :title="title" />
 
     <main class="px-4 pb-28 pt-4">
-      <QueryState :status="state.status" :error="state.error" @retry="reload()">
+      <p v-if="!supported" class="py-12 text-center text-body text-text-secondary" role="status">
+        {{ t('translation.unsupported') }}
+      </p>
+
+      <QueryState v-else :status="state.status" :error="state.error" @retry="reload()">
         <template v-if="item">
           <div class="flex flex-col items-center py-4 text-center">
             <span
@@ -312,7 +338,7 @@ async function done(): Promise<void> {
     </button>
 
     <footer
-      v-if="item"
+      v-if="supported && item"
       class="fixed inset-x-0 bottom-0 flex items-center space-x-3 bg-surface-elevated px-4 pb-[calc(env(safe-area-inset-bottom,0px)+1rem)] pt-3"
     >
       <button

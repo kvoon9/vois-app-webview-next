@@ -1,7 +1,10 @@
 {
   "nav": {
     "back": "Back",
-    "backToTop": "Back to top"
+    "backToTop": "Back to top",
+    "previewPort": "Port",
+    "previewPortInvalid": "Enter a port between 1 and 65535.",
+    "switchPreviewPort": "Switch preview port"
   },
   "home": {
     "title": "Navigation",

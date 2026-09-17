@@ -6,7 +6,6 @@ import { RouterView } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import ToastHost from '~/components/ToastHost.vue'
 import { useLangQuery } from '~/composables/useLangQuery'
-import { isWebviewDebug, useWebviewDebug } from '~/composables/useWebviewDebug'
 import { accessToken } from '~/constants'
 import { ACCESS_TOKEN_PATH } from '~/utils/auth-token-path'
 
@@ -53,8 +52,6 @@ watch(
   { immediate: true },
 )
 useLangQuery()
-const webviewDebugEnabled = isWebviewDebug()
-useWebviewDebug(webviewDebugEnabled)
 
 const error = shallowRef<Error | null>(null)
 

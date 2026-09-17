@@ -279,8 +279,6 @@
     "languagesMustDiffer": "來源語言和目標語言不能相同。",
     "swapLanguages": "切換來源語言和目標語言",
     "saving": "儲存中…",
-    "previousStep": "上一步",
-    "nextStep": "下一步",
     "done": "完成",
     "allLanguages": "全部語言",
     "enableTranslation": "啟用翻譯",

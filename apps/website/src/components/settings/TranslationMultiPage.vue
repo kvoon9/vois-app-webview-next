@@ -119,6 +119,11 @@ const options = computed(() =>
   createTranslationLanguageOptions(state.value.data?.languages ?? [], locale.value),
 )
 const visibleOptions = computed(() => filterTranslationLanguageOptions(options.value, search.value))
+// The pair doubles as the tab list, so render both sides from one shape.
+const sides = computed(() => [
+  { key: 'source' as const, code: draft.value.source },
+  { key: 'target' as const, code: draft.value.target },
+])
 const selectedCode = computed(() =>
   step.value === 'source' ? draft.value.source : draft.value.target,
 )
@@ -236,70 +241,59 @@ async function done(): Promise<void> {
               </button>
             </div>
 
+            <!-- The pair is the tab switcher: the highlighted card decides which
+                 side the language list below edits, so no separate tab bar. -->
             <div class="mt-4 flex items-center space-x-2" :class="{ 'opacity-50': !enabled }">
-              <div class="min-w-0 flex-1 rounded-standard bg-surface-field px-3 py-2">
-                <span class="block text-small text-text-secondary">{{
-                  t('translation.source')
-                }}</span>
-                <span class="flex items-center">
-                  <span class="language-flag w-5 flex-none text-header" aria-hidden="true">
-                    {{ languageFlag(draft.source) }}
+              <template v-for="(side, index) in sides" :key="side.key">
+                <button
+                  type="button"
+                  class="min-w-0 flex-1 rounded-standard px-3 py-2 text-left transition-colors focus-visible:ring-2 focus-visible:ring-primary/40 disabled:opacity-50"
+                  :class="
+                    step === side.key
+                      ? 'bg-primary text-primary-text'
+                      : 'bg-surface-field text-text-primary'
+                  "
+                  :aria-pressed="step === side.key"
+                  :disabled="!enabled"
+                  @click="step = side.key"
+                >
+                  <span
+                    class="block text-small"
+                    :class="step === side.key ? 'opacity-80' : 'text-text-secondary'"
+                  >
+                    {{ t(`translation.${side.key}`) }}
                   </span>
-                  <span class="ml-1.5 min-w-0 truncate text-2nd-body font-medium">
-                    {{ languageName(draft.source) }}
+                  <span class="flex items-center">
+                    <span class="language-flag w-5 flex-none text-header" aria-hidden="true">
+                      {{ languageFlag(side.code) }}
+                    </span>
+                    <span class="ml-1.5 min-w-0 truncate text-2nd-body font-medium">
+                      {{ languageName(side.code) }}
+                    </span>
                   </span>
-                </span>
-              </div>
+                </button>
 
-              <button
-                type="button"
-                class="h-10 w-10 flex flex-none items-center justify-center rounded-full bg-surface-muted text-text-secondary focus-visible:ring-2 focus-visible:ring-primary/40 disabled:opacity-50"
-                :aria-label="t('translation.swapLanguages')"
-                :disabled="saving || !enabled"
-                @click="swapLanguages"
-              >
-                <span class="i-ph-arrows-left-right" aria-hidden="true" />
-              </button>
-
-              <div class="min-w-0 flex-1 rounded-standard bg-surface-field px-3 py-2">
-                <span class="block text-small text-text-secondary">{{
-                  t('translation.target')
-                }}</span>
-                <span class="flex items-center">
-                  <span class="language-flag w-5 flex-none text-header" aria-hidden="true">
-                    {{ languageFlag(draft.target) }}
-                  </span>
-                  <span class="ml-1.5 min-w-0 truncate text-2nd-body font-medium">
-                    {{ languageName(draft.target) }}
-                  </span>
-                </span>
-              </div>
+                <button
+                  v-if="index === 0"
+                  type="button"
+                  class="h-10 w-10 flex flex-none items-center justify-center rounded-full bg-surface-muted text-text-secondary focus-visible:ring-2 focus-visible:ring-primary/40 disabled:opacity-50"
+                  :aria-label="t('translation.swapLanguages')"
+                  :disabled="saving || !enabled"
+                  @click="swapLanguages"
+                >
+                  <span class="i-ph-arrows-left-right" aria-hidden="true" />
+                </button>
+              </template>
             </div>
           </div>
 
           <div class="mt-4 card overflow-hidden">
-            <div class="flex rounded-standard bg-surface-muted p-1" role="tablist">
-              <button
-                v-for="tab in ['source', 'target'] as const"
-                :key="tab"
-                type="button"
-                role="tab"
-                class="h-10 flex-1 rounded-small text-2nd-body font-medium transition-colors"
-                :class="step === tab ? 'bg-primary text-primary-text' : 'text-text-secondary'"
-                :aria-selected="step === tab"
-                :disabled="!enabled"
-                @click="step = tab"
-              >
-                {{ t(`translation.${tab}`) }}
-              </button>
-            </div>
-
             <input
               v-model="search"
               type="search"
               name="translation-language-search"
               autocomplete="off"
-              class="mt-4 h-11 w-full rounded-standard bg-surface-field px-4 text-2nd-body text-text-primary outline-none opacity-75 transition-opacity focus-visible:opacity-100"
+              class="h-11 w-full rounded-standard bg-surface-field px-4 text-2nd-body text-text-primary outline-none opacity-75 transition-opacity focus-visible:opacity-100"
               :aria-label="t('translation.searchLanguages')"
               :placeholder="t('translation.searchLanguages')"
               :disabled="!enabled"
@@ -366,25 +360,7 @@ async function done(): Promise<void> {
       v-if="supported && item"
       class="fixed inset-x-0 bottom-0 flex items-center space-x-3 bg-surface-elevated px-4 pb-[calc(env(safe-area-inset-bottom,0px)+1rem)] pt-3"
     >
-      <button
-        v-if="enabled && step === 'target'"
-        type="button"
-        class="h-12 flex-none rounded-button bg-surface-muted px-5 text-header font-medium text-text-primary disabled:opacity-50"
-        :disabled="saving"
-        @click="step = 'source'"
-      >
-        {{ t('translation.previousStep') }}
-      </button>
-      <button
-        v-if="enabled && step === 'source'"
-        type="button"
-        class="btn-primary"
-        :disabled="saving"
-        @click="step = 'target'"
-      >
-        {{ t('translation.nextStep') }}
-      </button>
-      <button v-else type="button" class="btn-primary" :disabled="saving" @click="done">
+      <button type="button" class="btn-primary" :disabled="saving" @click="done">
         {{ saving ? t('translation.saving') : t('translation.done') }}
       </button>
     </footer>

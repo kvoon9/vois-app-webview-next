@@ -294,8 +294,6 @@
     "languagesMustDiffer": "Source and target languages must be different.",
     "swapLanguages": "Swap source and target languages",
     "saving": "Saving…",
-    "previousStep": "Previous",
-    "nextStep": "Next",
     "done": "Done",
     "allLanguages": "All languages",
     "enableTranslation": "Enable translation",

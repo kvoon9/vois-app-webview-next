@@ -8,6 +8,7 @@ import ToastHost from '~/components/ToastHost.vue'
 import { useLangQuery } from '~/composables/useLangQuery'
 import { isWebviewDebug, useWebviewDebug } from '~/composables/useWebviewDebug'
 import { accessToken } from '~/constants'
+import { ACCESS_TOKEN_PATH } from '~/utils/auth-token-path'
 
 const { t } = useI18n()
 const launchQuery = new URLSearchParams(window.location.search)
@@ -31,7 +32,7 @@ watch(
  */
 async function loadSharedAccessToken(): Promise<void> {
   try {
-    const response = await fetch('/__auth/token')
+    const response = await fetch(ACCESS_TOKEN_PATH)
     // SAFETY: the dev server owns the endpoint and always answers { token: string | null }
     const { token } = (await response.json()) as { token: string | null }
     // A launch token is fresher than the stored file, so it outranks the response

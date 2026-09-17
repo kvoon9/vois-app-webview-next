@@ -3,6 +3,7 @@ import type { IncomingMessage, ServerResponse } from 'node:http'
 import { homedir } from 'node:os'
 import { join } from 'node:path'
 import type { Plugin } from 'vite-plus'
+import { ACCESS_TOKEN_PATH } from '../src/utils/auth-token-path'
 
 /**
  * Canonical token file, shared by every worktree. The WebView debug plugin rewrites
@@ -53,10 +54,10 @@ export function devAuthToken(): Plugin {
   return {
     name: 'dev-auth-token',
     configureServer(server) {
-      server.middlewares.use('/__auth/token', serveAccessToken)
+      server.middlewares.use(ACCESS_TOKEN_PATH, serveAccessToken)
     },
     configurePreviewServer(server) {
-      server.middlewares.use('/__auth/token', serveAccessToken)
+      server.middlewares.use(ACCESS_TOKEN_PATH, serveAccessToken)
     },
   }
 }

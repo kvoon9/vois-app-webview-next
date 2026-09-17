@@ -12,17 +12,22 @@ export interface JsonObject {
   [key: string]: JsonValue
 }
 
-/** Request payload: which page the params are for. */
+/**
+ * Request payload: which page the params are for, and which names that page
+ * wants. Native is told the names up front so it can answer with exactly the
+ * fields this page reads, in one round trip.
+ */
 export interface PageParamsRequest {
   page: string
+  params: readonly string[]
 }
 
 /** Response envelope, following the built-in prepay protocols. */
-export interface PageParamsResponse {
+export interface PageParamsResponse<T extends JsonObject = JsonObject> {
   errcode: number
   errmsg: string
   /** Absent when native answers with a non-zero `errcode`. */
-  data?: JsonObject
+  data?: T
 }
 
 declare module '@vois/webview-bridge' {
@@ -40,8 +45,8 @@ export interface PageParamsBridgeSource {
 }
 
 /** What the page can show after asking native for its params. */
-export type PageParamsOutcome =
-  | { status: 'ok'; response: PageParamsResponse }
+export type PageParamsOutcome<T extends JsonObject = JsonObject> =
+  | { status: 'ok'; response: PageParamsResponse<T> }
   | { status: 'unsupported' }
   // `detail` carries native's own message when it answered with a non-zero errcode
   | { status: 'failed'; detail?: string }
@@ -66,31 +71,43 @@ export function objectRows(value?: JsonObject): DisplayRow[] {
 }
 
 /**
- * Ask native for the page params. Reports `unsupported` where no native bridge
- * exists, and `failed` when the bridge or its answer never arrives, so the page
- * never waits on a promise that cannot settle. `timeoutMs` bounds both waits.
+ * Ask native for the page params. `params` names the fields the caller reads;
+ * `T` declares their types, since the wire carries values, not types. Reports
+ * `unsupported` where no native bridge exists, and `failed` when the bridge or
+ * its answer never arrives, so the page never waits on a promise that cannot
+ * settle. `timeoutMs` bounds both waits.
  */
-export async function fetchPageParams(
+export async function fetchPageParams<T extends JsonObject = JsonObject>(
   source: PageParamsBridgeSource,
   page: string,
+  params: readonly string[],
   timeoutMs: number = PAGE_PARAMS_TIMEOUT_MS,
-): Promise<PageParamsOutcome> {
+): Promise<PageParamsOutcome<T>> {
   if (!source.supported) return { status: 'unsupported' }
 
   try {
-    const outcome = await withTimeout(askNative(source, page), timeoutMs)
-    return outcome ?? { status: 'failed' }
+    const outcome = (await withTimeout(askNative(source, page, params), timeoutMs)) ?? {
+      status: 'failed' as const,
+    }
+    // SAFETY: native answers `data` from the names in `params`, so `T` only has
+    // to declare the types of values the request already named.
+    return outcome as PageParamsOutcome<T>
   } catch {
     return { status: 'failed' }
   }
 }
 
-async function askNative(source: PageParamsBridgeSource, page: string): Promise<PageParamsOutcome> {
+async function askNative(
+  source: PageParamsBridgeSource,
+  page: string,
+  params: readonly string[],
+): Promise<PageParamsOutcome> {
   const bridge = await source.whenReady()
   // Widening to `unknown` (unregistered protocol) would break this annotation,
   // so the module augmentation above has to stay in the type graph.
   const response: PageParamsResponse | undefined = await bridge?.request('get-page-params', {
     page,
+    params: [...params],
   })
   if (!response) return { status: 'failed' }
   if (response.errcode !== 0) {

@@ -15,6 +15,9 @@ const OK: PageParamsResponse = {
   data: { mode: 'ai', retries: 2 },
 }
 
+/** The field names the page asks native for. */
+const WANTED = ['uuid', 'access-token'] as const
+
 /**
  * Real bridge wired to a fake native. `answer` decides what native replies;
  * returning `undefined` means native never calls back, the case the page has
@@ -83,44 +86,49 @@ describe('withTimeout', () => {
 })
 
 describe('fetchPageParams', () => {
-  it('sends the page path and returns the params native answers with', async () => {
-    const type = vi.fn()
-    const bridge = Bridge.create((name, _data, onResponse) => {
-      type(name)
+  it('sends the page path and the wanted names, and returns what native answers with', async () => {
+    const sent = vi.fn()
+    const bridge = Bridge.create((name, data, onResponse) => {
+      sent(name, data)
       onResponse?.(JSON.stringify(OK))
     })
 
-    await expect(fetchPageParams(sourceWith(bridge), '/settings/x')).resolves.toEqual({
+    await expect(fetchPageParams(sourceWith(bridge), '/settings/x', WANTED)).resolves.toEqual({
       status: 'ok',
       response: OK,
     })
-    expect(type).toHaveBeenCalledWith('get-page-params')
+    expect(sent).toHaveBeenCalledWith('get-page-params', {
+      page: '/settings/x',
+      params: ['uuid', 'access-token'],
+    })
   })
 
   it('reports unsupported outside the app without waiting', async () => {
     const whenReady = vi.fn()
-    await expect(fetchPageParams({ supported: false, whenReady }, '/settings/x')).resolves.toEqual({
+    await expect(
+      fetchPageParams({ supported: false, whenReady }, '/settings/x', WANTED),
+    ).resolves.toEqual({
       status: 'unsupported',
     })
     expect(whenReady).not.toHaveBeenCalled()
   })
 
   it('reports failure when the native channel never becomes ready', async () => {
-    await expect(fetchPageParams(neverReady(), '/settings/x', 1)).resolves.toEqual({
+    await expect(fetchPageParams(neverReady(), '/settings/x', WANTED, 1)).resolves.toEqual({
       status: 'failed',
     })
   })
 
   it('reports failure when native never answers', async () => {
     const silent = bridgeWithNative(() => undefined)
-    await expect(fetchPageParams(sourceWith(silent), '/settings/x', 1)).resolves.toEqual({
+    await expect(fetchPageParams(sourceWith(silent), '/settings/x', WANTED, 1)).resolves.toEqual({
       status: 'failed',
     })
   })
 
   it('reports failure when native answers with something unparseable', async () => {
     const garbage = bridgeWithNative(() => 'not json')
-    await expect(fetchPageParams(sourceWith(garbage), '/settings/x')).resolves.toEqual({
+    await expect(fetchPageParams(sourceWith(garbage), '/settings/x', WANTED)).resolves.toEqual({
       status: 'failed',
     })
   })
@@ -129,7 +137,9 @@ describe('fetchPageParams', () => {
     const errorEnvelope = bridgeWithNative(() =>
       JSON.stringify({ errcode: 31, errmsg: 'auth expired' }),
     )
-    await expect(fetchPageParams(sourceWith(errorEnvelope), '/settings/x')).resolves.toEqual({
+    await expect(
+      fetchPageParams(sourceWith(errorEnvelope), '/settings/x', WANTED),
+    ).resolves.toEqual({
       status: 'failed',
       detail: '31: auth expired',
     })

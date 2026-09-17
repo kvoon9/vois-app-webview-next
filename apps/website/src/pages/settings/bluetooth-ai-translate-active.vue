@@ -18,13 +18,27 @@ const route = useRoute()
 
 const query = computed(() => queryRows(route.query))
 
+/** What native returns. The wire carries values, so the page declares the types. */
+interface BluetoothAiTranslateParams {
+  uuid: string
+  'access-token': string
+}
+
+/**
+ * Names to ask native for. Typed against the interface above so a rename in one
+ * place cannot silently leave the request asking for a field nobody reads.
+ */
+const WANTED_PARAMS: readonly (keyof BluetoothAiTranslateParams)[] = ['uuid', 'access-token']
+
 /** Native owns the params; this page only renders whatever it sends back. */
 const nativeSource: PageParamsBridgeSource = {
   supported: isSupportBridge(),
   whenReady: whenWebviewBridge,
 }
 
-const outcome = shallowRef<PageParamsOutcome | { status: 'loading' }>({ status: 'loading' })
+const outcome = shallowRef<PageParamsOutcome<BluetoothAiTranslateParams> | { status: 'loading' }>({
+  status: 'loading',
+})
 
 const params = computed(() => {
   const current = outcome.value
@@ -33,7 +47,11 @@ const params = computed(() => {
 
 onMounted(async () => {
   outcome.value = { status: 'loading' }
-  outcome.value = await fetchPageParams(nativeSource, route.path)
+  outcome.value = await fetchPageParams<BluetoothAiTranslateParams>(
+    nativeSource,
+    route.path,
+    WANTED_PARAMS,
+  )
 })
 </script>
 

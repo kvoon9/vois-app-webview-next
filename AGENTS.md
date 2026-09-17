@@ -1,20 +1,32 @@
 # Common Pitfalls & Best Practices
 
 - Always follow `rizumu`, `antfu`, `vue/vueuse best practice` coding style skills
-- Use `@pinia/colada` to manage data fetching (use ctx7 cli to search its docs when needed)
-- Always use defineComponent() to define components. Never use bare { setup() {} } objects — they lack component scope, so inject, watch, and onScopeDispose won't work correctly.
+- Use `@pinia/colada` to manage data fetching
+- Always use `<script setup>` in SFCs. Never hand-write a bare `{ setup() {} }` component object — it lacks component scope, so inject, watch, and onScopeDispose won't work correctly.
 - Always use Vue's `shallowRef` over `ref` by default. Using ref requires a solid justification and a code comment explaining why deep reactivity is needed.
 - Prefer using `defuddle` to fetch web content, `ast-grep` to search local codebase
 - Prefer using existed VueUse functions instead of create a custom composition API
 - Use space, flex instead of gap, grid for styling, since they have compatibility issues: `apps/website/uno.config.ts` blocks them, and `vp test` fails on any used in a class attribute
+- Do not put a `placeholder:` utility on the `input-field` shortcut. UnoCSS expands shortcuts inside its preflight, so it collides with `.input-field::placeholder` and emits `::placeholder::placeholder`, which breaks the build in the lightningcss minifier.
 - Use `agent-browser` to test interactive UI behavior (clicks, form inputs, visual state) in addition to `vp check` and `vp test`
 - Leaving a page after a save or submit ("done" buttons included) must go through `usePageBack().goBack()`, the same path as the header back button. Never call `router.back()` or hand-roll a fallback directly — that is what drops the native `close-page` handshake.
 - Commit messages and PR titles must follow Conventional Commits, e.g. fix(runtime): align Ink parity behavior.
-- Using herdr to start a dev server
+- Use herdr to start a dev server
+
+## New Worktree Setup
+
+`.env` and `.env.local` are gitignored, so a fresh worktree has neither and the build fails on the missing `VITE_APP_ID`. Copy them and install before anything else:
+
+```sh
+cp apps/website/.env apps/website/.env.local <worktree>/apps/website/
+cd <worktree> && vp install
+```
+
+`.env.local` also carries the AMap keys, which only the device-location page needs.
 
 ## WebView Testing
 
-Both flows start from a `--debug` preview server. It captures auth, injects debug into all SPA routes, and auto-clears events on restart.
+Both flows start from a `--debug` preview server. It captures auth, injects debug into all SPA routes, and auto-clears events on restart. `isWebviewDebug()` (`~/composables/useWebviewDebug`) detects that server, so gate any debug-only UI behind it.
 
 ```sh
 cd apps/website && vp run --filter website build && vp preview --host --port 5173 --debug
@@ -22,10 +34,12 @@ cd apps/website && vp run --filter website build && vp preview --host --port 517
 
 ### Flow A: Automated (agent-browser)
 
-Headless tests with real `access-token`. The token persists in `.env.local` — no need to reopen the WebView unless it expires (API returns `授权失效` / errcode 31).
+Headless tests with real `access-token`. One file holds the token for every worktree: `~/.vois/webview-access-token.env`. The preview plugin rewrites it on WebView launch and the server serves it at `/__auth/token.json`, so a token captured in one worktree is visible in all of them. No need to reopen the WebView unless it expires (API returns `授权失效` / errcode 31).
+
+The app resolves the token in this order: `?access-token=` on the launch URL, then `/__auth/token.json`, then `VITE_ACCESS_TOKEN` baked in at build time. A stale `VITE_ACCESS_TOKEN` left in `.env.local` still loses to the endpoint, but delete it anyway so nothing reads as the live token.
 
 1. `cd apps/website && vp dev --host --port 3021` (hot reload in a second Herdr pane)
-2. Only when the token is missing or expired: user opens `http://<Mac IP>:5173/<route>` (the Network URL printed by `vp preview`) in Native App WebView → token written to `.env.local`
+2. Only when the token is missing or expired: user opens `http://<Mac IP>:5173/<route>` (the Network URL printed by `vp preview`) in Native App WebView → token written to `~/.vois/webview-access-token.env`
 3. `agent-browser --session webview-debug open 'http://localhost:3021/#/<route>'` (hash routing) and test
 
 Never print auth parameters.
@@ -53,6 +67,10 @@ User operates the phone; agent reads `.tmp/vois-webview-debug/events.jsonl`.
 2. Agent reads events to diagnose root cause
 3. Agent reproduces with agent-browser → [Flow A](#flow-a-automated-agent-browser)
 4. Fix, verify, repeat
+
+### Switching between worktree previews
+
+Each worktree serves a different port, so verifying one on the phone means retyping the URL. In a `--debug` server, tap the header title to enter a port; it rewrites only the port and keeps host, path, query, and hash, so the WebView's launch params survive.
 
 <!--VITE PLUS START-->
 

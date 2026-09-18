@@ -4,6 +4,7 @@ import {
   changeTranslationTarget,
   getGroupMembers,
   getTranslationLanguages,
+  getTranslationTarget,
 } from './translation-api'
 
 const weilaFetch = vi.hoisted(() => vi.fn())
@@ -139,5 +140,25 @@ describe('translation API', () => {
         target: 'fr-FR',
       },
     })
+  })
+
+  it('reads a single friend instead of the roster', async () => {
+    weilaFetch.mockResolvedValue({
+      data: { friend: { ...friend, user_id: 97359, nick: '微软翻译' } },
+    })
+
+    await expect(getTranslationTarget('friends', 441, 97359)).resolves.toMatchObject({
+      id: 97359,
+      name: '微软翻译',
+    })
+    expect(weilaFetch).toHaveBeenCalledWith('/v2/account/translate/get-friend', {
+      body: { user_id: 441, friend_id: 97359 },
+    })
+  })
+
+  it('treats a missing friend as not found', async () => {
+    weilaFetch.mockResolvedValue({ data: { friend: null } })
+
+    await expect(getTranslationTarget('friends', 441, 1)).resolves.toBeNull()
   })
 })

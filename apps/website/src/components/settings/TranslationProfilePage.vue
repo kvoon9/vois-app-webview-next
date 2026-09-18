@@ -12,7 +12,7 @@ import { nextSettingForSkill, swapLanguagePair, ZH_EN_LANGUAGES } from '~/utils/
 import { hideBrokenImage } from '~/utils/image'
 import {
   changeTranslationTarget,
-  getTranslationTargets,
+  getTranslationTarget,
   type TranslationSetting,
   type TranslationSkill,
   type TranslationTarget,
@@ -55,8 +55,7 @@ async function load(): Promise<TranslationTarget> {
   if (accountId.value == null) throw new Error(t('translation.invalidLoginId'))
   if (targetId.value == null) throw new Error(t('profile.notFound'))
 
-  const items = await getTranslationTargets(props.kind, accountId.value)
-  const item = items.find((item) => item.id === targetId.value)
+  const item = await getTranslationTarget(props.kind, accountId.value, targetId.value)
   if (!item) throw new Error(t('profile.notFound'))
   return item
 }

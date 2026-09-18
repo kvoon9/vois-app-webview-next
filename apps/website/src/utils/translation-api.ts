@@ -100,6 +100,28 @@ export async function getTranslationTargets(
   return response.data.groups.map(toGroupTarget)
 }
 
+/**
+ * Single-target read. Friends have a dedicated endpoint, so a page that already
+ * knows the id skips downloading the whole roster to filter it.
+ */
+export async function getTranslationTarget(
+  kind: TranslationTargetKind,
+  userId: number,
+  targetId: number,
+): Promise<TranslationTarget | null> {
+  if (kind === 'friends') {
+    const response = await weilaFetch<{ friend: FriendDto | null }>(
+      '/v2/account/translate/get-friend',
+      { body: { user_id: userId, friend_id: targetId } },
+    )
+    return response.data.friend?.user_id ? toFriendTarget(response.data.friend) : null
+  }
+
+  // ponytail: no single-group endpoint yet, so groups still list and filter
+  const items = await getTranslationTargets(kind, userId)
+  return items.find((item) => item.id === targetId) ?? null
+}
+
 export async function changeTranslationTarget(
   kind: TranslationTargetKind,
   userId: number,

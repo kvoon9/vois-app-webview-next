@@ -22,7 +22,7 @@ import {
 import {
   changeTranslationTarget,
   getTranslationLanguages,
-  getTranslationTargets,
+  getTranslationTarget,
   type TranslationSetting,
   type TranslationTarget,
   type TranslationTargetKind,
@@ -81,11 +81,10 @@ async function load(): Promise<{ item: TranslationTarget; languages: string[] }>
   if (accountId.value == null) throw new Error(t('translation.invalidLoginId'))
   if (targetId.value == null) throw new Error(t('profile.notFound'))
 
-  const [items, languages] = await Promise.all([
-    getTranslationTargets(props.kind, accountId.value),
+  const [item, languages] = await Promise.all([
+    getTranslationTarget(props.kind, accountId.value, targetId.value),
     getTranslationLanguages(),
   ])
-  const item = items.find((item) => item.id === targetId.value)
   if (!item) throw new Error(t('profile.notFound'))
   return { item, languages }
 }

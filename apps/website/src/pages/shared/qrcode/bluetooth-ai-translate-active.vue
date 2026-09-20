@@ -14,7 +14,6 @@ import {
   BLUETOOTH_UNACTIVATED,
   getBluetoothCodeInfo,
   getOwnAccount,
-  parseValidityPeriod,
   type BluetoothCodeInfo,
 } from '~/utils/bluetooth-api'
 
@@ -85,25 +84,6 @@ const { mutateAsync: activate, isLoading: activating } = useMutation({
   mutation: () => activateBluetoothCode(uuid.value),
 })
 
-/**
- * The backend sends a bare duration such as `12month`, with no locale of its own,
- * so the number is re-emitted through i18n. An unknown unit stays verbatim rather
- * than rendering a key the locale files may not have.
- */
-const VALIDITY_UNIT_KEYS = new Map([
-  ['day', 'validityDay'],
-  ['month', 'validityMonth'],
-  ['year', 'validityYear'],
-])
-
-function formatValidity(value: string): string {
-  const period = parseValidityPeriod(value)
-  const key = period && VALIDITY_UNIT_KEYS.get(period.unit)
-  if (!period || !key) return value
-
-  return t(`bluetoothAiTranslateActive.${key}`, period.count, { count: period.count })
-}
-
 async function confirmActivation(): Promise<void> {
   if (activating.value) return
   try {
@@ -132,10 +112,6 @@ function retry(): void {
       <QueryState :status="viewStatus" :error="viewError" @retry="retry">
         <template v-if="info">
           <h2 class="px-1 section-title">{{ info.name }}</h2>
-          <p class="mt-1 px-1 text-2nd-body text-text-secondary">
-            {{ t('bluetoothAiTranslateActive.validityPeriod') }}
-            {{ formatValidity(info.validityPeriod) }}
-          </p>
 
           <div v-if="activated || unactivated" class="mt-4 panel px-4 py-3">
             <p
@@ -210,29 +186,21 @@ function retry(): void {
       @cancel="confirming = false"
       @confirm="confirmActivation"
     >
-      <p class="text-2nd-body text-danger">{{ t('bluetoothAiTranslateActive.confirmWarning') }}</p>
+      <p class="text-2nd-body text-text-secondary">
+        {{ t('bluetoothAiTranslateActive.confirmTarget') }}
+      </p>
 
-      <h3 class="mt-4 text-2nd-body text-text-secondary">
-        {{ t('bluetoothAiTranslateActive.boundAccount') }}
-      </h3>
-      <dl class="mt-2 overflow-hidden panel">
-        <div class="flex items-center justify-between px-4 py-3">
-          <dt class="text-2nd-body text-text-secondary">
-            {{ t('bluetoothAiTranslateActive.number') }}
-          </dt>
-          <dd class="ml-4 text-right text-2nd-body">
-            {{ account?.num ?? t('translation.loading') }}
-          </dd>
-        </div>
-        <div class="flex items-center justify-between px-4 py-3">
-          <dt class="text-2nd-body text-text-secondary">
-            {{ t('bluetoothAiTranslateActive.nick') }}
-          </dt>
-          <dd class="ml-4 min-w-0 truncate text-right text-2nd-body">
-            {{ account?.nick ?? t('translation.loading') }}
-          </dd>
-        </div>
-      </dl>
+      <div class="mt-2 panel px-4 py-3">
+        <p class="text-header font-medium">{{ account?.nick ?? t('translation.loading') }}</p>
+        <p class="mt-1 text-2nd-body text-text-secondary">
+          {{ t('bluetoothAiTranslateActive.number') }}
+          {{ account?.num ?? t('translation.loading') }}
+        </p>
+      </div>
+
+      <p class="mt-4 text-2nd-body text-danger">
+        {{ t('bluetoothAiTranslateActive.confirmWarning') }}
+      </p>
     </BaseModal>
   </div>
 </template>

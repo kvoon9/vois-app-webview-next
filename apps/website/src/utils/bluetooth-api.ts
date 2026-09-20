@@ -21,7 +21,6 @@ export interface BluetoothCodeInfo {
   name: string
   uuid: string
   status: number
-  validityPeriod: string
   activeBefore: string
   /** Absent until the code is activated, so it must be read as nullable. */
   activeUser: BluetoothActiveUser | null
@@ -37,7 +36,6 @@ interface CodeInfoDto {
   name: string
   uuid: string
   status: number
-  validity_period: string
   active_before: string
   active_user?: {
     user_id: number
@@ -61,7 +59,6 @@ function toCodeInfo(dto: CodeInfoDto): BluetoothCodeInfo {
     name: dto.name,
     uuid: dto.uuid,
     status: dto.status,
-    validityPeriod: dto.validity_period,
     activeBefore: dto.active_before,
     activeUser: dto.active_user
       ? {
@@ -73,16 +70,6 @@ function toCodeInfo(dto: CodeInfoDto): BluetoothCodeInfo {
         }
       : null,
   }
-}
-
-/**
- * The backend spells a duration as `<count><unit>`, e.g. `12month`, and never
- * localizes it. Anything outside that shape is not a duration this page can
- * render, so callers fall back to the raw string.
- */
-export function parseValidityPeriod(value: string): { count: number; unit: string } | null {
-  const parts = /^(\d+)([a-z]+)$/.exec(value)
-  return parts ? { count: Number(parts[1]), unit: parts[2] } : null
 }
 
 /** Read one code's info, as the page's initial state. */

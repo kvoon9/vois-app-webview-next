@@ -352,7 +352,8 @@
   "reportTarget": {
     "user": {
       "title": "Report user",
-      "placeholder": "Tell us why you're reporting this user."
+      "placeholder": "Tell us why you're reporting this user.",
+      "success": "Reported. The user has been blocked; view blocked users in Settings -> Blocklist."
     },
     "group": {
       "title": "Report group",

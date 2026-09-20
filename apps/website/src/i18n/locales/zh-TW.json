@@ -337,7 +337,8 @@
   "reportTarget": {
     "user": {
       "title": "檢舉使用者",
-      "placeholder": "請告訴我們您檢舉該使用者的原因。"
+      "placeholder": "請告訴我們您檢舉該使用者的原因。",
+      "success": "檢舉成功，使用者已被封鎖，請在設定->黑名單中查看封鎖使用者"
     },
     "group": {
       "title": "檢舉群組",

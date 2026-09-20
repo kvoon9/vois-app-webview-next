@@ -337,7 +337,8 @@
   "reportTarget": {
     "user": {
       "title": "举报用户",
-      "placeholder": "请告诉我们您举报该用户的原因。"
+      "placeholder": "请告诉我们您举报该用户的原因。",
+      "success": "举报成功,用户已被拉黑,请在设置->黑名单中查看拉黑用户"
     },
     "group": {
       "title": "举报群组",

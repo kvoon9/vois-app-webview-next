@@ -6,7 +6,7 @@ import { RouterView } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import ToastHost from '~/components/ToastHost.vue'
 import { useLangQuery } from '~/composables/useLangQuery'
-import { accessToken } from '~/constants'
+import { accessToken, nativeTheme } from '~/constants'
 import { ACCESS_TOKEN_PATH } from '~/utils/auth-token-path'
 
 const { t } = useI18n()
@@ -43,9 +43,9 @@ async function loadSharedAccessToken(): Promise<void> {
 void loadSharedAccessToken()
 
 watch(
-  theme,
-  (value) => {
-    const selectedTheme = value || launchQuery.get('theme')
+  [theme, nativeTheme],
+  ([value, fromNative]) => {
+    const selectedTheme = value || fromNative || launchQuery.get('theme')
     if (selectedTheme === 'dark') isDark.value = true
     if (selectedTheme === 'light') isDark.value = false
   },

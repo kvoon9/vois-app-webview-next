@@ -52,9 +52,9 @@ const supported = computed(() => {
   const skill = Number(skillQuery.value)
   return skill === 0 || skill === 3
 })
-const title = computed(() =>
-  Number(typeQuery.value) === 2 ? t('translation.aiTitle') : t('settings.title'),
-)
+// Type 2 is the AI translator, which has no on/off toggle here.
+const isAiType = computed(() => Number(typeQuery.value) === 2)
+const title = computed(() => (isAiType.value ? t('translation.aiTitle') : t('settings.title')))
 
 const step = shallowRef<'source' | 'target'>('source')
 const search = shallowRef('')
@@ -221,7 +221,7 @@ async function done(): Promise<void> {
           </div>
 
           <div class="mt-4 card">
-            <div class="min-h-12 flex items-center justify-between text-body">
+            <div v-if="!isAiType" class="min-h-12 flex items-center justify-between text-body">
               <span>{{ t('translation.enableTranslation') }}</span>
               <button
                 type="button"

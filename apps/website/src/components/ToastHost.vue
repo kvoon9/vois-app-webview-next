@@ -1,8 +1,6 @@
 <script setup lang="ts">
-import { useI18n } from 'vue-i18n'
 import { useToast } from '~/composables/useToast'
 
-const { t } = useI18n()
 const { dismissToast, toast } = useToast()
 </script>
 
@@ -12,26 +10,20 @@ const { dismissToast, toast } = useToast()
     aria-live="polite"
     aria-atomic="true"
   >
-    <div
+    <!-- The toast itself is the dismiss target: no close affordance to aim at. -->
+    <button
       v-if="toast"
       :key="toast.id"
-      class="pointer-events-auto flex max-w-sm items-center rounded-standard px-4 py-3 text-2nd-body shadow-lg"
+      type="button"
+      class="pointer-events-auto flex max-w-sm items-center rounded-standard px-4 py-3 text-left text-2nd-body shadow-lg"
       :class="{
         'bg-primary text-primary-text': toast.type === 'success',
         'bg-danger text-danger-text': toast.type === 'error',
         'bg-text-primary text-surface': toast.type === 'info',
       }"
-      role="status"
+      @click="dismissToast"
     >
       <span class="min-w-0 flex-1">{{ toast.message }}</span>
-      <button
-        type="button"
-        class="ml-3 flex-none rounded-small p-1 opacity-80 focus-visible:ring-2 focus-visible:ring-current"
-        :aria-label="t('modal.close')"
-        @click="dismissToast"
-      >
-        <span class="i-ph-x text-2nd-body" aria-hidden="true" />
-      </button>
-    </div>
+    </button>
   </div>
 </template>

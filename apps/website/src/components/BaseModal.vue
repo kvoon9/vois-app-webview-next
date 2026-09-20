@@ -42,7 +42,7 @@ function preventDismiss(event: Event): void {
         class="fixed inset-0 z-modal flex items-center justify-center overflow-y-auto bg-black/50 p-4"
       >
         <DialogContent
-          class="max-h-[calc(100vh-2rem)] w-full max-w-sm flex flex-col overflow-hidden rounded-large bg-surface-elevated text-text-primary shadow-xl"
+          class="max-h-[calc(100vh-2rem)] w-full max-w-sm flex flex-col overflow-hidden rounded-large bg-surface-dialog text-text-primary shadow-xl"
           :aria-describedby="undefined"
           @escape-key-down="preventDismiss"
           @pointer-down-outside="preventDismiss"
@@ -68,7 +68,7 @@ function preventDismiss(event: Event): void {
                   class="modal-action focus-visible:ring-2"
                   :class="
                     tone === 'danger'
-                      ? 'bg-danger text-danger-text focus-visible:ring-danger/40'
+                      ? 'bg-danger-soft text-danger-soft-text focus-visible:ring-danger-soft-text/40'
                       : 'bg-primary text-primary-text focus-visible:ring-primary/40'
                   "
                   @click="$emit('confirm')"

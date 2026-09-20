@@ -34,7 +34,7 @@ const effectiveConfirmText = computed(() => {
 const confirmButtonClass = computed(() =>
   props.type === 'success'
     ? 'bg-primary text-primary-text focus-visible:ring-primary/40'
-    : 'bg-danger text-danger-text focus-visible:ring-danger/40',
+    : 'bg-danger-soft text-danger-soft-text focus-visible:ring-danger-soft-text/40',
 )
 </script>
 

@@ -3,10 +3,10 @@ import PageHeader from '~/components/PageHeader.vue'
 import QrCodeCard from '~/components/QrCodeCard.vue'
 
 /**
- * Origin the phone has to reach. A `localhost` URL in a code is only ever openable
- * by the machine that rendered it, so the sheet names this machine on the LAN.
+ * Directory the SPA is served from, taken from the current URL so a deployed sheet
+ * hands phones its own origin. `base: './'` means BASE_URL is relative and unusable here.
  */
-const SCAN_ORIGIN = 'http://192.168.1.87:5173'
+const SCAN_ORIGIN = new URL('.', location.href).href
 
 /** One batch of Bluetooth AI translate codes, named for the QR sheet. */
 const uuids = [
@@ -33,7 +33,7 @@ const uuids = [
 ]
 
 function scanUrl(uuid: string): string {
-  return `${SCAN_ORIGIN}/#/shared/qrcode/bluetooth-ai-translate-active?uuid=${uuid}`
+  return `${SCAN_ORIGIN}#/shared/qrcode/bluetooth-ai-translate-active?uuid=${uuid}`
 }
 </script>
 

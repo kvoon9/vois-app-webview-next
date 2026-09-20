@@ -8,18 +8,18 @@ const { dismissToast, toast } = useToast()
 
 <template>
   <div
-    class="pointer-events-none fixed inset-x-4 top-20 z-modal flex justify-center"
+    class="pointer-events-none fixed inset-x-4 bottom-[calc(env(safe-area-inset-bottom,0px)+2rem)] z-modal flex justify-center"
     aria-live="polite"
     aria-atomic="true"
   >
     <div
       v-if="toast"
       :key="toast.id"
-      class="pointer-events-auto flex max-w-sm items-center rounded-standard px-4 py-3 text-2nd-body shadow-lg"
+      class="pointer-events-auto flex max-w-sm items-center rounded-standard px-4 py-3 text-2nd-body shadow-[0_4px_12px_rgba(0,0,0,0.15)]"
       :class="{
-        'bg-primary text-primary-text': toast.type === 'success',
+        // White in both themes, so the text colour is fixed instead of themed.
+        'bg-white text-black': toast.type !== 'error',
         'bg-danger text-danger-text': toast.type === 'error',
-        'bg-text-primary text-surface': toast.type === 'info',
       }"
       role="status"
     >

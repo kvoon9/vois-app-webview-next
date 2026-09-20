@@ -8,6 +8,7 @@
     "linkCopyFailed": "链接复制失败，请选中上方链接手动复制。",
     "previewPort": "端口",
     "previewPortInvalid": "请输入 1-65535 之间的端口。",
+    "reloadWebview": "重新加载页面",
     "switchPreviewPort": "切换预览端口"
   },
   "home": {

@@ -8,6 +8,7 @@
     "linkCopyFailed": "Could not copy the link. Select the URL above and copy it by hand.",
     "previewPort": "Port",
     "previewPortInvalid": "Enter a port between 1 and 65535.",
+    "reloadWebview": "Reload page",
     "switchPreviewPort": "Switch preview port"
   },
   "home": {

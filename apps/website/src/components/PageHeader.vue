@@ -5,7 +5,7 @@ import LanguageSwitcher from '~/components/LanguageSwitcher.vue'
 import { isWebviewDebug } from '~/composables/useWebviewDebug'
 import { usePageBack } from '~/composables/usePageBack'
 import { browserClipboard, copyText } from '~/utils/clipboard'
-import { previewPortHref } from '~/utils/preview-port'
+import { previewPortHref, reloadPreview } from '~/utils/preview-port'
 
 // Debug-preview only. Loading it lazily keeps the dialog runtime out of the
 // shared PageHeader chunk that every route pulls in.
@@ -96,6 +96,14 @@ async function copyCurrentUrl(): Promise<void> {
             @click="copyCurrentUrl"
           >
             <span class="i-ph-copy text-xl" aria-hidden="true" />
+          </button>
+          <button
+            type="button"
+            class="icon-button h-11 w-11 bg-surface-field text-text-primary focus-visible:ring-2 focus-visible:ring-primary/40"
+            :aria-label="t('nav.reloadWebview')"
+            @click="reloadPreview"
+          >
+            <span class="i-ph-arrows-clockwise text-xl" aria-hidden="true" />
           </button>
         </div>
         <p

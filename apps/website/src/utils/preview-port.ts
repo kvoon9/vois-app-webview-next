@@ -12,3 +12,11 @@ export function previewPortHref(port: string, url: URL): string | null {
   next.port = String(parsed)
   return next.href
 }
+
+/**
+ * Reload the preview in place. The native shell keeps the page it loaded, so a
+ * port switch alone can leave the WebView showing the previous build.
+ */
+export function reloadPreview(): void {
+  window.location.reload()
+}

@@ -103,7 +103,7 @@ function closeModal(): void {
 <template>
   <div class="page">
     <PageHeader :title="t(`${i18nNamespace}.title`)" />
-    <main class="p-4">
+    <main class="p-4 pb-28">
       <form novalidate @submit.prevent="handleSubmit">
         <section>
           <h2 class="section-title mb-4">{{ t(`${i18nNamespace}.${sectionLabelKey}`) }}</h2>
@@ -147,9 +147,13 @@ function closeModal(): void {
           </p>
         </section>
 
-        <button type="submit" class="btn-primary mt-6" :disabled="isSubmitting">
-          {{ t(`${i18nNamespace}.${submitKey}`) }}
-        </button>
+        <footer
+          class="fixed inset-x-0 bottom-0 bg-surface-elevated px-4 pb-[calc(env(safe-area-inset-bottom,0px)+1rem)] pt-3"
+        >
+          <button type="submit" class="btn-primary" :disabled="isSubmitting">
+            {{ t(`${i18nNamespace}.${submitKey}`) }}
+          </button>
+        </footer>
       </form>
     </main>
 

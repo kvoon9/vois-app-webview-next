@@ -81,7 +81,12 @@ async function handleSubmit(): Promise<void> {
     })
     data.value.content = ''
     resetErrors()
-    modal.value = { type: 'success', message: response.errmsg }
+    // Reporting a user also blocks them server-side, so the confirmation names where
+    // the block list lives instead of echoing the server's wording.
+    modal.value = {
+      type: 'success',
+      message: props.target === 'user' ? t('reportTarget.user.success') : response.errmsg,
+    }
   } catch (error) {
     modal.value = {
       type: 'error',
@@ -103,7 +108,7 @@ function closeModal(): void {
   <div class="page">
     <PageHeader :title="title" />
 
-    <main class="p-4">
+    <main class="p-4 pb-28">
       <form novalidate @submit.prevent="handleSubmit">
         <fieldset>
           <legend class="mb-3 text-2nd-body font-semibold">
@@ -148,9 +153,13 @@ function closeModal(): void {
           {{ errors.content }}
         </p>
 
-        <button type="submit" class="btn-primary mt-4" :disabled="isSubmitting">
-          {{ t('reportTarget.submit') }}
-        </button>
+        <footer
+          class="fixed inset-x-0 bottom-0 bg-surface-elevated px-4 pb-[calc(env(safe-area-inset-bottom,0px)+1rem)] pt-3"
+        >
+          <button type="submit" class="btn-primary" :disabled="isSubmitting">
+            {{ t('reportTarget.submit') }}
+          </button>
+        </footer>
       </form>
     </main>
 

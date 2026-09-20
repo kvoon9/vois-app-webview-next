@@ -101,9 +101,6 @@ function confirm(): void {
 
 <template>
   <BaseModal :title="t('settings.title')" :dismissible="!saving" @cancel="$emit('cancel')">
-    <template #header>
-      <span class="block text-center">{{ t('settings.title') }}</span>
-    </template>
     <div v-if="!memberOnly" class="space-y-2" role="group" :aria-label="t('translation.mode')">
       <button
         v-for="mode in modes"
@@ -158,10 +155,10 @@ function confirm(): void {
     </div>
 
     <template #footer>
-      <div class="flex justify-end space-x-3">
+      <div class="flex space-x-3">
         <button
           type="button"
-          class="rounded-small px-4 py-2 text-text-secondary focus-visible:ring-2 focus-visible:ring-primary/40"
+          class="modal-action bg-surface-field text-text-primary focus-visible:ring-2 focus-visible:ring-primary/40"
           :disabled="saving"
           @click="$emit('cancel')"
         >
@@ -169,7 +166,7 @@ function confirm(): void {
         </button>
         <button
           type="button"
-          class="rounded-small bg-primary px-4 py-2 text-primary-text focus-visible:ring-2 focus-visible:ring-primary/40 disabled:opacity-50"
+          class="modal-action bg-primary text-primary-text focus-visible:ring-2 focus-visible:ring-primary/40"
           :disabled="!canConfirm"
           @click="confirm"
         >

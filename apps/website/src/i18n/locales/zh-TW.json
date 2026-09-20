@@ -36,7 +36,7 @@
     "devices": "裝置翻譯設定"
   },
   "bluetoothAiTranslateActive": {
-    "title": "翻譯使用期啟用",
+    "title": "啟用藍牙耳機翻譯",
     "code": "啟用碼",
     "activated": "已啟用",
     "unactivated": "未啟用",

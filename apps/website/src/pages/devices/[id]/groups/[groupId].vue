@@ -477,6 +477,7 @@ async function exitGroup(): Promise<void> {
       :cancel-text="t('modal.cancel')"
       :confirm-text="exitMutation.isLoading.value ? t('device.saving') : t('modal.confirm')"
       :dismissible="!exitMutation.isLoading.value"
+      tone="danger"
       @cancel="exitConfirmation = false"
       @confirm="exitGroup"
     >

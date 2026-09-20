@@ -7,11 +7,17 @@ const props = withDefaults(
     confirmText?: string
     dismissible?: boolean
     title: string
+    /**
+     * Paint for the confirm action. `danger` marks the actions that cannot be
+     * undone, so the colour carries the consequence, not the button order.
+     */
+    tone?: 'primary' | 'danger'
   }>(),
   {
     cancelText: 'Cancel',
     confirmText: 'Confirm',
     dismissible: true,
+    tone: 'primary',
   },
 )
 
@@ -41,25 +47,30 @@ function preventDismiss(event: Event): void {
           @escape-key-down="preventDismiss"
           @pointer-down-outside="preventDismiss"
         >
-          <DialogTitle class="flex-none p-4 text-header font-semibold">
+          <DialogTitle class="flex-none px-5 pb-4 pt-6 text-center text-header font-semibold">
             <slot name="header">{{ title }}</slot>
           </DialogTitle>
-          <div class="min-h-0 overflow-y-auto p-4 text-body">
+          <div class="min-h-0 overflow-y-auto px-5 text-body">
             <slot />
           </div>
-          <footer class="flex-none p-4">
+          <footer class="flex-none p-5">
             <slot name="footer">
-              <div class="flex justify-end space-x-3">
+              <div class="flex space-x-3">
                 <button
                   type="button"
-                  class="rounded-small px-4 py-2 text-text-secondary focus-visible:ring-2 focus-visible:ring-primary/40"
+                  class="modal-action bg-surface-field text-text-primary focus-visible:ring-2 focus-visible:ring-primary/40"
                   @click="$emit('cancel')"
                 >
                   {{ cancelText }}
                 </button>
                 <button
                   type="button"
-                  class="rounded-small bg-primary px-4 py-2 text-primary-text focus-visible:ring-2 focus-visible:ring-primary/40"
+                  class="modal-action focus-visible:ring-2"
+                  :class="
+                    tone === 'danger'
+                      ? 'bg-danger text-danger-text focus-visible:ring-danger/40'
+                      : 'bg-primary text-primary-text focus-visible:ring-primary/40'
+                  "
                   @click="$emit('confirm')"
                 >
                   {{ confirmText }}

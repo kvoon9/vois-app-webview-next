@@ -315,13 +315,15 @@ const headerTitle = computed(() =>
       @cancel="activeRow = null"
     >
       <template #footer>
-        <button
-          type="button"
-          class="min-h-10 w-full rounded-small bg-surface-muted px-4 text-body text-text-primary"
-          @click="activeRow = null"
-        >
-          {{ t('modal.close') }}
-        </button>
+        <div class="flex">
+          <button
+            type="button"
+            class="modal-action bg-surface-field text-text-primary"
+            @click="activeRow = null"
+          >
+            {{ t('modal.close') }}
+          </button>
+        </div>
       </template>
       <div role="radiogroup" :aria-label="activeRow.label">
         <button
@@ -371,6 +373,7 @@ const headerTitle = computed(() =>
       :cancel-text="t('modal.cancel')"
       :confirm-text="removeMutation.isLoading.value ? t('device.saving') : t('modal.confirm')"
       :dismissible="!removeMutation.isLoading.value"
+      tone="danger"
       @cancel="deleteConfirmation = false"
       @confirm="removeReminder"
     >

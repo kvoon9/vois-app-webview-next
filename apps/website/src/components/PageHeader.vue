@@ -132,17 +132,17 @@ async function copyCurrentUrl(): Promise<void> {
         {{ t('nav.previewPortInvalid') }}
       </p>
       <template #footer>
-        <div class="flex justify-end space-x-3">
+        <div class="flex space-x-3">
           <button
             type="button"
-            class="rounded-small px-4 py-2 text-text-secondary focus-visible:ring-2 focus-visible:ring-primary/40"
+            class="modal-action bg-surface-field text-text-primary focus-visible:ring-2 focus-visible:ring-primary/40"
             @click="portDialogOpen = false"
           >
             {{ t('modal.cancel') }}
           </button>
           <button
             type="button"
-            class="rounded-small bg-primary px-4 py-2 text-primary-text focus-visible:ring-2 focus-visible:ring-primary/40 disabled:opacity-50"
+            class="modal-action bg-primary text-primary-text focus-visible:ring-2 focus-visible:ring-primary/40"
             :disabled="targetHref === null"
             @click="confirmPort"
           >

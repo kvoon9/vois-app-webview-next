@@ -293,6 +293,7 @@ async function removeContact(): Promise<void> {
       :cancel-text="t('modal.cancel')"
       :confirm-text="removeMutation.isLoading.value ? t('device.saving') : t('modal.confirm')"
       :dismissible="!removeMutation.isLoading.value"
+      tone="danger"
       @cancel="removeConfirmation = false"
       @confirm="removeContact"
     >

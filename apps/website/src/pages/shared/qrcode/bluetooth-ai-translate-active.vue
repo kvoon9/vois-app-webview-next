@@ -133,20 +133,6 @@ function retry(): void {
             {{ t('bluetoothAiTranslateActive.unknownStatus') }}
           </p>
 
-          <button
-            v-if="unactivated"
-            type="button"
-            class="btn-primary mt-4"
-            :disabled="activating"
-            @click="confirming = true"
-          >
-            {{
-              activating
-                ? t('bluetoothAiTranslateActive.activating')
-                : t('bluetoothAiTranslateActive.activate')
-            }}
-          </button>
-
           <template v-if="activated && info.activeUser">
             <p class="mt-6 px-1 text-2nd-body text-text-secondary">
               {{ t('bluetoothAiTranslateActive.boundAccount') }}
@@ -173,6 +159,20 @@ function retry(): void {
             {{ t('bluetoothAiTranslateActive.code') }}
           </p>
           <p class="mt-1 px-1 text-small break-all text-text-secondary">{{ info.uuid }}</p>
+
+          <button
+            v-if="unactivated"
+            type="button"
+            class="btn-primary mt-6"
+            :disabled="activating"
+            @click="confirming = true"
+          >
+            {{
+              activating
+                ? t('bluetoothAiTranslateActive.activating')
+                : t('bluetoothAiTranslateActive.activate')
+            }}
+          </button>
         </template>
       </QueryState>
     </main>
@@ -183,6 +183,7 @@ function retry(): void {
       :cancel-text="t('modal.cancel')"
       :confirm-text="activating ? t('bluetoothAiTranslateActive.activating') : t('modal.confirm')"
       :dismissible="!activating"
+      tone="danger"
       @cancel="confirming = false"
       @confirm="confirmActivation"
     >

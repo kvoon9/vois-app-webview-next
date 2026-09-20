@@ -36,7 +36,7 @@
     "devices": "Device translation"
   },
   "bluetoothAiTranslateActive": {
-    "title": "Translation activation",
+    "title": "Activate earbud translation",
     "code": "Activation code",
     "activated": "Activated",
     "unactivated": "Not activated",

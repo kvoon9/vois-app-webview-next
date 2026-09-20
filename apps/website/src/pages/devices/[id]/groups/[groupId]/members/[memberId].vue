@@ -185,6 +185,7 @@ async function transferOwner(): Promise<void> {
       :cancel-text="t('modal.cancel')"
       :confirm-text="removeMutation.isLoading.value ? t('device.saving') : t('modal.confirm')"
       :dismissible="!removeMutation.isLoading.value"
+      tone="danger"
       @cancel="confirmationOpen = false"
       @confirm="removeMember"
     >

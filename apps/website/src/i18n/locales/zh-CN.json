@@ -36,7 +36,7 @@
     "devices": "设备翻译设置"
   },
   "bluetoothAiTranslateActive": {
-    "title": "翻译使用期激活",
+    "title": "激活蓝牙耳机翻译",
     "code": "激活码",
     "activated": "已激活",
     "unactivated": "未激活",

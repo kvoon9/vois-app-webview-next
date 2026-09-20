@@ -135,6 +135,10 @@ input[type='search']::-webkit-search-cancel-button {
       'w-full rounded-button bg-surface-elevated px-4 py-3 text-body disabled:opacity-50',
     'btn-danger':
       'w-full rounded-button bg-surface-elevated px-4 py-3 text-body text-danger disabled:opacity-50',
+    // One button in a modal's action row. Two of them split the row evenly, one
+    // takes the whole width, so every dialog gets the same control size.
+    'modal-action':
+      'h-12 flex-1 rounded-button text-header font-medium flex items-center justify-center disabled:opacity-50',
     chip: 'h-10 px-4 rounded-standard text-2nd-body font-medium flex items-center justify-center transition-colors',
     'chip-selected': 'bg-primary text-primary-text',
     'chip-unselected': 'bg-surface-muted text-text-primary',

@@ -40,7 +40,7 @@
     "code": "啟用碼",
     "activated": "已啟用",
     "unactivated": "未啟用",
-    "activateBefore": "{date} 前啟用",
+    "activateBefore": "最晚啟用日期：{date}",
     "expiresOn": "{date} 到期",
     "boundAccount": "綁定帳號資訊",
     "number": "微喇號",

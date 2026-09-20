@@ -40,7 +40,7 @@
     "code": "激活码",
     "activated": "已激活",
     "unactivated": "未激活",
-    "activateBefore": "{date} 前激活",
+    "activateBefore": "最晚激活日期：{date}",
     "expiresOn": "{date} 到期",
     "boundAccount": "绑定账号信息",
     "number": "微喇号",

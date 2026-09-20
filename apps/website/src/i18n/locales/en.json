@@ -40,7 +40,7 @@
     "code": "Activation code",
     "activated": "Activated",
     "unactivated": "Not activated",
-    "activateBefore": "Activate by {date}",
+    "activateBefore": "Activate before: {date}",
     "expiresOn": "Expires {date}",
     "boundAccount": "Bound account",
     "number": "Weila number",

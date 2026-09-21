@@ -60,11 +60,16 @@ const step = shallowRef<'source' | 'target'>('source')
 const search = shallowRef('')
 const saving = shallowRef(false)
 const resultError = shallowRef<string | null>(null)
-const draft = shallowRef<TranslationSetting>({ skill: 3, source: 'zh-CN', target: 'en-US' })
+const draft = shallowRef<TranslationSetting>({
+  state: 1,
+  skill: 3,
+  source: 'zh-CN',
+  target: 'en-US',
+})
 
-// The toggle and the setting are the same fact: skill 0 is off. Deriving it from
-// the draft keeps a reopened page showing the stored skill instead of drifting.
-const enabled = computed(() => draft.value.skill !== 0)
+// The toggle is the stored `state`; the backend keeps skill 3 on an off row, so
+// deriving the toggle from skill would show every reopened page as on.
+const enabled = computed(() => draft.value.state === 1)
 
 // The language list runs past 100 rows, so a tap beats a long flick back. The
 // offset clears the fixed footer instead of sitting under it.
@@ -149,10 +154,9 @@ function swapLanguages(): void {
   draft.value = swapLanguagePair(draft.value)
 }
 
-// The wire payload for off always clears the pair, mirroring what the backend
-// does when translation is turned off.
+// This page only edits the multilingual skill, whatever the stored row had.
 function settingForDraft(draft: TranslationSetting): TranslationSetting {
-  return draft.skill === 0 ? { skill: 0, source: '', target: '' } : { ...draft, skill: 3 }
+  return { ...draft, skill: 3 }
 }
 
 async function save(draft: TranslationSetting): Promise<boolean> {
@@ -180,7 +184,7 @@ async function save(draft: TranslationSetting): Promise<boolean> {
 // The toggle is a setting of its own, so it persists on the spot instead of
 // waiting for the footer button.
 async function toggleEnabledAndSave(): Promise<void> {
-  const next = { ...draft.value, skill: enabled.value ? 0 : 3 }
+  const next = { ...draft.value, state: enabled.value ? 0 : 1 }
   draft.value = next
   await save(next)
 }

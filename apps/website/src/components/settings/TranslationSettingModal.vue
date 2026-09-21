@@ -7,6 +7,7 @@ import { nextSettingForSkill, swapLanguagePair, ZH_EN_LANGUAGES } from '~/utils/
 import type {
   TranslationSetting,
   TranslationSkill,
+  TranslationState,
   TranslationTarget,
 } from '~/utils/translation-api'
 
@@ -29,15 +30,16 @@ const emit = defineEmits<{
 }>()
 
 const { t } = useI18n({ useScope: 'global' })
+const state = shallowRef<TranslationState>(props.item.state)
 const skill = shallowRef<TranslationSkill>(props.item.skill)
 const source = shallowRef(props.item.source || 'zh-CN')
 const target = shallowRef(props.item.target || 'en-US')
 
 const modes = computed(() => [
-  { skill: 0 as const, label: t('translation.skills.off') },
-  { skill: 1 as const, label: t('translation.skills.basic') },
-  { skill: 2 as const, label: t('translation.skills.premiumZhEn') },
-  { skill: 3 as const, label: t('translation.skills.premiumMulti') },
+  { state: 0 as const, skill: 3 as const, label: t('translation.skills.off') },
+  { state: 1 as const, skill: 1 as const, label: t('translation.skills.basic') },
+  { state: 1 as const, skill: 2 as const, label: t('translation.skills.premiumZhEn') },
+  { state: 1 as const, skill: 3 as const, label: t('translation.skills.premiumMulti') },
 ])
 
 const languageOptions = computed(() => {
@@ -45,8 +47,8 @@ const languageOptions = computed(() => {
   return [...new Set([...props.languages, source.value, target.value].filter(Boolean))]
 })
 
-const isZhEn = computed(() => skill.value === 2)
-const showsLanguages = computed(() => props.memberOnly || skill.value >= 2)
+const isZhEn = computed(() => state.value === 1 && skill.value === 2)
+const showsLanguages = computed(() => props.memberOnly || (state.value === 1 && skill.value !== 1))
 const canConfirm = computed(
   () =>
     !props.saving &&
@@ -56,11 +58,22 @@ const canConfirm = computed(
         source.value !== target.value)),
 )
 
-function selectSkill(nextSkill: TranslationSkill): void {
-  skill.value = nextSkill
+function isSelected(mode: { state: TranslationState; skill: TranslationSkill }): boolean {
+  return state.value === mode.state && skill.value === mode.skill
+}
+
+function selectMode(mode: { state: TranslationState; skill: TranslationSkill }): void {
+  const current = {
+    state: state.value,
+    skill: skill.value,
+    source: source.value,
+    target: target.value,
+  }
+  state.value = mode.state
+  skill.value = mode.skill
   const next = nextSettingForSkill(
-    { skill: skill.value, source: source.value, target: target.value },
-    nextSkill,
+    current,
+    mode.state === 0 ? 0 : mode.skill,
     languageOptions.value,
   )
   if (next) {
@@ -69,10 +82,13 @@ function selectSkill(nextSkill: TranslationSkill): void {
   }
 }
 
-if (skill.value === 2 || (!props.memberOnly && skill.value !== 3)) selectSkill(skill.value)
+if (!props.memberOnly && (state.value === 0 || skill.value !== 3)) {
+  selectMode({ state: state.value, skill: skill.value })
+}
 
 function swapLanguages(): void {
   const swapped = swapLanguagePair({
+    state: state.value,
     skill: skill.value,
     source: source.value,
     target: target.value,
@@ -86,12 +102,13 @@ function confirm(): void {
 
   let nextSource = ''
   let nextTarget = ''
-  if (props.memberOnly || skill.value !== 0) {
+  if (props.memberOnly || state.value === 1) {
     nextSource = showsLanguages.value ? source.value : 'zh-CN'
     nextTarget = showsLanguages.value ? target.value : 'en-US'
   }
 
   emit('confirm', {
+    state: state.value,
     skill: skill.value,
     source: nextSource,
     target: nextTarget,
@@ -104,17 +121,17 @@ function confirm(): void {
     <div v-if="!memberOnly" class="space-y-2" role="group" :aria-label="t('translation.mode')">
       <button
         v-for="mode in modes"
-        :key="mode.skill"
+        :key="mode.label"
         type="button"
         class="min-h-11 w-full rounded-standard px-4 text-left text-2nd-body transition-colors"
         :class="
-          skill === mode.skill
+          isSelected(mode)
             ? 'bg-surface-selected text-text-primary'
             : 'bg-surface-muted text-text-secondary'
         "
-        :aria-pressed="skill === mode.skill"
+        :aria-pressed="isSelected(mode)"
         :disabled="saving"
-        @click="selectSkill(mode.skill)"
+        @click="selectMode(mode)"
       >
         {{ mode.label }}
       </button>

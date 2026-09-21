@@ -7,15 +7,14 @@ export const ZH_EN_LANGUAGES: readonly string[] = ['zh-CN', 'en-US']
 /**
  * Seed the multi-language editor from a stored setting. The backend clears the
  * pair while translation is off, so source/target need a fallback before the
- * user picks. `skill` has to survive the seed because the page derives its
- * enable toggle from it.
+ * user picks. `state` survives the seed because the page derives its enable
+ * toggle from it.
  */
 export function initialLanguagePair(setting: TranslationSetting): TranslationSetting {
-  const skill = setting.skill === 0 ? 0 : 3
   const from = setting.source || ZH_EN_LANGUAGES[0]
   const to = setting.target || ZH_EN_LANGUAGES[1]
-  if (from !== to) return { skill, source: from, target: to }
-  return { skill, source: from, target: from === 'zh-CN' ? 'en-US' : 'zh-CN' }
+  if (from !== to) return { ...setting, source: from, target: to }
+  return { ...setting, source: from, target: from === 'zh-CN' ? 'en-US' : 'zh-CN' }
 }
 
 /**
@@ -23,26 +22,30 @@ export function initialLanguagePair(setting: TranslationSetting): TranslationSet
  * member editor. Both surfaces need the same language normalization when the
  * user picks a different skill or swaps a source/target, so we keep the rules
  * here instead of duplicating the if/else ladder in each component.
+ *
+ * `nextSkill` 0 is the editors' off mode: off is a `state`, not a skill, and an
+ * off row keeps the skill the editor would switch back on with.
  */
 export function nextSettingForSkill(
   current: TranslationSetting,
-  nextSkill: TranslationSkill,
+  nextSkill: TranslationSkill | 0,
   languageOptions: readonly string[],
 ): TranslationSetting | null {
-  if (current.skill === nextSkill) return null
+  if (nextSkill === 0) {
+    if (current.state === 0) return null
+    return { state: 0, skill: 3, source: '', target: '' }
+  }
+  if (current.state === 1 && current.skill === nextSkill) return null
 
   let { source, target } = current
 
-  if (nextSkill === 0) {
-    return { skill: 0, source: '', target: '' }
-  }
   if (nextSkill === 1) {
-    return { skill: 1, source: 'zh-CN', target: 'en-US' }
+    return { state: 1, skill: 1, source: 'zh-CN', target: 'en-US' }
   }
   if (nextSkill === 2) {
     source = translationLanguageSubtag(source) === 'en' ? 'en-US' : 'zh-CN'
     target = source === 'zh-CN' ? 'en-US' : 'zh-CN'
-    return { skill: 2, source, target }
+    return { state: 1, skill: 2, source, target }
   }
 
   const options = languageOptions.filter(Boolean)
@@ -51,7 +54,7 @@ export function nextSettingForSkill(
     target = options.find((code) => code !== source) ?? ''
   }
   if (!source || !target) return null
-  return { skill: 3, source, target }
+  return { state: 1, skill: 3, source, target }
 }
 
 /**
@@ -65,18 +68,18 @@ export function pickLanguagePair(
 ): TranslationSetting {
   if (field === 'source') {
     return {
-      skill: current.skill,
+      ...current,
       source: value,
       target: value === current.target ? current.source : current.target,
     }
   }
   return {
-    skill: current.skill,
+    ...current,
     source: value === current.source ? current.target : current.source,
     target: value,
   }
 }
 
 export function swapLanguagePair(current: TranslationSetting): TranslationSetting {
-  return { skill: current.skill, source: current.target, target: current.source }
+  return { ...current, source: current.target, target: current.source }
 }

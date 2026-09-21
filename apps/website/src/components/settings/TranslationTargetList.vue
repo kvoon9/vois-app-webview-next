@@ -27,7 +27,7 @@ function statusLabel(item: TranslationTarget): string {
       : ''
 
   if (props.memberOnly && languagePair) return languagePair
-  if (item.skill === 0) return t('translation.skills.off')
+  if (item.state === 0) return t('translation.skills.off')
   if (item.skill === 1) return t('translation.skills.basic')
   if (languagePair) return languagePair
   return t(item.skill === 2 ? 'translation.skills.premiumZhEn' : 'translation.skills.premiumMulti')

@@ -5,6 +5,7 @@ import {
   getGroupMembers,
   getTranslationLanguages,
   getTranslationTarget,
+  getTranslationTargets,
 } from './translation-api'
 
 const weilaFetch = vi.hoisted(() => vi.fn())
@@ -16,6 +17,7 @@ const friend = {
   user_num: 'V002',
   nick: 'Member',
   avatar: '',
+  state: 0,
   skill: 0,
   source: '',
   target: '',
@@ -55,20 +57,22 @@ describe('translation API', () => {
     })
   })
 
-  it('omits languages only when closing translation', async () => {
+  it('toggles with state and keeps the stored skill on an off write', async () => {
     weilaFetch.mockResolvedValue({ data: { friend } })
 
     await changeTranslationTarget('friends', 441, 2, {
-      skill: 0,
+      state: 0,
+      skill: 3,
       source: 'zh-CN',
       target: 'en-US',
     })
 
     expect(weilaFetch).toHaveBeenCalledWith('/v2/account/translate/change-friend', {
-      body: { user_id: 441, friend_id: 2, skill: 0 },
+      body: { user_id: 441, friend_id: 2, state: 0, skill: 3 },
     })
 
     await changeTranslationTarget('friends', 441, 2, {
+      state: 1,
       skill: 2,
       source: 'zh-CN',
       target: 'en-US',
@@ -78,6 +82,7 @@ describe('translation API', () => {
       body: {
         user_id: 441,
         friend_id: 2,
+        state: 1,
         skill: 2,
         source: 'zh-CN',
         target: 'en-US',
@@ -103,6 +108,7 @@ describe('translation API', () => {
 
     await expect(
       changeTranslationTarget('groups', 441, 99, {
+        state: 1,
         skill: 2,
         source: 'zh-CN',
         target: 'en-US',
@@ -113,6 +119,7 @@ describe('translation API', () => {
       body: {
         user_id: 441,
         group_id: 99,
+        state: 1,
         skill: 2,
         source: 'zh-CN',
         target: 'en-US',
@@ -154,6 +161,31 @@ describe('translation API', () => {
     expect(weilaFetch).toHaveBeenCalledWith('/v2/account/translate/get-friend', {
       body: { user_id: 441, friend_id: 97359 },
     })
+  })
+
+  it('reads the toggle from state, not from the stored skill', async () => {
+    weilaFetch.mockResolvedValue({
+      data: { friend: { ...friend, state: 0, skill: 3 } },
+    })
+
+    await expect(getTranslationTarget('friends', 441, 97359)).resolves.toMatchObject({
+      state: 0,
+      skill: 3,
+    })
+  })
+
+  it('falls back to the skill while groups do not report a state', async () => {
+    weilaFetch.mockResolvedValue({
+      data: {
+        groups: [
+          { group_id: 99, name: 'Group', avatar: '', skill: 2, source: 'zh-CN', target: 'en-US' },
+        ],
+      },
+    })
+
+    await expect(getTranslationTargets('groups', 441)).resolves.toMatchObject([
+      { id: 99, state: 1, skill: 2 },
+    ])
   })
 
   it('treats a missing friend as not found', async () => {

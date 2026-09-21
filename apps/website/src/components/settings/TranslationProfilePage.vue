@@ -70,14 +70,21 @@ const item = computed(() => state.value.data ?? null)
 // Skill 2 pins the pair to zh-CN <-> en-US but still lets the user flip which
 // side is the source, so only that direction toggle stays inline; the free-form
 // pair lives on the multi-translation page.
-const isZhEn = computed(() => item.value?.skill === 2)
+const isZhEn = computed(() => item.value?.state === 1 && item.value.skill === 2)
 
+// Skill 0 is the off row the mode pickers pass; `state` decides what is active.
 const modes = computed(() => [
   { skill: 0 as const, label: t('translation.skills.off') },
   { skill: 1 as const, label: t('translation.skills.basic') },
   { skill: 2 as const, label: t('translation.skills.premiumZhEn') },
   { skill: 3 as const, label: t('translation.skills.premiumMulti') },
 ])
+
+function isSelected(skill: TranslationSkill | 0): boolean {
+  const current = item.value
+  if (!current) return false
+  return skill === 0 ? current.state === 0 : current.state === 1 && current.skill === skill
+}
 
 async function save(setting: TranslationSetting): Promise<void> {
   if (accountId.value == null || !item.value || saving.value) return
@@ -93,7 +100,7 @@ async function save(setting: TranslationSetting): Promise<void> {
   }
 }
 
-function selectSkill(skill: TranslationSkill): void {
+function selectSkill(skill: TranslationSkill | 0): void {
   if (!item.value) return
   const next = nextSettingForSkill(item.value, skill, [])
   if (next) save(next)
@@ -158,7 +165,7 @@ function swapLanguages(): void {
                   v-if="mode.skill === 3"
                   :to="multiTranslationLink"
                   class="min-h-11 w-full flex items-center justify-between rounded-standard px-4 text-2nd-body bg-surface-muted text-text-secondary"
-                  :class="{ 'bg-surface-selected text-text-primary': item.skill === 3 }"
+                  :class="{ 'bg-surface-selected text-text-primary': isSelected(3) }"
                 >
                   {{ mode.label }}
                   <span class="row-chevron" aria-hidden="true" />
@@ -168,11 +175,11 @@ function swapLanguages(): void {
                   type="button"
                   class="min-h-11 w-full rounded-standard px-4 text-left text-2nd-body transition-colors"
                   :class="
-                    item.skill === mode.skill
+                    isSelected(mode.skill)
                       ? 'bg-surface-selected text-text-primary'
                       : 'bg-surface-muted text-text-secondary'
                   "
-                  :aria-pressed="item.skill === mode.skill"
+                  :aria-pressed="isSelected(mode.skill)"
                   :disabled="saving"
                   @click="selectSkill(mode.skill)"
                 >

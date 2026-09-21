@@ -1,9 +1,11 @@
 import { weilaFetch } from '~/utils/api'
 
-export type TranslationSkill = 0 | 1 | 2 | 3
+export type TranslationState = 0 | 1
+export type TranslationSkill = 1 | 2 | 3
 export type TranslationTargetKind = 'friends' | 'groups'
 
 export interface TranslationSetting {
+  state: TranslationState
   skill: TranslationSkill
   source: string
   target: string
@@ -16,14 +18,26 @@ export interface TranslationTarget extends TranslationSetting {
   avatar: string
 }
 
-interface FriendDto extends TranslationSetting {
+/**
+ * What the translate endpoints return. `state` owns the toggle: the backend
+ * keeps the stored `skill` (often 3) while translation is off, so skill cannot
+ * be read as the on/off signal. Groups don't send it yet, hence the fallback.
+ */
+interface TranslationDto {
+  state?: TranslationState
+  skill: number
+  source: string
+  target: string
+}
+
+interface FriendDto extends TranslationDto {
   user_id: number
   user_num: string
   nick: string
   avatar: string
 }
 
-interface GroupDto extends TranslationSetting {
+interface GroupDto extends TranslationDto {
   group_id: number
   name: string
   avatar: string
@@ -33,6 +47,7 @@ type ChangeTranslationBody = {
   user_id: number
   friend_id?: number
   group_id?: number
+  state: TranslationState
   skill: TranslationSkill
   source?: string
   target?: string
@@ -128,15 +143,18 @@ export async function changeTranslationTarget(
   targetId: number,
   setting: TranslationSetting,
 ): Promise<TranslationTarget> {
+  // `state` owns the toggle: an off save keeps the stored skill but the
+  // backend clears the pair, so only an on save carries languages.
   const body: ChangeTranslationBody = {
     user_id: userId,
+    state: setting.state,
     skill: setting.skill,
   }
 
   if (kind === 'friends') body.friend_id = targetId
   else body.group_id = targetId
 
-  if (setting.skill !== 0) {
+  if (setting.state === 1) {
     body.source = setting.source
     body.target = setting.target
   }
@@ -204,15 +222,23 @@ export async function changeGroupMember(
   return toFriendTarget(response.data.member)
 }
 
+function toSetting(dto: TranslationDto): TranslationSetting {
+  return {
+    state: dto.state ?? (dto.skill === 0 ? 0 : 1),
+    // Legacy rows keep skill 0 while off; the editors only ever send a real skill.
+    skill: dto.skill === 1 || dto.skill === 2 ? dto.skill : 3,
+    source: dto.source,
+    target: dto.target,
+  }
+}
+
 function toFriendTarget(friend: FriendDto): TranslationTarget {
   return {
     id: friend.user_id,
     number: friend.user_num,
     name: friend.nick,
     avatar: friend.avatar,
-    skill: friend.skill,
-    source: friend.source,
-    target: friend.target,
+    ...toSetting(friend),
   }
 }
 
@@ -222,8 +248,6 @@ function toGroupTarget(group: GroupDto): TranslationTarget {
     number: '',
     name: group.name,
     avatar: group.avatar,
-    skill: group.skill,
-    source: group.source,
-    target: group.target,
+    ...toSetting(group),
   }
 }

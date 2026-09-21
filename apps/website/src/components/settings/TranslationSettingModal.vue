@@ -100,12 +100,10 @@ function swapLanguages(): void {
 function confirm(): void {
   if (!canConfirm.value) return
 
-  let nextSource = ''
-  let nextTarget = ''
-  if (props.memberOnly || state.value === 1) {
-    nextSource = showsLanguages.value ? source.value : 'zh-CN'
-    nextTarget = showsLanguages.value ? target.value : 'en-US'
-  }
+  // Off keeps the pair, so turning translation back on restores the languages
+  const keepsPair = state.value === 0 || props.memberOnly || showsLanguages.value
+  const nextSource = keepsPair ? source.value : 'zh-CN'
+  const nextTarget = keepsPair ? target.value : 'en-US'
 
   emit('confirm', {
     state: state.value,

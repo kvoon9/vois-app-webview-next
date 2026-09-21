@@ -49,8 +49,8 @@ type ChangeTranslationBody = {
   group_id?: number
   state: TranslationState
   skill: TranslationSkill
-  source?: string
-  target?: string
+  source: string
+  target: string
 }
 
 type MemberDto = FriendDto
@@ -143,21 +143,18 @@ export async function changeTranslationTarget(
   targetId: number,
   setting: TranslationSetting,
 ): Promise<TranslationTarget> {
-  // `state` owns the toggle: an off save keeps the stored skill but the
-  // backend clears the pair, so only an on save carries languages.
+  // The pair always rides along, even while off: the backend rewrites the whole
+  // row, so an off save that omits the languages wipes the user's selection.
   const body: ChangeTranslationBody = {
     user_id: userId,
     state: setting.state,
     skill: setting.skill,
+    source: setting.source,
+    target: setting.target,
   }
 
   if (kind === 'friends') body.friend_id = targetId
   else body.group_id = targetId
-
-  if (setting.state === 1) {
-    body.source = setting.source
-    body.target = setting.target
-  }
 
   if (kind === 'friends') {
     const response = await weilaFetch<{ friend: FriendDto }>(

@@ -20,10 +20,10 @@ describe('nextSettingForSkill', () => {
     expect(nextSettingForSkill({ state: 0, skill: 3, source: '', target: '' }, 0, en)).toBeNull()
   })
 
-  it('keeps the multilingual skill while turning off', () => {
+  it('keeps the multilingual skill and the pair while turning off', () => {
     expect(
       nextSettingForSkill({ state: 1, skill: 2, source: 'zh-CN', target: 'en-US' }, 0, en),
-    ).toEqual({ state: 0, skill: 3, source: '', target: '' })
+    ).toEqual({ state: 0, skill: 3, source: 'zh-CN', target: 'en-US' })
   })
 
   it('turns a stored off row on with the picked skill', () => {
@@ -126,6 +126,15 @@ describe('initialLanguagePair', () => {
       skill: 3,
       source: 'zh-CN',
       target: 'en-US',
+    })
+  })
+
+  it('restores the stored pair on an off row instead of falling back to zh-en', () => {
+    expect(initialLanguagePair({ state: 0, skill: 3, source: 'ar-JO', target: 'am-ET' })).toEqual({
+      state: 0,
+      skill: 3,
+      source: 'ar-JO',
+      target: 'am-ET',
     })
   })
 

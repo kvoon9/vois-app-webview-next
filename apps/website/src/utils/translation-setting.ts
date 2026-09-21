@@ -24,7 +24,8 @@ export function initialLanguagePair(setting: TranslationSetting): TranslationSet
  * here instead of duplicating the if/else ladder in each component.
  *
  * `nextSkill` 0 is the editors' off mode: off is a `state`, not a skill, and an
- * off row keeps the skill the editor would switch back on with.
+ * off row keeps both the skill the editor would switch back on with and the
+ * language pair, so turning translation off does not lose the selection.
  */
 export function nextSettingForSkill(
   current: TranslationSetting,
@@ -33,7 +34,7 @@ export function nextSettingForSkill(
 ): TranslationSetting | null {
   if (nextSkill === 0) {
     if (current.state === 0) return null
-    return { state: 0, skill: 3, source: '', target: '' }
+    return { state: 0, skill: 3, source: current.source, target: current.target }
   }
   if (current.state === 1 && current.skill === nextSkill) return null
 

@@ -68,7 +68,14 @@ describe('translation API', () => {
     })
 
     expect(weilaFetch).toHaveBeenCalledWith('/v2/account/translate/change-friend', {
-      body: { user_id: 441, friend_id: 2, state: 0, skill: 3 },
+      body: {
+        user_id: 441,
+        friend_id: 2,
+        state: 0,
+        skill: 3,
+        source: 'zh-CN',
+        target: 'en-US',
+      },
     })
 
     await changeTranslationTarget('friends', 441, 2, {

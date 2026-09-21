@@ -284,7 +284,10 @@ async function done(): Promise<void> {
                   :disabled="saving || !enabled"
                   @click="swapLanguages"
                 >
-                  <span class="i-ph-arrows-left-right" aria-hidden="true" />
+                  <span
+                    :class="isAiType ? 'i-ph-arrows-left-right' : 'i-ph-arrow-right'"
+                    aria-hidden="true"
+                  />
                 </button>
               </template>
             </div>

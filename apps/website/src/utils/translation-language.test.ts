@@ -13,6 +13,28 @@ function withoutIntlMembers(...members: Array<'Locale' | 'DisplayNames'>) {
   vi.stubGlobal('Intl', stub)
 }
 
+/**
+ * Android's trimmed ICU: the constructor exists, has no data, and follows the
+ * `fallback: 'code'` default by handing the code back.
+ */
+function withDataLessDisplayNames() {
+  const stub = Object.defineProperties({}, Object.getOwnPropertyDescriptors(Intl))
+  Object.defineProperty(stub, 'DisplayNames', {
+    value: class {
+      private readonly fallback: string | undefined
+
+      constructor(_locales: string[], options: { fallback?: string } = {}) {
+        this.fallback = options.fallback
+      }
+
+      of(code: string): string | undefined {
+        return this.fallback === 'none' ? undefined : code
+      }
+    },
+  })
+  vi.stubGlobal('Intl', stub)
+}
+
 afterEach(() => {
   vi.unstubAllGlobals()
 })
@@ -99,5 +121,12 @@ describe('translation language options', () => {
 
     expect(translationLanguageName('zh-HK', 'zh-CN')).toBe('Chinese (Traditional)')
     expect(translationLanguageSubtag('EN-us')).toBe('en')
+  })
+
+  it('uses the built-in English names when DisplayNames has no ICU data', () => {
+    withDataLessDisplayNames()
+
+    expect(translationLanguageName('af-ZA', 'zh-CN')).toBe('Afrikaans (South Africa)')
+    expect(translationLanguageName('zh-HK', 'zh-CN')).toBe('Chinese (Traditional)')
   })
 })

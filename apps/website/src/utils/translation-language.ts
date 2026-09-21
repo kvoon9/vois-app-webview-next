@@ -41,8 +41,11 @@ export function translationLanguageSubtag(code: string): string {
 
 /**
  * Localized language name, falling back to the static English name and finally
- * to the raw code. Low-end Intl builds omit `Locale`/`DisplayNames` entirely, so
- * every Intl call sits behind the try/catch instead of assuming the API exists.
+ * to the raw code. Low-end Intl builds fail in two ways: the constructors can be
+ * missing entirely, and Android WebViews can ship them without any ICU data, so
+ * `of()` hands the code back instead of a name. `fallback: 'none'` turns that
+ * echo into `undefined`, which is what lands here in the table. The polyfill in
+ * `~/i18n/intl-polyfill` normally beats both cases to it.
  */
 export function translationLanguageName(code: string, locale: string): string {
   return intlLanguageName(code, locale) ?? ENGLISH_LANGUAGE_NAMES.get(code) ?? code
@@ -53,9 +56,13 @@ function intlLanguageName(code: string, locale: string): string | null {
 
   try {
     const codeLocale = new Intl.Locale(code)
-    const languageName =
-      new Intl.DisplayNames([locale], { type: 'language' }).of(codeLocale.language) ?? code
+    const languageName = displayName('language', codeLocale.language, locale)
+    if (!languageName) return null
+
     const qualifier = displayLanguageQualifier(codeLocale, locale)
+    // `null` says the engine has the API but not the data for it; the table
+    // holds the full name, so don't settle for a partial one.
+    if (qualifier === null) return null
     if (!qualifier) return languageName
 
     const displayLanguage = new Intl.Locale(locale).language
@@ -66,18 +73,27 @@ function intlLanguageName(code: string, locale: string): string | null {
   }
 }
 
-function displayLanguageQualifier(codeLocale: Intl.Locale, locale: string): string {
+/**
+ * `fallback: 'none'` is what makes a data-less engine answer `undefined` instead
+ * of echoing the code back, so the caller knows to use its own table.
+ */
+function displayName(
+  type: 'language' | 'region' | 'script',
+  code: string,
+  locale: string,
+): string | null {
+  return new Intl.DisplayNames([locale], { type, fallback: 'none' }).of(code) ?? null
+}
+
+/** Returns `null` when the engine knows the subtag but cannot name it. */
+function displayLanguageQualifier(codeLocale: Intl.Locale, locale: string): string | null {
   if (codeLocale.language === 'zh' && (codeLocale.script || codeLocale.region)) {
     const script = codeLocale.script ?? codeLocale.maximize().script
-    if (script) return new Intl.DisplayNames([locale], { type: 'script' }).of(script) ?? ''
+    if (script) return displayName('script', script, locale)
   }
 
-  if (codeLocale.region) {
-    return new Intl.DisplayNames([locale], { type: 'region' }).of(codeLocale.region) ?? ''
-  }
-  if (codeLocale.script) {
-    return new Intl.DisplayNames([locale], { type: 'script' }).of(codeLocale.script) ?? ''
-  }
+  if (codeLocale.region) return displayName('region', codeLocale.region, locale)
+  if (codeLocale.script) return displayName('script', codeLocale.script, locale)
   return ''
 }
 

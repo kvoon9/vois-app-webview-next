@@ -63,5 +63,7 @@ minimumReleaseAgeExclude:
   - vite-plugin-vois-webview-debug@0.1.0
 catalog:
   '@amap/amap-jsapi-loader': ^1.0.1
+  '@formatjs/intl-displaynames': ^7.3.15
+  '@formatjs/intl-locale': ^5.3.11
   '@iconify-json/ph': ^1.2.2
   '@internationalized/date': ^3.12.3

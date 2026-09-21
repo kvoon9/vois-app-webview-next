@@ -11,6 +11,8 @@
   },
   "dependencies": {
     "@amap/amap-jsapi-loader": "catalog:",
+    "@formatjs/intl-displaynames": "catalog:",
+    "@formatjs/intl-locale": "catalog:",
     "@internationalized/date": "catalog:",
     "@pinia/colada": "catalog:vue",
     "@valibot/i18n": "^1.2.0",

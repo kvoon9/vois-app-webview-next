@@ -7,7 +7,6 @@ import {
   maxLength,
   maxValue,
   minValue,
-  nonEmpty,
   number,
   object,
   pipe,
@@ -42,12 +41,8 @@ const targetId = computed(() => {
 const schema = object({
   targetId: pipe(number(), integer(), minValue(1), safeInteger()),
   reasonIndex: pipe(number(), minValue(0), maxValue(reasons.value.length - 1)),
-  content: pipe(
-    string(),
-    trim(),
-    nonEmpty(() => t('validation.required')),
-    maxLength(MAX_REPORT_CONTENT_LENGTH),
-  ),
+  // The backend accepts an empty remark, so there is no nonEmpty rule.
+  content: pipe(string(), trim(), maxLength(MAX_REPORT_CONTENT_LENGTH)),
 })
 
 const { data, errors, resetErrors, validate, validateField } = useFormValidation(schema, () => ({

@@ -1,17 +1,7 @@
 <script setup lang="ts">
 import { computed, shallowRef } from 'vue'
 import { useI18n } from 'vue-i18n'
-import {
-  maxLength,
-  maxValue,
-  minValue,
-  nonEmpty,
-  number,
-  object,
-  pipe,
-  string,
-  trim,
-} from 'valibot'
+import { maxLength, maxValue, minValue, number, object, pipe, string, trim } from 'valibot'
 import PageHeader from '~/components/PageHeader.vue'
 import ResultModal from '~/components/ResultModal.vue'
 import { MAX_REPORT_CONTENT_LENGTH } from '~/constants'
@@ -48,12 +38,8 @@ const items = computed(() => {
 
 const schema = object({
   index: pipe(number(), minValue(0), maxValue(items.value.length - 1)),
-  content: pipe(
-    string(),
-    trim(),
-    nonEmpty(() => t('validation.required')),
-    maxLength(MAX_REPORT_CONTENT_LENGTH),
-  ),
+  // The backend accepts an empty text, so there is no nonEmpty rule.
+  content: pipe(string(), trim(), maxLength(MAX_REPORT_CONTENT_LENGTH)),
 })
 
 const { data, errors, resetErrors, validate, validateField } = useFormValidation(schema, {

@@ -72,6 +72,23 @@ User operates the phone; agent reads `.tmp/vois-webview-debug/events.jsonl`.
 
 Each worktree serves a different port, so verifying one on the phone means retyping the URL. In a `--debug` server, tap the header title to enter a port; it rewrites only the port and keeps host, path, query, and hash, so the WebView's launch params survive.
 
+## Release
+
+Cut releases on `main` with the `bumpp` CLI through the repo script. The tag push needs the **kvoon9** GitHub account: the default active account is `kvoon3`, which has no access to this repo, so the push fails with 403.
+
+```sh
+gh auth switch --user kvoon9   # the account that can push to kvoon9/vois-app-webview-next
+vp run release patch --yes     # bumpp --recursive: bumps all package.json files, commits chore: release vX.Y.Z, tags, pushes
+gh auth switch --user kvoon3   # back to the usual account
+```
+
+`--yes` skips the interactive confirm; use `minor`/`major` instead of `patch` as needed. The pushed `vX.Y.Z` tag triggers `.github/workflows/release.yml`, which builds the site and publishes `vois-app-webview-vX.Y.Z.zip`:
+
+```sh
+gh run list -L 1 -R kvoon9/vois-app-webview-next
+gh release view vX.Y.Z -R kvoon9/vois-app-webview-next
+```
+
 <!--VITE PLUS START-->
 
 # Using Vite+, the Unified Toolchain for the Web

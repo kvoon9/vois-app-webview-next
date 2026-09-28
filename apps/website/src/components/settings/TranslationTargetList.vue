@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
-import { hideBrokenImage } from '~/utils/image'
+import Avatar from '~/components/Avatar.vue'
 import type { TranslationTarget, TranslationTargetKind } from '~/utils/translation-api'
 import { translationLanguageName } from '~/utils/translation-language'
 
@@ -43,18 +43,7 @@ function statusLabel(item: TranslationTarget): string {
         class="min-w-0 flex flex-1 items-center text-left"
         @click="emit('open', item)"
       >
-        <span
-          class="relative h-11 w-11 flex flex-none items-center justify-center overflow-hidden rounded-full bg-surface-muted text-header text-text-secondary"
-        >
-          {{ item.name.slice(0, 1) }}
-          <img
-            v-if="item.avatar"
-            :src="item.avatar"
-            alt=""
-            class="absolute inset-0 h-full w-full object-cover"
-            @error="hideBrokenImage"
-          />
-        </span>
+        <Avatar :name="item.name" :src="item.avatar" />
         <span class="ml-3 min-w-0 flex-1">
           <span class="block truncate text-body font-medium">{{ item.name }}</span>
           <span v-if="item.number" class="block truncate text-small text-text-secondary">
@@ -69,18 +58,7 @@ function statusLabel(item: TranslationTarget): string {
 
       <template v-else>
         <div class="min-w-0 flex flex-1 items-center">
-          <span
-            class="relative h-11 w-11 flex flex-none items-center justify-center overflow-hidden rounded-full bg-surface-muted text-header text-text-secondary"
-          >
-            {{ item.name.slice(0, 1) }}
-            <img
-              v-if="item.avatar"
-              :src="item.avatar"
-              alt=""
-              class="absolute inset-0 h-full w-full object-cover"
-              @error="hideBrokenImage"
-            />
-          </span>
+          <Avatar :name="item.name" :src="item.avatar" />
           <span class="ml-3 min-w-0 flex-1">
             <span class="block truncate text-body font-medium">{{ item.name }}</span>
             <span v-if="item.number" class="block truncate text-small text-text-secondary">

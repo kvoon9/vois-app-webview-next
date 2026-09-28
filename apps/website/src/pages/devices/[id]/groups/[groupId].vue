@@ -4,6 +4,7 @@ import { computed, shallowRef, useTemplateRef } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { RouterLink, RouterView, useRoute, useRouter } from 'vue-router'
 import BaseModal from '~/components/BaseModal.vue'
+import Avatar from '~/components/Avatar.vue'
 import ImageCropper from '~/components/ImageCropper.vue'
 import PageHeader from '~/components/PageHeader.vue'
 import QueryState from '~/components/settings/QueryState.vue'
@@ -21,7 +22,6 @@ import {
   updateMyGroupNickname,
   type GroupSettings,
 } from '~/utils/device-api'
-import { hideBrokenImage } from '~/utils/image'
 
 type RouteParam = string | string[] | undefined
 type EditableField = 'name' | 'intro' | 'nickname'
@@ -288,20 +288,13 @@ async function exitGroup(): Promise<void> {
               />
               <button
                 type="button"
-                class="relative h-20 w-20 flex items-center justify-center overflow-hidden rounded-full bg-surface-muted text-2xl text-text-secondary disabled:cursor-default"
+                class="rounded-full disabled:cursor-default"
                 :class="avatarUploading ? 'opacity-50' : ''"
                 :disabled="!isOwner || avatarUploading"
                 :aria-label="isOwner ? t('device.changeAvatar') : undefined"
                 @click="pickAvatar"
               >
-                {{ group.name.slice(0, 1) }}
-                <img
-                  v-if="group.avatar"
-                  :src="group.avatar"
-                  alt=""
-                  class="absolute inset-0 h-full w-full object-cover"
-                  @error="hideBrokenImage"
-                />
+                <Avatar :name="group.name" :src="group.avatar" size="xl" />
               </button>
               <span
                 v-if="isOwner"

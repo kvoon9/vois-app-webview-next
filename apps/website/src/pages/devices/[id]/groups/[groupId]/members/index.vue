@@ -3,10 +3,10 @@ import { useQuery } from '@pinia/colada'
 import { computed, shallowRef } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
+import Avatar from '~/components/Avatar.vue'
 import PageHeader from '~/components/PageHeader.vue'
 import QueryState from '~/components/settings/QueryState.vue'
 import { getGroupMembers, type GroupMember } from '~/utils/device-api'
-import { hideBrokenImage } from '~/utils/image'
 
 type RouteParam = string | string[] | undefined
 type MemberSection = 'admin' | 'member'
@@ -128,18 +128,7 @@ function openMember(member: GroupMember): void {
                   class="min-h-16 w-full flex items-center px-4 text-left"
                   @click="openMember(member)"
                 >
-                  <span
-                    class="relative h-11 w-11 flex-none flex items-center justify-center overflow-hidden rounded-full bg-surface-muted text-text-secondary"
-                  >
-                    {{ displayName(member).slice(0, 1) }}
-                    <img
-                      v-if="member.avatar"
-                      :src="member.avatar"
-                      alt=""
-                      class="absolute inset-0 h-full w-full object-cover"
-                      @error="hideBrokenImage"
-                    />
-                  </span>
+                  <Avatar :name="displayName(member)" :src="member.avatar" />
                   <span class="ml-3 min-w-0 flex-1">
                     <span class="block truncate text-body">{{ displayName(member) }}</span>
                     <span class="mt-0.5 block truncate text-small text-text-secondary">

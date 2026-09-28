@@ -4,12 +4,12 @@ import { useWindowScroll } from '@vueuse/core'
 import { useRouteQuery } from '@vueuse/router'
 import { computed, shallowRef, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
+import Avatar from '~/components/Avatar.vue'
 import PageHeader from '~/components/PageHeader.vue'
 import ResultModal from '~/components/ResultModal.vue'
 import QueryState from '~/components/settings/QueryState.vue'
 import { parseAccountId, useAccountId } from '~/composables/useAccountId'
 import { usePageBack } from '~/composables/usePageBack'
-import { hideBrokenImage } from '~/utils/image'
 import {
   initialLanguagePair,
   pickLanguagePair,
@@ -206,18 +206,7 @@ async function done(): Promise<void> {
       <QueryState v-else :status="state.status" :error="state.error" @retry="reload()">
         <template v-if="item">
           <div class="flex flex-col items-center py-4 text-center">
-            <span
-              class="relative h-20 w-20 flex items-center justify-center overflow-hidden rounded-full bg-surface-muted text-2xl text-text-secondary"
-            >
-              {{ item.name.slice(0, 1) }}
-              <img
-                v-if="item.avatar"
-                :src="item.avatar"
-                alt=""
-                class="absolute inset-0 h-full w-full object-cover"
-                @error="hideBrokenImage"
-              />
-            </span>
+            <Avatar :name="item.name" :src="item.avatar" size="xl" />
             <span class="mt-3 text-header font-semibold">{{ item.name }}</span>
             <span v-if="item.number" class="mt-1 text-small text-text-secondary">
               {{ t('profile.userNumber', { id: item.number }) }}

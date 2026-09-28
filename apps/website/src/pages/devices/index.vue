@@ -2,9 +2,9 @@
 import { useQuery } from '@pinia/colada'
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
+import Avatar from '~/components/Avatar.vue'
 import PageHeader from '~/components/PageHeader.vue'
 import QueryState from '~/components/settings/QueryState.vue'
-import { hideBrokenImage } from '~/utils/image'
 import { getConnectedDevices, type Device } from '~/utils/device-api'
 
 const { t } = useI18n({ useScope: 'global' })
@@ -44,24 +44,13 @@ function openDevice(device: Device): void {
               class="min-w-0 w-full flex items-center text-left"
               @click="openDevice(device)"
             >
-              <span
-                class="relative h-12 w-12 flex-none flex items-center justify-center overflow-hidden rounded-full bg-surface text-text-secondary"
-              >
-                {{ device.nick.trim().slice(0, 1) || '?' }}
-                <img
-                  v-if="device.avatar"
-                  :src="device.avatar"
-                  alt=""
-                  class="absolute inset-0 h-full w-full object-cover"
-                  @error="hideBrokenImage"
-                />
-                <span
-                  class="status-dot"
-                  :class="device.online ? 'bg-blue-500' : 'bg-fill'"
-                  :aria-label="t(device.online ? 'device.online' : 'device.offline')"
-                  role="img"
-                />
-              </span>
+              <Avatar
+                :name="device.nick"
+                :src="device.avatar"
+                :online="device.online"
+                show-status
+                :status-label="t(device.online ? 'device.online' : 'device.offline')"
+              />
               <span class="ml-3 min-w-0 flex-1">
                 <span class="block truncate text-body font-medium">{{ device.nick }}</span>
                 <span class="mt-0.5 block truncate text-small text-text-secondary">

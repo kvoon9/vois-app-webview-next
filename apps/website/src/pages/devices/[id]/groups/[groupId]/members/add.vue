@@ -4,6 +4,7 @@ import { computed, shallowRef } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 import BaseModal from '~/components/BaseModal.vue'
+import Avatar from '~/components/Avatar.vue'
 import PageHeader from '~/components/PageHeader.vue'
 import QueryState from '~/components/settings/QueryState.vue'
 import { useToast } from '~/composables/useToast'
@@ -14,7 +15,6 @@ import {
   type Friend,
   type GroupMember,
 } from '~/utils/device-api'
-import { hideBrokenImage } from '~/utils/image'
 
 const route = useRoute()
 const router = useRouter()
@@ -129,18 +129,7 @@ async function submit(): Promise<void> {
               :disabled="isDisabled(candidate)"
               @click="toggleCandidate(candidate)"
             >
-              <span
-                class="relative h-11 w-11 flex-none flex items-center justify-center overflow-hidden rounded-full bg-surface-muted text-text-secondary"
-              >
-                {{ candidate.nick.slice(0, 1) }}
-                <img
-                  v-if="candidate.avatar"
-                  :src="candidate.avatar"
-                  alt=""
-                  class="absolute inset-0 h-full w-full object-cover"
-                  @error="hideBrokenImage"
-                />
-              </span>
+              <Avatar :name="candidate.nick" :src="candidate.avatar" />
               <span class="min-w-0 ml-3 flex-1">
                 <span class="block truncate text-body">{{ candidate.nick }}</span>
                 <span class="mt-0.5 block truncate text-small text-text-secondary">{{

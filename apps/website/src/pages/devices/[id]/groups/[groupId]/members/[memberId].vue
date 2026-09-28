@@ -4,6 +4,7 @@ import { computed, shallowRef } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import BaseModal from '~/components/BaseModal.vue'
+import Avatar from '~/components/Avatar.vue'
 import PageHeader from '~/components/PageHeader.vue'
 import QueryState from '~/components/settings/QueryState.vue'
 import { useToast } from '~/composables/useToast'
@@ -14,7 +15,6 @@ import {
   transferGroupOwner,
   type GroupMember,
 } from '~/utils/device-api'
-import { hideBrokenImage } from '~/utils/image'
 
 const route = useRoute()
 const router = useRouter()
@@ -125,18 +125,7 @@ async function transferOwner(): Promise<void> {
       <QueryState :status="state.status" :error="state.error" @retry="reload()">
         <template v-if="member">
           <div class="flex flex-col items-center py-4 text-center">
-            <span
-              class="relative h-24 w-24 flex items-center justify-center overflow-hidden rounded-full bg-surface-muted text-3xl text-text-secondary"
-            >
-              {{ member.nick.slice(0, 1) }}
-              <img
-                v-if="member.avatar"
-                :src="member.avatar"
-                alt=""
-                class="absolute inset-0 h-full w-full object-cover"
-                @error="hideBrokenImage"
-              />
-            </span>
+            <Avatar :name="member.nick" :src="member.avatar" size="2xl" />
             <h2 class="mt-3 text-header font-semibold">{{ member.nick }}</h2>
             <p class="mt-1 text-small text-text-secondary">{{ member.userNum }}</p>
           </div>

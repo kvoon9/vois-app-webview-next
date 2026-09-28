@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { computed } from 'vue'
-import { hideBrokenImage } from '~/utils/image'
+import { computed, shallowRef, watch } from 'vue'
+
+type AvatarSize = 'sm' | 'md' | 'lg' | 'xl' | '2xl'
 
 const props = withDefaults(
   defineProps<{
@@ -8,7 +9,7 @@ const props = withDefaults(
     name: string
     online?: boolean
     showStatus?: boolean
-    size?: 'sm' | 'md' | 'lg'
+    size?: AvatarSize
     src?: string | null
     statusLabel?: string
   }>(),
@@ -22,11 +23,30 @@ const props = withDefaults(
   },
 )
 
-const sizeClass = computed(() => {
-  if (props.size === 'sm') return 'h-8 w-8 text-2nd-body'
-  if (props.size === 'lg') return 'h-16 w-16 text-title'
-  return 'h-11 w-11 text-header'
-})
+const SIZE_CLASS = {
+  sm: 'h-8 w-8 text-2nd-body',
+  md: 'h-11 w-11 text-header',
+  lg: 'h-16 w-16 text-title',
+  xl: 'h-20 w-20 text-2xl',
+  '2xl': 'h-24 w-24 text-3xl',
+} satisfies Record<AvatarSize, string>
+
+const failed = shallowRef(false)
+const loaded = shallowRef(false)
+
+// A new src is an unloaded image again; without this, the previous result sticks.
+watch(
+  () => props.src,
+  () => {
+    failed.value = false
+    loaded.value = false
+  },
+)
+
+// A remote image in flight is not the avatar yet. Nothing in the slot claims to be
+// it: the spinner says "loading" and the initial is reserved for the no-image and
+// broken-image cases, so an upload never flashes the old letter back.
+const loading = computed(() => Boolean(props.src) && !loaded.value && !failed.value)
 
 const initial = computed(() => props.name.trim().slice(0, 1) || '?')
 </script>
@@ -34,15 +54,18 @@ const initial = computed(() => props.name.trim().slice(0, 1) || '?')
 <template>
   <span
     class="relative flex flex-none items-center justify-center overflow-hidden rounded-full bg-surface-muted text-text-secondary"
-    :class="sizeClass"
+    :class="SIZE_CLASS[size]"
   >
-    {{ initial }}
+    <span v-if="loading" class="i-ph-spinner animate-spin" aria-hidden="true" />
+    <template v-else>{{ initial }}</template>
     <img
-      v-if="src"
+      v-if="src && !failed"
       :src="src"
       :alt="alt"
-      class="absolute inset-0 h-full w-full object-cover"
-      @error="hideBrokenImage"
+      class="absolute inset-0 h-full w-full object-cover transition-opacity duration-200"
+      :class="loaded ? 'opacity-100' : 'opacity-0'"
+      @load="loaded = true"
+      @error="failed = true"
     />
     <span
       v-if="showStatus && online !== undefined"

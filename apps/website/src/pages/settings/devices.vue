@@ -2,10 +2,10 @@
 import { useQuery } from '@pinia/colada'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
+import Avatar from '~/components/Avatar.vue'
 import PageHeader from '~/components/PageHeader.vue'
 import QueryState from '~/components/settings/QueryState.vue'
 import { useAccountId } from '~/composables/useAccountId'
-import { hideBrokenImage } from '~/utils/image'
 import { getSmartDevices, type SmartDevice } from '~/utils/translation-api'
 
 const { t } = useI18n()
@@ -45,18 +45,7 @@ function openDevice(device: SmartDevice): void {
               class="min-w-0 flex flex-1 items-center text-left"
               @click="openDevice(device)"
             >
-              <span
-                class="relative h-11 w-11 flex-none flex items-center justify-center overflow-hidden rounded-full bg-surface-muted text-text-secondary"
-              >
-                {{ device.nick.slice(0, 1) }}
-                <img
-                  v-if="device.avatar"
-                  :src="device.avatar"
-                  alt=""
-                  class="absolute inset-0 h-full w-full object-cover"
-                  @error="hideBrokenImage"
-                />
-              </span>
+              <Avatar :name="device.nick" :src="device.avatar" />
               <span class="min-w-0 ml-3 flex-1">
                 <span class="block truncate text-body font-medium">{{ device.nick }}</span>
                 <span class="mt-0.5 block truncate text-small text-text-secondary">

@@ -266,7 +266,9 @@
     "transferOwner": "轉讓群主",
     "transferOwnerConfirm": "確定將群主轉讓給{name}嗎？轉讓後你將成為普通成員。",
     "ownerTransferred": "群主已轉讓。",
-    "changeAvatar": "修改群頭像"
+    "changeAvatar": "修改群頭像",
+    "cropAvatar": "裁剪群頭像",
+    "cropAvatarHint": "拖動調整位置，雙指縮放"
   },
   "translation": {
     "loading": "載入中…",

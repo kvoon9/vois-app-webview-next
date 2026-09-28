@@ -266,7 +266,9 @@
     "transferOwner": "转让群主",
     "transferOwnerConfirm": "确定将群主转让给{name}吗？转让后你将成为普通成员。",
     "ownerTransferred": "群主已转让。",
-    "changeAvatar": "修改群头像"
+    "changeAvatar": "修改群头像",
+    "cropAvatar": "裁剪群头像",
+    "cropAvatarHint": "拖动调整位置，双指缩放"
   },
   "translation": {
     "loading": "加载中…",

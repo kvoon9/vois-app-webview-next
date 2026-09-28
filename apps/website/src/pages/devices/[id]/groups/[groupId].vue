@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { useMutation, useQuery, useQueryCache } from '@pinia/colada'
-import { useFileDialog } from '@vueuse/core'
-import { computed, shallowRef } from 'vue'
+import { computed, shallowRef, useTemplateRef } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { RouterLink, RouterView, useRoute, useRouter } from 'vue-router'
 import BaseModal from '~/components/BaseModal.vue'
+import ImageCropper from '~/components/ImageCropper.vue'
 import PageHeader from '~/components/PageHeader.vue'
 import QueryState from '~/components/settings/QueryState.vue'
 import { useToast } from '~/composables/useToast'
@@ -147,18 +147,31 @@ const exitMutation = useMutation({
 })
 
 const avatarUploading = shallowRef(false)
-const { open: openAvatarPicker, onChange: onAvatarPicked } = useFileDialog({
-  accept: 'image/*',
-  reset: true,
-})
+const avatarInput = useTemplateRef<HTMLInputElement>('avatarInput')
+/** Picked but not cropped yet; holding it open is what keeps the crop dialog mounted. */
+const avatarFile = shallowRef<File | null>(null)
 
-onAvatarPicked(async (files) => {
-  const file = files?.[0]
-  if (!file || deviceId.value == null || groupId.value == null || avatarUploading.value) return
+function pickAvatar(): void {
+  if (isOwner.value && !avatarUploading.value) avatarInput.value?.click()
+}
+
+function onAvatarChange(event: Event): void {
+  const input = event.currentTarget
+  if (!(input instanceof HTMLInputElement)) return
+  avatarFile.value = input.files?.[0] ?? null
+  // Cleared so that picking the same file twice still fires a change event
+  input.value = ''
+}
+
+async function uploadAvatar(file: Blob, fileName: string): Promise<void> {
+  const device = deviceId.value
+  const group = groupId.value
+  if (device == null || group == null || avatarUploading.value) return
+  avatarFile.value = null
   avatarUploading.value = true
   try {
-    const url = await weilaUpload(file, file.name)
-    await updateGroupAvatar(deviceId.value, groupId.value, url)
+    const url = await weilaUpload(file, fileName)
+    await updateGroupAvatar(device, group, url)
     await queryCache.invalidateQueries({ key: ['device-management'] })
     await reload()
     showToast(t('device.groupUpdated'))
@@ -167,10 +180,16 @@ onAvatarPicked(async (files) => {
   } finally {
     avatarUploading.value = false
   }
-})
+}
 
-function pickAvatar(): void {
-  if (isOwner.value && !avatarUploading.value) openAvatarPicker()
+function onCropConfirmed(blob: Blob): void {
+  void uploadAvatar(blob, 'avatar.jpg')
+}
+
+/** A file the WebView cannot decode still uploads, exactly as it did before cropping. */
+function onCropFailed(): void {
+  const file = avatarFile.value
+  if (file) void uploadAvatar(file, file.name)
 }
 
 const savingEdit = computed(
@@ -259,6 +278,14 @@ async function exitGroup(): Promise<void> {
         <template v-if="group">
           <section class="overflow-hidden rounded-standard bg-surface-elevated">
             <div class="flex flex-col items-center px-4 py-5 text-center">
+              <input
+                ref="avatarInput"
+                type="file"
+                accept="image/*"
+                class="sr-only"
+                :aria-label="t('device.changeAvatar')"
+                @change="onAvatarChange"
+              />
               <button
                 type="button"
                 class="relative h-20 w-20 flex items-center justify-center overflow-hidden rounded-full bg-surface-muted text-2xl text-text-secondary disabled:cursor-default"
@@ -489,5 +516,13 @@ async function exitGroup(): Promise<void> {
         }}
       </p>
     </BaseModal>
+
+    <ImageCropper
+      v-if="avatarFile"
+      :file="avatarFile"
+      @cancel="avatarFile = null"
+      @confirm="onCropConfirmed"
+      @failed="onCropFailed"
+    />
   </div>
 </template>

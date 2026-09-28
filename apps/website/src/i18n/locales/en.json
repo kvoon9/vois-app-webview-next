@@ -266,7 +266,9 @@
     "transferOwner": "Transfer ownership",
     "transferOwnerConfirm": "Transfer ownership to {name}? You will become a regular member.",
     "ownerTransferred": "Ownership transferred.",
-    "changeAvatar": "Change group avatar"
+    "changeAvatar": "Change group avatar",
+    "cropAvatar": "Crop group avatar",
+    "cropAvatarHint": "Drag to reposition, pinch to zoom"
   },
   "profile": {
     "media": "Media, links, docs",

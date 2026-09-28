@@ -1,4 +1,4 @@
-import { isSupportBridge, type BridgeFn, type WebviewBridge } from '@vois/webview-bridge'
+import { isSupportBridge, type WebviewBridge } from '@vois/webview-bridge'
 import {
   boolean,
   number,
@@ -9,17 +9,22 @@ import {
   string,
   union,
   unknown,
-  type InferOutput,
 } from 'valibot'
 import { computed, onMounted, shallowRef, type ComputedRef, type ShallowRef } from 'vue'
 import { useRoute, type LocationQuery } from 'vue-router'
 import { whenWebviewBridge } from '~/composables/useWebviewBridge'
-import { isWebviewDebug } from '~/composables/useWebviewDebug'
-import { accessToken, nativeLang, nativeTheme } from '~/constants'
-import { SAVE_ACCESS_TOKEN_PATH } from '~/utils/auth-token-path'
+import { nativeLang, nativeTheme } from '~/constants'
+import { resolveBridgeAccessToken } from '~/utils/access-token'
 
 /** Give up on an unanswered bridge request after this long; native's own budget. */
 export const PAGE_PARAMS_TIMEOUT_MS = 3000
+
+/**
+ * How long the boot read may wait for the token. Every request awaits that read, so
+ * this is the app's patience with a slow bridge rather than a page's: a page still
+ * settles at `PAGE_PARAMS_TIMEOUT_MS` and offers its retry button.
+ */
+export const BOOT_TOKEN_TIMEOUT_MS = 60_000
 
 /** Page params are flat string key/values by contract; nesting is out of scope. */
 export interface PageParams {
@@ -41,24 +46,6 @@ const pageParamsSchema = object({
  * is a native bug and gets dropped rather than reaching the page.
  */
 const scalarSchema = union([string(), number(), boolean()])
-
-type PageParamsResponse = InferOutput<typeof pageParamsSchema>
-
-/**
- * Request payload: which page is asking, and which names it reads. An empty
- * `params` means "everything native injects by default", which is how a page
- * gets `access-token` without naming it.
- */
-export interface PageParamsRequest {
-  page: string
-  params: readonly string[]
-}
-
-declare module '@vois/webview-bridge' {
-  interface BridgeProtocolMap {
-    'get-page-params': BridgeFn<PageParamsRequest, PageParamsResponse>
-  }
-}
 
 /** Where the params come from; injectable so the fetch is testable without a WebView. */
 export interface PageParamsBridgeSource {
@@ -109,15 +96,11 @@ export async function fetchPageParams(
   return values
 }
 
-async function askNative(
-  source: PageParamsBridgeSource,
-  page: string,
-  params: readonly string[],
-): Promise<PageParamsResponse> {
+/** The bridge's own `get-page-params` types drive both sides; only `data` is decoded here. */
+async function askNative(source: PageParamsBridgeSource, page: string, params: readonly string[]) {
   const bridge = await source.whenReady()
   if (!bridge) throw new Error('no bridge')
-  const response = await bridge.request('get-page-params', { page, params: [...params] })
-  return response
+  return bridge.request('get-page-params', { page, params: [...params] })
 }
 
 /** The promise's value, or `undefined` once it outlasts `ms`. */
@@ -157,32 +140,11 @@ export function mergePageParams(bridgeParams: PageParams, query: LocationQuery):
 }
 
 /**
- * Hand a token that arrived over the bridge to the dev server, which writes it
- * to the shared env file.
- *
- * The debug plugin only persists tokens it finds in a page URL, and a bridge
- * token never appears in one. Without this, a bridge-authenticated session
- * leaves the env file holding whatever token an earlier launch captured, so the
- * next desktop run authenticates as the wrong account. Production has no such
- * endpoint.
- */
-function persistTokenForDebug(token: string): void {
-  if (!isWebviewDebug()) return
-  void fetch(SAVE_ACCESS_TOKEN_PATH, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ token }),
-  }).catch(() => {
-    /* dev servers only; a failed write costs nothing at runtime */
-  })
-}
-
-/**
  * Page params for the current route.
  *
- * A non-empty `access-token` from either source is written to the shared token
- * the request layer reads. A missing one never clears a working token, so a
- * desktop launch or a silent bridge keeps whatever the app already resolved.
+ * The token is not one of them, but a late answer is still forwarded to
+ * `access-token`: the boot read gives up on its own schedule, and this is what lets
+ * a page's retry button recover after that.
  */
 export function usePageParams(params: readonly string[] = []): PageParamsHandle {
   const route = useRoute()
@@ -201,10 +163,8 @@ export function usePageParams(params: readonly string[] = []): PageParamsHandle 
       params,
     )
     bridgeParams.value = fetched
+    resolveBridgeAccessToken(fetched['access-token'])
 
-    const token = mergePageParams(fetched, route.query)['access-token']
-    if (token) accessToken.value = token
-    if (fetched['access-token']) persistTokenForDebug(fetched['access-token'])
     // Native also owns the app's own theme and language; the route query outranks
     // them at the read site, so only what native actually answered lands here.
     if (fetched.theme) nativeTheme.value = fetched.theme

@@ -1,7 +1,7 @@
 // @env browser
 
 import md5 from 'md5'
-import { accessToken } from '~/constants'
+import { whenAccessToken } from '~/utils/access-token'
 
 interface WeilaResponse<T> {
   errcode: number
@@ -21,7 +21,7 @@ export async function weilaFetch<T>(
   url: string,
   options: RequestOptions = {},
 ): Promise<WeilaResponse<T>> {
-  const urlWithAuth = buildAuthUrl(url)
+  const urlWithAuth = await buildAuthUrl(url)
 
   const response = await fetch(urlWithAuth, {
     method: options.method ?? 'POST',
@@ -44,7 +44,7 @@ export async function weilaUpload(file: Blob, fileName: string): Promise<string>
   formData.append('file', file, fileName)
 
   // Content-Type must stay unset so the browser emits the multipart boundary
-  const response = await fetch(buildAuthUrl('/v2/common/upload-file'), {
+  const response = await fetch(await buildAuthUrl('/v2/common/upload-file'), {
     method: 'POST',
     body: formData,
   })
@@ -56,16 +56,13 @@ export async function weilaUpload(file: Blob, fileName: string): Promise<string>
   return data.data.url
 }
 
-function buildAuthUrl(url: string): URL {
+async function buildAuthUrl(url: string): Promise<URL> {
   const query = generateV2Query(APP_ID, APP_KEY)
   const urlWithAuth = new URL(url, window.location.origin)
   urlWithAuth.searchParams.set('appid', query.appid)
   urlWithAuth.searchParams.set('et', query.et)
   urlWithAuth.searchParams.set('sign', query.sign)
-  urlWithAuth.searchParams.set(
-    'token',
-    accessToken.value || import.meta.env.VITE_ACCESS_TOKEN || '',
-  )
+  urlWithAuth.searchParams.set('token', await whenAccessToken())
   return urlWithAuth
 }
 

@@ -1,46 +1,41 @@
 <script setup lang="ts">
+import { isSupportBridge } from '@vois/webview-bridge'
 import { useDark } from '@vueuse/core'
 import { useRouteQuery } from '@vueuse/router'
 import { onErrorCaptured, shallowRef, watch } from 'vue'
-import { RouterView } from 'vue-router'
+import { RouterView, useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import ToastHost from '~/components/ToastHost.vue'
 import { useLangQuery } from '~/composables/useLangQuery'
-import { accessToken, nativeTheme } from '~/constants'
-import { ACCESS_TOKEN_PATH } from '~/utils/auth-token-path'
+import { fetchPageParams, BOOT_TOKEN_TIMEOUT_MS } from '~/composables/usePageParams'
+import { whenWebviewBridge } from '~/composables/useWebviewBridge'
+import { nativeTheme } from '~/constants'
+import { resolveBridgeAccessToken } from '~/utils/access-token'
 
 const { t } = useI18n()
+const route = useRoute()
 const launchQuery = new URLSearchParams(window.location.search)
 const isDark = useDark({ storage: sessionStorage })
 const theme = useRouteQuery('theme')
-const tokenQuery = useRouteQuery<string | null>('access-token')
-
-watch(
-  tokenQuery,
-  (value) => {
-    const token = value || launchQuery.get('access-token')
-    if (token) accessToken.value = token
-  },
-  { immediate: true },
-)
 
 /**
- * Dev and preview servers expose the worktree-shared token; a production build
- * has no such endpoint, so a failed probe just leaves the launch query and
- * `VITE_ACCESS_TOKEN` fallback in charge.
+ * The bridge is the only token source, so this one read covers every case: native
+ * answers with the live token, and under the debug server the debug entry does.
+ * A desktop browser with neither leaves it empty.
+ *
+ * It waits far longer than a page would, because requests wait on it too; a page
+ * that runs out of patience first still renders its retry button.
  */
-async function loadSharedAccessToken(): Promise<void> {
-  try {
-    const response = await fetch(ACCESS_TOKEN_PATH)
-    // SAFETY: the dev server owns the endpoint and always answers { token: string | null }
-    const { token } = (await response.json()) as { token: string | null }
-    // A launch token is fresher than the stored file, so it outranks the response
-    if (token && !tokenQuery.value && !launchQuery.get('access-token')) accessToken.value = token
-  } catch {
-    /* no endpoint outside the dev/preview servers */
-  }
+async function loadBridgeAccessToken(): Promise<void> {
+  const params = await fetchPageParams(
+    { supported: isSupportBridge(), whenReady: whenWebviewBridge },
+    route.path,
+    ['access-token'],
+    BOOT_TOKEN_TIMEOUT_MS,
+  )
+  resolveBridgeAccessToken(params['access-token'])
 }
-void loadSharedAccessToken()
+void loadBridgeAccessToken()
 
 watch(
   [theme, nativeTheme],

@@ -1,9 +1,6 @@
 // @env browser
 
-import { useLocalStorage } from '@vueuse/core'
 import { shallowRef } from 'vue'
-
-export const accessToken = useLocalStorage('access-token', '')
 
 /**
  * Native's own UI settings, as last reported over `get-page-params`. Module state

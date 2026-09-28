@@ -4,18 +4,7 @@ import { emitBridgeDebugEvent } from 'vite-plugin-vois-webview-debug/bridge'
 import { isWebviewDebug } from '~/composables/useWebviewDebug'
 
 let bridge: WebviewBridge | undefined
-
-/**
- * Both entry points settle on this one promise, so a caller that waits gets the
- * same instance `useWebviewBridge` hands out instead of the native bridge the
- * mirror never wraps.
- */
-const ready = new Promise<WebviewBridge>((resolve) => {
-  onBridgeReady((native) => {
-    bridge = isWebviewDebug() ? mirrored(native) : native
-    resolve(bridge)
-  })
-})
+let pending: Promise<WebviewBridge> | undefined
 
 /**
  * Both directions of every call copied into the debug server's log, so a page's
@@ -59,10 +48,19 @@ export function useWebviewBridge(): WebviewBridge | undefined {
 }
 
 /**
- * The same wait as a promise, for callers that need the bridge rather than
- * `undefined`. Never settles on its own when native stays silent, so race it
- * against a timeout before awaiting.
+ * The wait, for callers that need the bridge rather than `undefined`. Never settles
+ * on its own when native stays silent, so race it against a timeout before awaiting.
+ *
+ * The wait starts here rather than at import on purpose: registering while modules
+ * are still evaluating would begin it before the app can configure a bridge, which
+ * is exactly what a debug session needs to do first.
  */
 export function whenWebviewBridge(): Promise<WebviewBridge> {
-  return ready
+  pending ??= new Promise<WebviewBridge>((resolve) => {
+    onBridgeReady((native) => {
+      bridge = isWebviewDebug() ? mirrored(native) : native
+      resolve(bridge)
+    })
+  })
+  return pending
 }

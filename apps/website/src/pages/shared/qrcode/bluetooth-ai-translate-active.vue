@@ -7,7 +7,7 @@ import PageHeader from '~/components/PageHeader.vue'
 import QueryState from '~/components/settings/QueryState.vue'
 import { usePageParams } from '~/composables/usePageParams'
 import { useToast } from '~/composables/useToast'
-import { accessToken } from '~/constants'
+import { getAccessToken } from '~/utils/access-token'
 import {
   activateBluetoothCode,
   BLUETOOTH_ACTIVATED,
@@ -31,15 +31,14 @@ const codeKey = computed(() => ['bluetooth-ai-translate', 'code', uuid.value])
 const { state, refetch: reloadCode } = useQuery({
   key: codeKey,
   query: () => getBluetoothCodeInfo(uuid.value),
-  // Auth, not the bridge, is what a request needs: the token arrives from
-  // either the launch query or native, and the query starts as soon as it lands.
-  enabled: () => Boolean(accessToken.value) && uuid.value !== '',
+  // Auth is the fetch layer's business: it waits for the token and reports a
+  // missing one, so the query only gates on its own input.
+  enabled: () => uuid.value !== '',
 })
 
 const { state: accountState } = useQuery({
   key: ['bluetooth-ai-translate', 'own-account'],
   query: getOwnAccount,
-  enabled: () => Boolean(accessToken.value),
 })
 
 const info = computed(() => state.value.data ?? null)
@@ -70,13 +69,13 @@ const deadline = computed<string | null>(() => {
  */
 const viewStatus = computed<'pending' | 'error' | 'success'>(() => {
   if (!uuid.value) return 'error'
-  if (!accessToken.value) return settled.value ? 'error' : 'pending'
+  if (!getAccessToken()) return settled.value ? 'error' : 'pending'
   return state.value.status
 })
 
 const viewError = computed<Error | null>(() => {
   if (!uuid.value) return new Error(t('bluetoothAiTranslateActive.invalidUuid'))
-  if (!accessToken.value) return new Error(t('bluetoothAiTranslateActive.noAuth'))
+  if (!getAccessToken()) return new Error(t('bluetoothAiTranslateActive.noAuth'))
   return state.value.error ?? null
 })
 

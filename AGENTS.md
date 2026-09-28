@@ -15,42 +15,35 @@
 
 ## New Worktree Setup
 
-`.env` and `.env.local` are gitignored, so a fresh worktree has neither and the build fails on the missing `VITE_APP_ID`. Copy them and install before anything else:
+Machine-specific values live in `~/.vois/`, outside the repo, so a fresh worktree copies no secrets:
 
 ```sh
-cp apps/website/.env apps/website/.env.local <worktree>/apps/website/
+cp apps/website/.env.example ~/.vois/.env   # once per machine, then fill in the values
 cd <worktree> && vp install
 ```
 
-`.env.local` also carries the AMap keys, which only the device-location page needs.
+`~/.vois/.env` holds `VITE_APP_ID` / `VITE_APP_KEY` (build) and the AMap keys the device-location page needs. `vite.config.ts` points `envDir` there, so every worktree shares one copy; CI has no such directory and injects the same names as `process.env`, which wins over the file.
 
 ## WebView Testing
 
-Both flows start from a `--debug` preview server. It captures auth, injects debug into all SPA routes, and auto-clears events on restart. `isWebviewDebug()` (`~/composables/useWebviewDebug`) detects that server, so gate any debug-only UI behind it.
+Every flow runs against a `--debug` server: it captures auth, injects debug into all SPA routes, records events to `.tmp/vois-webview-debug/events.jsonl`, and clears them on restart. `isWebviewDebug()` (`~/composables/useWebviewDebug`) detects that server, so gate any debug-only UI behind it.
 
 ```sh
 cd apps/website && vp run --filter website build && vp preview --host --port 5173 --debug
 ```
 
-### Flow A: Automated (agent-browser)
+The app has **one** token source: the bridge. Native answers `get-page-params` with the live token on every page, and under a `--debug` server there is no native side, so `@vois/webview-bridge/debug` logs in itself and answers the same call. `main.ts` imports that entry whenever `isWebviewDebug()` is true, which covers dev and `--debug` preview. Nothing is cached, nothing is written to `localStorage`, and the launch URL is not consulted.
 
-Headless tests with real `access-token`. One file holds the token for every worktree: `~/.vois/webview-access-token.env`. The preview plugin rewrites it on WebView launch and the server serves it at `/__auth/token.json`, so a token captured in one worktree is visible in all of them. No need to reopen the WebView unless it expires (API returns `授权失效` / errcode 31).
-
-The app resolves the token in this order: `?access-token=` on the launch URL, then `/__auth/token.json`, then `VITE_ACCESS_TOKEN` baked in at build time. A stale `VITE_ACCESS_TOKEN` left in `.env.local` still loses to the endpoint, but delete it anyway so nothing reads as the live token.
+That entry carries a fixed debug account, so it must never reach a build: `isWebviewDebug()` reads a script tag the debug server injects, and a production artifact has none.
 
 1. `cd apps/website && vp dev --host --port 3021` (hot reload in a second Herdr pane)
-2. Only when the token is missing or expired: user opens `http://<Mac IP>:5173/<route>` (the Network URL printed by `vp preview`) in Native App WebView → token written to `~/.vois/webview-access-token.env`
-3. `agent-browser --session webview-debug open 'http://localhost:3021/#/<route>'` (hash routing) and test
+2. `agent-browser --session webview-debug open 'http://localhost:3021/#/<route>'` (hash routing) and test
 
 Never print auth parameters.
 
-### Flow B: Real WebView (event capture)
+### Reading captured events
 
-User operates the phone; agent reads `.tmp/vois-webview-debug/events.jsonl`.
-
-1. User opens `http://<Mac IP>:5173/<route>` (the Network URL printed by `vp preview`) in Native App WebView, performs actions
-2. Read: `vp run website#debug:logs` or `curl http://127.0.0.1:5173/__debug/status`
-3. `🟢 WebView debug connected` confirms pipeline; missing → `?debug-reload=1`
+The server records what the page did. Read it with `vp run website#debug:logs`, or `curl http://127.0.0.1:5173/__debug/status` for the pipeline state. `🟢 WebView debug connected` confirms the pipeline; if it is missing, reload with `?debug-reload=1`.
 
 `debug:logs` prints event URLs and bodies verbatim, auth parameters included. Treat its output as secret.
 
@@ -61,16 +54,23 @@ User operates the phone; agent reads `.tmp/vois-webview-debug/events.jsonl`.
 | `console`   | `log`/`warn`/`error`                 |
 | `error`     | unhandled rejection, `onerror`       |
 
-### Flow C: Debug & fix (B → A)
+### Production preview
 
-1. User reproduces bug in real WebView → triggers events captured by [Flow B](#flow-b-real-webview-event-capture)
-2. Agent reads events to diagnose root cause
-3. Agent reproduces with agent-browser → [Flow A](#flow-a-automated-agent-browser)
-4. Fix, verify, repeat
+`vp run preview:production` builds, then serves `dist/` under the same subpath a real
+deployment uses. `--base` is what puts it there, and `--debug` is what lets the page
+authenticate without a native bridge.
+
+```sh
+vp run preview:production   # http://localhost:8080/vois-app-webview-next/
+```
+
+Opening it is the point: the artifact only has relative asset paths (`base: './'`),
+so a regression that breaks subpath deployment shows up as a blank page here rather
+than in production.
 
 ### Switching between worktree previews
 
-Each worktree serves a different port, so verifying one on the phone means retyping the URL. In a `--debug` server, tap the header title to enter a port; it rewrites only the port and keeps host, path, query, and hash, so the WebView's launch params survive.
+Each worktree serves a different port. In a `--debug` server, tap the header title to enter a port; it rewrites only the port and keeps host, path, query, and hash, so the launch params survive the switch.
 
 ## Release
 

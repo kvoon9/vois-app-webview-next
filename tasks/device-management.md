@@ -75,8 +75,8 @@
 ## 验证（开发者必须执行）
 
 1. `vp check` + `vp test` 全绿
-2. **agent-browser 走 Flow A 逐页面验证**：
-   - 起 mock server（3030）+ `vp dev --host --port 3021`（website `.env.local` 配好 `VITE_API_TARGET=http://localhost:3030`，token 已有）
+2. **agent-browser 逐页面验证**：
+   - 起 mock server（3030）+ `vp dev --host --port 3021`（在 `~/.vois/.env` 里加 `VITE_API_TARGET=http://localhost:3030`，token 已有）
    - `agent-browser --session webview-debug open 'http://localhost:3021/#/devices'` 起，把 9 个页面全部点一遍：列表→详情→群组管理→两个添加入口（含确认弹窗、禁选态）→群详情（改名/改介绍/退群）→成员列表→添加成员（tab 切换、禁选、全选、批量提交）→成员详情（踢人）
    - 每个写操作后回到对应列表确认状态变化；截图留证
 
@@ -130,7 +130,7 @@
 
 ## 验收补充
 
-- i18n 三语言、vp check/test、agent-browser Flow A 全页面验证（含二期新页面和群详情新结构）
+- i18n 三语言、vp check/test、agent-browser 全页面验证（含二期新页面和群详情新结构）
 - **上线前必须删除 `help.vue` 里的临时 `/devices` 入口链接**（代码里有 WARNING 注释）
 - commit 按 Conventional Commits，不要 WIP 提交
 
@@ -181,13 +181,13 @@ mock 数据:设备 101 造**最近 3 天**轨迹(深圳坂田一带折线),围�
 ## 高德接入(已确认)
 
 - 加依赖 `@amap/amap-jsapi-loader`;加载模式参考 `~/weila/weila-work-webview/src/composables/useAMap.ts`(`window._AMapSecurityConfig` + `AMapLoader.load`,plugins: Scale、ToolBar)
-- key 已配进 `apps/website/.env.local`:`VITE_AMAP_KEY` / `VITE_AMAP_SECURITY_CODE`(该文件 gitignored,不要把 key 写进源码)
+- key 已配进 `~/.vois/.env`:`VITE_AMAP_KEY` / `VITE_AMAP_SECURITY_CODE`(全局配置,不在仓库里,也不要在源码里硬编码)
 - reka-ui 已是依赖,直接用
 
 ## 验收
 
 - i18n 三语言、vp check + vp test 全绿、双构建通过
-- agent-browser Flow A:成员列表独立页(从群详情 link item 进)、群名/群昵称/群介绍权限差异(群主 vs 非群主群)、三个地图页面渲染、日历选日期画轨迹、上报频率切换后位置页提示条联动
+- agent-browser:成员列表独立页(从群详情 link item 进)、群名/群昵称/群介绍权限差异(群主 vs 非群主群)、三个地图页面渲染、日历选日期画轨迹、上报频率切换后位置页提示条联动
 
 ## 三期补充:设备群列表区分「我创建的/我加入的」(2026-09-04 确认)
 
@@ -254,4 +254,4 @@ mock 数据:设备 101 造**最近 3 天**轨迹(深圳坂田一带折线),围�
 ## 四期验收
 
 - i18n 三语言、`vp check` + `vp test` 全绿
-- agent-browser Flow A:设备资料开关与两个新入口、紧急联系人三页全链路(添加/删除/上限灰显)、提醒列表+新建+编辑+删除、各字段 Select 取值
+- agent-browser:设备资料开关与两个新入口、紧急联系人三页全链路(添加/删除/上限灰显)、提醒列表+新建+编辑+删除、各字段 Select 取值

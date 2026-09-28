@@ -1,3 +1,5 @@
+import { homedir } from 'node:os'
+import { join } from 'node:path'
 import { defineConfig, loadEnv } from 'vite-plus'
 import vue from '@vitejs/plugin-vue'
 import unocss from 'unocss/vite'
@@ -5,7 +7,6 @@ import legacy from '@vitejs/plugin-legacy'
 import VueRouter from 'vue-router/vite'
 import vueDevtools from 'vite-plugin-vue-devtools'
 import { vconsoleDev } from './plugins/vconsole-dev.ts'
-import { accessTokenFile, devAuthToken } from './plugins/dev-auth-token.ts'
 
 // The debug plugin is pnpm-linked from a sibling repo, so CI (and anyone who has
 // not cloned it) has no resolvable copy. It only ever activates for serve/preview,
@@ -13,31 +14,38 @@ import { accessTokenFile, devAuthToken } from './plugins/dev-auth-token.ts'
 async function webviewDebugPlugin(preview: boolean) {
   try {
     const { voisWebviewDebug } = await import('vite-plugin-vois-webview-debug')
-    // One canonical file for every worktree: a token captured in any of them is
-    // visible to all of them, instead of only the worktree the WebView opened.
-    return voisWebviewDebug({ preview, envFile: accessTokenFile })
+    return voisWebviewDebug({ preview })
   } catch {
     console.warn('[vite] vite-plugin-vois-webview-debug not installed; WebView debug disabled')
     return undefined
   }
 }
 
+/** Machine-global config directory; every worktree shares one `.env`. */
+const voisConfigDir = join(homedir(), '.vois')
+
 export default defineConfig(async ({ isPreview, command, mode }) => {
-  const env = loadEnv(mode, process.cwd(), 'VITE_')
+  const env = loadEnv(mode, voisConfigDir, 'VITE_')
   const apiTarget = env.VITE_API_TARGET || 'https://api.voischat.cn'
   // Group management went real first; everything else still targets the mock.
   const subuserApiTarget = env.VITE_SUBUSER_API_TARGET || 'https://api.voischat.cn'
 
-  // .env is gitignored, so CI must inject these via secrets; fail loudly instead of
-  // shipping a bundle where appid/sign silently become "undefined" (errcode 31)
+  // Fail loudly instead of shipping a bundle where appid/sign silently become
+  // "undefined" (errcode 31). CI supplies both as secrets.
   if (command === 'build') {
     if (!env.VITE_APP_ID || !env.VITE_APP_KEY) {
-      throw new Error('VITE_APP_ID and VITE_APP_KEY are required for build (see .env.example)')
+      throw new Error(
+        `VITE_APP_ID and VITE_APP_KEY are required for build; set them in ${join(voisConfigDir, '.env')} (see .env.example)`,
+      )
     }
   }
 
   return {
     base: './',
+    // One `.env` for every worktree, so nothing is copied into a fresh checkout. CI has
+    // no such directory and injects the same names through `process.env`, which `loadEnv`
+    // merges over the files.
+    envDir: voisConfigDir,
     server: {
       host: true,
       port: 3021,
@@ -69,7 +77,6 @@ export default defineConfig(async ({ isPreview, command, mode }) => {
     },
     plugins: [
       ...(isPreview ? [vconsoleDev()] : []),
-      devAuthToken(),
       await webviewDebugPlugin(process.argv.includes('--debug')),
       vueDevtools(),
       VueRouter({ dts: 'src/route-map.d.ts' }),

@@ -353,18 +353,16 @@ const headerTitle = computed(() =>
       @cancel="editingContent = false"
       @confirm="saveContent"
     >
-      <label class="block text-body" for="reminder-content">
-        {{ t('device.reminderContent') }}
-        <input
-          id="reminder-content"
-          v-model="contentDraft"
-          class="input-field mt-2"
-          type="text"
-          maxlength="64"
-          :placeholder="t('device.reminderContentPlaceholder')"
-          @keyup.enter="saveContent"
-        />
-      </label>
+      <input
+        id="reminder-content"
+        v-model="contentDraft"
+        class="input-field"
+        type="text"
+        maxlength="64"
+        :aria-label="t('device.reminderContent')"
+        :placeholder="t('device.reminderContentPlaceholder')"
+        @keyup.enter="saveContent"
+      />
     </BaseModal>
 
     <BaseModal

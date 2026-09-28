@@ -479,16 +479,13 @@ async function exitGroup(): Promise<void> {
       @cancel="closeEditor"
       @confirm="saveGroupField"
     >
-      <label class="block text-body">
-        {{ editingTitle }}
-        <textarea
-          v-model="editValue"
-          class="input-field mt-2 min-h-24"
-          :aria-label="editingTitle"
-          :disabled="savingEdit"
-          rows="3"
-        />
-      </label>
+      <textarea
+        v-model="editValue"
+        class="input-field min-h-24"
+        :aria-label="editingTitle"
+        :disabled="savingEdit"
+        rows="3"
+      />
     </BaseModal>
 
     <BaseModal

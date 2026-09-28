@@ -61,6 +61,7 @@ minimumReleaseAgeExclude:
   - vue@3.6.0-rc.5
   - '@vue/compiler-vapor@3.6.0-rc.5'
   - vite-plugin-vois-webview-debug@0.1.0
+  - '@vois/webview-bridge@0.2.0'
 catalog:
   '@amap/amap-jsapi-loader': ^1.0.1
   '@formatjs/intl-displaynames': ^7.3.15

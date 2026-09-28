@@ -1,3 +1,4 @@
+import { enableDebugBridge } from '@vois/webview-bridge/debug'
 import { PiniaColada } from '@pinia/colada'
 import { createPinia } from 'pinia'
 import { createApp } from 'vue'
@@ -6,7 +7,8 @@ import { routes } from 'vue-router/auto-routes'
 import App from '~/App.vue'
 import { i18n, SUPPORTED_LOCALES } from '~/i18n'
 import { needsIntlPolyfill } from '~/i18n/intl-polyfill-needed'
-import { deviceGroupsEntryTarget } from '~/utils/device-groups-entry'
+import { isWebviewDebug } from '~/composables/useWebviewDebug'
+import { deviceEntryTarget } from '~/utils/device-entry'
 import '@unocss/reset/tailwind.css'
 import 'virtual:uno.css'
 import '~/styles/base.css'
@@ -17,7 +19,7 @@ const router = createRouter({
 })
 
 router.beforeEach((to) => {
-  const target = deviceGroupsEntryTarget(to.path, to.query)
+  const target = deviceEntryTarget(to.path, to.query)
   return target ? { ...target, replace: true } : undefined
 })
 
@@ -37,6 +39,14 @@ app.config.errorHandler = (err) => {
  * boot: `translation-language.ts` falls back to its own table on its own.
  */
 async function mount(): Promise<void> {
+  // A debug page has no native side, so the bridge logs in itself and answers
+  // `get-page-params` like native would. Enabling it before mount keeps
+  // `isSupportBridge()` honest from the first call.
+  //
+  // The served script tag decides, not a build flag: a production build cannot
+  // tell itself apart.
+  if (isWebviewDebug()) enableDebugBridge()
+
   try {
     if (needsIntlPolyfill(SUPPORTED_LOCALES)) await import('~/i18n/intl-polyfill')
   } catch (error) {

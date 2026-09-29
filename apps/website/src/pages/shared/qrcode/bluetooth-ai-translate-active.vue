@@ -7,7 +7,6 @@ import PageHeader from '~/components/PageHeader.vue'
 import QueryState from '~/components/settings/QueryState.vue'
 import { usePageParams } from '~/composables/usePageParams'
 import { useToast } from '~/composables/useToast'
-import { getAccessToken } from '~/utils/access-token'
 import {
   activateBluetoothCode,
   BLUETOOTH_ACTIVATED,
@@ -22,8 +21,7 @@ const { showToast } = useToast()
 const queryCache = useQueryCache()
 const confirming = shallowRef(false)
 
-/** Native owns the params; only `uuid` is page-specific, the rest are defaults. */
-const { params, settled, reload: reloadParams } = usePageParams([])
+const { params, settled, reload: reloadParams } = usePageParams(['uuid'])
 
 const uuid = computed(() => params.value.uuid ?? '')
 const codeKey = computed(() => ['bluetooth-ai-translate', 'code', uuid.value])
@@ -36,7 +34,7 @@ const { state, refetch: reloadCode } = useQuery({
   enabled: () => uuid.value !== '',
 })
 
-const { state: accountState } = useQuery({
+const { state: accountState, refetch: reloadAccount } = useQuery({
   key: ['bluetooth-ai-translate', 'own-account'],
   query: getOwnAccount,
 })
@@ -63,20 +61,16 @@ const deadline = computed<string | null>(() => {
   return null
 })
 
-/**
- * The page's own state on top of the query: a missing code and a missing token
- * are failures too, and a missing token is only one once native has answered.
- */
 const viewStatus = computed<'pending' | 'error' | 'success'>(() => {
-  if (!uuid.value) return 'error'
-  if (!getAccessToken()) return settled.value ? 'error' : 'pending'
+  if (!uuid.value) return settled.value ? 'error' : 'pending'
+  if (state.value.status === 'error' || accountState.value.status === 'error') return 'error'
+  if (accountState.value.status === 'pending') return 'pending'
   return state.value.status
 })
 
 const viewError = computed<Error | null>(() => {
   if (!uuid.value) return new Error(t('bluetoothAiTranslateActive.invalidUuid'))
-  if (!getAccessToken()) return new Error(t('bluetoothAiTranslateActive.noAuth'))
-  return state.value.error ?? null
+  return state.value.error ?? accountState.value.error ?? null
 })
 
 const { mutateAsync: activate, isLoading: activating } = useMutation({
@@ -97,9 +91,9 @@ async function confirmActivation(): Promise<void> {
   }
 }
 
-function retry(): void {
-  void reloadParams()
-  void reloadCode()
+async function retry(): Promise<void> {
+  if (!uuid.value) await reloadParams()
+  await Promise.all([uuid.value ? reloadCode() : undefined, reloadAccount()])
 }
 </script>
 

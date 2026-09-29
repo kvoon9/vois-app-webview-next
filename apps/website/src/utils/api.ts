@@ -1,7 +1,7 @@
 // @env browser
 
 import md5 from 'md5'
-import { whenAccessToken } from '~/utils/access-token'
+import { bridge } from '~/utils/bridge'
 
 interface WeilaResponse<T> {
   errcode: number
@@ -57,12 +57,13 @@ export async function weilaUpload(file: Blob, fileName: string): Promise<string>
 }
 
 async function buildAuthUrl(url: string): Promise<URL> {
+  const token = await bridge.getAccessToken()
   const query = generateV2Query(APP_ID, APP_KEY)
   const urlWithAuth = new URL(url, window.location.origin)
   urlWithAuth.searchParams.set('appid', query.appid)
   urlWithAuth.searchParams.set('et', query.et)
   urlWithAuth.searchParams.set('sign', query.sign)
-  urlWithAuth.searchParams.set('token', await whenAccessToken())
+  urlWithAuth.searchParams.set('token', token)
   return urlWithAuth
 }
 

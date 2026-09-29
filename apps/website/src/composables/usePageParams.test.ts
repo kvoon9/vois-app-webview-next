@@ -14,11 +14,16 @@ function sourceWith(bridge: Bridge, supported = true): PageParamsBridgeSource {
   return { supported, whenReady: async () => bridge }
 }
 
-/** Native's default payload, the shape `params: []` is answered with. */
-const DEFAULTS = {
+/** Native's default payload; auth fields are ordinary scalars here, not filtered. */
+const NATIVE_DEFAULTS = {
   errcode: 0,
   errmsg: 'ok',
-  data: { 'access-token': 'tok', 'login-id': '441', lang: 'zh-CN', 'device-type': 'android' },
+  data: {
+    'access-token': 'tok',
+    'login-id': '441',
+    lang: 'zh-CN',
+    'device-type': 'android',
+  },
 }
 
 describe('fetchPageParams', () => {
@@ -26,19 +31,61 @@ describe('fetchPageParams', () => {
     vi.useRealTimers()
   })
 
-  it('asks for the named fields and returns native defaults', async () => {
+  it('asks for the named fields and returns native defaults including the token', async () => {
     const sent = vi.fn()
     const bridge = Bridge.create((name, data, onResponse) => {
       sent(name, data)
-      onResponse?.(JSON.stringify(DEFAULTS))
+      onResponse?.(JSON.stringify(NATIVE_DEFAULTS))
     })
 
     await expect(fetchPageParams(sourceWith(bridge), '/shared/qrcode/x')).resolves.toEqual(
-      DEFAULTS.data,
+      NATIVE_DEFAULTS.data,
     )
     expect(sent).toHaveBeenCalledWith('get-page-params', {
       page: '/shared/qrcode/x',
       params: [],
+    })
+  })
+
+  it('forwards requested names verbatim, auth fields included', async () => {
+    const sent = vi.fn()
+    const bridge = Bridge.create((name, data, onResponse) => {
+      sent(name, data)
+      onResponse?.(
+        JSON.stringify({ errcode: 0, errmsg: 'ok', data: { 'access-token': 'tok', uuid: 'x' } }),
+      )
+    })
+
+    await expect(
+      fetchPageParams(sourceWith(bridge), '/shared/qrcode/x', ['access-token', 'uuid']),
+    ).resolves.toEqual({ 'access-token': 'tok', uuid: 'x' })
+    expect(sent).toHaveBeenCalledWith('get-page-params', {
+      page: '/shared/qrcode/x',
+      params: ['access-token', 'uuid'],
+    })
+  })
+
+  it('preserves every scalar auth field alongside the other values', async () => {
+    const mixed = sourceWith(
+      bridgeWithNative(() =>
+        JSON.stringify({
+          errcode: 0,
+          errmsg: 'ok',
+          data: {
+            'access-token': 7,
+            accessToken: 'camel',
+            token: true,
+            'login-id': '441',
+          },
+        }),
+      ),
+    )
+
+    await expect(fetchPageParams(mixed, '/shared/qrcode/x')).resolves.toEqual({
+      'access-token': '7',
+      accessToken: 'camel',
+      token: 'true',
+      'login-id': '441',
     })
   })
 
@@ -86,18 +133,33 @@ describe('fetchPageParams', () => {
 })
 
 describe('mergePageParams', () => {
-  const fromBridge = { 'access-token': 'tok', 'login-id': '441', uuid: 'from-native' }
+  const fromBridge = {
+    'access-token': 'tok',
+    accessToken: 'camel',
+    token: 'plain',
+    'login-id': '441',
+    uuid: 'from-native',
+  }
 
   it('lets the route query outrank what native sent', () => {
     expect(mergePageParams(fromBridge, { uuid: '0140c6a1' })).toEqual({
-      'access-token': 'tok',
-      'login-id': '441',
+      ...fromBridge,
       uuid: '0140c6a1',
     })
   })
 
-  it('keeps the bridge value when the query has no such key', () => {
+  it('keeps native values, auth fields included, when the query has no such key', () => {
     expect(mergePageParams(fromBridge, {})).toEqual(fromBridge)
+  })
+
+  it('lets the route query outrank native for auth fields too', () => {
+    expect(
+      mergePageParams(fromBridge, { 'access-token': 'query-tok', token: 'query-plain' }),
+    ).toEqual({
+      ...fromBridge,
+      'access-token': 'query-tok',
+      token: 'query-plain',
+    })
   })
 
   it('ignores non-string query values and keeps the first of a repeated key', () => {

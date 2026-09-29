@@ -1,41 +1,17 @@
 <script setup lang="ts">
-import { isSupportBridge } from '@vois/webview-bridge'
 import { useDark } from '@vueuse/core'
 import { useRouteQuery } from '@vueuse/router'
 import { onErrorCaptured, shallowRef, watch } from 'vue'
-import { RouterView, useRoute } from 'vue-router'
+import { RouterView } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import ToastHost from '~/components/ToastHost.vue'
 import { useLangQuery } from '~/composables/useLangQuery'
-import { fetchPageParams, BOOT_TOKEN_TIMEOUT_MS } from '~/composables/usePageParams'
-import { whenWebviewBridge } from '~/composables/useWebviewBridge'
 import { nativeTheme } from '~/constants'
-import { resolveBridgeAccessToken } from '~/utils/access-token'
 
 const { t } = useI18n()
-const route = useRoute()
 const launchQuery = new URLSearchParams(window.location.search)
 const isDark = useDark({ storage: sessionStorage })
 const theme = useRouteQuery('theme')
-
-/**
- * The bridge is the only token source, so this one read covers every case: native
- * answers with the live token, and under the debug server the debug entry does.
- * A desktop browser with neither leaves it empty.
- *
- * It waits far longer than a page would, because requests wait on it too; a page
- * that runs out of patience first still renders its retry button.
- */
-async function loadBridgeAccessToken(): Promise<void> {
-  const params = await fetchPageParams(
-    { supported: isSupportBridge(), whenReady: whenWebviewBridge },
-    route.path,
-    ['access-token'],
-    BOOT_TOKEN_TIMEOUT_MS,
-  )
-  resolveBridgeAccessToken(params['access-token'])
-}
-void loadBridgeAccessToken()
 
 watch(
   [theme, nativeTheme],

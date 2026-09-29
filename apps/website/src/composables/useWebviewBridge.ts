@@ -24,7 +24,17 @@ function mirrored(native: WebviewBridge): WebviewBridge {
     emitBridgeDebugEvent({ direction: 'send', protocol: args[0], data: args[1] })
     try {
       const response = await native.request(...args)
-      emitBridgeDebugEvent({ direction: 'receive', protocol: args[0], data: response })
+      emitBridgeDebugEvent({
+        direction: 'receive',
+        protocol: args[0],
+        data: JSON.parse(
+          JSON.stringify(response, (key, value) =>
+            key === 'access-token' || key === 'accessToken' || key === 'token'
+              ? '[redacted]'
+              : value,
+          ),
+        ),
+      })
       // SAFETY: a wrapper cannot restate the caller's generic, and this is
       // native's answer verbatim.
       return response as never

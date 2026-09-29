@@ -14,17 +14,9 @@ import { computed, onMounted, shallowRef, type ComputedRef, type ShallowRef } fr
 import { useRoute, type LocationQuery } from 'vue-router'
 import { whenWebviewBridge } from '~/composables/useWebviewBridge'
 import { nativeLang, nativeTheme } from '~/constants'
-import { resolveBridgeAccessToken } from '~/utils/access-token'
 
 /** Give up on an unanswered bridge request after this long; native's own budget. */
 export const PAGE_PARAMS_TIMEOUT_MS = 3000
-
-/**
- * How long the boot read may wait for the token. Every request awaits that read, so
- * this is the app's patience with a slow bridge rather than a page's: a page still
- * settles at `PAGE_PARAMS_TIMEOUT_MS` and offers its retry button.
- */
-export const BOOT_TOKEN_TIMEOUT_MS = 60_000
 
 /** Page params are flat string key/values by contract; nesting is out of scope. */
 export interface PageParams {
@@ -100,7 +92,10 @@ export async function fetchPageParams(
 async function askNative(source: PageParamsBridgeSource, page: string, params: readonly string[]) {
   const bridge = await source.whenReady()
   if (!bridge) throw new Error('no bridge')
-  return bridge.request('get-page-params', { page, params: [...params] })
+  return bridge.request('get-page-params', {
+    page,
+    params: [...params],
+  })
 }
 
 /** The promise's value, or `undefined` once it outlasts `ms`. */
@@ -139,13 +134,7 @@ export function mergePageParams(bridgeParams: PageParams, query: LocationQuery):
   return values
 }
 
-/**
- * Page params for the current route.
- *
- * The token is not one of them, but a late answer is still forwarded to
- * `access-token`: the boot read gives up on its own schedule, and this is what lets
- * a page's retry button recover after that.
- */
+/** Page params for the current route, with query values taking precedence. */
 export function usePageParams(params: readonly string[] = []): PageParamsHandle {
   const route = useRoute()
   const bridgeParams = shallowRef<PageParams>({})
@@ -160,10 +149,9 @@ export function usePageParams(params: readonly string[] = []): PageParamsHandle 
     const fetched = await fetchPageParams(
       { supported: isSupportBridge(), whenReady: whenWebviewBridge },
       route.path,
-      params,
+      [...new Set(['theme', 'lang', ...params])],
     )
     bridgeParams.value = fetched
-    resolveBridgeAccessToken(fetched['access-token'])
 
     // Native also owns the app's own theme and language; the route query outranks
     // them at the read site, so only what native actually answered lands here.

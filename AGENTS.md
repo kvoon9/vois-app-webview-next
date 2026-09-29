@@ -32,9 +32,11 @@ Every flow runs against a `--debug` server: it captures auth, injects debug into
 cd apps/website && vp run --filter website build && vp preview --host --port 5173 --debug
 ```
 
-The app has **one** token source: the bridge. Native answers `get-page-params` with the live token on every page, and under a `--debug` server there is no native side, so `@vois/webview-bridge/debug` logs in itself and answers the same call. `main.ts` imports that entry whenever `isWebviewDebug()` is true, which covers dev and `--debug` preview. Nothing is cached, nothing is written to `localStorage`, and the launch URL is not consulted.
+The app has **one** token entry point: `bridge.getAccessToken()` from `~/utils/bridge`. It first requests native `get-page-params` with `{ page: currentRoutePath, params: ['access-token'] }`. If no usable token arrives, dev (`import.meta.env.DEV`) and debug preview (`isWebviewDebug()`) may call `getDebugAccessToken()` from `@vois/webview-bridge/debug` to log in with the existing fixed account. Production never enables that fallback. Concurrent callers share the whole native-read/login attempt; each later call tries native first again. Native readiness/response is bounded to 10 seconds; fallback login has its own 15-second network timeout. No new native protocol is required. Both HTTP requests and uploads use this entry point.
 
-That entry carries a fixed debug account, so it must never reach a build: `isWebviewDebug()` reads a script tag the debug server injects, and a production artifact has none.
+Website `usePageParams()` preserves all scalar fields, including token fields, and normal route-query precedence. It does not write authentication state or trigger login. The debug bridge's page params also never trigger login: only `getDebugAccessToken()` does. Debug login success is reused in memory, while a failure is forgotten for retry. `main.ts` enables the debug bridge before warming the channel. HTTP authentication does not read route-query tokens or browser storage. Token fields in bridge response logs are redacted.
+
+The fixed account is for dev and debug preview only. Preview runs the production artifact, so the runtime script marker injected by the debug server enables preview fallback; production hosting without that marker must never invoke fixed-account login.
 
 1. `cd apps/website && vp dev --host --port 3021` (hot reload in a second Herdr pane)
 2. `agent-browser --session webview-debug open 'http://localhost:3021/#/<route>'` (hash routing) and test

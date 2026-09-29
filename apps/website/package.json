@@ -16,7 +16,7 @@
     "@internationalized/date": "catalog:",
     "@pinia/colada": "catalog:vue",
     "@valibot/i18n": "^1.2.0",
-    "@vois/webview-bridge": "^0.2.0",
+    "@vois/webview-bridge": "catalog:",
     "@vue/runtime-vapor": "catalog:vue",
     "@vueuse/core": "catalog:vue",
     "@vueuse/integrations": "catalog:vue",

@@ -119,24 +119,27 @@ async function transferOwner(): Promise<void> {
 
 <template>
   <div class="page">
-    <PageHeader :title="t('device.memberDetail')" />
+    <PageHeader :title="member?.nick || t('device.memberDetail')" />
 
     <main class="p-4">
       <QueryState :status="state.status" :error="state.error" @retry="reload()">
         <template v-if="member">
-          <div class="flex flex-col items-center py-4 text-center">
+          <!-- The name carries the header; read-only facts sit on the background as centred `key：value` lines. -->
+          <section class="flex flex-col items-center py-4">
             <Avatar :name="member.nick" :src="member.avatar" size="2xl" />
-            <h2 class="mt-3 text-header font-semibold">{{ member.nick }}</h2>
-            <p class="mt-1 text-small text-text-secondary">{{ member.userNum }}</p>
-          </div>
+            <p class="mt-3 text-small text-text-secondary">
+              {{ t('device.userNumberValue', { number: member.userNum }) }}
+            </p>
+            <p class="mt-1 text-small text-text-secondary">
+              {{
+                t('device.groupNicknameValue', {
+                  nickname: member.nickname || t('device.groupNicknameUnset'),
+                })
+              }}
+            </p>
+          </section>
 
-          <div class="mt-4 panel">
-            <div class="min-h-14 px-4 py-3">
-              <p class="text-small text-text-secondary">
-                {{ t('device.groupNickname') }}
-              </p>
-              <p class="mt-1 text-body">{{ member.nickname || t('device.groupNicknameUnset') }}</p>
-            </div>
+          <section class="mt-2 overflow-hidden panel">
             <RouterLink
               :to="{ path: '/report-user', query: { id: String(memberId) } }"
               class="min-h-14 flex items-center justify-between px-4 text-body text-danger"
@@ -144,7 +147,7 @@ async function transferOwner(): Promise<void> {
               <span>{{ t('profile.report') }}</span>
               <span class="row-chevron" aria-hidden="true" />
             </RouterLink>
-          </div>
+          </section>
 
           <div v-if="canManage" class="mt-8 space-y-3">
             <button

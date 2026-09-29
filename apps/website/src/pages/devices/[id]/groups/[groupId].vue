@@ -276,97 +276,95 @@ async function exitGroup(): Promise<void> {
     <main class="p-4">
       <QueryState :status="state.status" :error="state.error" @retry="reload()">
         <template v-if="group">
-          <section class="overflow-hidden rounded-standard bg-surface-elevated">
-            <div class="flex flex-col items-center px-4 py-5 text-center">
-              <input
-                ref="avatarInput"
-                type="file"
-                accept="image/*"
-                class="sr-only"
-                :aria-label="t('device.changeAvatar')"
-                @change="onAvatarChange"
-              />
-              <button
-                type="button"
-                class="rounded-full disabled:cursor-default"
-                :class="avatarUploading ? 'opacity-50' : ''"
-                :disabled="!isOwner || avatarUploading"
-                :aria-label="isOwner ? t('device.changeAvatar') : undefined"
-                @click="pickAvatar"
-              >
-                <Avatar :name="group.name" :src="group.avatar" size="xl" />
-              </button>
-              <span
-                v-if="isOwner"
-                class="pointer-events-none -mt-6 ml-14 h-7 w-7 flex items-center justify-center rounded-full bg-primary text-primary-text text-small"
-                aria-hidden="true"
-              >
-                <span class="i-ph-pencil-simple" />
+          <!-- The group name lives in the header, so the avatar stands alone here. -->
+          <section class="flex flex-col items-center py-4">
+            <input
+              ref="avatarInput"
+              type="file"
+              accept="image/*"
+              class="sr-only"
+              :aria-label="t('device.changeAvatar')"
+              @change="onAvatarChange"
+            />
+            <button
+              type="button"
+              class="rounded-full disabled:cursor-default"
+              :class="avatarUploading ? 'opacity-50' : ''"
+              :disabled="!isOwner || avatarUploading"
+              :aria-label="isOwner ? t('device.changeAvatar') : undefined"
+              @click="pickAvatar"
+            >
+              <Avatar :name="group.name" :src="group.avatar" size="xl" />
+            </button>
+            <span
+              v-if="isOwner"
+              class="pointer-events-none -mt-6 ml-14 h-7 w-7 flex items-center justify-center rounded-full bg-primary text-primary-text text-small"
+              aria-hidden="true"
+            >
+              <span class="i-ph-pencil-simple" />
+            </span>
+            <!-- Read-only facts sit on the background as centred `key：value` lines. -->
+            <p class="mt-3 text-small text-text-secondary">
+              {{ t('device.groupNumber', { number: group.num }) }}
+            </p>
+            <p v-show="false" class="mt-1 text-small text-text-secondary">
+              {{ t('device.createdAt', { date: group.createdAt || t('device.notAvailable') }) }}
+            </p>
+          </section>
+
+          <section class="overflow-hidden panel">
+            <!-- Renaming is the only place an owner still sees the name; members read it from the header. -->
+            <button
+              v-if="isOwner"
+              type="button"
+              class="panel-row min-h-14 w-full py-3 text-left"
+              @click="openEditor('name')"
+            >
+              <span class="flex-none text-2nd-body text-text-secondary">
+                {{ t('device.groupName') }}
               </span>
-              <h2 class="mt-3 text-header font-semibold">{{ group.name }}</h2>
-              <p class="mt-1 text-small text-text-secondary">
-                {{ t('device.groupNumber', { number: group.num }) }}
-              </p>
-              <p v-show="false" class="mt-1 text-small text-text-secondary">
-                {{ t('device.createdAt', { date: group.createdAt || t('device.notAvailable') }) }}
-              </p>
-            </div>
-
-            <div>
-              <button
-                v-if="isOwner"
-                type="button"
-                class="panel-row min-h-14 w-full py-3 text-left"
-                @click="openEditor('name')"
-              >
-                <span>
-                  <span class="block text-body">{{ t('device.groupName') }}</span>
-                  <span class="mt-0.5 block text-small text-text-secondary">{{ group.name }}</span>
-                </span>
+              <span class="ml-4 flex min-w-0 items-center text-right text-2nd-body">
+                <span class="truncate">{{ group.name }}</span>
                 <span class="row-chevron" aria-hidden="true" />
-              </button>
-              <div v-else class="panel-row min-h-14 py-3">
-                <span>
-                  <span class="block text-body">{{ t('device.groupName') }}</span>
-                  <span class="mt-0.5 block text-small text-text-secondary">{{ group.name }}</span>
-                </span>
-              </div>
+              </span>
+            </button>
 
-              <button
-                v-show="false"
-                v-if="isOwner && group.infoAvailable"
-                type="button"
-                class="panel-row min-h-14 w-full py-3 text-left"
-                @click="openEditor('intro')"
-              >
-                <span class="min-w-0">
-                  <span class="block text-body">{{ t('device.groupIntroduction') }}</span>
-                  <span class="mt-0.5 block truncate text-small text-text-secondary">
-                    {{ group.intro || t('device.notAvailable') }}
-                  </span>
-                </span>
+            <button
+              type="button"
+              class="panel-row min-h-14 w-full py-3 text-left"
+              @click="openEditor('nickname')"
+            >
+              <span class="flex-none text-2nd-body text-text-secondary">
+                {{ t('device.groupNickname') }}
+              </span>
+              <span class="ml-4 flex min-w-0 items-center text-right text-2nd-body">
+                <span class="truncate">{{ myNickname }}</span>
                 <span class="row-chevron" aria-hidden="true" />
-              </button>
-              <div v-show="false" v-else class="panel-row min-h-14 py-3">
-                <span class="min-w-0">
-                  <span class="block text-body">{{ t('device.groupIntroduction') }}</span>
-                  <span class="mt-0.5 block truncate text-small text-text-secondary">
-                    {{ group.intro || t('device.notAvailable') }}
-                  </span>
-                </span>
-              </div>
+              </span>
+            </button>
 
-              <button
-                type="button"
-                class="panel-row min-h-14 w-full py-3 text-left"
-                @click="openEditor('nickname')"
-              >
-                <span>
-                  <span class="block text-body">{{ t('device.groupNickname') }}</span>
-                  <span class="mt-0.5 block text-small text-text-secondary">{{ myNickname }}</span>
-                </span>
+            <button
+              v-show="false"
+              v-if="isOwner && group.infoAvailable"
+              type="button"
+              class="panel-row min-h-14 w-full py-3 text-left"
+              @click="openEditor('intro')"
+            >
+              <span class="flex-none text-2nd-body text-text-secondary">
+                {{ t('device.groupIntroduction') }}
+              </span>
+              <span class="ml-4 flex min-w-0 items-center text-right text-2nd-body">
+                <span class="truncate">{{ group.intro || t('device.notAvailable') }}</span>
                 <span class="row-chevron" aria-hidden="true" />
-              </button>
+              </span>
+            </button>
+            <div v-show="false" v-else class="panel-row min-h-14 py-3">
+              <span class="flex-none text-2nd-body text-text-secondary">
+                {{ t('device.groupIntroduction') }}
+              </span>
+              <span class="ml-4 min-w-0 truncate text-right text-2nd-body">
+                {{ group.intro || t('device.notAvailable') }}
+              </span>
             </div>
           </section>
 

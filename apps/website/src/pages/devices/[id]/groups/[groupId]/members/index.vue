@@ -71,18 +71,7 @@ function openMember(member: GroupMember): void {
   <div class="page">
     <PageHeader :title="t('device.members')" />
     <main class="p-4">
-      <RouterLink
-        :to="{
-          path: `/devices/${deviceId}/groups/${groupId}/members/add`,
-          query: route.query,
-        }"
-        class="min-h-12 w-full nav-item"
-      >
-        <span>{{ t('device.addMember') }}</span>
-        <span class="row-chevron" aria-hidden="true" />
-      </RouterLink>
-
-      <label class="relative mt-4 block">
+      <label class="relative block">
         <span class="sr-only">{{ t('device.searchMembers') }}</span>
         <input
           v-model="search"
@@ -100,6 +89,17 @@ function openMember(member: GroupMember): void {
           <span class="i-ph-x" aria-hidden="true" />
         </button>
       </label>
+
+      <RouterLink
+        :to="{
+          path: `/devices/${deviceId}/groups/${groupId}/members/add`,
+          query: route.query,
+        }"
+        class="mt-4 min-h-12 w-full nav-item"
+      >
+        <span>{{ t('device.addMember') }}</span>
+        <span class="row-chevron" aria-hidden="true" />
+      </RouterLink>
 
       <QueryState
         :status="state.status"

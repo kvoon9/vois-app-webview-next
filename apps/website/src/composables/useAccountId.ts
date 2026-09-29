@@ -1,5 +1,6 @@
-import { useRouteQuery } from '@vueuse/router'
 import { computed } from 'vue'
+import { useNavigationContext } from '~/composables/useNavigationContext'
+import { usePageParams } from '~/composables/usePageParams'
 
 export function parseAccountId(value: string | null | undefined): number | null {
   if (!value || !/^[1-9]\d*$/.test(value)) return null
@@ -8,21 +9,18 @@ export function parseAccountId(value: string | null | undefined): number | null 
 }
 
 /**
- * Current translation account: the owner's `login-id`, or the device's id
- * passed as `login-id` when inside the device flow.
+ * Current translation account: the device flow's pushed override, else native's launch
+ * `login-id`. The status/error/reload triple describes the native read, so callers gate
+ * their own queries until the account is settled.
  */
 export function useAccountId() {
-  const loginIdQuery = useRouteQuery<string | null>('login-id')
+  const { context } = useNavigationContext()
+  const { params, status, error, reload } = usePageParams(['login-id'])
 
-  // Hash routing never touches the outer ?search, so launch-time login-id stays readable there
-  const launchLoginId = parseAccountId(new URLSearchParams(window.location.search).get('login-id'))
-
-  const accountId = computed(() => parseAccountId(loginIdQuery.value) ?? launchLoginId)
-
-  // Spread into router.push/RouterLink query to keep the account context across navigation
-  const accountQuery = computed(() =>
-    accountId.value == null ? {} : { 'login-id': String(accountId.value) },
-  )
-
-  return { accountId, accountQuery }
+  return {
+    accountId: computed(() => context.value.accountId ?? parseAccountId(params.value['login-id'])),
+    status,
+    error,
+    reload,
+  }
 }

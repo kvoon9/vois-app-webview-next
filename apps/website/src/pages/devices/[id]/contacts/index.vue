@@ -38,10 +38,7 @@ function displayName(contact: Contact): string {
 
 function openContact(contact: Contact): void {
   if (deviceId.value == null) return
-  router.push({
-    path: `/devices/${deviceId.value}/contacts/${contact.userId}`,
-    query: route.query,
-  })
+  router.push(`/devices/${deviceId.value}/contacts/${contact.userId}`)
 }
 </script>
 
@@ -51,17 +48,11 @@ function openContact(contact: Contact): void {
 
     <main class="p-4">
       <nav class="space-y-3" :aria-label="t('device.addContact')">
-        <router-link
-          :to="{ path: `/devices/${deviceId}/contacts/add`, query: route.query }"
-          class="min-h-12 nav-item"
-        >
+        <router-link :to="`/devices/${deviceId}/contacts/add`" class="min-h-12 nav-item">
           <span>{{ t('device.addFromFriends') }}</span>
           <span class="row-chevron" aria-hidden="true" />
         </router-link>
-        <router-link
-          :to="{ path: `/devices/${deviceId}/contacts/search`, query: route.query }"
-          class="min-h-12 nav-item"
-        >
+        <router-link :to="`/devices/${deviceId}/contacts/search`" class="min-h-12 nav-item">
           <span>{{ t('device.searchContacts') }}</span>
           <span class="row-chevron" aria-hidden="true" />
         </router-link>

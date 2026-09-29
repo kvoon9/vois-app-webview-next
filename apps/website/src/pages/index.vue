@@ -2,10 +2,8 @@
 import { useI18n } from 'vue-i18n'
 import { RouterLink } from 'vue-router'
 import PageHeader from '~/components/PageHeader.vue'
-import { useAccountId } from '~/composables/useAccountId'
 
 const { t } = useI18n({ useScope: 'global' })
-const { accountQuery } = useAccountId()
 </script>
 
 <template>
@@ -27,10 +25,7 @@ const { accountQuery } = useAccountId()
           <span>{{ t('home.deviceManagement') }}</span>
           <span class="row-chevron" aria-hidden="true" />
         </RouterLink>
-        <RouterLink
-          :to="{ path: '/settings', query: accountQuery }"
-          class="min-h-12 w-full nav-item"
-        >
+        <RouterLink to="/settings" class="min-h-12 w-full nav-item">
           <span>{{ t('settings.title') }}</span>
           <span class="row-chevron" aria-hidden="true" />
         </RouterLink>

@@ -2,6 +2,7 @@ import { onBridgeReady, type WebviewBridge } from '@vois/webview-bridge'
 import '@vois/webview-bridge/vois'
 import { emitBridgeDebugEvent } from 'vite-plugin-vois-webview-debug/bridge'
 import { isWebviewDebug } from '~/composables/useWebviewDebug'
+import { debugUrlPageParams, mergeDebugPageParams } from '~/utils/bridge/debug-page-params'
 
 let bridge: WebviewBridge | undefined
 let pending: Promise<WebviewBridge> | undefined
@@ -24,20 +25,30 @@ function mirrored(native: WebviewBridge): WebviewBridge {
     emitBridgeDebugEvent({ direction: 'send', protocol: args[0], data: args[1] })
     try {
       const response = await native.request(...args)
+      // A debug page carries its selections in the URL, and native only knows
+      // the launch context, so they are laid over the answer it gave.
+      const answered =
+        args[0] === 'get-page-params'
+          ? mergeDebugPageParams(
+              response,
+              args[1],
+              debugUrlPageParams(window.location.search, window.location.hash),
+            )
+          : response
       emitBridgeDebugEvent({
         direction: 'receive',
         protocol: args[0],
         data: JSON.parse(
-          JSON.stringify(response, (key, value) =>
+          JSON.stringify(answered, (key, value) =>
             key === 'access-token' || key === 'accessToken' || key === 'token'
               ? '[redacted]'
               : value,
           ),
         ),
       })
-      // SAFETY: a wrapper cannot restate the caller's generic, and this is
-      // native's answer verbatim.
-      return response as never
+      // SAFETY: a wrapper cannot restate the caller's generic; this is native's
+      // answer with debug URL params laid over `data` for get-page-params only.
+      return answered as never
     } catch (error) {
       // A rejection is the case worth seeing: native's answer never arrived.
       emitBridgeDebugEvent({

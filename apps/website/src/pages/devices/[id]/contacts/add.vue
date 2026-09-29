@@ -90,7 +90,7 @@ async function submit(): Promise<void> {
     confirmationOpen.value = false
     await queryCache.invalidateQueries({ key: ['device-management', 'contacts'] })
     showToast(t('device.contactsAdded'))
-    await router.push({ path: `/devices/${deviceId.value}/contacts`, query: route.query })
+    await router.push(`/devices/${deviceId.value}/contacts`)
   } catch (error) {
     showToast(error instanceof Error ? error.message : String(error), { type: 'error' })
   }

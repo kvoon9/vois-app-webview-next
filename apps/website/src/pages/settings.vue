@@ -2,11 +2,9 @@
 import { RouterLink, RouterView, useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import PageHeader from '~/components/PageHeader.vue'
-import { useAccountId } from '~/composables/useAccountId'
 
 const { t } = useI18n()
 const route = useRoute()
-const { accountQuery } = useAccountId()
 </script>
 
 <template>
@@ -19,7 +17,7 @@ const { accountQuery } = useAccountId()
         <RouterLink
           v-for="item in ['friends', 'groups', 'devices']"
           :key="item"
-          :to="{ path: `/settings/${item}`, query: accountQuery }"
+          :to="`/settings/${item}`"
           class="card min-h-16 w-full flex items-center justify-between text-left"
         >
           <span class="text-body font-medium">{{ t(`settings.${item}`) }}</span>

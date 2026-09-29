@@ -100,10 +100,7 @@ async function submit(): Promise<void> {
     await addMutation.mutateAsync(selectedIds.value)
     await queryCache.invalidateQueries({ key: ['device-management'] })
     showToast(t('device.membersAdded'))
-    await router.push({
-      path: `/devices/${deviceId.value}/groups/${groupId.value}`,
-      query: route.query,
-    })
+    await router.push(`/devices/${deviceId.value}/groups/${groupId.value}`)
   } catch (error) {
     showToast(error instanceof Error ? error.message : String(error), { type: 'error' })
   }

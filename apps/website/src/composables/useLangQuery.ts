@@ -1,25 +1,18 @@
 import { useSessionStorage } from '@vueuse/core'
-import { useRouteQuery } from '@vueuse/router'
 import { watch } from 'vue'
 
 import { DEFAULT_LOCALE, i18n, isSupportedLocale, type SupportedLocale } from '~/i18n'
 import { nativeLang } from '~/constants'
 
-/**
- * The route query describes this navigation, native describes the app it was
- * opened from; the launch query is only the older copy of the same answer.
- */
+/** Native's language wins; the stored locale is the fallback once it says nothing usable. */
 export function useLangQuery(): void {
-  const launchLang = new URLSearchParams(window.location.search).get('lang')
-  const lang = useRouteQuery<string | null>('lang')
   const storedLocale = useSessionStorage<SupportedLocale>('locale', DEFAULT_LOCALE)
 
   watch(
-    [lang, nativeLang],
-    ([value, fromNative]) => {
-      const requestedLocale = value || fromNative || launchLang
-      const locale = isSupportedLocale(requestedLocale)
-        ? requestedLocale
+    nativeLang,
+    (fromNative) => {
+      const locale = isSupportedLocale(fromNative)
+        ? fromNative
         : isSupportedLocale(storedLocale.value)
           ? storedLocale.value
           : DEFAULT_LOCALE

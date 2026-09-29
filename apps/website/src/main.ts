@@ -48,6 +48,10 @@ async function mount(): Promise<void> {
   } catch (error) {
     console.error('[intl] polyfill failed to load', error)
   }
+  // Mount only after the first route resolved: App.vue's usePageParams observes
+  // route.path at setup, and observing START_LOCATION ('/') would send native a
+  // page-params request for a page that is never shown.
+  await router.isReady()
   app.mount('#app')
 }
 

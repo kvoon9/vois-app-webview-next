@@ -7,6 +7,7 @@ import PageHeader from '~/components/PageHeader.vue'
 import QueryState from '~/components/settings/QueryState.vue'
 import TranslationTargetList from '~/components/settings/TranslationTargetList.vue'
 import { useAccountId } from '~/composables/useAccountId'
+import { useNavigationContext } from '~/composables/useNavigationContext'
 import {
   getTranslationTargets,
   type TranslationTarget,
@@ -20,7 +21,13 @@ const props = defineProps<{
 const { t } = useI18n({ useScope: 'global' })
 const router = useRouter()
 const route = useRoute()
-const { accountId, accountQuery } = useAccountId()
+const {
+  accountId,
+  status: accountStatus,
+  error: accountError,
+  reload: reloadAccount,
+} = useAccountId()
+const { withContext } = useNavigationContext()
 
 // Device flow enters here directly with ?login-id&name; show the device name as title
 const deviceName = computed(() => {
@@ -32,25 +39,38 @@ const emptyText = computed(() =>
   t(props.kind === 'friends' ? 'translation.emptyFriends' : 'translation.emptyGroups'),
 )
 
+const inputError = computed<Error | null>(() => {
+  // While the read is pending the account is unknown, not invalid.
+  if (accountStatus.value === 'pending') return null
+  if (accountStatus.value === 'error') return accountError.value
+  if (accountId.value == null) return new Error(t('translation.invalidLoginId'))
+  return null
+})
+const inputsReady = computed(() => accountStatus.value !== 'pending' && inputError.value == null)
+
 async function load(): Promise<{ items: TranslationTarget[] }> {
   if (accountId.value == null) throw new Error(t('translation.invalidLoginId'))
   return { items: await getTranslationTargets(props.kind, accountId.value) }
 }
 
-const { state, refetch: reload } = useQuery({
+const { state, refetch } = useQuery({
   key: () => ['translation', 'targets', props.kind, accountId.value],
   query: load,
+  enabled: inputsReady,
 })
 
 const items = computed(() => state.value.data?.items ?? [])
+const viewStatus = computed(() => (inputError.value ? 'error' : state.value.status))
+const viewError = computed(() => inputError.value ?? state.value.error)
+
+async function retry(): Promise<void> {
+  if (accountStatus.value === 'error' || inputError.value) await reloadAccount()
+  else await refetch()
+}
 
 function openItem(item: TranslationTarget): void {
-  if (props.kind === 'friends') {
-    router.push({ path: `/settings/friends/${item.id}`, query: accountQuery.value })
-    return
-  }
-
-  router.push({ path: `/settings/groups/${item.id}`, query: accountQuery.value })
+  const base = props.kind === 'friends' ? '/settings/friends' : '/settings/groups'
+  router.push({ path: `${base}/${item.id}`, ...withContext() })
 }
 </script>
 
@@ -60,11 +80,11 @@ function openItem(item: TranslationTarget): void {
 
     <main class="p-4">
       <QueryState
-        :status="state.status"
-        :error="state.error"
+        :status="viewStatus"
+        :error="viewError"
         :empty="items.length === 0"
         :empty-text="emptyText"
-        @retry="reload()"
+        @retry="retry"
       >
         <TranslationTargetList :items="items" :kind="kind" @open="openItem" />
       </QueryState>

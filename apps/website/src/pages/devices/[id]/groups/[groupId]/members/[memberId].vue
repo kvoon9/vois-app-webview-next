@@ -90,10 +90,7 @@ async function removeMember(): Promise<void> {
     await removeMutation.mutateAsync()
     confirmationOpen.value = false
     showToast(t('device.memberRemoved'))
-    await router.push({
-      path: `/devices/${deviceId.value}/groups/${groupId.value}/members`,
-      query: route.query,
-    })
+    await router.push(`/devices/${deviceId.value}/groups/${groupId.value}/members`)
     await queryCache.invalidateQueries({ key: ['device-management'] })
   } catch (error) {
     showToast(error instanceof Error ? error.message : String(error), { type: 'error' })
@@ -107,10 +104,7 @@ async function transferOwner(): Promise<void> {
     transferConfirmationOpen.value = false
     await queryCache.invalidateQueries({ key: ['device-management'] })
     showToast(t('device.ownerTransferred'))
-    await router.push({
-      path: `/devices/${deviceId.value}/groups/${groupId.value}`,
-      query: route.query,
-    })
+    await router.push(`/devices/${deviceId.value}/groups/${groupId.value}`)
   } catch (error) {
     showToast(error instanceof Error ? error.message : String(error), { type: 'error' })
   }

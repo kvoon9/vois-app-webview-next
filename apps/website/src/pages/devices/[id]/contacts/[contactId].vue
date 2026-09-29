@@ -153,7 +153,7 @@ async function removeContact(): Promise<void> {
     removeConfirmation.value = false
     await queryCache.invalidateQueries({ key: ['device-management', 'contacts'] })
     showToast(t('device.contactRemoved'))
-    await router.push({ path: `/devices/${deviceId.value}/contacts`, query: route.query })
+    await router.push(`/devices/${deviceId.value}/contacts`)
   } catch (error) {
     showToast(error instanceof Error ? error.message : String(error), { type: 'error' })
   }

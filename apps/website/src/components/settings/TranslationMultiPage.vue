@@ -33,7 +33,12 @@ const props = defineProps<{
 }>()
 
 const { t, locale } = useI18n({ useScope: 'global' })
-const { accountId } = useAccountId()
+const {
+  accountId,
+  status: accountStatus,
+  error: accountError,
+  reload: reloadAccount,
+} = useAccountId()
 const queryCache = useQueryCache()
 const { goBack } = usePageBack()
 
@@ -55,6 +60,20 @@ const supported = computed(() => {
 // Type 2 is the AI translator, which has no on/off toggle here.
 const isAiType = computed(() => Number(typeQuery.value) === 2)
 const title = computed(() => (isAiType.value ? t('translation.aiTitle') : t('settings.title')))
+
+const inputError = computed<Error | null>(() => {
+  // While the read is pending the account is unknown, not invalid.
+  if (accountStatus.value === 'pending') return null
+  if (accountStatus.value === 'error') return accountError.value
+  if (accountId.value == null) return new Error(t('translation.invalidLoginId'))
+  if (targetId.value == null) return new Error(t('profile.notFound'))
+  return null
+})
+const inputsReady = computed(() => accountStatus.value !== 'pending' && inputError.value == null)
+// Pending account keeps loading; a settled entry without a supported skill is the tip.
+const unsupported = computed(
+  () => accountStatus.value !== 'pending' && inputError.value == null && !supported.value,
+)
 
 const step = shallowRef<'source' | 'target'>('source')
 const search = shallowRef('')
@@ -94,13 +113,20 @@ async function load(): Promise<{ item: TranslationTarget; languages: string[] }>
   return { item, languages }
 }
 
-const { state, refetch: reload } = useQuery({
+const { state, refetch } = useQuery({
   key: () => ['translation', 'multi', props.kind, accountId.value, targetId.value],
   query: load,
-  enabled: supported,
+  enabled: computed(() => inputsReady.value && supported.value),
 })
 
 const item = computed(() => state.value.data?.item ?? null)
+const viewStatus = computed(() => (inputError.value ? 'error' : state.value.status))
+const viewError = computed(() => inputError.value ?? state.value.error)
+
+async function retry(): Promise<void> {
+  if (accountStatus.value === 'error' || inputError.value) await reloadAccount()
+  else await refetch()
+}
 // The backend clears source/target while translation is off, so seed a usable
 // pair. Seeding is keyed by target, not one-shot: changing the route query to
 // another friend reuses this component, and a background refetch of the same
@@ -199,11 +225,11 @@ async function done(): Promise<void> {
     <PageHeader :title="title" />
 
     <main class="px-4 pb-28 pt-4">
-      <p v-if="!supported" class="py-12 text-center text-body text-text-secondary" role="status">
+      <p v-if="unsupported" class="py-12 text-center text-body text-text-secondary" role="status">
         {{ t('translation.unsupported') }}
       </p>
 
-      <QueryState v-else :status="state.status" :error="state.error" @retry="reload()">
+      <QueryState v-else :status="viewStatus" :error="viewError" @retry="retry">
         <template v-if="item">
           <div class="flex flex-col items-center py-4 text-center">
             <Avatar :name="item.name" :src="item.avatar" size="xl" />

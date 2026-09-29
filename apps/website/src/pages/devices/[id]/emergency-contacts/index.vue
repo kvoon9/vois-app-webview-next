@@ -65,19 +65,13 @@ const removeMutation = useMutation({
 
 function openAddFriend(): void {
   if (deviceId.value != null && !friendsFull.value) {
-    router.push({
-      path: `/devices/${deviceId.value}/emergency-contacts/add-friend`,
-      query: route.query,
-    })
+    router.push(`/devices/${deviceId.value}/emergency-contacts/add-friend`)
   }
 }
 
 function openAddPhone(): void {
   if (deviceId.value != null && !phonesFull.value) {
-    router.push({
-      path: `/devices/${deviceId.value}/emergency-contacts/add-phone`,
-      query: route.query,
-    })
+    router.push(`/devices/${deviceId.value}/emergency-contacts/add-phone`)
   }
 }
 

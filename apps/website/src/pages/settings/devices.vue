@@ -5,12 +5,12 @@ import { useI18n } from 'vue-i18n'
 import Avatar from '~/components/Avatar.vue'
 import PageHeader from '~/components/PageHeader.vue'
 import QueryState from '~/components/settings/QueryState.vue'
-import { useAccountId } from '~/composables/useAccountId'
+import { useNavigationContext } from '~/composables/useNavigationContext'
 import { getSmartDevices, type SmartDevice } from '~/utils/translation-api'
 
 const { t } = useI18n()
 const router = useRouter()
-const { accountQuery } = useAccountId()
+const { withContext } = useNavigationContext()
 
 const { state, refetch: reload } = useQuery({
   key: ['devices'],
@@ -21,7 +21,8 @@ function openDevice(device: SmartDevice): void {
   // 设备没有群组（后端确认），直接进入该设备的好友翻译设置
   router.push({
     path: '/settings/friends',
-    query: { ...accountQuery.value, 'login-id': String(device.userId), name: device.nick },
+    query: { name: device.nick },
+    ...withContext({ accountId: device.userId }),
   })
 }
 </script>

@@ -19,7 +19,12 @@ import {
 
 const route = useRoute()
 const { t } = useI18n({ useScope: 'global' })
-const { accountId } = useAccountId()
+const {
+  accountId,
+  status: accountStatus,
+  error: accountError,
+  reload: reloadAccount,
+} = useAccountId()
 const queryCache = useQueryCache()
 const selected = shallowRef<TranslationTarget | null>(null)
 const saving = shallowRef(false)
@@ -36,6 +41,16 @@ const pageTitle = computed(() => {
   return name || t('translation.groupMembers')
 })
 
+const inputError = computed<Error | null>(() => {
+  // While the read is pending the account is unknown, not invalid.
+  if (accountStatus.value === 'pending') return null
+  if (accountStatus.value === 'error') return accountError.value
+  if (accountId.value == null) return new Error(t('translation.invalidLoginId'))
+  if (groupId.value == null) return new Error(t('translation.invalidGroupId'))
+  return null
+})
+const inputsReady = computed(() => accountStatus.value !== 'pending' && inputError.value == null)
+
 async function load(): Promise<{ items: TranslationTarget[]; languages: string[] }> {
   if (accountId.value == null) throw new Error(t('translation.invalidLoginId'))
   if (groupId.value == null) throw new Error(t('translation.invalidGroupId'))
@@ -47,13 +62,21 @@ async function load(): Promise<{ items: TranslationTarget[]; languages: string[]
   return { items: group.members, languages }
 }
 
-const { state, refetch: reload } = useQuery({
+const { state, refetch } = useQuery({
   key: () => ['translation', 'members', accountId.value, groupId.value],
   query: load,
+  enabled: inputsReady,
 })
 
 const items = computed(() => state.value.data?.items ?? [])
 const languages = computed(() => state.value.data?.languages ?? [])
+const viewStatus = computed(() => (inputError.value ? 'error' : state.value.status))
+const viewError = computed(() => inputError.value ?? state.value.error)
+
+async function retry(): Promise<void> {
+  if (accountStatus.value === 'error' || inputError.value) await reloadAccount()
+  else await refetch()
+}
 
 async function save(setting: TranslationSetting): Promise<void> {
   if (accountId.value == null || groupId.value == null || !selected.value || saving.value) return
@@ -83,11 +106,11 @@ async function save(setting: TranslationSetting): Promise<void> {
 
     <main class="p-4">
       <QueryState
-        :status="state.status"
-        :error="state.error"
+        :status="viewStatus"
+        :error="viewError"
         :empty="items.length === 0"
         :empty-text="t('translation.emptyMembers')"
-        @retry="reload()"
+        @retry="retry"
       >
         <TranslationTargetList
           :items="items"

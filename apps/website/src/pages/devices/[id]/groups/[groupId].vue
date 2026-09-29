@@ -260,7 +260,7 @@ async function exitGroup(): Promise<void> {
     showToast(wasOwner ? t('device.groupDissolved') : t('device.groupLeft'))
     // Navigate away before invalidating: refetching this page's query after the
     // exit would fail (the device is no longer a member) and show a bogus error.
-    await router.push({ path: `/devices/${deviceId.value}/groups`, query: route.query })
+    await router.push(`/devices/${deviceId.value}/groups`)
     queryCache.invalidateQueries({ key: ['device-management'] })
   } catch (error) {
     showToast(error instanceof Error ? error.message : String(error), { type: 'error' })
@@ -444,10 +444,7 @@ async function exitGroup(): Promise<void> {
           </section>
 
           <RouterLink
-            :to="{
-              path: `/devices/${deviceId}/groups/${groupId}/members`,
-              query: route.query,
-            }"
+            :to="`/devices/${deviceId}/groups/${groupId}/members`"
             class="mt-4 min-h-14 w-full nav-item"
           >
             <span>{{ t('device.membersCount', { count: group.memberCount }) }}</span>

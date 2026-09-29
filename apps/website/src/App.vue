@@ -1,24 +1,22 @@
 <script setup lang="ts">
 import { useDark } from '@vueuse/core'
-import { useRouteQuery } from '@vueuse/router'
 import { onErrorCaptured, shallowRef, watch } from 'vue'
 import { RouterView } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import ToastHost from '~/components/ToastHost.vue'
 import { useLangQuery } from '~/composables/useLangQuery'
+import { usePageParams } from '~/composables/usePageParams'
 import { nativeTheme } from '~/constants'
 
 const { t } = useI18n()
-const launchQuery = new URLSearchParams(window.location.search)
 const isDark = useDark({ storage: sessionStorage })
-const theme = useRouteQuery('theme')
+usePageParams()
 
 watch(
-  [theme, nativeTheme],
-  ([value, fromNative]) => {
-    const selectedTheme = value || fromNative || launchQuery.get('theme')
-    if (selectedTheme === 'dark') isDark.value = true
-    if (selectedTheme === 'light') isDark.value = false
+  nativeTheme,
+  (fromNative) => {
+    if (fromNative === 'dark') isDark.value = true
+    if (fromNative === 'light') isDark.value = false
   },
   { immediate: true },
 )

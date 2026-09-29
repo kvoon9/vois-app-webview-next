@@ -35,14 +35,20 @@ const response = await native.request('get-page-params', {
 
 无需原生增加接口或修改 token 返回格式。原生继续负责登录会话与 token 刷新。
 
-website 的 `usePageParams(['uuid'])` 只处理页面参数，自动附带 `theme`、`lang` 字段请求。它保留所有标量字段，包括 token，并保留正常的 query 优先级；不会写入认证状态、结束认证等待或触发登录。HTTP 认证仍直接读取原生 page params，不使用 query 中的 token。
+website 的 `usePageParams(names)` 读取原生固定的 web 默认参数（`theme`、`lang`、`login-id`、`device-type`，以及 `pkg-name` / `wxpay-appid` / `pay-method`），并统一提供 loading / error / retry、同页请求合并与切路由丢弃陈旧响应。原生无法返回的页面专属启动参数（`uuid`、`hardware-id`、`name`、各类目标 id）继续由 route query 承载，`route.params` 继续承载路径资源 ID。它保留所有标量字段，包括 token；不会写入认证状态、结束认证等待或触发登录。HTTP 认证仍直接读取原生 page params，不使用 query 中的 token。
+
+H5 内部选中、native 无法知道的设备流账号不向 native 重读，也不写回 query：它走按 history entry 隔离的导航上下文（`useNavigationContext`，存在 `history.state.h5Context`）。push 显式携带并继承当前 entry 的账号覆盖；前进/后退各自恢复对应 entry 的上下文；刷新由浏览器恢复当前 entry 的 state，宿主重建 history 时退回原生启动的 `login-id`，不会串用其他流程的账号。
+
+debug 会话由 app 层 adapter（`utils/bridge/debug-page-params`）把 URL 参数注入 `get-page-params` 应答：hash query 优先、outer search 兜底，只合并原生默认集合中非认证的字段（`access-token` 永不注入），该路径也不触发登录；页面专属参数仍由页面直接读 route query。
 
 两条 Web 调用链独立管理生命周期，但复用同一个原生协议：
 
 ```text
 业务 API → bridge.getAccessToken() → get-page-params(['access-token'])
                                   ↳ 无可用 token → 仅 dev / debug preview 固定账号登录
-页面参数 → usePageParams(['uuid']) → get-page-params(['theme', 'lang', 'uuid'])
+页面默认参数 → usePageParams(names) → get-page-params(['theme', 'lang', ...names])
+                                  ↳ debug：URL 中同集合的非认证字段由 app 层 adapter 并入应答
+页面专属参数 → useRouteQuery / route.query（原生启动 URL 直接携带，不经过 bridge）
 ```
 
 ## 生命周期
@@ -77,7 +83,7 @@ SDK 目前没有取消接口：Web 超时结束等待，不会撤销已送达原
 
 直接修改 `~/weila/vois-webview-bridge`，不使用依赖补丁。开发时本地链接构建出的 SDK，正式使用这些 SDK 改进时发布新版并更新依赖。
 
-Debug 继续模拟原来的 `get-page-params`，读取参数本身不触发登录，也不刻意过滤已提供的 token。`bridge.getAccessToken()` 取不到 token 时才调用 SDK 的 `getDebugAccessToken()`，复用 SDK 中已有的固定账号与登录实现。
+Debug 继续模拟原来的 `get-page-params`，读取参数本身不触发登录，也不刻意过滤已提供的 token。app 层 adapter 只把 URL 中与原生默认集合同名、非认证的字段并入应答（`access-token` 永不注入）；`bridge.getAccessToken()` 取不到 token 时才调用 SDK 的 `getDebugAccessToken()`，复用 SDK 中已有的固定账号与登录实现。
 
 dev 由 `import.meta.env.DEV` 识别，preview 由 `--debug` 服务注入的 script 标记识别（项目的 preview 脚本已开启）。正式部署没有该标记，不会启用固定账号兜底。调试镜像会脱敏 token 字段。
 
@@ -91,6 +97,9 @@ dev 由 `import.meta.env.DEV` 识别，preview 由 `--debug` 服务注入的 scr
 - 页面参数不写入认证状态，参数读取失败不结束 token 等待。
 - 原生 token 优先；dev/preview 无 token 时才登录；生产不触发固定账号登录。
 - `usePageParams` 保留 token 字段，参数读取本身不登录。
+- bridge 只请求原生默认字段；页面专属参数继续读 route query；参数未就绪时依赖账号/ID 的查询保持 pending 而非报无效 ID。
+- H5 账号覆盖按 history entry 隔离，后退/刷新不会串用设备流账号；`/devices/groups` 缺 `hardware-id` 时受控重定向到设备列表。
+- debug adapter 不注入任何认证字段，也不注入原生无法返回的页面专属字段；被点名请求只注入对应字段。
 - 兜底登录合并并发、失败可重试、原生恢复后重新优先使用原生 token。
 - iOS 同一协议的多个响应互不覆盖。
 - 激活页重试及上传均通过同一 token 入口。

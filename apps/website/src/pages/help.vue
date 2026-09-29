@@ -1,14 +1,13 @@
 <script setup lang="ts">
-import { useRoute, useRouter } from 'vue-router'
+import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import PageHeader from '~/components/PageHeader.vue'
 
 const { t } = useI18n()
-const route = useRoute()
 const router = useRouter()
 
 function openBackgroundHelp() {
-  router.push({ path: '/help-guide', query: route.query })
+  router.push('/help-guide')
 }
 </script>
 

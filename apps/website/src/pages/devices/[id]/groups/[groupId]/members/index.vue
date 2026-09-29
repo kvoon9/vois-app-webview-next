@@ -60,10 +60,7 @@ const groupedMembers = computed<Record<MemberSection, GroupMember[]>>(() => ({
 }))
 
 function openMember(member: GroupMember): void {
-  router.push({
-    path: `/devices/${deviceId.value}/groups/${groupId.value}/members/${member.userId}`,
-    query: route.query,
-  })
+  router.push(`/devices/${deviceId.value}/groups/${groupId.value}/members/${member.userId}`)
 }
 </script>
 
@@ -91,10 +88,7 @@ function openMember(member: GroupMember): void {
       </label>
 
       <RouterLink
-        :to="{
-          path: `/devices/${deviceId}/groups/${groupId}/members/add`,
-          query: route.query,
-        }"
+        :to="`/devices/${deviceId}/groups/${groupId}/members/add`"
         class="mt-4 min-h-12 w-full nav-item"
       >
         <span>{{ t('device.addMember') }}</span>

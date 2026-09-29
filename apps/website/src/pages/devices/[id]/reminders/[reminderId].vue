@@ -113,7 +113,7 @@ const removeMutation = useMutation({
 })
 
 async function backToList(): Promise<void> {
-  await router.push({ path: `/devices/${deviceId.value}/reminders`, query: route.query })
+  await router.push(`/devices/${deviceId.value}/reminders`)
 }
 
 async function save(): Promise<void> {

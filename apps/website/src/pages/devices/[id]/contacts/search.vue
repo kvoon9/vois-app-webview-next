@@ -83,7 +83,7 @@ async function confirmAdd(): Promise<void> {
     await queryCache.invalidateQueries({ key: ['device-management', 'contacts'] })
     await queryCache.invalidateQueries({ key: ['device-management', 'contact-search'] })
     showToast(t('device.contactsAdded'))
-    await router.push({ path: `/devices/${deviceId.value}/contacts`, query: route.query })
+    await router.push(`/devices/${deviceId.value}/contacts`)
   } catch (error) {
     showToast(error instanceof Error ? error.message : String(error), { type: 'error' })
   }

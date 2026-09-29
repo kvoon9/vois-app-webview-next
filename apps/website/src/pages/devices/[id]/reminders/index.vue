@@ -39,15 +39,12 @@ function repeatLabel(repeat: string): string {
 
 function openNew(): void {
   if (deviceId.value == null) return
-  router.push({ path: `/devices/${deviceId.value}/reminders/new`, query: route.query })
+  router.push(`/devices/${deviceId.value}/reminders/new`)
 }
 
 function openReminder(reminderId: number): void {
   if (deviceId.value == null) return
-  router.push({
-    path: `/devices/${deviceId.value}/reminders/${reminderId}`,
-    query: route.query,
-  })
+  router.push(`/devices/${deviceId.value}/reminders/${reminderId}`)
 }
 </script>
 

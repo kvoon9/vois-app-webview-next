@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import { useMutation, useQuery, useQueryCache } from '@pinia/colada'
+import { useRouteQuery } from '@vueuse/router'
 import { computed, shallowRef } from 'vue'
 import { useI18n } from 'vue-i18n'
 import BaseModal from '~/components/BaseModal.vue'
 import PageHeader from '~/components/PageHeader.vue'
 import QueryState from '~/components/settings/QueryState.vue'
-import { usePageParams } from '~/composables/usePageParams'
 import { useToast } from '~/composables/useToast'
 import {
   activateBluetoothCode,
@@ -21,9 +21,10 @@ const { showToast } = useToast()
 const queryCache = useQueryCache()
 const confirming = shallowRef(false)
 
-const { params, settled, reload: reloadParams } = usePageParams(['uuid'])
-
-const uuid = computed(() => params.value.uuid ?? '')
+// Native opens this page with the activation code in the launch URL; it is not one
+// of the default page params native can answer, so the route query is the source.
+const uuidQuery = useRouteQuery<string | null>('uuid')
+const uuid = computed(() => uuidQuery.value ?? '')
 const codeKey = computed(() => ['bluetooth-ai-translate', 'code', uuid.value])
 
 const { state, refetch: reloadCode } = useQuery({
@@ -62,7 +63,7 @@ const deadline = computed<string | null>(() => {
 })
 
 const viewStatus = computed<'pending' | 'error' | 'success'>(() => {
-  if (!uuid.value) return settled.value ? 'error' : 'pending'
+  if (!uuid.value) return 'error'
   if (state.value.status === 'error' || accountState.value.status === 'error') return 'error'
   if (accountState.value.status === 'pending') return 'pending'
   return state.value.status
@@ -92,7 +93,6 @@ async function confirmActivation(): Promise<void> {
 }
 
 async function retry(): Promise<void> {
-  if (!uuid.value) await reloadParams()
   await Promise.all([uuid.value ? reloadCode() : undefined, reloadAccount()])
 }
 </script>

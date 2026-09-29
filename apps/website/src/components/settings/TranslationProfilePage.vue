@@ -9,6 +9,7 @@ import ResultModal from '~/components/ResultModal.vue'
 import LanguagePickerDrawer from '~/components/settings/LanguagePickerDrawer.vue'
 import QueryState from '~/components/settings/QueryState.vue'
 import { parseAccountId, useAccountId } from '~/composables/useAccountId'
+import { useNavigationContext } from '~/composables/useNavigationContext'
 import { nextSettingForSkill, swapLanguagePair, ZH_EN_LANGUAGES } from '~/utils/translation-setting'
 import {
   changeTranslationTarget,
@@ -25,7 +26,13 @@ const props = defineProps<{
 
 const route = useRoute()
 const { t } = useI18n({ useScope: 'global' })
-const { accountId, accountQuery } = useAccountId()
+const {
+  accountId,
+  status: accountStatus,
+  error: accountError,
+  reload: reloadAccount,
+} = useAccountId()
+const { withContext } = useNavigationContext()
 const queryCache = useQueryCache()
 const saving = shallowRef(false)
 const resultError = shallowRef<string | null>(null)
@@ -34,6 +41,16 @@ const targetId = computed(() => {
   const raw = route.params[props.kind === 'friends' ? 'id' : 'groupId']
   return parseAccountId(Array.isArray(raw) ? raw[0] : raw)
 })
+
+const inputError = computed<Error | null>(() => {
+  // While the read is pending the account is unknown, not invalid.
+  if (accountStatus.value === 'pending') return null
+  if (accountStatus.value === 'error') return accountError.value
+  if (accountId.value == null) return new Error(t('translation.invalidLoginId'))
+  if (targetId.value == null) return new Error(t('profile.notFound'))
+  return null
+})
+const inputsReady = computed(() => accountStatus.value !== 'pending' && inputError.value == null)
 
 // The multi-language editor lives on its own route; build the link once here.
 // `route.query` carries `friend-type` through so the editor can pick its title,
@@ -48,6 +65,7 @@ const multiTranslationLink = computed(() => {
       [isFriend ? 'friend-id' : 'group-id']: String(targetId.value ?? ''),
       [isFriend ? 'friend-skill' : 'group-skill']: '3',
     },
+    ...withContext(),
   }
 })
 
@@ -60,12 +78,20 @@ async function load(): Promise<TranslationTarget> {
   return item
 }
 
-const { state, refetch: reload } = useQuery({
+const { state, refetch } = useQuery({
   key: () => ['translation', 'target', props.kind, accountId.value, targetId.value],
   query: load,
+  enabled: inputsReady,
 })
 
 const item = computed(() => state.value.data ?? null)
+const viewStatus = computed(() => (inputError.value ? 'error' : state.value.status))
+const viewError = computed(() => inputError.value ?? state.value.error)
+
+async function retry(): Promise<void> {
+  if (accountStatus.value === 'error' || inputError.value) await reloadAccount()
+  else await refetch()
+}
 
 // Skill 2 pins the pair to zh-CN <-> en-US but still lets the user flip which
 // side is the source, so only that direction toggle stays inline; the free-form
@@ -117,7 +143,7 @@ function swapLanguages(): void {
     <PageHeader :title="item?.name ?? t('settings.title')" />
 
     <main class="p-4">
-      <QueryState :status="state.status" :error="state.error" @retry="reload()">
+      <QueryState :status="viewStatus" :error="viewError" @retry="retry">
         <template v-if="item">
           <div class="flex flex-col items-center py-4 text-center">
             <Avatar :name="item.name" :src="item.avatar" size="xl" />
@@ -240,7 +266,8 @@ function swapLanguages(): void {
             v-if="kind === 'groups'"
             :to="{
               path: `/settings/groups/${item.id}/members`,
-              query: { ...accountQuery, name: item.name },
+              query: { name: item.name },
+              ...withContext(),
             }"
             class="mt-4 min-h-12 nav-item"
           >

@@ -10,8 +10,8 @@ import {
   union,
   unknown,
 } from 'valibot'
-import { computed, onMounted, shallowRef, type ComputedRef, type ShallowRef } from 'vue'
-import { useRoute, type LocationQuery } from 'vue-router'
+import { computed, effectScope, shallowRef, watch, type ComputedRef, type ShallowRef } from 'vue'
+import { useRoute, useRouter, type Router } from 'vue-router'
 import { whenWebviewBridge } from '~/composables/useWebviewBridge'
 import { nativeLang, nativeTheme } from '~/constants'
 
@@ -21,6 +21,28 @@ export const PAGE_PARAMS_TIMEOUT_MS = 3000
 /** Page params are flat string key/values by contract; nesting is out of scope. */
 export interface PageParams {
   [key: string]: string
+}
+
+/** A read is pending until native answers; `error` tells why it did not. */
+export type PageParamsStatus = 'pending' | 'ready' | 'error'
+
+/** The app shell always needs native's theme + language. */
+export const BASE_PAGE_PARAM_NAMES = ['theme', 'lang'] as const
+
+/** Which kind of failure ended a read, so a caller can react to the reason. */
+export type PageParamsErrorReason = 'timeout' | 'invalid' | 'native' | 'unavailable'
+
+/** Every failed in-app read rejects with this, never a bare bridge error. */
+export class PageParamsError extends Error {
+  readonly reason: PageParamsErrorReason
+  readonly nativeCode: number | undefined
+
+  constructor(reason: PageParamsErrorReason, message: string, nativeCode?: number) {
+    super(message)
+    this.name = 'PageParamsError'
+    this.reason = reason
+    this.nativeCode = nativeCode
+  }
 }
 
 /**
@@ -39,29 +61,20 @@ const pageParamsSchema = object({
  */
 const scalarSchema = union([string(), number(), boolean()])
 
-/** Where the params come from; injectable so the fetch is testable without a WebView. */
+const INVALID_MESSAGE = 'App 返回的页面参数格式不正确。'
+
+/** Where the params come from; injectable so a read is testable without a WebView. */
 export interface PageParamsBridgeSource {
   /** Whether this environment ever gets a native bridge; desktop never does. */
-  supported: boolean
-  /** Resolves with the ready bridge; never settles where `supported` is false. */
+  supported: () => boolean
+  /** Resolves with the ready bridge; never settles where `supported()` is false. */
   whenReady: () => Promise<WebviewBridge | undefined>
 }
 
-/** What `usePageParams` hands the page. */
-export interface PageParamsHandle {
-  /** Native's values with the route query laid over them. */
-  params: ComputedRef<PageParams>
-  /** Whether the bridge attempt finished, so a caller can end its own wait. */
-  settled: ShallowRef<boolean>
-  /** Ask native again; the page's retry button calls this. */
-  reload: () => Promise<void>
-}
-
 /**
- * Ask native for its default params. Returns an empty object whenever the
- * answer is unusable: no bridge, a timeout, an unparseable body, or a non-zero
- * `errcode`. Callers read values, not failure reasons, so a missing field and a
- * missing answer are the same thing to them.
+ * One-shot read of native's page params for `page`. Outside the app the answer
+ * is an empty bag, because desktop is a normal place to be, not a failure; a
+ * read that started in the app and failed rejects {@link PageParamsError}.
  */
 export async function fetchPageParams(
   source: PageParamsBridgeSource,
@@ -69,14 +82,23 @@ export async function fetchPageParams(
   params: readonly string[] = [],
   timeoutMs: number = PAGE_PARAMS_TIMEOUT_MS,
 ): Promise<PageParams> {
-  if (!source.supported) return {}
+  if (!source.supported()) return {}
 
-  const answer = await withTimeout(
-    askNative(source, page, params).catch(() => undefined),
-    timeoutMs,
-  )
+  let answer: unknown
+  try {
+    answer = await withTimeout(askNative(source, page, params), timeoutMs)
+  } catch (failure) {
+    if (failure instanceof PageParamsError) throw failure
+    throw new PageParamsError('invalid', INVALID_MESSAGE)
+  }
+
+  if (answer === undefined) throw new PageParamsError('timeout', '获取页面参数超时，请重试。')
+
   const decoded = safeParse(pageParamsSchema, answer)
-  if (!answer || !decoded.success || decoded.output.errcode !== 0) return {}
+  if (!decoded.success) throw new PageParamsError('invalid', INVALID_MESSAGE)
+  if (decoded.output.errcode !== 0) {
+    throw new PageParamsError('native', 'App 无法提供页面参数，请重试。', decoded.output.errcode)
+  }
 
   const values: PageParams = {}
   for (const [key, value] of Object.entries(decoded.output.data ?? {})) {
@@ -88,10 +110,13 @@ export async function fetchPageParams(
   return values
 }
 
-/** The bridge's own `get-page-params` types drive both sides; only `data` is decoded here. */
+/**
+ * The bridge's own `get-page-params` types drive both sides; only `data` is
+ * decoded here. A missing bridge means the app never handed one over in time.
+ */
 async function askNative(source: PageParamsBridgeSource, page: string, params: readonly string[]) {
   const bridge = await source.whenReady()
-  if (!bridge) throw new Error('no bridge')
+  if (!bridge) throw new PageParamsError('unavailable', '请在 App 中打开本页面。')
   return bridge.request('get-page-params', {
     page,
     params: [...params],
@@ -113,57 +138,185 @@ async function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T | unde
   }
 }
 
-/** Route query as flat strings; the protocol carries one value per key. */
-function queryParams(query: LocationQuery): PageParams {
-  const values: PageParams = {}
-  for (const [key, value] of Object.entries(query)) {
-    const first = Array.isArray(value) ? value[0] : value
-    if (first != null) values[key] = first
-  }
-  return values
+/** What {@link createPageParamsStore} owns; see `observe` for the fetch rules. */
+export interface PageParamsStore {
+  params: ShallowRef<PageParams>
+  status: ShallowRef<PageParamsStatus>
+  error: ShallowRef<PageParamsError | null>
+  /** The page whose values this store holds; undefined before the first observe. */
+  page: ShallowRef<string | undefined>
+  /** Point the store at the page being shown and ask for its names. */
+  observe(page: string, names?: readonly string[]): void
+  /** Read the current page again; resolves once the new answer (or failure) landed. */
+  reload(): Promise<void>
 }
 
 /**
- * What native sent, with the route query laid over it. The query describes this
- * navigation, so a key present there outranks native's default; native is the
- * fallback, not the override.
+ * Page params for one app session. `observe` is the only entry point pages use:
+ * calls in the same tick share one bridge request, a page change drops the
+ * previous page's values and ignores its late answer, and names that arrive
+ * mid-read trigger one more read with the union, never a loop.
  */
-export function mergePageParams(bridgeParams: PageParams, query: LocationQuery): PageParams {
-  const values: PageParams = { ...bridgeParams }
-  for (const [key, value] of Object.entries(queryParams(query))) values[key] = value
-  return values
-}
+export function createPageParamsStore(source: PageParamsBridgeSource): PageParamsStore {
+  const params = shallowRef<PageParams>({})
+  const status = shallowRef<PageParamsStatus>('pending')
+  const error = shallowRef<PageParamsError | null>(null)
 
-/** Page params for the current route, with query values taking precedence. */
-export function usePageParams(params: readonly string[] = []): PageParamsHandle {
-  const route = useRoute()
-  const bridgeParams = shallowRef<PageParams>({})
-  const settled = shallowRef(false)
+  const observedPage = shallowRef<string | undefined>()
+  let requested = new Set<string>()
+  // Every read gets its own generation; only the newest one may land.
+  let fetchGeneration = 0
+  let batched = false
+  let inFlight = false
+  let rerun = false
+  let idleWaiters: Array<() => void> = []
 
-  const values = computed(() => mergePageParams(bridgeParams.value, route.query))
-
-  async function load(): Promise<void> {
-    settled.value = false
-    bridgeParams.value = {}
-
-    const fetched = await fetchPageParams(
-      { supported: isSupportBridge(), whenReady: whenWebviewBridge },
-      route.path,
-      [...new Set(['theme', 'lang', ...params])],
-    )
-    bridgeParams.value = fetched
-
-    // Native also owns the app's own theme and language; the route query outranks
-    // them at the read site, so only what native actually answered lands here.
-    if (fetched.theme) nativeTheme.value = fetched.theme
-    if (fetched.lang) nativeLang.value = fetched.lang
-
-    settled.value = true
+  function observe(page: string, names: readonly string[] = []): void {
+    if (page !== observedPage.value) {
+      observedPage.value = page
+      params.value = {}
+      status.value = 'pending'
+      error.value = null
+      requested = new Set()
+    }
+    for (const name of [...BASE_PAGE_PARAM_NAMES, ...names]) requested.add(name)
+    schedule()
   }
 
-  onMounted(() => {
-    void load()
-  })
+  function schedule(): void {
+    if (inFlight) {
+      rerun = true
+      return
+    }
+    if (batched) return
+    batched = true
+    queueMicrotask(() => {
+      batched = false
+      void start()
+    })
+  }
 
-  return { params: values, settled, reload: load }
+  async function start(): Promise<void> {
+    const page = observedPage.value
+    if (page === undefined) return
+
+    const readGeneration = ++fetchGeneration
+    const names = [...requested]
+    // A retry or rerun shows progress again; values already read stay readable.
+    status.value = 'pending'
+    inFlight = true
+    try {
+      const values = await fetchPageParams(source, page, names)
+      if (!isCurrent(readGeneration, page)) return
+      params.value = values
+      status.value = 'ready'
+      error.value = null
+      // Native also owns the app's own theme and language; the shell reads them.
+      if (values.theme) nativeTheme.value = values.theme
+      if (values.lang) nativeLang.value = values.lang
+    } catch (failure) {
+      if (!isCurrent(readGeneration, page)) return
+      error.value =
+        failure instanceof PageParamsError
+          ? failure
+          : new PageParamsError('invalid', INVALID_MESSAGE)
+      status.value = 'error'
+    } finally {
+      inFlight = false
+      if (rerun) {
+        rerun = false
+        void start()
+      } else {
+        resolveIdle()
+      }
+    }
+  }
+
+  /** A read may land only while it is the newest one and its page is still shown. */
+  function isCurrent(readGeneration: number, page: string): boolean {
+    return readGeneration === fetchGeneration && page === observedPage.value
+  }
+
+  function whenIdle(): Promise<void> {
+    return new Promise((resolve) => {
+      idleWaiters.push(resolve)
+    })
+  }
+
+  function resolveIdle(): void {
+    const waiters = idleWaiters
+    idleWaiters = []
+    for (const resolve of waiters) resolve()
+  }
+
+  async function reload(): Promise<void> {
+    if (observedPage.value === undefined) return
+    // A pending read's answer must not land after the reload's: retire it now,
+    // even before the new request goes out.
+    fetchGeneration += 1
+    const idle = whenIdle()
+    schedule()
+    await idle
+  }
+
+  return { params, status, error, page: observedPage, observe, reload }
+}
+
+/** What `usePageParams` hands the page. */
+export interface PageParamsHandle {
+  params: ComputedRef<PageParams>
+  status: ShallowRef<PageParamsStatus>
+  error: ShallowRef<PageParamsError | null>
+  /** Ask native again; the page's retry button calls this. */
+  reload: () => Promise<void>
+}
+
+/** The app's one bridge source; the debug bridge registers before any read. */
+const defaultSource: PageParamsBridgeSource = {
+  supported: isSupportBridge,
+  whenReady: whenWebviewBridge,
+}
+
+// One store for the app: App.vue and the current page observe different name
+// sets, and the store unions them into the same read.
+const store = createPageParamsStore(defaultSource)
+
+/** Page params for the current route; the route query is never a source. */
+export function usePageParams(names: readonly string[] = []): PageParamsHandle {
+  const route = useRoute()
+
+  // Registered once, at this component's setup. A component about to unmount
+  // has no say in the next page: the next route's own consumers reset the store.
+  store.observe(route.path, names)
+  startSamePageRefresh(useRouter())
+
+  return {
+    params: computed(() => store.params.value),
+    status: store.status,
+    error: store.error,
+    reload: () => store.reload(),
+  }
+}
+
+let samePageRefreshStarted = false
+
+/**
+ * One app-level watcher for a path that stays the same while its fullPath changes
+ * (a native hash update, or a debug URL query edit): re-read the page's params
+ * without re-registering names. A page change is owned by the next page's setup,
+ * so a component about to unmount never pollutes it.
+ */
+function startSamePageRefresh(router: Router): void {
+  if (samePageRefreshStarted) return
+  samePageRefreshStarted = true
+
+  effectScope(true).run(() => {
+    watch(
+      () => router.currentRoute.value.fullPath,
+      () => {
+        if (router.currentRoute.value.path === store.page.value) void store.reload()
+      },
+      { flush: 'pre' },
+    )
+  })
 }

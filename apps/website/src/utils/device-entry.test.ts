@@ -5,36 +5,33 @@ describe('deviceEntryTarget', () => {
   it('rewrites the native device entry', () => {
     expect(deviceEntryTarget('/devices', { 'hardware-id': '441' })).toEqual({
       path: '/devices/441',
-      query: {},
     })
     expect(deviceEntryTarget('/devices/', { 'hardware-id': '441' })).toEqual({
       path: '/devices/441',
-      query: {},
     })
   })
 
   it('rewrites the native device groups entry', () => {
     expect(deviceEntryTarget('/devices/groups', { 'hardware-id': '441' })).toEqual({
       path: '/devices/441/groups',
-      query: {},
     })
   })
 
-  it('accepts a trailing slash and repeated param values', () => {
+  it('accepts a trailing slash and keeps the first of repeated values', () => {
     expect(deviceEntryTarget('/devices/groups/', { 'hardware-id': ['441', '442'] })).toEqual({
       path: '/devices/441/groups',
-      query: {},
     })
   })
 
-  it('passes the other query parameters through', () => {
-    expect(
-      deviceEntryTarget('/devices/groups/', {
-        'hardware-id': '441',
-        lang: 'zh-CN',
-        name: null,
-      }),
-    ).toEqual({ path: '/devices/441/groups', query: { lang: 'zh-CN', name: null } })
+  it('falls back to the device list for an id-less entry', () => {
+    expect(deviceEntryTarget('/devices', {})).toBeNull()
+    expect(deviceEntryTarget('/devices', { 'hardware-id': 'abc' })).toBeNull()
+
+    // The groups entry must not stay on a path that matches /devices/:id.
+    expect(deviceEntryTarget('/devices/groups', {})).toEqual({ path: '/devices' })
+    expect(deviceEntryTarget('/devices/groups/', { 'hardware-id': '0' })).toEqual({
+      path: '/devices',
+    })
   })
 
   it('leaves real device routes alone', () => {
@@ -43,9 +40,9 @@ describe('deviceEntryTarget', () => {
     expect(deviceEntryTarget('/devices/441', { 'hardware-id': '442' })).toBeNull()
   })
 
-  it('requires a usable hardware id', () => {
-    expect(deviceEntryTarget('/devices', {})).toBeNull()
-    expect(deviceEntryTarget('/devices', { 'hardware-id': 'abc' })).toBeNull()
-    expect(deviceEntryTarget('/devices/groups', { 'hardware-id': '0' })).toBeNull()
+  it('drops the id from the page path', () => {
+    const target = deviceEntryTarget('/devices/groups', { 'hardware-id': '441' })
+    expect(target).toEqual({ path: '/devices/441/groups' })
+    expect(Object.keys(target ?? {})).toEqual(['path'])
   })
 })

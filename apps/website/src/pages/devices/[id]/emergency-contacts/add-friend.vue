@@ -54,10 +54,7 @@ async function addFriend(userId: number): Promise<void> {
     await addMutation.mutateAsync(userId)
     await queryCache.invalidateQueries({ key: ['device-management', 'emergency-contacts'] })
     showToast(t('device.emergencyContactAdded'))
-    await router.push({
-      path: `/devices/${deviceId.value}/emergency-contacts`,
-      query: route.query,
-    })
+    await router.push(`/devices/${deviceId.value}/emergency-contacts`)
   } catch (error) {
     showToast(error instanceof Error ? error.message : String(error), { type: 'error' })
   }

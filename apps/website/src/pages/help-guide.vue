@@ -1,16 +1,22 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import PageHeader from '~/components/PageHeader.vue'
+import { usePageParams } from '~/composables/usePageParams'
+
+const HELP_PARAMS = ['lang', 'device-type'] as const
 
 const { t } = useI18n()
-const route = useRoute()
+const { params } = usePageParams(HELP_PARAMS)
 
 const helpUrl = computed(() => {
-  // SAFETY: help.vue forwards the native app's flat string query parameters.
-  const params = new URLSearchParams(route.query as Record<string, string>)
-  return `https://api.voischat.cn/help/background/?${params}`
+  // TODO(contract): the external help page's exact accepted fields are unconfirmed; update when known.
+  const search = new URLSearchParams()
+  for (const name of HELP_PARAMS) {
+    const value = params.value[name]
+    if (value != null) search.set(name, value)
+  }
+  return `https://api.voischat.cn/help/background/?${search}`
 })
 </script>
 

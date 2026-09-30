@@ -3,9 +3,11 @@ import { useMutation, useQueryCache } from '@pinia/colada'
 import { computed, shallowRef } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
+import { safeParse } from 'valibot'
 import PageHeader from '~/components/PageHeader.vue'
 import { useToast } from '~/composables/useToast'
 import { addEmergencyPhone } from '~/utils/device-api'
+import { MAX_NAME_LENGTH, nameSchema } from '~/utils/field-schema'
 
 type RouteParam = string | string[] | undefined
 
@@ -25,6 +27,14 @@ const deviceId = computed(() => routeNumber(route.params.id))
 const phone = shallowRef('')
 const name = shallowRef('')
 
+const nameRules = computed(() =>
+  nameSchema({
+    required: t('validation.required'),
+    tooLong: t('validation.nameTooLong', { max: MAX_NAME_LENGTH }),
+    singleLine: t('validation.nameSingleLine'),
+  }),
+)
+
 const addMutation = useMutation({
   mutation: (input: { name: string; phone: string }) => {
     if (deviceId.value == null) throw new Error(t('device.invalidId'))
@@ -35,17 +45,17 @@ const addMutation = useMutation({
 async function save(): Promise<void> {
   if (addMutation.isLoading.value) return
   const trimmedPhone = phone.value.trim()
-  const trimmedName = name.value.trim()
   if (!/^\+?\d{5,15}$/.test(trimmedPhone)) {
     showToast(t('device.emergencyPhoneInvalid'), { type: 'error' })
     return
   }
-  if (trimmedName === '') {
-    showToast(t('device.emergencyNameRequired'), { type: 'error' })
+  const trimmedName = safeParse(nameRules.value, name.value)
+  if (!trimmedName.success) {
+    showToast(trimmedName.issues[0].message, { type: 'error' })
     return
   }
   try {
-    await addMutation.mutateAsync({ name: trimmedName, phone: trimmedPhone })
+    await addMutation.mutateAsync({ name: trimmedName.output, phone: trimmedPhone })
     await queryCache.invalidateQueries({ key: ['device-management', 'emergency-contacts'] })
     showToast(t('device.emergencyContactAdded'))
     await router.push(`/devices/${deviceId.value}/emergency-contacts`)
@@ -88,7 +98,7 @@ async function save(): Promise<void> {
             v-model="name"
             class="ml-3 min-w-0 flex-1 bg-transparent text-body outline-none opacity-75 transition-opacity focus:opacity-100 placeholder:text-text-secondary"
             type="text"
-            maxlength="64"
+            :maxlength="MAX_NAME_LENGTH"
             :placeholder="t('device.emergencyNamePlaceholder')"
             :disabled="addMutation.isLoading.value"
             @keyup.enter="save"

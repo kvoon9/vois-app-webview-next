@@ -5,6 +5,7 @@ import { useI18n } from 'vue-i18n'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import BaseModal from '~/components/BaseModal.vue'
 import Avatar from '~/components/Avatar.vue'
+import FieldEditModal from '~/components/FieldEditModal.vue'
 import PageHeader from '~/components/PageHeader.vue'
 import QueryState from '~/components/settings/QueryState.vue'
 import { useToast } from '~/composables/useToast'
@@ -110,10 +111,10 @@ function openRemarkEditor(): void {
   editingRemark.value = true
 }
 
-async function saveRemark(): Promise<void> {
+async function saveRemark(value: string): Promise<void> {
   if (!editingRemark.value || updateMutation.isLoading.value) return
   try {
-    await updateMutation.mutateAsync({ remark: remark.value.trim() })
+    await updateMutation.mutateAsync({ remark: value })
     editingRemark.value = false
     await queryCache.invalidateQueries({ key: ['device-management', 'contact'] })
     showToast(t('device.contactUpdated'))
@@ -263,29 +264,16 @@ async function removeContact(): Promise<void> {
       </QueryState>
     </main>
 
-    <BaseModal
+    <FieldEditModal
       v-if="editingRemark"
       :title="t('device.editRemark')"
-      :cancel-text="t('modal.cancel')"
-      :confirm-text="updateMutation.isLoading.value ? t('device.saving') : t('modal.confirm')"
-      :dismissible="!updateMutation.isLoading.value"
+      :model-value="remark"
+      kind="name"
+      :placeholder="t('device.remarkPlaceholder')"
+      :loading="updateMutation.isLoading.value"
       @cancel="editingRemark = false"
-      @confirm="saveRemark"
-    >
-      <label class="block text-body" for="contact-remark">
-        {{ t('device.remark') }}
-        <input
-          id="contact-remark"
-          v-model="remark"
-          class="input-field mt-2"
-          type="text"
-          maxlength="64"
-          :placeholder="t('device.remarkPlaceholder')"
-          :disabled="updateMutation.isLoading.value"
-          @keyup.enter="saveRemark"
-        />
-      </label>
-    </BaseModal>
+      @save="saveRemark"
+    />
 
     <BaseModal
       v-if="removeConfirmation"

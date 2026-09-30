@@ -29,6 +29,12 @@
     "description": "发生了意外错误，请重试。",
     "retry": "重试"
   },
+  "validation": {
+    "nameTooLong": "名称最多 {max} 个字符。",
+    "nameSingleLine": "名称不能包含换行等特殊字符。",
+    "descriptionTooLong": "描述最多 {max} 个字符。",
+    "required": "此项不能为空。"
+  },
   "settings": {
     "title": "翻译设置",
     "friends": "好友翻译设置",
@@ -92,7 +98,6 @@
     "groupNicknameValue": "群昵称：{nickname}",
     "userNumberValue": "微喇号：{number}",
     "groupIntroduction": "群介绍",
-    "groupNameRequired": "请输入群名称。",
     "groupUpdated": "群组已更新。",
     "groupSettingsUpdated": "群组设置已更新。",
     "groupLeft": "设备已退出群组。",
@@ -210,7 +215,6 @@
     "emergencyPhonePlaceholder": "请输入紧急联系人电话",
     "emergencyNamePlaceholder": "请输入紧急联系人姓名",
     "emergencyPhoneInvalid": "请输入正确的电话号码。",
-    "emergencyNameRequired": "请输入紧急联系人姓名。",
     "emergencySave": "保存",
     "reminderNew": "新建提醒",
     "reminderEdit": "编辑提醒",
@@ -240,7 +244,6 @@
     "auditJoinGroups": "需审批的群组",
     "applyReason": "申请理由",
     "applyReasonPlaceholder": "请输入加群理由",
-    "applyReasonRequired": "请输入加群理由。",
     "applicationSent": "已提交申请，等待审核。",
     "pendingApproval": "待审核",
     "transferOwner": "转让群主",

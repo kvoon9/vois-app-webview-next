@@ -5,6 +5,7 @@ import { useI18n } from 'vue-i18n'
 import { RouterLink, RouterView, useRoute } from 'vue-router'
 import BaseModal from '~/components/BaseModal.vue'
 import Avatar from '~/components/Avatar.vue'
+import FieldEditModal from '~/components/FieldEditModal.vue'
 import ImageCropper from '~/components/ImageCropper.vue'
 import PageHeader from '~/components/PageHeader.vue'
 import QueryState from '~/components/settings/QueryState.vue'
@@ -214,17 +215,13 @@ function closeEditor(): void {
   if (!savingEdit.value) editing.value = null
 }
 
-async function saveGroupField(): Promise<void> {
-  if (!editing.value) return
-  const value = editValue.value.trim()
-  if (editing.value === 'name' && value === '') {
-    showToast(t('device.groupNameRequired'), { type: 'error' })
-    return
-  }
+async function saveGroupField(value: string): Promise<void> {
+  const kind = editing.value
+  if (!kind) return
 
   try {
-    if (editing.value === 'name') await nameMutation.mutateAsync(value)
-    else if (editing.value === 'intro') await introMutation.mutateAsync(value)
+    if (kind === 'name') await nameMutation.mutateAsync(value)
+    else if (kind === 'intro') await introMutation.mutateAsync(value)
     else await nicknameMutation.mutateAsync(value)
     editing.value = null
     await queryCache.invalidateQueries({ key: ['device-management'] })
@@ -462,23 +459,16 @@ async function exitGroup(): Promise<void> {
       </QueryState>
     </main>
 
-    <BaseModal
+    <FieldEditModal
       v-if="editing"
       :title="editingTitle"
-      :cancel-text="t('modal.cancel')"
-      :confirm-text="savingEdit ? t('device.saving') : t('modal.confirm')"
-      :dismissible="!savingEdit"
+      :model-value="editValue"
+      :kind="editing === 'intro' ? 'description' : 'name'"
+      :required="editing === 'name'"
+      :loading="savingEdit"
       @cancel="closeEditor"
-      @confirm="saveGroupField"
-    >
-      <textarea
-        v-model="editValue"
-        class="input-field min-h-24"
-        :aria-label="editingTitle"
-        :disabled="savingEdit"
-        rows="3"
-      />
-    </BaseModal>
+      @save="saveGroupField"
+    />
 
     <BaseModal
       v-if="exitConfirmation"

@@ -1,8 +1,10 @@
 <script setup lang="ts">
-import { shallowRef } from 'vue'
+import { computed, shallowRef } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { safeParse } from 'valibot'
 import BaseModal from '~/components/BaseModal.vue'
 import { useToast } from '~/composables/useToast'
+import { descriptionSchema, MAX_DESCRIPTION_LENGTH } from '~/utils/field-schema'
 
 const props = defineProps<{
   groupName: string
@@ -19,13 +21,24 @@ const { t } = useI18n({ useScope: 'global' })
 const { showToast } = useToast()
 const reason = shallowRef('')
 
+const reasonRules = computed(() =>
+  descriptionSchema({
+    // An audit group asks for the reason; a direct join sends none.
+    required: props.needsAudit ? t('validation.required') : undefined,
+    tooLong: t('validation.descriptionTooLong', { max: MAX_DESCRIPTION_LENGTH }),
+  }),
+)
+
 function confirm(): void {
   if (props.loading) return
-  if (props.needsAudit && reason.value.trim() === '') {
-    showToast(t('device.applyReasonRequired'), { type: 'error' })
+
+  const detail = safeParse(reasonRules.value, reason.value)
+  if (!detail.success) {
+    showToast(detail.issues[0].message, { type: 'error' })
     return
   }
-  emit('confirm', reason.value.trim())
+
+  emit('confirm', detail.output)
 }
 </script>
 
@@ -44,6 +57,7 @@ function confirm(): void {
       <textarea
         v-model="reason"
         class="input-field mt-2 min-h-24"
+        :maxlength="MAX_DESCRIPTION_LENGTH"
         :placeholder="t('device.applyReasonPlaceholder')"
         :aria-label="t('device.applyReason')"
         :disabled="loading"

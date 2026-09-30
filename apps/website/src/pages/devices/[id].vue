@@ -3,7 +3,7 @@ import { useMutation, useQuery, useQueryCache } from '@pinia/colada'
 import { computed, shallowRef } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { RouterLink, RouterView, useRoute } from 'vue-router'
-import BaseModal from '~/components/BaseModal.vue'
+import FieldEditModal from '~/components/FieldEditModal.vue'
 import PageHeader from '~/components/PageHeader.vue'
 import QueryState from '~/components/settings/QueryState.vue'
 import Avatar from '~/components/Avatar.vue'
@@ -43,10 +43,10 @@ function startEditing(): void {
   editing.value = true
 }
 
-async function saveName(): Promise<void> {
-  if (deviceId.value == null || !nick.value.trim() || saving.value) return
+async function saveName(value: string): Promise<void> {
+  if (deviceId.value == null || saving.value) return
   try {
-    await saveDevice({ deviceId: deviceId.value, nick: nick.value.trim() })
+    await saveDevice({ deviceId: deviceId.value, nick: value })
     editing.value = false
     await queryCache.invalidateQueries({ key: ['device-management', 'devices'] })
     showToast(t('device.updated'))
@@ -144,26 +144,15 @@ async function copyDeviceNumber(): Promise<void> {
       </QueryState>
     </main>
 
-    <BaseModal
+    <FieldEditModal
       v-if="editing"
       :title="t('device.editName')"
-      :cancel-text="t('modal.cancel')"
-      :confirm-text="saving ? t('device.saving') : t('modal.confirm')"
+      :model-value="nick"
+      kind="name"
+      required
+      :loading="saving"
       @cancel="editing = false"
-      @confirm="saveName"
-    >
-      <label class="block text-2nd-body text-text-secondary" for="device-name">
-        {{ t('device.name') }}
-      </label>
-      <input
-        id="device-name"
-        v-model="nick"
-        class="input-field mt-2"
-        type="text"
-        maxlength="64"
-        :disabled="saving"
-        @keyup.enter="saveName"
-      />
-    </BaseModal>
+      @save="saveName"
+    />
   </div>
 </template>

@@ -4,6 +4,7 @@ import { computed, shallowRef, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 import BaseModal from '~/components/BaseModal.vue'
+import FieldEditModal from '~/components/FieldEditModal.vue'
 import PageHeader from '~/components/PageHeader.vue'
 import QueryState from '~/components/settings/QueryState.vue'
 import { useToast } from '~/composables/useToast'
@@ -232,8 +233,8 @@ function openContentEditor(): void {
   editingContent.value = true
 }
 
-function saveContent(): void {
-  content.value = contentDraft.value
+function saveContent(value: string): void {
+  content.value = value
   editingContent.value = false
 }
 
@@ -345,25 +346,16 @@ const headerTitle = computed(() =>
       </div>
     </BaseModal>
 
-    <BaseModal
+    <FieldEditModal
       v-if="editingContent"
       :title="t('device.reminderContent')"
-      :cancel-text="t('modal.cancel')"
-      :confirm-text="t('modal.confirm')"
+      :model-value="contentDraft"
+      kind="description"
+      :multiline="false"
+      :placeholder="t('device.reminderContentPlaceholder')"
       @cancel="editingContent = false"
-      @confirm="saveContent"
-    >
-      <input
-        id="reminder-content"
-        v-model="contentDraft"
-        class="input-field"
-        type="text"
-        maxlength="64"
-        :aria-label="t('device.reminderContent')"
-        :placeholder="t('device.reminderContentPlaceholder')"
-        @keyup.enter="saveContent"
-      />
-    </BaseModal>
+      @save="saveContent"
+    />
 
     <BaseModal
       v-if="deleteConfirmation"

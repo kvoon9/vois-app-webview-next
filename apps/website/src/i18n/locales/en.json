@@ -29,6 +29,12 @@
     "description": "An unexpected error occurred. Please try again.",
     "retry": "Try again"
   },
+  "validation": {
+    "nameTooLong": "Names can be at most {max} characters.",
+    "nameSingleLine": "Names cannot contain line breaks or other special characters.",
+    "descriptionTooLong": "Descriptions can be at most {max} characters.",
+    "required": "Please fill in this field."
+  },
   "settings": {
     "title": "Translation settings",
     "friends": "Friend translation",
@@ -92,7 +98,6 @@
     "groupNicknameValue": "Group nickname: {nickname}",
     "userNumberValue": "Weila number: {number}",
     "groupIntroduction": "Group introduction",
-    "groupNameRequired": "Please enter a group name.",
     "groupUpdated": "Group updated.",
     "groupSettingsUpdated": "Group settings updated.",
     "groupLeft": "Device left the group.",
@@ -210,7 +215,6 @@
     "emergencyPhonePlaceholder": "Enter emergency contact phone",
     "emergencyNamePlaceholder": "Enter emergency contact name",
     "emergencyPhoneInvalid": "Please enter a valid phone number.",
-    "emergencyNameRequired": "Please enter the emergency contact name.",
     "emergencySave": "Save",
     "reminderNew": "New Reminder",
     "reminderEdit": "Edit Reminder",
@@ -240,7 +244,6 @@
     "auditJoinGroups": "Approval required",
     "applyReason": "Application reason",
     "applyReasonPlaceholder": "Why do you want to join?",
-    "applyReasonRequired": "Please enter a reason for joining.",
     "applicationSent": "Application sent, pending approval.",
     "pendingApproval": "Pending",
     "transferOwner": "Transfer ownership",

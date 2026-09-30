@@ -29,6 +29,12 @@
     "description": "發生了意外錯誤，請再試一次。",
     "retry": "重試"
   },
+  "validation": {
+    "nameTooLong": "名稱最多 {max} 個字元。",
+    "nameSingleLine": "名稱不能包含換行等特殊字元。",
+    "descriptionTooLong": "描述最多 {max} 個字元。",
+    "required": "此項不能為空。"
+  },
   "settings": {
     "title": "翻譯設定",
     "friends": "好友翻譯設定",
@@ -92,7 +98,6 @@
     "groupNicknameValue": "群組暱稱：{nickname}",
     "userNumberValue": "微喇號：{number}",
     "groupIntroduction": "群組介紹",
-    "groupNameRequired": "請輸入群組名稱。",
     "groupUpdated": "群組已更新。",
     "groupSettingsUpdated": "群組設定已更新。",
     "groupLeft": "裝置已退出群組。",
@@ -210,7 +215,6 @@
     "emergencyPhonePlaceholder": "請輸入緊急聯絡人電話",
     "emergencyNamePlaceholder": "請輸入緊急聯絡人姓名",
     "emergencyPhoneInvalid": "請輸入正確的電話號碼。",
-    "emergencyNameRequired": "請輸入緊急聯絡人姓名。",
     "emergencySave": "保存",
     "reminderNew": "新建提醒",
     "reminderEdit": "編輯提醒",
@@ -240,7 +244,6 @@
     "auditJoinGroups": "需審批的群組",
     "applyReason": "申請理由",
     "applyReasonPlaceholder": "請輸入加群理由",
-    "applyReasonRequired": "請輸入加群理由。",
     "applicationSent": "已提交申請，等待審核。",
     "pendingApproval": "待審核",
     "transferOwner": "轉讓群主",

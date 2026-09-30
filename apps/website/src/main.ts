@@ -8,6 +8,7 @@ import App from '~/App.vue'
 import { i18n, SUPPORTED_LOCALES } from '~/i18n'
 import { needsIntlPolyfill } from '~/i18n/intl-polyfill-needed'
 import { isWebviewDebug } from '~/composables/useWebviewDebug'
+import { markSessionStart } from '~/composables/usePageBack'
 import { whenWebviewBridge } from '~/composables/useWebviewBridge'
 import { deviceEntryTarget } from '~/utils/device-entry'
 import '@unocss/reset/tailwind.css'
@@ -18,6 +19,10 @@ const router = createRouter({
   history: createWebHashHistory(),
   routes,
 })
+
+// Leaves whatever the WebView host loaded before this document out of the
+// back-button depth, so `goBack(2)` cannot pop into a host-owned page.
+markSessionStart()
 
 router.beforeEach((to) => {
   const target = deviceEntryTarget(to.path, to.query)

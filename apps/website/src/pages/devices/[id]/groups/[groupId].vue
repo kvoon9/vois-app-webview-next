@@ -255,9 +255,9 @@ async function exitGroup(): Promise<void> {
     await exitMutation.mutateAsync()
     exitConfirmation.value = false
     showToast(wasOwner ? t('device.groupDissolved') : t('device.groupLeft'))
-    // Leave first and invalidate the group lists only: refetching this page's own
-    // query after the exit would fail (the device is no longer a member).
-    goBack()
+    // Two pages out: this group page and the group list behind it, so the list
+    // is only rebuilt for the next visit, never left showing the exited group.
+    goBack(2)
     queryCache.invalidateQueries({ key: ['device-management', 'groups'] })
   } catch (error) {
     showToast(error instanceof Error ? error.message : String(error), { type: 'error' })

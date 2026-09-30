@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "vois-debug": {
+      "command": "node",
+      "args": ["packages/mcp/src/cli.ts"]
+    }
+  }
+}

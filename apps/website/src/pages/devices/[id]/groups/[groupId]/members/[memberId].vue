@@ -2,7 +2,7 @@
 import { useMutation, useQuery, useQueryCache } from '@pinia/colada'
 import { computed, shallowRef } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { RouterLink, useRoute, useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import BaseModal from '~/components/BaseModal.vue'
 import Avatar from '~/components/Avatar.vue'
 import PageHeader from '~/components/PageHeader.vue'
@@ -131,16 +131,6 @@ async function transferOwner(): Promise<void> {
                 })
               }}
             </p>
-          </section>
-
-          <section class="mt-2 overflow-hidden panel">
-            <RouterLink
-              :to="{ path: '/report-user', query: { id: String(memberId) } }"
-              class="min-h-14 flex items-center justify-between px-4 text-body text-danger"
-            >
-              <span>{{ t('profile.report') }}</span>
-              <span class="row-chevron" aria-hidden="true" />
-            </RouterLink>
           </section>
 
           <div v-if="canManage" class="mt-8 space-y-3">

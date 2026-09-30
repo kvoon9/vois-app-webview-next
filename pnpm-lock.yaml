@@ -240,8 +240,8 @@ catalogs:
       specifier: ^3.12.3
       version: 3.12.3
     '@vois/webview-bridge':
-      specifier: ^0.3.0
-      version: 0.3.0
+      specifier: ^0.4.0
+      version: 0.4.0
   tooling:
     '@oxlint/plugins':
       specifier: 1.73.0
@@ -355,7 +355,7 @@ importers:
         version: 1.2.0(valibot@1.4.2(typescript@7.0.2))
       '@vois/webview-bridge':
         specifier: 'catalog:'
-        version: 0.3.0
+        version: 0.4.0
       '@vue/runtime-vapor':
         specifier: catalog:vue
         version: 3.6.0-rc.5(@vue/runtime-dom@3.6.0-rc.5)
@@ -2683,8 +2683,8 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@vois/webview-bridge@0.3.0':
-    resolution: {integrity: sha512-44gOwBUvArrGPIoV8/VeF1IOTyxgiHHsyE+X9zZ3RmoM8v5/H19nD+tbtGYOsH3pT+nSBko0ytEM1jjhdpCySg==}
+  '@vois/webview-bridge@0.4.0':
+    resolution: {integrity: sha512-5SMiwQMTWR3ZoDzp8T3wJY20tt781KNc2gL1RfQVd0mu1fj4WBS62m+6pXHD8CPx1Y3F027p5qHTwEX4Qm8Ugw==}
 
   '@vue-macros/common@3.1.4':
     resolution: {integrity: sha512-/5Fv+6DgIcM9ajY05ZmKBv+LMX1M9A0X+IUwDRVdt67ciw8OV9bvG2r34p3RiEadlsQybjhKPRKNXDC8Bp23cw==}
@@ -7295,7 +7295,7 @@ snapshots:
   '@voidzero-dev/vite-plus-win32-x64-msvc@0.3.0':
     optional: true
 
-  '@vois/webview-bridge@0.3.0': {}
+  '@vois/webview-bridge@0.4.0': {}
 
   '@vue-macros/common@3.1.4(vue@3.6.0-rc.5(typescript@7.0.2))':
     dependencies:

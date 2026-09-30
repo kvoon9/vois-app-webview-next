@@ -520,14 +520,19 @@ export async function transferGroupOwner(
   return response.data
 }
 
-/** Update the device's own in-group card name (`remark` upstream). */
+/**
+ * Update the device's own in-group card name (`remark` upstream).
+ *
+ * A cleared name travels as a single space: the endpoint rejects an empty string
+ * with `20 参数错误` and keeps the old remark, while a space clears it.
+ */
 export async function updateMyGroupNickname(
   deviceId: number,
   groupId: number,
   nickname: string,
 ): Promise<EmptyData> {
   const response = await weilaFetch<EmptyData>('/v2/subuser/group-member-change-remark', {
-    body: { user_id: deviceId, group_id: groupId, remark: nickname },
+    body: { user_id: deviceId, group_id: groupId, remark: nickname || ' ' },
   })
   return response.data
 }
@@ -776,7 +781,7 @@ function toGroupInfo(group: GroupInfoDto): GroupInfo {
     createdAt: group.created_at,
     memberCount: group.member_count,
     settings: toSettings(group.settings),
-    myNickname: group.my_nickname ?? '',
+    myNickname: group.my_nickname?.trim() ?? '',
   }
 }
 
@@ -787,7 +792,8 @@ function toGroupMember(member: SubuserGroupMemberDto): GroupMember {
     nick: member.nick,
     avatar: member.avatar,
     isAdmin: member.is_admin ?? false,
-    nickname: member.remark ?? '',
+    // A name cleared through the API comes back as a single space.
+    nickname: member.remark?.trim() ?? '',
   }
 }
 

@@ -11,6 +11,8 @@
   --color-surface-dialog: #eff6ff;
   --color-surface-muted: #f5f6f8;
   --color-surface-field: #f3f4f6;
+  /* Text entry is pure white on the light theme; controls keep the field fill. */
+  --color-surface-input: #ffffff;
   --color-surface-selected: #e4f8e7;
   --color-fill: #d9d9d9;
   --color-text-primary: #000000;
@@ -25,6 +27,7 @@
   --color-surface-dialog: var(--color-surface-elevated);
   --color-surface-muted: #262626;
   --color-surface-field: #2c2c2c;
+  --color-surface-input: #2c2c2c;
   --color-surface-selected: #173e32;
   --color-fill: #3a3b3c;
   --color-text-primary: #f8fff7;

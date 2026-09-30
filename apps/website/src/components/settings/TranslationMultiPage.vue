@@ -314,7 +314,7 @@ async function done(): Promise<void> {
               type="search"
               name="translation-language-search"
               autocomplete="off"
-              class="h-11 w-full rounded-standard bg-surface-field px-4 text-2nd-body text-text-primary outline-none opacity-75 transition-opacity focus-visible:opacity-100"
+              class="h-11 w-full rounded-standard bg-surface-input px-4 text-2nd-body text-text-primary outline-none opacity-75 transition-opacity focus-visible:opacity-100"
               :aria-label="t('translation.searchLanguages')"
               :placeholder="t('translation.searchLanguages')"
               :disabled="!enabled"

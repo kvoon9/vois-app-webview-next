@@ -81,6 +81,7 @@ input[type='search']::-webkit-search-cancel-button {
       'surface-dialog': 'var(--color-surface-dialog)',
       'surface-muted': 'var(--color-surface-muted)',
       'surface-field': 'var(--color-surface-field)',
+      'surface-input': 'var(--color-surface-input)',
       'surface-selected': 'var(--color-surface-selected)',
       // Neutral fill for control tracks, checkboxes, radios and dots; a fill,
       // never a border.
@@ -160,7 +161,7 @@ input[type='search']::-webkit-search-cancel-button {
     // The placeholder colour lives in the preflight above; a `placeholder:`
     // utility here collides with it as `::placeholder::placeholder`.
     'input-field':
-      'w-full bg-surface-field rounded-standard p-4 text-body text-text-primary resize-none outline-none opacity-75 focus:opacity-100 transition-opacity',
+      'w-full bg-surface-input rounded-standard p-4 text-body text-text-primary resize-none outline-none opacity-75 focus:opacity-100 transition-opacity',
     'z-modal': 'z-50',
     'z-drawer': 'z-60',
     'z-drawer-content': 'z-70',

@@ -1,13 +1,13 @@
 <script setup lang="ts">
 import { computed, shallowRef } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { maxLength, maxValue, minValue, number, object, pipe, string, trim } from 'valibot'
+import { maxValue, minValue, number, object, pipe } from 'valibot'
 import PageHeader from '~/components/PageHeader.vue'
 import ResultModal from '~/components/ResultModal.vue'
-import { MAX_REPORT_CONTENT_LENGTH } from '~/constants'
 import { useFormValidation } from '~/composables/useFormValidation'
 import { useWebviewBridge } from '~/composables/useWebviewBridge'
 import { weilaFetch } from '~/utils/api'
+import { descriptionSchema, MAX_DESCRIPTION_LENGTH } from '~/utils/field-schema'
 
 /**
  * Tells the server which form was filled in; controls the success message wording.
@@ -36,11 +36,15 @@ const items = computed(() => {
   return Object.values(tm(`${props.i18nNamespace}.${props.listKey}`)) as string[]
 })
 
-const schema = object({
-  index: pipe(number(), minValue(0), maxValue(items.value.length - 1)),
-  // The backend accepts an empty text, so there is no nonEmpty rule.
-  content: pipe(string(), trim(), maxLength(MAX_REPORT_CONTENT_LENGTH)),
-})
+const schema = computed(() =>
+  object({
+    index: pipe(number(), minValue(0), maxValue(items.value.length - 1)),
+    // The backend accepts an empty text, so there is no nonEmpty rule.
+    content: descriptionSchema({
+      tooLong: t('validation.descriptionTooLong', { max: MAX_DESCRIPTION_LENGTH }),
+    }),
+  }),
+)
 
 const { data, errors, resetErrors, validate, validateField } = useFormValidation(schema, {
   index: 0,
@@ -61,7 +65,7 @@ async function handleSubmit(): Promise<void> {
     const response = await weilaFetch<void>(props.endpoint, {
       body: {
         type: items.value[data.value.index],
-        content: data.value.content,
+        content: data.value.content.trim(),
       },
     })
 
@@ -119,14 +123,14 @@ function closeModal(): void {
           <h2 class="section-title mt-6 mb-4">{{ t(`${i18nNamespace}.${textareaLabelKey}`) }}</h2>
           <textarea
             v-model="data.content"
-            :maxlength="MAX_REPORT_CONTENT_LENGTH"
+            :maxlength="MAX_DESCRIPTION_LENGTH"
             rows="6"
             class="input-field"
             :placeholder="t(`${i18nNamespace}.${placeholderKey}`)"
             @blur="validateField('content')"
           />
           <p class="text-right text-small text-text-secondary mt-2">
-            {{ data.content.length }}/{{ MAX_REPORT_CONTENT_LENGTH }}
+            {{ data.content.length }}/{{ MAX_DESCRIPTION_LENGTH }}
           </p>
           <p v-if="errors.content" class="mt-1 text-small text-danger">
             {{ errors.content }}

@@ -15,13 +15,14 @@ type FormSchema = GenericSchema | GenericSchemaAsync
 /**
  * Reusable form validation powered by valibot.
  *
- * @param schema - The valibot schema describing the form shape.
+ * @param schema - The valibot schema describing the form shape, or a getter for one
+ * whose messages depend on the active locale.
  * @param initialData - Initial form data or a getter for it.
  *
  * @returns Reactive `data`, per-field `errors`, and helpers to validate/reset.
  */
 export function useFormValidation<TSchema extends FormSchema>(
-  schema: TSchema,
+  schema: MaybeRefOrGetter<TSchema>,
   initialData: MaybeRefOrGetter<InferInput<TSchema> & object>,
 ) {
   type Data = InferInput<TSchema> & object
@@ -43,7 +44,7 @@ export function useFormValidation<TSchema extends FormSchema>(
    * @returns `true` when the current data passes the schema.
    */
   async function validate(): Promise<boolean> {
-    const result = await safeParseAsync(schema, data.value)
+    const result = await safeParseAsync(toValue(schema), data.value)
 
     if (result.success) {
       errors.value = {}
@@ -68,7 +69,7 @@ export function useFormValidation<TSchema extends FormSchema>(
    * @returns `true` when the field has no error after validation.
    */
   async function validateField(path: string): Promise<boolean> {
-    const result = await safeParseAsync(schema, data.value)
+    const result = await safeParseAsync(toValue(schema), data.value)
     const nextErrors = { ...errors.value }
     delete nextErrors[path]
 

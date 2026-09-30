@@ -2,25 +2,14 @@
 import { computed, shallowRef } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute } from 'vue-router'
-import {
-  integer,
-  maxLength,
-  maxValue,
-  minValue,
-  number,
-  object,
-  pipe,
-  safeInteger,
-  string,
-  trim,
-} from 'valibot'
+import { integer, maxValue, minValue, number, object, pipe, safeInteger } from 'valibot'
 import PageHeader from '~/components/PageHeader.vue'
 import ResultModal from '~/components/ResultModal.vue'
-import { MAX_REPORT_CONTENT_LENGTH } from '~/constants'
 import { parseAccountId } from '~/composables/useAccountId'
 import { useFormValidation } from '~/composables/useFormValidation'
 import { useWebviewBridge } from '~/composables/useWebviewBridge'
 import { weilaFetch } from '~/utils/api'
+import { descriptionSchema, MAX_DESCRIPTION_LENGTH } from '~/utils/field-schema'
 
 const props = defineProps<{
   target: 'user' | 'group'
@@ -38,12 +27,16 @@ const targetId = computed(() => {
   return parseAccountId(Array.isArray(rawId) ? rawId[0] : rawId)
 })
 
-const schema = object({
-  targetId: pipe(number(), integer(), minValue(1), safeInteger()),
-  reasonIndex: pipe(number(), minValue(0), maxValue(reasons.value.length - 1)),
-  // The backend accepts an empty remark, so there is no nonEmpty rule.
-  content: pipe(string(), trim(), maxLength(MAX_REPORT_CONTENT_LENGTH)),
-})
+const schema = computed(() =>
+  object({
+    targetId: pipe(number(), integer(), minValue(1), safeInteger()),
+    reasonIndex: pipe(number(), minValue(0), maxValue(reasons.value.length - 1)),
+    // The backend accepts an empty remark, so there is no nonEmpty rule.
+    content: descriptionSchema({
+      tooLong: t('validation.descriptionTooLong', { max: MAX_DESCRIPTION_LENGTH }),
+    }),
+  }),
+)
 
 const { data, errors, resetErrors, validate, validateField } = useFormValidation(schema, () => ({
   targetId: targetId.value ?? 0,
@@ -138,7 +131,7 @@ function closeModal(): void {
         <textarea
           id="report-remark"
           v-model="data.content"
-          :maxlength="MAX_REPORT_CONTENT_LENGTH"
+          :maxlength="MAX_DESCRIPTION_LENGTH"
           rows="5"
           class="input-field min-h-29 text-2nd-body"
           :placeholder="t(`reportTarget.${target}.placeholder`)"

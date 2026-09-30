@@ -6,6 +6,7 @@ import unocss from 'unocss/vite'
 import legacy from '@vitejs/plugin-legacy'
 import VueRouter from 'vue-router/vite'
 import vueDevtools from 'vite-plugin-vue-devtools'
+import { voisBridgeAuth } from '@vois/webview-bridge/vite'
 import { vconsoleDev } from './plugins/vconsole-dev.ts'
 
 // The debug plugin is pnpm-linked from a sibling repo, so CI (and anyone who has
@@ -77,6 +78,9 @@ export default defineConfig(async ({ isPreview, command, mode }) => {
     },
     plugins: [
       ...(isPreview ? [vconsoleDev()] : []),
+      // Mints the debug account's access token over the gateway its API hands out;
+      // the bridge's own WebSocket login cannot, and its tokens answer `31 授权失效`.
+      voisBridgeAuth(),
       await webviewDebugPlugin(process.argv.includes('--debug')),
       vueDevtools(),
       VueRouter({ dts: 'src/route-map.d.ts' }),

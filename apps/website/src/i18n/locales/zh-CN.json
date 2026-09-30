@@ -16,6 +16,18 @@
     "helpCenter": "帮助中心",
     "deviceManagement": "设备管理"
   },
+  "login": {
+    "title": "登录",
+    "accountMode": "帐号登录",
+    "phoneMode": "手机号登录",
+    "account": "帐号",
+    "countryCode": "国家区号",
+    "phone": "手机号",
+    "password": "密码",
+    "submit": "登录",
+    "submitting": "登录中…",
+    "debugOnly": "登录仅限开发或调试模式使用。"
+  },
   "modal": {
     "cancel": "取消",
     "confirm": "确认",

@@ -16,6 +16,18 @@
     "helpCenter": "Help center",
     "deviceManagement": "Device management"
   },
+  "login": {
+    "title": "Sign in",
+    "accountMode": "Account",
+    "phoneMode": "Phone number",
+    "account": "Account",
+    "countryCode": "Country code",
+    "phone": "Phone number",
+    "password": "Password",
+    "submit": "Sign in",
+    "submitting": "Signing in…",
+    "debugOnly": "Sign-in is available in dev or debug mode only."
+  },
   "modal": {
     "cancel": "Cancel",
     "confirm": "Confirm",

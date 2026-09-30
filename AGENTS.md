@@ -43,6 +43,8 @@ The fixed account is for dev and debug preview only. Preview runs the production
 
 Debug inputs: native's default fields (`login-id`, `theme`, `lang`, `device-type`, ...) come from the URL through the app-layer adapter (hash query wins over the outer search; token fields are ignored), while page-specific params (`uuid`, `hardware-id`, ...) are read directly from the route query. Examples: `#/settings/friends?login-id=456`, `#/devices?hardware-id=441`.
 
+`#/login` signs the debug session in as an external account (帐号/手机号 + 密码): the dev/debug server logs in on the TCP gateway, after which the token endpoint and the bridge's `login-id` answer serve that account for the page's life (a URL `login-id` still overrides).
+
 Never print auth parameters.
 
 ### Reading captured events

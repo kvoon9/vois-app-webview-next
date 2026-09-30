@@ -16,6 +16,18 @@
     "helpCenter": "說明中心",
     "deviceManagement": "裝置管理"
   },
+  "login": {
+    "title": "登入",
+    "accountMode": "帳號登入",
+    "phoneMode": "手機號登入",
+    "account": "帳號",
+    "countryCode": "國家區號",
+    "phone": "手機號",
+    "password": "密碼",
+    "submit": "登入",
+    "submitting": "登入中…",
+    "debugOnly": "登入僅限開發或偵錯模式使用。"
+  },
   "modal": {
     "cancel": "取消",
     "confirm": "確認",

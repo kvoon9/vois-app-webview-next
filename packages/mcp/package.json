@@ -23,7 +23,7 @@
     "check": "vp check"
   },
   "dependencies": {
-    "valibot": "^1.4.2"
+    "valibot": "^1.5.0"
   },
   "devDependencies": {
     "@types/node": "catalog:tooling",

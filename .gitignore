@@ -32,3 +32,6 @@ dist-ssr
 !.vscode/settings.json
 !.vscode/extensions.json
 apps/website/src/route-map.d.ts
+
+# Vendored app builds used for protocol reverse engineering
+vender/

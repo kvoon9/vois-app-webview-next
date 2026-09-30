@@ -26,7 +26,8 @@ export default defineConfig({
     presetWind3(),
     presetAttributify(),
     presetIcons({
-      scale: 1.2,
+      // Icons match the surrounding font size exactly; no per-usage sizing.
+      scale: 1,
       // Mask mode renders every icon as a CSS mask filled with `currentColor`, so
       // icons inherit text colour instead of baking in the SVG's own colours.
       mode: 'mask',

@@ -280,23 +280,25 @@ async function exitGroup(): Promise<void> {
               :aria-label="t('device.changeAvatar')"
               @change="onAvatarChange"
             />
-            <button
-              type="button"
-              class="rounded-full disabled:cursor-default"
-              :class="avatarUploading ? 'opacity-50' : ''"
-              :disabled="!isOwner || avatarUploading"
-              :aria-label="isOwner ? t('device.changeAvatar') : undefined"
-              @click="pickAvatar"
-            >
-              <Avatar :name="group.name" :src="group.avatar" size="xl" />
-            </button>
-            <span
-              v-if="isOwner"
-              class="pointer-events-none -mt-6 ml-14 h-7 w-7 flex items-center justify-center rounded-full bg-primary text-primary-text text-small"
-              aria-hidden="true"
-            >
-              <span class="i-ph-pencil-simple" />
-            </span>
+            <div class="relative">
+              <button
+                type="button"
+                class="block rounded-full disabled:cursor-default"
+                :class="avatarUploading ? 'opacity-50' : ''"
+                :disabled="!isOwner || avatarUploading"
+                :aria-label="isOwner ? t('device.changeAvatar') : undefined"
+                @click="pickAvatar"
+              >
+                <Avatar :name="group.name" :src="group.avatar" size="xl" />
+              </button>
+              <span
+                v-if="isOwner"
+                class="pointer-events-none absolute bottom-0 right-0 z-10 h-7 w-7 flex items-center justify-center rounded-full bg-primary text-primary-text text-small"
+                aria-hidden="true"
+              >
+                <span class="i-ph-pencil-simple" />
+              </span>
+            </div>
             <!-- Read-only facts sit on the background as centred `key：value` lines. -->
             <p class="mt-3 text-small text-text-secondary">
               {{ t('device.groupNumber', { number: group.num }) }}

@@ -107,6 +107,7 @@ async function confirmJoin(detail: string): Promise<void> {
         <input
           v-model="keyword"
           type="search"
+          inputmode="numeric"
           class="input-field min-w-0 flex-1"
           :placeholder="t('device.groupNumberPlaceholder')"
           :aria-label="t('device.groupNumber')"

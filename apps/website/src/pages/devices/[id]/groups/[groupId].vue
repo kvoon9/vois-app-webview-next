@@ -220,10 +220,6 @@ async function saveGroupField(): Promise<void> {
     showToast(t('device.groupNameRequired'), { type: 'error' })
     return
   }
-  if (editing.value === 'nickname' && value === '') {
-    showToast(t('device.groupNicknameRequired'), { type: 'error' })
-    return
-  }
 
   try {
     if (editing.value === 'name') await nameMutation.mutateAsync(value)

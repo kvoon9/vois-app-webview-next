@@ -8,13 +8,13 @@ catalogMode: prefer
 catalogs:
   vue:
     '@pinia/colada': ^1.4.6
-    '@vue/runtime-vapor': 3.6.0-rc.5
+    '@vue/runtime-vapor': 3.6.0-rc.9
     '@vueuse/core': ^14.4.0
     '@vueuse/integrations': ^14.4.0
     '@vueuse/router': ^14.4.0
     pinia: ^4.0.3
     reka-ui: ^2.10.5
-    vue: 3.6.0-rc.5
+    vue: 3.6.0-rc.9
     vue-i18n: ^11.4.12
     vue-router: ^5.3.1
   build:
@@ -48,18 +48,18 @@ allowBuilds:
   esbuild: true
   vue-demi: true
 minimumReleaseAgeExclude:
-  - '@vue/compiler-core@3.6.0-rc.5'
-  - '@vue/compiler-dom@3.6.0-rc.5'
-  - '@vue/compiler-sfc@3.6.0-rc.5'
-  - '@vue/compiler-ssr@3.6.0-rc.5'
-  - '@vue/reactivity@3.6.0-rc.5'
-  - '@vue/runtime-core@3.6.0-rc.5'
-  - '@vue/runtime-dom@3.6.0-rc.5'
-  - '@vue/runtime-vapor@3.6.0-rc.5'
-  - '@vue/server-renderer@3.6.0-rc.5'
-  - '@vue/shared@3.6.0-rc.5'
-  - vue@3.6.0-rc.5
-  - '@vue/compiler-vapor@3.6.0-rc.5'
+  - '@vue/compiler-core@3.6.0-rc.9'
+  - '@vue/compiler-dom@3.6.0-rc.9'
+  - '@vue/compiler-sfc@3.6.0-rc.9'
+  - '@vue/compiler-ssr@3.6.0-rc.9'
+  - '@vue/reactivity@3.6.0-rc.9'
+  - '@vue/runtime-core@3.6.0-rc.9'
+  - '@vue/runtime-dom@3.6.0-rc.9'
+  - '@vue/runtime-vapor@3.6.0-rc.9'
+  - '@vue/server-renderer@3.6.0-rc.9'
+  - '@vue/shared@3.6.0-rc.9'
+  - vue@3.6.0-rc.9
+  - '@vue/compiler-vapor@3.6.0-rc.9'
   - vite-plugin-vois-webview-debug@0.1.0
   - '@vois/webview-bridge@0.5.1'
 catalog:

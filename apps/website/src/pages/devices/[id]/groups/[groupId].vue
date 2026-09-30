@@ -2,12 +2,13 @@
 import { useMutation, useQuery, useQueryCache } from '@pinia/colada'
 import { computed, shallowRef, useTemplateRef } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { RouterLink, RouterView, useRoute, useRouter } from 'vue-router'
+import { RouterLink, RouterView, useRoute } from 'vue-router'
 import BaseModal from '~/components/BaseModal.vue'
 import Avatar from '~/components/Avatar.vue'
 import ImageCropper from '~/components/ImageCropper.vue'
 import PageHeader from '~/components/PageHeader.vue'
 import QueryState from '~/components/settings/QueryState.vue'
+import { usePageBack } from '~/composables/usePageBack'
 import { useToast } from '~/composables/useToast'
 import { weilaUpload } from '~/utils/api'
 import {
@@ -42,10 +43,10 @@ interface GroupDetail {
 }
 
 const route = useRoute()
-const router = useRouter()
 const { t } = useI18n({ useScope: 'global' })
 const queryCache = useQueryCache()
 const { showToast } = useToast()
+const { goBack } = usePageBack()
 
 const defaultGroupSettings: GroupSettings = {
   muted: false,
@@ -254,10 +255,10 @@ async function exitGroup(): Promise<void> {
     await exitMutation.mutateAsync()
     exitConfirmation.value = false
     showToast(wasOwner ? t('device.groupDissolved') : t('device.groupLeft'))
-    // Navigate away before invalidating: refetching this page's query after the
-    // exit would fail (the device is no longer a member) and show a bogus error.
-    await router.push(`/devices/${deviceId.value}/groups`)
-    queryCache.invalidateQueries({ key: ['device-management'] })
+    // Leave first and invalidate the group lists only: refetching this page's own
+    // query after the exit would fail (the device is no longer a member).
+    goBack()
+    queryCache.invalidateQueries({ key: ['device-management', 'groups'] })
   } catch (error) {
     showToast(error instanceof Error ? error.message : String(error), { type: 'error' })
   }

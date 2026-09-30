@@ -3,7 +3,6 @@ import { useMutation, useQuery, useQueryCache } from '@pinia/colada'
 import { computed, shallowRef } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
-import BaseModal from '~/components/BaseModal.vue'
 import Avatar from '~/components/Avatar.vue'
 import PageHeader from '~/components/PageHeader.vue'
 import QueryState from '~/components/settings/QueryState.vue'
@@ -22,7 +21,6 @@ const { t } = useI18n({ useScope: 'global' })
 const queryCache = useQueryCache()
 const { showToast } = useToast()
 const selectedIds = shallowRef<number[]>([])
-const confirmationOpen = shallowRef(false)
 
 type RouteParam = string | string[] | undefined
 
@@ -95,7 +93,6 @@ function toggleAll(): void {
 
 async function submit(): Promise<void> {
   if (!selectedIds.value.length || addMutation.isLoading.value) return
-  confirmationOpen.value = false
   try {
     await addMutation.mutateAsync(selectedIds.value)
     await queryCache.invalidateQueries({ key: ['device-management'] })
@@ -174,7 +171,7 @@ async function submit(): Promise<void> {
         type="button"
         class="btn-primary mt-2 w-full"
         :disabled="selectedCount === 0 || addMutation.isLoading.value"
-        @click="confirmationOpen = true"
+        @click="submit"
       >
         {{
           addMutation.isLoading.value
@@ -183,17 +180,5 @@ async function submit(): Promise<void> {
         }}
       </button>
     </footer>
-
-    <BaseModal
-      v-if="confirmationOpen"
-      :title="t('device.addMember')"
-      :cancel-text="t('modal.cancel')"
-      :confirm-text="t('modal.confirm')"
-      :dismissible="!addMutation.isLoading.value"
-      @cancel="confirmationOpen = false"
-      @confirm="submit"
-    >
-      <p>{{ t('device.addMembersConfirm', { count: selectedCount }) }}</p>
-    </BaseModal>
   </div>
 </template>

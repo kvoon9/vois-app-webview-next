@@ -34,11 +34,29 @@ export function historyDepth(state: HistoryStateValue, sessionStart: number): nu
   return Math.max(0, position - sessionStart)
 }
 
+/**
+ * Where the app's first entry sits in the WebView session. A reload of a deep entry
+ * keeps that entry's state but not the app's own numbering, so the mark has to
+ * outlive the document: without it a reloaded page counts the host's entries, and
+ * `goBack(2)` would pop into whatever the host loaded before the app.
+ */
+const SESSION_START_KEY = 'page-back-session-start'
+
 let sessionStart = 0
+
+/** The mark this WebView session stored, or null on its first document. */
+function storedSessionStart(): number | null {
+  const stored = sessionStorage.getItem(SESSION_START_KEY)
+  if (stored === null) return null
+
+  const parsed = Number(stored)
+  return Number.isInteger(parsed) ? parsed : null
+}
 
 /** Call once, after the router is created and before the app mounts. */
 export function markSessionStart(): void {
-  sessionStart = historyPosition(window.history.state)
+  sessionStart = storedSessionStart() ?? historyPosition(window.history.state)
+  sessionStorage.setItem(SESSION_START_KEY, String(sessionStart))
 }
 
 /**
@@ -50,13 +68,15 @@ export function usePageBack() {
   const router = useRouter()
 
   function goBack(steps = 1): void {
+    // A `@click="goBack"` handler hands the click event in as the step count.
+    const count = Number.isInteger(steps) ? steps : 1
     const depth = historyDepth(window.history.state, sessionStart)
     if (depth === 0) {
       useWebviewBridge()?.send('close-page')
       return
     }
 
-    router.go(-Math.min(steps, depth))
+    router.go(-Math.min(count, depth))
   }
 
   return { goBack }

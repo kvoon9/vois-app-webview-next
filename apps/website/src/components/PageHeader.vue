@@ -58,7 +58,7 @@ async function copyCurrentUrl(): Promise<void> {
       type="button"
       class="absolute left-0 top-1/2 -translate-y-1/2 flex items-center justify-center w-11 h-11"
       :aria-label="t('nav.back')"
-      @click="goBack"
+      @click="goBack()"
     >
       <span class="i-ph-arrow-left text-xl text-text-primary" aria-hidden="true" />
     </button>

@@ -47,6 +47,10 @@ Debug inputs: native's default fields (`login-id`, `theme`, `lang`, `device-type
 
 Never print auth parameters.
 
+### MCP debugging
+
+`packages/mcp` is an MCP stdio server (wired as `vois-debug` in `.pi/mcp.json`) that gives an agent the debug pipeline without a browser: `status` finds the debug server, `events` reads the capture (tokens redacted), `login` re-signs the fixed account or switches accounts, `token` verifies the mint, and `api` performs signed `/v2` calls as the signed-in account. It runs from source on Node >= 22.18 (`node packages/mcp/src/cli.ts`), probes ports `3021` / `5173` / `8080`, and never returns the token itself. See `packages/mcp/README.md`.
+
 ### Reading captured events
 
 The server records what the page did. Read it with `vp run website#debug:logs`, or `curl http://127.0.0.1:5173/__debug/status` for the pipeline state. `🟢 WebView debug connected` confirms the pipeline; if it is missing, reload with `?debug-reload=1`.

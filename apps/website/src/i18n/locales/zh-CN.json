@@ -125,7 +125,7 @@
     "selectAll": "全选",
     "alreadyMember": "已在群中",
     "noCandidates": "暂无可添加的好友或设备。",
-    "confirmAdd": "添加 {count} 名成员",
+    "addMembersConfirm": "确定将所选成员添加到群聊吗？",
     "membersAdded": "成员已添加。",
     "search": "搜索",
     "groupNumberPlaceholder": "请输入群号",

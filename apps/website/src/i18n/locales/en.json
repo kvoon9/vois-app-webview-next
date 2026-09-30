@@ -125,7 +125,7 @@
     "selectAll": "Select all",
     "alreadyMember": "Already in group",
     "noCandidates": "No friends or devices available.",
-    "confirmAdd": "Add {count} members",
+    "addMembersConfirm": "Add the selected members to the group?",
     "membersAdded": "Members added.",
     "search": "Search",
     "groupNumberPlaceholder": "Enter group number",

@@ -7,10 +7,12 @@ import ToastHost from '~/components/ToastHost.vue'
 import { useLangQuery } from '~/composables/useLangQuery'
 import { usePageParams } from '~/composables/usePageParams'
 import { nativeTheme } from '~/constants'
+import { useAccountProfile } from '~/composables/useAccountProfile'
 
 const { t } = useI18n()
 const isDark = useDark({ storage: sessionStorage })
 usePageParams()
+useAccountProfile()
 
 watch(
   nativeTheme,

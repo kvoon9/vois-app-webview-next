@@ -20,11 +20,16 @@
     "title": "登入",
     "accountOrPhone": "帳號／手機號",
     "chooseAccount": "選擇已登入帳號",
-    "switchAccount": "切換帳號",
     "password": "密碼",
     "submit": "登入",
     "submitting": "登入中…",
-    "debugOnly": "登入僅限開發或偵錯模式使用。"
+    "debugOnly": "登入僅限開發或偵錯模式使用。",
+    "savedAccounts": "已登入帳號",
+    "currentAccount": "目前帳號",
+    "switching": "切換中…",
+    "addAccount": "新增帳號",
+    "appAccount": "App 帳號",
+    "sessionExpired": "請重新登入"
   },
   "modal": {
     "cancel": "取消",

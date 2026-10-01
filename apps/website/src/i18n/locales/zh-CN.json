@@ -20,11 +20,16 @@
     "title": "登录",
     "accountOrPhone": "帐号／手机号",
     "chooseAccount": "选择已登录帐号",
-    "switchAccount": "切换帐号",
     "password": "密码",
     "submit": "登录",
     "submitting": "登录中…",
-    "debugOnly": "登录仅限开发或调试模式使用。"
+    "debugOnly": "登录仅限开发或调试模式使用。",
+    "savedAccounts": "已登录帐号",
+    "currentAccount": "当前帐号",
+    "switching": "切换中…",
+    "addAccount": "添加账号",
+    "appAccount": "App 账号",
+    "sessionExpired": "请重新登录"
   },
   "modal": {
     "cancel": "取消",

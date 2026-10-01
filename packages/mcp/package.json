@@ -1,6 +1,6 @@
 {
   "name": "mcp",
-  "version": "0.9.0",
+  "version": "0.10.0",
   "private": true,
   "description": "MCP server exposing the WebView debug pipeline: server status, captured events, debug login, and signed API calls.",
   "license": "MIT",

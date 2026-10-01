@@ -1,11 +1,21 @@
 <script setup lang="ts">
-import { shallowRef } from 'vue'
+import { computed, shallowRef, watch } from 'vue'
+import { useStorage } from '@vueuse/core'
 import { useI18n } from 'vue-i18n'
-import { useRouter } from 'vue-router'
 import { loginWithCredentials } from '@vois/webview-bridge/debug'
+import { useQueryCache } from '@pinia/colada'
 import PageHeader from '~/components/PageHeader.vue'
+import LoginAccountInput from '~/components/login/LoginAccountInput.vue'
 import { isWebviewDebug } from '~/composables/useWebviewDebug'
 import { useToast } from '~/composables/useToast'
+import { usePageBack } from '~/composables/usePageBack'
+import { useCredentialSession } from '~/utils/auth'
+import {
+  ACCOUNT_COUNTRY_CODE,
+  PHONE_COUNTRY_CODE,
+  SAVED_LOGIN_CREDENTIALS_KEY,
+} from '~/utils/auth/constants'
+import type { SavedLoginCredentials } from '~/utils/auth/types'
 
 /**
  * Signs in with an external account so a debug session runs as it. The native app
@@ -15,20 +25,42 @@ import { useToast } from '~/composables/useToast'
  */
 const loginEnabled = import.meta.env.DEV || isWebviewDebug()
 
-type LoginMode = 'account' | 'phone'
-// '0' is the wire format's Weila-number country code; a phone number dials with its real code.
-const WEILA_COUNTRY_CODE = '0'
-
 const { t } = useI18n({ useScope: 'global' })
-const router = useRouter()
+const { goBack } = usePageBack()
+const queryCache = useQueryCache()
+const { selectSession } = useCredentialSession()
 const { showToast } = useToast()
 
-const mode = shallowRef<LoginMode>('account')
 const account = shallowRef('')
-const countryCode = shallowRef('86')
 const password = shallowRef('')
 const error = shallowRef('')
 const submitting = shallowRef(false)
+const accountHistory = useStorage<Record<string, string[]>>('vois-login-accounts', {}, undefined, {
+  shallow: true,
+  deep: false,
+})
+const savedCredentials = useStorage<SavedLoginCredentials[]>(
+  SAVED_LOGIN_CREDENTIALS_KEY,
+  [],
+  undefined,
+  { shallow: true, deep: false },
+)
+const savedAccounts = computed(() => [
+  ...new Set([
+    ...savedCredentials.value.map((saved) => saved.account),
+    ...(accountHistory.value[ACCOUNT_COUNTRY_CODE] ?? []),
+    ...(accountHistory.value[PHONE_COUNTRY_CODE] ?? []),
+  ]),
+])
+
+account.value = savedCredentials.value[0]?.account ?? ''
+watch(
+  () => account.value.trim(),
+  (name) => {
+    password.value = savedCredentials.value.find((saved) => saved.account === name)?.password ?? ''
+  },
+  { immediate: true, flush: 'sync' },
+)
 
 async function submit(): Promise<void> {
   if (submitting.value) return
@@ -44,22 +76,31 @@ async function submit(): Promise<void> {
     error.value = t('validation.required')
     return
   }
-  const code = mode.value === 'phone' ? countryCode.value.trim() : WEILA_COUNTRY_CODE
-  if (code === '') {
-    error.value = t('validation.required')
-    return
-  }
+  const code = /^1[3-9]\d{9}$/.test(name) ? PHONE_COUNTRY_CODE : ACCOUNT_COUNTRY_CODE
+  const submittedPassword = password.value
 
   submitting.value = true
   try {
-    // The server adopts the account: its token serves every later
-    // `getDebugAccessToken`, and the bridge answers the account's `login-id`.
-    await loginWithCredentials({
+    const login = await loginWithCredentials({
       account: name,
-      password: password.value,
+      password: submittedPassword,
       countryCode: code,
     })
-    await router.replace('/')
+    selectSession(login)
+    savedCredentials.value = [
+      { account: name, password: submittedPassword },
+      ...savedCredentials.value.filter((saved) => saved.account !== name),
+    ].slice(0, 20)
+    queryCache.cancelQueries()
+    for (const entry of queryCache.getEntries()) queryCache.remove(entry)
+    accountHistory.value = {
+      ...accountHistory.value,
+      [code]: [name, ...(accountHistory.value[code] ?? []).filter((saved) => saved !== name)].slice(
+        0,
+        10,
+      ),
+    }
+    goBack()
   } catch (loginError) {
     error.value = loginError instanceof Error ? loginError.message : String(loginError)
   } finally {
@@ -73,58 +114,19 @@ async function submit(): Promise<void> {
     <PageHeader :title="t('login.title')" />
 
     <main class="p-4">
-      <div class="flex mb-4" :aria-label="t('login.title')">
-        <button
-          type="button"
-          class="chip flex-1 mr-3"
-          :class="mode === 'account' ? 'chip-selected' : 'chip-unselected'"
-          :aria-pressed="mode === 'account'"
-          @click="mode = 'account'"
-        >
-          {{ t('login.accountMode') }}
-        </button>
-        <button
-          type="button"
-          class="chip flex-1"
-          :class="mode === 'phone' ? 'chip-selected' : 'chip-unselected'"
-          :aria-pressed="mode === 'phone'"
-          @click="mode = 'phone'"
-        >
-          {{ t('login.phoneMode') }}
-        </button>
-      </div>
-
       <form class="card space-y-4" novalidate @submit.prevent="submit()">
-        <label v-if="mode === 'phone'" class="block">
-          <span class="text-2nd-body">{{ t('login.countryCode') }}</span>
-          <input
-            v-model="countryCode"
-            type="text"
-            inputmode="numeric"
-            autocomplete="off"
-            class="input-field mt-2"
-            :placeholder="t('login.countryCode')"
-          />
-        </label>
-
-        <label class="block">
-          <span class="text-2nd-body">{{
-            mode === 'phone' ? t('login.phone') : t('login.account')
-          }}</span>
-          <input
-            v-model="account"
-            type="text"
-            :inputmode="mode === 'phone' ? 'tel' : 'text'"
-            autocomplete="username"
-            class="input-field mt-2"
-            :placeholder="mode === 'phone' ? t('login.phone') : t('login.account')"
-          />
-        </label>
+        <LoginAccountInput
+          v-model="account"
+          :label="t('login.accountOrPhone')"
+          :accounts="savedAccounts"
+          :disabled="submitting"
+        />
 
         <label class="block">
           <span class="text-2nd-body">{{ t('login.password') }}</span>
           <input
             v-model="password"
+            :disabled="submitting"
             type="password"
             autocomplete="current-password"
             class="input-field mt-2"

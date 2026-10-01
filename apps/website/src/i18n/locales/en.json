@@ -20,11 +20,16 @@
     "title": "Sign in",
     "accountOrPhone": "Account / phone number",
     "chooseAccount": "Choose a previously signed-in account",
-    "switchAccount": "Switch account",
     "password": "Password",
     "submit": "Sign in",
     "submitting": "Signing in…",
-    "debugOnly": "Sign-in is available in dev or debug mode only."
+    "debugOnly": "Sign-in is available in dev or debug mode only.",
+    "savedAccounts": "Saved accounts",
+    "currentAccount": "Current account",
+    "switching": "Switching…",
+    "addAccount": "Add account",
+    "appAccount": "App account",
+    "sessionExpired": "Sign in again"
   },
   "modal": {
     "cancel": "Cancel",

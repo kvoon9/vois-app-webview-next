@@ -15,9 +15,10 @@ import { useRoute, useRouter, type Router } from 'vue-router'
 import { whenWebviewBridge } from '~/composables/useWebviewBridge'
 import { nativeLang, nativeTheme } from '~/constants'
 import { useCredentialSession } from '~/utils/auth'
+import { ACCESS_TOKEN_TIMEOUT_MS } from '~/utils/bridge/constants'
 
 /** Give up on an unanswered bridge request after this long; native's own budget. */
-export const PAGE_PARAMS_TIMEOUT_MS = 3000
+export const PAGE_PARAMS_TIMEOUT_MS = ACCESS_TOKEN_TIMEOUT_MS
 
 /** Page params are flat string key/values by contract; nesting is out of scope. */
 export interface PageParams {
@@ -173,15 +174,28 @@ export function createPageParamsStore(source: PageParamsBridgeSource): PageParam
   let idleWaiters: Array<() => void> = []
 
   function observe(page: string, names: readonly string[] = []): void {
+    let changed = false
     if (page !== observedPage.value) {
+      retirePendingRead()
       observedPage.value = page
       params.value = {}
       status.value = 'pending'
       error.value = null
       requested = new Set()
+      changed = true
     }
-    for (const name of [...BASE_PAGE_PARAM_NAMES, ...names]) requested.add(name)
-    schedule()
+    for (const name of [...BASE_PAGE_PARAM_NAMES, ...names]) {
+      if (requested.has(name)) continue
+      requested.add(name)
+      changed = true
+    }
+    if (changed) schedule()
+  }
+
+  function retirePendingRead(): void {
+    fetchGeneration += 1
+    inFlight = false
+    rerun = false
   }
 
   function schedule(): void {
@@ -223,12 +237,14 @@ export function createPageParamsStore(source: PageParamsBridgeSource): PageParam
           : new PageParamsError('invalid', INVALID_MESSAGE)
       status.value = 'error'
     } finally {
-      inFlight = false
-      if (rerun) {
-        rerun = false
-        void start()
-      } else {
-        resolveIdle()
+      if (readGeneration === fetchGeneration) {
+        inFlight = false
+        if (rerun) {
+          rerun = false
+          void start()
+        } else {
+          resolveIdle()
+        }
       }
     }
   }
@@ -254,7 +270,7 @@ export function createPageParamsStore(source: PageParamsBridgeSource): PageParam
     if (observedPage.value === undefined) return
     // A pending read's answer must not land after the reload's: retire it now,
     // even before the new request goes out.
-    fetchGeneration += 1
+    retirePendingRead()
     const idle = whenIdle()
     schedule()
     await idle

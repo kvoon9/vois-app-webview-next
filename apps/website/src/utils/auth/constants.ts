@@ -1,4 +1,7 @@
 export const CREDENTIAL_SESSION_KEY = 'vois-credential-session'
 export const SAVED_LOGIN_CREDENTIALS_KEY = 'vois-login-credentials'
+export const SAVED_ACCOUNTS_KEY = 'vois-accounts'
+export const ACCOUNT_SESSIONS_KEY = 'vois-account-sessions'
+export const BRIDGE_ACCOUNT_KEY = 'vois-bridge-account'
 export const PHONE_COUNTRY_CODE = '86'
 export const ACCOUNT_COUNTRY_CODE = '0'

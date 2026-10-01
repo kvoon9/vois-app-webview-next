@@ -1,11 +1,14 @@
 import { Bridge } from '@vois/webview-bridge'
-import { describe, expect, it, vi } from 'vite-plus/test'
+import { afterEach, describe, expect, it, vi } from 'vite-plus/test'
 import { nativeLang, nativeTheme } from '~/constants'
 import {
   createPageParamsStore,
   fetchPageParams,
+  PAGE_PARAMS_TIMEOUT_MS,
   type PageParamsBridgeSource,
 } from './usePageParams'
+
+afterEach(() => vi.useRealTimers())
 
 /** A real bridge wired to a fake native; `answer` decides what native replies. */
 function bridgeWithNative(answer: (type: string) => string | undefined): Bridge {
@@ -39,6 +42,23 @@ function deferredBridge() {
 }
 
 describe('fetchPageParams', () => {
+  it('accepts a native response after the former three-second deadline', async () => {
+    vi.useFakeTimers()
+    const bridge = Bridge.create((_type, _data, onResponse) => {
+      setTimeout(() => onResponse?.(okAnswer({ 'login-id': '441' })), 4000)
+    })
+    const reading = fetchPageParams(sourceWith(bridge), '/settings/friends', ['login-id'])
+    await vi.advanceTimersByTimeAsync(4000)
+    await expect(reading).resolves.toEqual({ 'login-id': '441' })
+  })
+
+  it('still times out when a ready native bridge stays silent', async () => {
+    vi.useFakeTimers()
+    const reading = fetchPageParams(sourceWith(Bridge.create(() => {})), '/settings/friends')
+    const failure = expect(reading).rejects.toMatchObject({ reason: 'timeout' })
+    await vi.advanceTimersByTimeAsync(PAGE_PARAMS_TIMEOUT_MS)
+    await failure
+  })
   it('asks for the named fields and returns native defaults including the token', async () => {
     const sent = vi.fn()
     const bridge = Bridge.create((type, data, onResponse) => {
@@ -132,6 +152,48 @@ describe('fetchPageParams', () => {
 })
 
 describe('createPageParamsStore', () => {
+  it('loads the new page without waiting for the previous page to answer', async () => {
+    const { bridge, sent, answers } = deferredBridge()
+    const store = createPageParamsStore(sourceWith(bridge))
+    store.observe('/a', ['login-id'])
+    await flush()
+    store.observe('/b', ['login-id'])
+    await flush()
+    expect(sent).toHaveBeenCalledTimes(2)
+    answers[1]?.(okAnswer({ 'login-id': '456' }))
+    await flush()
+    expect(store.status.value).toBe('ready')
+    expect(store.params.value['login-id']).toBe('456')
+    answers[0]?.(okAnswer({ 'login-id': '441' }))
+    await flush()
+    expect(store.params.value['login-id']).toBe('456')
+    expect(store.status.value).toBe('ready')
+  })
+  it('shares an in-flight read when another consumer asks for the same fields', async () => {
+    const { bridge, sent, answers } = deferredBridge()
+    const store = createPageParamsStore(sourceWith(bridge))
+    store.observe('/settings/friends', ['login-id'])
+    await flush()
+    store.observe('/settings/friends', ['login-id'])
+    answers[0]?.(okAnswer({ 'login-id': '441' }))
+    await flush()
+    expect(sent).toHaveBeenCalledOnce()
+    expect(store.status.value).toBe('ready')
+  })
+
+  it('keeps a successful read when a later consumer needs no new fields', async () => {
+    const { bridge, sent, answers } = deferredBridge()
+    const store = createPageParamsStore(sourceWith(bridge))
+    store.observe('/settings/friends', ['login-id'])
+    await flush()
+    answers[0]?.(okAnswer({ 'login-id': '441' }))
+    await flush()
+    store.observe('/settings/friends')
+    await flush()
+    expect(sent).toHaveBeenCalledOnce()
+    expect(store.status.value).toBe('ready')
+    expect(store.params.value['login-id']).toBe('441')
+  })
   it('reads the page and asks for its names plus the shell names', async () => {
     const { bridge, sent, answers } = deferredBridge()
     const store = createPageParamsStore(sourceWith(bridge))

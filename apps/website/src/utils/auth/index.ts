@@ -14,7 +14,12 @@ export const useCredentialSession = createGlobalState(() => {
 
   function selectSession(login: CredentialSession): void {
     if (!login.token.trim()) throw new Error('登录信息不可用，请重试。')
-    session.value = { token: login.token, userId: login.userId }
+    session.value = {
+      token: login.token,
+      userId: login.userId,
+      account: login.account,
+      source: login.source,
+    }
   }
 
   return { session, selectSession }

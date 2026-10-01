@@ -4,8 +4,9 @@ const startLogin = vi.fn(function WebSocket() {
   throw new Error('synthetic login attempt')
 })
 
-beforeEach(() => {
+beforeEach(async () => {
   vi.resetModules()
+  await import('vue')
   startLogin.mockClear()
   vi.stubGlobal('navigator', { userAgent: 'Desktop QA' })
   vi.stubGlobal('WebSocket', startLogin)

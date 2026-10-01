@@ -10,7 +10,7 @@ const tokenResponseSchema = object({
   data: optional(object({ 'access-token': optional(string()) })),
 })
 
-/** Shares only an in-flight token read; retries always ask native again. */
+/** Explicit sign-in takes priority, including over a native read already in flight. */
 export function createAppBridge(
   source: BridgeSource,
   timeoutMs: number = ACCESS_TOKEN_TIMEOUT_MS,
@@ -65,10 +65,15 @@ export function createAppBridge(
 
   async function readAccessToken(): Promise<string> {
     try {
-      return await readNativeAccessToken()
+      const token = await readNativeAccessToken()
+      return readCredentialToken() ?? token
     } catch (error) {
+      const credentialToken = readCredentialToken()
+      if (credentialToken !== undefined) return credentialToken
       if (!source.login) throw error
       const token = await source.login()
+      const selectedToken = readCredentialToken()
+      if (selectedToken !== undefined) return selectedToken
       if (!token.trim()) {
         throw new AppBridgeError('AUTH_REQUIRED', '登录信息不可用，请重试。')
       }
@@ -76,7 +81,21 @@ export function createAppBridge(
     }
   }
 
+  function readCredentialToken(): string | undefined {
+    const token = source.credentialToken?.()
+    if (token !== undefined && !token.trim()) {
+      throw new AppBridgeError('AUTH_REQUIRED', '登录信息不可用，请重新登录。')
+    }
+    return token
+  }
+
   function getAccessToken(): Promise<string> {
+    try {
+      const token = readCredentialToken()
+      if (token !== undefined) return Promise.resolve(token)
+    } catch (error) {
+      return Promise.reject(error)
+    }
     pending ??= readAccessToken().finally(() => {
       pending = undefined
     })

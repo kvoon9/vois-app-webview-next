@@ -14,6 +14,7 @@ import { computed, effectScope, shallowRef, watch, type ComputedRef, type Shallo
 import { useRoute, useRouter, type Router } from 'vue-router'
 import { whenWebviewBridge } from '~/composables/useWebviewBridge'
 import { nativeLang, nativeTheme } from '~/constants'
+import { useCredentialSession } from '~/utils/auth'
 
 /** Give up on an unanswered bridge request after this long; native's own budget. */
 export const PAGE_PARAMS_TIMEOUT_MS = 3000
@@ -284,6 +285,7 @@ const store = createPageParamsStore(defaultSource)
 /** Page params for the current route; the route query is never a source. */
 export function usePageParams(names: readonly string[] = []): PageParamsHandle {
   const route = useRoute()
+  const { session } = useCredentialSession()
 
   // Registered once, at this component's setup. A component about to unmount
   // has no say in the next page: the next route's own consumers reset the store.
@@ -291,7 +293,13 @@ export function usePageParams(names: readonly string[] = []): PageParamsHandle {
   startSamePageRefresh(useRouter())
 
   return {
-    params: computed(() => store.params.value),
+    params: computed(() => {
+      if (!session.value) return store.params.value
+      const values = { ...store.params.value }
+      delete values['login-id']
+      if (session.value.userId !== undefined) values['login-id'] = String(session.value.userId)
+      return values
+    }),
     status: store.status,
     error: store.error,
     reload: () => store.reload(),

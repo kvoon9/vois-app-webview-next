@@ -43,6 +43,57 @@ function sourceWith(
 }
 
 describe('createAppBridge', () => {
+  it('uses explicit sign-in without consulting native or fixed-account login', async () => {
+    const supported = vi.fn(() => true)
+    const whenReady = vi.fn(async () => bridgeWith(() => OK))
+    const login = vi.fn(async () => 'fixed-account')
+    const app = createAppBridge({
+      supported,
+      whenReady,
+      getPage: () => DEFAULT_PAGE,
+      login,
+      credentialToken: () => 'signed-in-account',
+    })
+
+    await expect(app.getAccessToken()).resolves.toBe('signed-in-account')
+    await expect(app.getAccessToken()).resolves.toBe('signed-in-account')
+    expect(supported).not.toHaveBeenCalled()
+    expect(whenReady).not.toHaveBeenCalled()
+    expect(login).not.toHaveBeenCalled()
+  })
+
+  it('replaces an in-flight native answer when explicit sign-in completes', async () => {
+    const { bridge, responders } = controllableBridge()
+    let token: string | undefined
+    const app = createAppBridge({
+      ...sourceWith(bridge),
+      credentialToken: () => token,
+    })
+    const pending = app.getAccessToken()
+    await vi.waitFor(() => expect(responders).toHaveLength(1))
+
+    token = 'signed-in-account'
+    await expect(app.getAccessToken()).resolves.toBe(token)
+    responders[0]!(OK)
+    await expect(pending).resolves.toBe(token)
+  })
+
+  it('does not fall back to native for an invalid explicit session', async () => {
+    const supported = vi.fn(() => true)
+    const login = vi.fn(async () => 'fixed-account')
+    const app = createAppBridge({
+      supported,
+      whenReady: async () => bridgeWith(() => OK),
+      getPage: () => DEFAULT_PAGE,
+      login,
+      credentialToken: () => '',
+    })
+
+    await expect(app.getAccessToken()).rejects.toMatchObject({ code: 'AUTH_REQUIRED' })
+    expect(supported).not.toHaveBeenCalled()
+    expect(login).not.toHaveBeenCalled()
+  })
+
   beforeEach(() => {
     vi.useFakeTimers()
   })

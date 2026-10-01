@@ -5,6 +5,7 @@ export interface BridgeSource {
   whenReady: () => Promise<WebviewBridge | undefined>
   getPage: () => string
   login?: () => Promise<string>
+  credentialToken?: () => string | undefined
 }
 
 export interface AppBridge {

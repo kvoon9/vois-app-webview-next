@@ -42,7 +42,10 @@
   "error": {
     "title": "出了點問題",
     "description": "發生了意外錯誤，請再試一次。",
-    "retry": "重試"
+    "retry": "重試",
+    "authExpired": "工作階段已過期，請重新進入頁面。",
+    "networkTimeout": "網路逾時，請重試。",
+    "networkError": "無法連線伺服器，請檢查網路後重試。"
   },
   "validation": {
     "nameTooLong": "名稱最多 {max} 個字元。",

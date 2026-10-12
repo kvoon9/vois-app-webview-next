@@ -42,7 +42,10 @@
   "error": {
     "title": "Something went wrong",
     "description": "An unexpected error occurred. Please try again.",
-    "retry": "Try again"
+    "retry": "Try again",
+    "authExpired": "Your session has expired. Please reopen the page.",
+    "networkTimeout": "Network timed out. Please try again.",
+    "networkError": "Could not reach the server. Check your connection and try again."
   },
   "validation": {
     "nameTooLong": "Names can be at most {max} characters.",

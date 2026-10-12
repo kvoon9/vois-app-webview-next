@@ -7,7 +7,9 @@
     "dev": "vp dev --host",
     "build": "tsc && vp build",
     "preview": "vp preview --host --port 5173 --debug",
-    "debug:logs": "vois-webview-debug"
+    "debug:logs": "vois-webview-debug",
+    "test": "vp test",
+    "check": "vp check"
   },
   "dependencies": {
     "@amap/amap-jsapi-loader": "catalog:",

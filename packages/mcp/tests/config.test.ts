@@ -1,7 +1,10 @@
 import { join } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { expect, test } from 'vite-plus/test'
 
 import { findRepoRoot, parseEnvFile, resolveConfig } from '../src/config.ts'
+
+const envFixture = fileURLToPath(new URL('./fixtures/vois.env', import.meta.url))
 
 test('parseEnvFile reads KEY=VALUE lines and skips comments', () => {
   const values = parseEnvFile(
@@ -28,16 +31,16 @@ test('resolveConfig defaults to the built-in app pair and ports', () => {
 })
 
 test('resolveConfig prefers VOIS_, then VITE_, then the .vois env file', () => {
-  const fromVoisFile = resolveConfig({}, {}, 'tests/fixtures/vois.env')
+  const fromVoisFile = resolveConfig({}, {}, envFixture)
   expect(fromVoisFile.appId).toBe('from-file')
 
-  const fromViteEnv = resolveConfig({ VITE_APP_ID: 'from-vite' }, {}, 'tests/fixtures/vois.env')
+  const fromViteEnv = resolveConfig({ VITE_APP_ID: 'from-vite' }, {}, envFixture)
   expect(fromViteEnv.appId).toBe('from-vite')
 
   const fromVoisEnv = resolveConfig(
     { VITE_APP_ID: 'from-vite', VOIS_APP_ID: 'from-vois' },
     {},
-    'tests/fixtures/vois.env',
+    envFixture,
   )
   expect(fromVoisEnv.appId).toBe('from-vois')
 })

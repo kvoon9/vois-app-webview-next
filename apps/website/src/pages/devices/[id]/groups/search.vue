@@ -7,6 +7,7 @@ import Avatar from '~/components/Avatar.vue'
 import JoinGroupModal from '~/components/device/JoinGroupModal.vue'
 import PageHeader from '~/components/PageHeader.vue'
 import QueryState from '~/components/settings/QueryState.vue'
+import { parseRouteParamId } from '~/composables/useRouteParamId'
 import { useToast } from '~/composables/useToast'
 import { getDeviceGroups, joinDeviceGroup, searchGroups, type Group } from '~/utils/device-api'
 
@@ -21,11 +22,7 @@ const selected = shallowRef<Group | null>(null)
 /** Groups whose join application was sent from this page; pending state is page-local. */
 const appliedIds = shallowRef<Set<number>>(new Set())
 
-const deviceId = computed(() => {
-  const value = Array.isArray(route.params.id) ? route.params.id[0] : route.params.id
-  const parsed = Number(value)
-  return Number.isInteger(parsed) ? parsed : null
-})
+const deviceId = computed(() => parseRouteParamId(route.params.id))
 
 async function loadResults(): Promise<Group[]> {
   if (deviceId.value == null) throw new Error(t('device.invalidId'))

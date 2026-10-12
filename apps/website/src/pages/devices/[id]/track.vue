@@ -8,10 +8,9 @@ import MapCanvas from '~/components/device/MapCanvas.vue'
 import TrackCalendarModal from '~/components/device/TrackCalendarModal.vue'
 import PageHeader from '~/components/PageHeader.vue'
 import QueryState from '~/components/settings/QueryState.vue'
+import { parseRouteParamId } from '~/composables/useRouteParamId'
 import { useToast } from '~/composables/useToast'
 import { getDeviceLocation, getDeviceTrack } from '~/utils/device-api'
-
-type RouteParam = string | string[] | undefined
 
 const route = useRoute()
 const { t } = useI18n({ useScope: 'global' })
@@ -20,14 +19,7 @@ const calendarOpen = shallowRef(false)
 const selectedDate = shallowRef(today(getLocalTimeZone()).toString())
 const awaitingDate = shallowRef<string | null>(null)
 
-function routeNumber(value: RouteParam): number | null {
-  const raw = Array.isArray(value) ? value[0] : value
-  if (!raw || raw.trim() === '') return null
-  const number = Number(raw)
-  return Number.isSafeInteger(number) && number > 0 ? number : null
-}
-
-const deviceId = computed(() => routeNumber(route.params.id))
+const deviceId = computed(() => parseRouteParamId(route.params.id))
 const { state: locationState, refetch: reloadLocation } = useQuery({
   key: () => ['device-management', 'device', 'location', deviceId.value],
   query: () => {

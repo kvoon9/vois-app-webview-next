@@ -7,6 +7,7 @@ import BaseModal from '~/components/BaseModal.vue'
 import FieldEditModal from '~/components/FieldEditModal.vue'
 import PageHeader from '~/components/PageHeader.vue'
 import QueryState from '~/components/settings/QueryState.vue'
+import { parseRouteParamId } from '~/composables/useRouteParamId'
 import { useToast } from '~/composables/useToast'
 import {
   createDeviceReminder,
@@ -15,15 +16,6 @@ import {
   updateDeviceReminder,
   type ReminderRepeat,
 } from '~/utils/device-api'
-
-type RouteParam = string | string[] | undefined
-
-function routeNumber(value: RouteParam): number | null {
-  const raw = Array.isArray(value) ? value[0] : value
-  if (!raw || raw.trim() === '') return null
-  const number = Number(raw)
-  return Number.isSafeInteger(number) && number > 0 ? number : null
-}
 
 const RING_DURATIONS = [30, 60, 120, 180, 300, 600]
 const REPEAT_COUNTS = [0, 1, 2, 3, 5, 10]
@@ -35,8 +27,8 @@ const route = useRoute()
 const router = useRouter()
 const queryCache = useQueryCache()
 const { showToast } = useToast()
-const deviceId = computed(() => routeNumber(route.params.id))
-const reminderId = computed(() => routeNumber(route.params.reminderId))
+const deviceId = computed(() => parseRouteParamId(route.params.id))
+const reminderId = computed(() => parseRouteParamId(route.params.reminderId))
 const isEdit = computed(() => reminderId.value != null)
 const editingContent = shallowRef(false)
 const contentDraft = shallowRef('')

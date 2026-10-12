@@ -7,6 +7,7 @@ import Avatar from '~/components/Avatar.vue'
 import BaseModal from '~/components/BaseModal.vue'
 import PageHeader from '~/components/PageHeader.vue'
 import QueryState from '~/components/settings/QueryState.vue'
+import { parseRouteParamId } from '~/composables/useRouteParamId'
 import { useToast } from '~/composables/useToast'
 import {
   getEmergencyContacts,
@@ -14,22 +15,13 @@ import {
   type EmergencyContact,
 } from '~/utils/device-api'
 
-type RouteParam = string | string[] | undefined
-
-function routeNumber(value: RouteParam): number | null {
-  const raw = Array.isArray(value) ? value[0] : value
-  if (!raw || raw.trim() === '') return null
-  const number = Number(raw)
-  return Number.isSafeInteger(number) && number > 0 ? number : null
-}
-
 const { t } = useI18n({ useScope: 'global' })
 const route = useRoute()
 const router = useRouter()
 const queryCache = useQueryCache()
 const { showToast } = useToast()
 const removing = shallowRef<EmergencyContact | null>(null)
-const deviceId = computed(() => routeNumber(route.params.id))
+const deviceId = computed(() => parseRouteParamId(route.params.id))
 
 const { state, refetch: reload } = useQuery({
   key: () => ['device-management', 'emergency-contacts', deviceId.value],

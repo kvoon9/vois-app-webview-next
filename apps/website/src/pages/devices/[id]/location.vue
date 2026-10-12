@@ -3,24 +3,16 @@ import { useQuery } from '@pinia/colada'
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { RouterLink, useRoute } from 'vue-router'
+import { parseRouteParamId } from '~/composables/useRouteParamId'
 import MapCanvas from '~/components/device/MapCanvas.vue'
 import PageHeader from '~/components/PageHeader.vue'
 import QueryState from '~/components/settings/QueryState.vue'
 import { getDeviceLocation } from '~/utils/device-api'
 
-type RouteParam = string | string[] | undefined
-
 const route = useRoute()
 const { t } = useI18n({ useScope: 'global' })
 
-function routeNumber(value: RouteParam): number | null {
-  const raw = Array.isArray(value) ? value[0] : value
-  if (!raw || raw.trim() === '') return null
-  const number = Number(raw)
-  return Number.isSafeInteger(number) && number > 0 ? number : null
-}
-
-const deviceId = computed(() => routeNumber(route.params.id))
+const deviceId = computed(() => parseRouteParamId(route.params.id))
 const { state, refetch: reload } = useQuery({
   key: () => ['device-management', 'device', 'location', deviceId.value],
   query: () => {

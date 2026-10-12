@@ -8,6 +8,7 @@ import Avatar from '~/components/Avatar.vue'
 import PageHeader from '~/components/PageHeader.vue'
 import ResultModal from '~/components/ResultModal.vue'
 import QueryState from '~/components/settings/QueryState.vue'
+import ToggleSwitch from '~/components/ToggleSwitch.vue'
 import { parseAccountId, useAccountId } from '~/composables/useAccountId'
 import { usePageBack } from '~/composables/usePageBack'
 import {
@@ -242,21 +243,12 @@ async function done(): Promise<void> {
           <div class="mt-4 card">
             <div v-if="!isAiType" class="min-h-12 flex items-center justify-between text-body">
               <span>{{ t('translation.enableTranslation') }}</span>
-              <button
-                type="button"
-                role="switch"
-                class="relative h-7 w-12 flex-none rounded-full disabled:opacity-50"
-                :class="enabled ? 'bg-primary' : 'bg-fill'"
-                :aria-checked="enabled"
+              <ToggleSwitch
+                :checked="enabled"
                 :disabled="saving"
                 :aria-label="t('translation.enableTranslation')"
-                @click="toggleEnabledAndSave"
-              >
-                <span
-                  class="absolute top-0.5 h-6 w-6 rounded-full bg-white shadow transition-transform"
-                  :class="enabled ? 'right-0.5' : 'left-0.5'"
-                />
-              </button>
+                @change="toggleEnabledAndSave"
+              />
             </div>
 
             <!-- The pair is the tab switcher: the highlighted card decides which

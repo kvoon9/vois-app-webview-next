@@ -7,6 +7,7 @@ import Avatar from '~/components/Avatar.vue'
 import BaseModal from '~/components/BaseModal.vue'
 import PageHeader from '~/components/PageHeader.vue'
 import QueryState from '~/components/settings/QueryState.vue'
+import { parseRouteParamId } from '~/composables/useRouteParamId'
 import { useToast } from '~/composables/useToast'
 import {
   addGroupMembers,
@@ -24,17 +25,8 @@ const { showToast } = useToast()
 const selectedIds = shallowRef<number[]>([])
 const confirmationOpen = shallowRef(false)
 
-type RouteParam = string | string[] | undefined
-
-function routeNumber(value: RouteParam): number | null {
-  const raw = Array.isArray(value) ? value[0] : value
-  if (!raw || raw.trim() === '') return null
-  const number = Number(raw)
-  return Number.isSafeInteger(number) && number > 0 ? number : null
-}
-
-const deviceId = computed(() => routeNumber(route.params.id))
-const groupId = computed(() => routeNumber(route.params.groupId))
+const deviceId = computed(() => parseRouteParamId(route.params.id))
+const groupId = computed(() => parseRouteParamId(route.params.groupId))
 
 async function load(): Promise<{
   friends: Friend[]

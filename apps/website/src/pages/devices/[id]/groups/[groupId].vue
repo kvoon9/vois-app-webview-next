@@ -9,7 +9,9 @@ import FieldEditModal from '~/components/FieldEditModal.vue'
 import ImageCropper from '~/components/ImageCropper.vue'
 import PageHeader from '~/components/PageHeader.vue'
 import QueryState from '~/components/settings/QueryState.vue'
+import ToggleSwitch from '~/components/ToggleSwitch.vue'
 import { usePageBack } from '~/composables/usePageBack'
+import { parseRouteParamId } from '~/composables/useRouteParamId'
 import { useToast } from '~/composables/useToast'
 import { weilaUpload } from '~/utils/api'
 import {
@@ -25,7 +27,6 @@ import {
   type GroupSettings,
 } from '~/utils/device-api'
 
-type RouteParam = string | string[] | undefined
 type EditableField = 'name' | 'intro' | 'nickname'
 
 interface GroupDetail {
@@ -56,15 +57,8 @@ const defaultGroupSettings: GroupSettings = {
   pinned: false,
 }
 
-function routeNumber(value: RouteParam): number | null {
-  const raw = Array.isArray(value) ? value[0] : value
-  if (!raw || raw.trim() === '') return null
-  const number = Number(raw)
-  return Number.isSafeInteger(number) && number > 0 ? number : null
-}
-
-const deviceId = computed(() => routeNumber(route.params.id))
-const groupId = computed(() => routeNumber(route.params.groupId))
+const deviceId = computed(() => parseRouteParamId(route.params.id))
+const groupId = computed(() => parseRouteParamId(route.params.groupId))
 const editing = shallowRef<EditableField | null>(null)
 const editValue = shallowRef('')
 const exitConfirmation = shallowRef(false)
@@ -367,75 +361,39 @@ async function exitGroup(): Promise<void> {
           <section v-show="false" class="mt-4 panel">
             <div class="panel-row min-h-12 text-body">
               <span>{{ t('device.muteNotifications') }}</span>
-              <button
-                type="button"
-                role="switch"
-                class="relative h-7 w-12 flex-none rounded-full disabled:opacity-50"
-                :class="groupSettings.muted ? 'bg-primary' : 'bg-fill'"
-                :aria-checked="groupSettings.muted"
+              <ToggleSwitch
+                :checked="groupSettings.muted"
                 :disabled="settingsMutation.isLoading.value || !group.infoAvailable"
                 :aria-label="t('device.muteNotifications')"
-                @click="toggleSetting('muted')"
-              >
-                <span
-                  class="absolute top-0.5 h-6 w-6 rounded-full bg-white shadow transition-transform"
-                  :class="groupSettings.muted ? 'right-0.5' : 'left-0.5'"
-                />
-              </button>
+                @change="toggleSetting('muted')"
+              />
             </div>
             <div class="panel-row min-h-12 text-body">
               <span>{{ t('device.shareLocation') }}</span>
-              <button
-                type="button"
-                role="switch"
-                class="relative h-7 w-12 flex-none rounded-full disabled:opacity-50"
-                :class="groupSettings.shareLocation ? 'bg-primary' : 'bg-fill'"
-                :aria-checked="groupSettings.shareLocation"
+              <ToggleSwitch
+                :checked="groupSettings.shareLocation"
                 :disabled="settingsMutation.isLoading.value || !group.infoAvailable"
                 :aria-label="t('device.shareLocation')"
-                @click="toggleSetting('shareLocation')"
-              >
-                <span
-                  class="absolute top-0.5 h-6 w-6 rounded-full bg-white shadow transition-transform"
-                  :class="groupSettings.shareLocation ? 'right-0.5' : 'left-0.5'"
-                />
-              </button>
+                @change="toggleSetting('shareLocation')"
+              />
             </div>
             <div class="panel-row min-h-12 text-body">
               <span>{{ t('device.voiceBroadcast') }}</span>
-              <button
-                type="button"
-                role="switch"
-                class="relative h-7 w-12 flex-none rounded-full disabled:opacity-50"
-                :class="groupSettings.broadcast ? 'bg-primary' : 'bg-fill'"
-                :aria-checked="groupSettings.broadcast"
+              <ToggleSwitch
+                :checked="groupSettings.broadcast"
                 :disabled="settingsMutation.isLoading.value || !group.infoAvailable"
                 :aria-label="t('device.voiceBroadcast')"
-                @click="toggleSetting('broadcast')"
-              >
-                <span
-                  class="absolute top-0.5 h-6 w-6 rounded-full bg-white shadow transition-transform"
-                  :class="groupSettings.broadcast ? 'right-0.5' : 'left-0.5'"
-                />
-              </button>
+                @change="toggleSetting('broadcast')"
+              />
             </div>
             <div class="panel-row min-h-12 text-body">
               <span>{{ t('device.stickOnTop') }}</span>
-              <button
-                type="button"
-                role="switch"
-                class="relative h-7 w-12 flex-none rounded-full disabled:opacity-50"
-                :class="groupSettings.pinned ? 'bg-primary' : 'bg-fill'"
-                :aria-checked="groupSettings.pinned"
+              <ToggleSwitch
+                :checked="groupSettings.pinned"
                 :disabled="settingsMutation.isLoading.value || !group.infoAvailable"
                 :aria-label="t('device.stickOnTop')"
-                @click="toggleSetting('pinned')"
-              >
-                <span
-                  class="absolute top-0.5 h-6 w-6 rounded-full bg-white shadow transition-transform"
-                  :class="groupSettings.pinned ? 'right-0.5' : 'left-0.5'"
-                />
-              </button>
+                @change="toggleSetting('pinned')"
+              />
             </div>
           </section>
 

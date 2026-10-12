@@ -6,24 +6,16 @@ import { useRoute, useRouter } from 'vue-router'
 import Avatar from '~/components/Avatar.vue'
 import PageHeader from '~/components/PageHeader.vue'
 import QueryState from '~/components/settings/QueryState.vue'
+import { parseRouteParamId } from '~/composables/useRouteParamId'
 import { useToast } from '~/composables/useToast'
 import { addEmergencyFriends, getEmergencyContacts, getFriends } from '~/utils/device-api'
-
-type RouteParam = string | string[] | undefined
-
-function routeNumber(value: RouteParam): number | null {
-  const raw = Array.isArray(value) ? value[0] : value
-  if (!raw || raw.trim() === '') return null
-  const number = Number(raw)
-  return Number.isSafeInteger(number) && number > 0 ? number : null
-}
 
 const { t } = useI18n({ useScope: 'global' })
 const route = useRoute()
 const router = useRouter()
 const queryCache = useQueryCache()
 const { showToast } = useToast()
-const deviceId = computed(() => routeNumber(route.params.id))
+const deviceId = computed(() => parseRouteParamId(route.params.id))
 
 async function load() {
   if (deviceId.value == null) throw new Error(t('device.invalidId'))

@@ -8,6 +8,7 @@ import Avatar from '~/components/Avatar.vue'
 import FieldEditModal from '~/components/FieldEditModal.vue'
 import PageHeader from '~/components/PageHeader.vue'
 import QueryState from '~/components/settings/QueryState.vue'
+import { parseRouteParamId } from '~/composables/useRouteParamId'
 import { useToast } from '~/composables/useToast'
 import {
   clearDeviceMessages,
@@ -18,24 +19,15 @@ import {
   type ContactSettings,
 } from '~/utils/device-api'
 
-type RouteParam = string | string[] | undefined
-
 type SettingName = keyof ContactSettings
-
-function routeNumber(value: RouteParam): number | null {
-  const raw = Array.isArray(value) ? value[0] : value
-  if (!raw || raw.trim() === '') return null
-  const number = Number(raw)
-  return Number.isSafeInteger(number) && number > 0 ? number : null
-}
 
 const { t } = useI18n({ useScope: 'global' })
 const route = useRoute()
 const router = useRouter()
 const queryCache = useQueryCache()
 const { showToast } = useToast()
-const deviceId = computed(() => routeNumber(route.params.id))
-const contactId = computed(() => routeNumber(route.params.contactId))
+const deviceId = computed(() => parseRouteParamId(route.params.id))
+const contactId = computed(() => parseRouteParamId(route.params.contactId))
 const editingRemark = shallowRef(false)
 const remark = shallowRef('')
 const removeConfirmation = shallowRef(false)

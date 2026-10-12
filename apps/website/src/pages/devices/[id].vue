@@ -7,6 +7,7 @@ import FieldEditModal from '~/components/FieldEditModal.vue'
 import PageHeader from '~/components/PageHeader.vue'
 import QueryState from '~/components/settings/QueryState.vue'
 import Avatar from '~/components/Avatar.vue'
+import { parseRouteParamId } from '~/composables/useRouteParamId'
 import { useToast } from '~/composables/useToast'
 import { getConnectedDevices, updateDevice, type Device } from '~/utils/device-api'
 
@@ -17,11 +18,7 @@ const { showToast } = useToast()
 const editing = shallowRef(false)
 const nick = shallowRef('')
 
-const deviceId = computed(() => {
-  const value = Array.isArray(route.params.id) ? route.params.id[0] : route.params.id
-  const parsed = Number(value)
-  return Number.isInteger(parsed) ? parsed : null
-})
+const deviceId = computed(() => parseRouteParamId(route.params.id))
 
 const { state, refetch: reload } = useQuery({
   key: () => ['device-management', 'devices'],

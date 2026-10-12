@@ -3,6 +3,7 @@ import { useQuery } from '@pinia/colada'
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
+import { parseRouteParamId } from '~/composables/useRouteParamId'
 import Avatar from '~/components/Avatar.vue'
 import PageHeader from '~/components/PageHeader.vue'
 import QueryState from '~/components/settings/QueryState.vue'
@@ -11,11 +12,7 @@ import { getDeviceGroups, type Group } from '~/utils/device-api'
 const { t } = useI18n({ useScope: 'global' })
 const route = useRoute()
 const router = useRouter()
-const deviceId = computed(() => {
-  const value = Array.isArray(route.params.id) ? route.params.id[0] : route.params.id
-  const parsed = Number(value)
-  return Number.isInteger(parsed) ? parsed : null
-})
+const deviceId = computed(() => parseRouteParamId(route.params.id))
 
 const { state, refetch: reload } = useQuery({
   key: () => ['device-management', 'groups', deviceId.value],

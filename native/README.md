@@ -94,6 +94,10 @@ mkdir -p ~/.vois/tools/rea && cd ~/.vois/tools/rea && npm init -y && npm i rea-a
 - Never record runtime behavior as observed in a package: static analysis does
   not execute anything. Runtime checks live in the WebView debug pipeline
   (`.tmp/vois-webview-debug/events.jsonl`) and are cited as such.
+- This repository is public. Record identifiers the app passes to the H5 (keys,
+  app ids) as `<redacted sha256:<12-hex prefix of the value>>` instead of the
+  literal: the prefix still reveals a change between versions, the value does
+  not leave the machine. The package itself stays untracked in `vender/`.
 - When a version diverges, fix the contract docs in place and note the change in
   that version's `README.md`; superseded facts move to a "history" list rather
   than being deleted silently.

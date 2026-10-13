@@ -1,5 +1,10 @@
 {
   "$comment": "Machine-readable H5-facing contract for android-5.0.4+504. Diff this file across artifacts; prose lives next to it. Values are observations from the package (see evidence.md).",
+  "redactions": [
+    "Identifiers are stored as <redacted sha256:<12-hex prefix>> because this repository is public; the prefix still detects a change between versions.",
+    "pageParams.values.wxpay-appid",
+    "payment.appId"
+  ],
   "artifactId": "android-5.0.4+504",
   "platform": "android",
   "identity": {

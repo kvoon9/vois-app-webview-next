@@ -21,16 +21,16 @@ an account switch must ask again.
 
 ## Keys
 
-| Key            | Source                                                                      | Observed value           |
-| -------------- | --------------------------------------------------------------------------- | ------------------------ |
-| `access-token` | `IAccount#getToken()` — the IM account token of the App's signed-in account | opaque                   |
-| `login-id`     | `ConfigManager#getLoginId()` — persisted int, default `0`                   | `"441"`                  |
-| `theme`        | `VoisActivity#getWebThemeMode()`                                            | `light` / `dark`         |
-| `lang`         | `VoisActivity#getWebLang()`                                                 | `zh-CN` / `zh-TW` / `en` |
-| `device-type`  | literal                                                                     | `android`                |
-| `pkg-name`     | `applicationId`                                                             | `com.voistech.chat`      |
-| `wxpay-appid`  | `SysConstant.WX_APP_ID` (public WeChat app id)                              | `<redacted sha256:bf93fa384618>`     |
-| `pay-method`   | WeChat OpenSDK `ConstantsAPI.Token.WX_TOKEN_PLATFORMID_VALUE`               | `wechat`                 |
+| Key            | Source                                                                      | Observed value                   |
+| -------------- | --------------------------------------------------------------------------- | -------------------------------- |
+| `access-token` | `IAccount#getToken()` — the IM account token of the App's signed-in account | opaque                           |
+| `login-id`     | `ConfigManager#getLoginId()` — persisted int, default `0`                   | `"441"`                          |
+| `theme`        | `VoisActivity#getWebThemeMode()`                                            | `light` / `dark`                 |
+| `lang`         | `VoisActivity#getWebLang()`                                                 | `zh-CN` / `zh-TW` / `en`         |
+| `device-type`  | literal                                                                     | `android`                        |
+| `pkg-name`     | `applicationId`                                                             | `com.voistech.chat`              |
+| `wxpay-appid`  | `SysConstant.WX_APP_ID` (public WeChat app id)                              | `<redacted sha256:bf93fa384618>` |
+| `pay-method`   | WeChat OpenSDK `ConstantsAPI.Token.WX_TOKEN_PLATFORMID_VALUE`               | `wechat`                         |
 
 Mappings behind `theme` and `lang`:
 
@@ -46,6 +46,11 @@ Mappings behind `theme` and `lang`:
 token source on this path. `login-id` is the App's own account id, not any
 H5-side selection — an explicitly selected H5 account (dev/debug only) cannot be
 communicated to native through this call.
+
+The `wxpay-appid` value is deliberately not recorded here: this repository is
+public, so identifiers are stored as `<redacted sha256:<12-hex prefix>>`, which
+still detects a change between versions. Read the real value from the package
+(`SysConstant.WX_APP_ID`) or at runtime from `get-page-params`.
 
 ## Launch-time merging
 

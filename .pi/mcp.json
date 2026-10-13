@@ -4,6 +4,12 @@
       "command": "node",
       "args": ["packages/mcp/src/cli.ts"]
     },
+    "tempad-dev": {
+      "type": "stdio",
+      "command": "node",
+      "args": ["~/.vois/tools/tempad-mcp/node_modules/@tempad-dev/mcp/dist/cli.mjs"],
+      "description": "TemPad Dev 0.11.0 (pin: extension must be 0.23.x): read Figma designs (code/screenshot/structure/design-system) from the connected browser tab, and author native Figma layers"
+    },
     "rea": {
       "type": "stdio",
       "command": "~/.vois/tools/rea/node_modules/.bin/rea",

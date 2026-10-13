@@ -31,6 +31,20 @@
       "skillPath": "skills/defuddle/SKILL.md",
       "computedHash": "38e4230ec519114ab5fdb2e19b579564824a69e6a47c4782f04c9122ca5e6aa3"
     },
+    "design-in-figma": {
+      "source": "ecomfe/tempad-dev",
+      "ref": "main",
+      "sourceType": "github",
+      "skillPath": "agent-plugin/targets/standard/skills/design-in-figma/SKILL.md",
+      "computedHash": "9a8b375899955db10444ad8fd94bc38610e64eeb149fda7af68e3def3a326b4b"
+    },
+    "figma-design-to-code": {
+      "source": "ecomfe/tempad-dev",
+      "ref": "main",
+      "sourceType": "github",
+      "skillPath": "agent-plugin/targets/standard/skills/figma-design-to-code/SKILL.md",
+      "computedHash": "1a36e2a9887d31a142f2c61a48cb34dfb7d8b580b0635747b551529874155642"
+    },
     "grill-me": {
       "source": "mattpocock/skills",
       "sourceType": "github",

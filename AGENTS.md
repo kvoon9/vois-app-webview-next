@@ -105,6 +105,18 @@ than in production.
 
 Each worktree's DevServer uses a different port (3021 for the main workspace). With the debug pipeline enabled, tap the header title to enter a port; it rewrites only the port and keeps host, path, query, and hash, so the launch params survive the switch.
 
+## Figma Design Access
+
+Design file: https://www.figma.com/design/hLC1vCNnZq9bhVay76gJYJ/VoisChat (page "App design"). Figma access goes through TemPad Dev only — the old `figma-developer-mcp` REST integration is gone.
+
+The TemPad Dev browser extension is installed in **ego browser** (not the user's daily Chrome). The VoisChat tab must be open there with the TemPad panel's **MCP access** enabled and the MCP badge showing **Active**; with several Figma tabs open, the badge marks which file the agent reads. `mcp__tempad_dev__list_design_sessions` confirms the connection (`fileName: "VoisChat"`).
+
+Server wiring lives in `.pi/mcp.json` (`tempad-dev`), pointing at the machine-local pinned install `~/.vois/tools/tempad-mcp` (works across worktrees). Version pairing is strict: MCP 0.11.0 requires extension 0.23.x; upgrade both together. Never switch the entry back to `npx @tempad-dev/mcp@latest` — `npx` fails inside this repo (`package.json` devEngines forces pnpm) and `@latest` drifts from the paired extension. Use `pnpm dlx` for one-off npm packages.
+
+Reading designs: locate screens by name with `get_structure` (the page has 500 roots; use `depth` and `remainingNodeIds` pagination), then `get_code` with `preferredLang: "vue"`. Over-budget screens return a shell plus direct child ids — fetch those individually instead of re-creating the layout. Asset URLs are temporary loopback secrets; download immediately, never persist them. The `.agents/skills/figma-design-to-code` and `design-in-figma` skills (registered in `skills-lock.json`) route implementation and canvas-authoring work.
+
+Tailwind output adaptation: `get_code` emits Tailwind, but this repo bans `gap-*`/`grid` utilities — convert to `space-*`/flex layouts (see the top of this file). Arbitrary values like `w-[375px]` map 1:1 to UnoCSS.
+
 ## Release
 
 Cut releases on `main` with the `bumpp` CLI through the repo script. The tag push needs the **kvoon9** GitHub account: the default active account is `kvoon3`, which has no access to this repo, so the push fails with 403.

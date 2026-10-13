@@ -18,8 +18,10 @@ Options:
   --events-file <p>   JSONL capture to read. Falls back to $VOIS_DEBUG_EVENTS_FILE,
                       then apps/website/.tmp/vois-webview-debug/events.jsonl.
 
-Environment: VOIS_API_BASE, VOIS_APP_ID, VOIS_APP_KEY, VOIS_DEBUG_ACCOUNT,
-VOIS_DEBUG_PASSWORD, VOIS_DEBUG_COUNTRY_CODE override the defaults.
+Environment: VOIS_API_BASE, VOIS_DEBUG_ACCOUNT, VOIS_DEBUG_PASSWORD,
+VOIS_DEBUG_COUNTRY_CODE override the defaults. VOIS_APP_ID / VOIS_APP_KEY (or
+VITE_APP_ID / VITE_APP_KEY in ~/.vois/.env) are required by the "api" tool and
+have no built-in fallback.
 `
 
 /** Runs the stdio loop: one JSON-RPC message per line in, one per line out. */

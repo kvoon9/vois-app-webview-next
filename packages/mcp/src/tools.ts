@@ -26,6 +26,15 @@ const START_HINT = [
   '  vp run preview:production',
 ].join('\n')
 
+/**
+ * How to supply the signing pair. It has no built-in fallback because this
+ * repository is public; `~/.vois/.env` is the machine-local source.
+ */
+const SIGNING_PAIR_HINT = [
+  'API signing needs the app pair. Set VOIS_APP_ID and VOIS_APP_KEY, or put',
+  'VITE_APP_ID and VITE_APP_KEY in ~/.vois/.env, then reconnect this server.',
+].join('\n')
+
 /** Reads an optional object argument. */
 function readObjectArg(args: Record<string, JsonValue>, key: string): JsonObject | undefined {
   return asJsonObject(readValue(args, key))
@@ -278,6 +287,8 @@ function apiTool(config: ResolvedConfig, fetchImpl: FetchLike): McpTool {
       const path = readString(args, 'path')
       if (path === undefined || path === '')
         return textResult('path is required, for example /v2/subuser/list', true)
+      if (config.appId === undefined || config.appKey === undefined)
+        return textResult(SIGNING_PAIR_HINT, true)
       const method = readString(args, 'method') === 'GET' ? 'GET' : 'POST'
       const body = readObjectArg(args, 'body')
       const status = await firstAliveStatus(config, fetchImpl)

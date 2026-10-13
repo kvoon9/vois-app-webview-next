@@ -46,13 +46,13 @@ cd apps/website && vp dev --host --port 3021
 
 ## Configuration
 
-| Variable                                                                 | Default                                                               | Purpose                       |
-| ------------------------------------------------------------------------ | --------------------------------------------------------------------- | ----------------------------- |
-| `VOIS_DEBUG_PORTS`                                                       | `3021,5173,8080`                                                      | Probe list                    |
-| `VOIS_DEBUG_EVENTS_FILE`                                                 | `apps/website/.tmp/vois-webview-debug/events.jsonl`                   | Capture to read               |
-| `VOIS_API_BASE`                                                          | `https://api.voischat.cn`                                             | API origin for the `api` tool |
-| `VOIS_APP_ID` / `VOIS_APP_KEY`                                           | `VITE_*` from the env or `~/.vois/.env`, then the app's built-in pair | API signing                   |
-| `VOIS_DEBUG_ACCOUNT` / `VOIS_DEBUG_PASSWORD` / `VOIS_DEBUG_COUNTRY_CODE` | the throwaway debug account from `@vois/webview-bridge`               | Fixed account for `login`     |
+| Variable                                                                 | Default                                                           | Purpose                       |
+| ------------------------------------------------------------------------ | ----------------------------------------------------------------- | ----------------------------- |
+| `VOIS_DEBUG_PORTS`                                                       | `3021,5173,8080`                                                  | Probe list                    |
+| `VOIS_DEBUG_EVENTS_FILE`                                                 | `apps/website/.tmp/vois-webview-debug/events.jsonl`               | Capture to read               |
+| `VOIS_API_BASE`                                                          | `https://api.voischat.cn`                                         | API origin for the `api` tool |
+| `VOIS_APP_ID` / `VOIS_APP_KEY`                                           | `VITE_*` from the environment or `~/.vois/.env`; no built-in pair | API signing (`api`)           |
+| `VOIS_DEBUG_ACCOUNT` / `VOIS_DEBUG_PASSWORD` / `VOIS_DEBUG_COUNTRY_CODE` | the throwaway debug account from `@vois/webview-bridge`           | Fixed account for `login`     |
 
 `--events-file <path>` overrides the capture location from the CLI.
 

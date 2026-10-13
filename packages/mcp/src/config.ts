@@ -18,8 +18,8 @@ export interface ResolvedConfig {
   /** API origin the signed calls target. */
   apiBase: string
   /** Pair that signs HTTP API queries, as the app bundle does. */
-  appId: string
-  appKey: string
+  appId: string | undefined
+  appKey: string | undefined
   /** Account a no-argument login re-signs. */
   fixedAccount: DebugCredentials
 }
@@ -35,13 +35,6 @@ export const DEFAULT_PORTS = [3021, 5173, 8080]
 
 /** Where the website's proxy points when no env override exists. */
 export const DEFAULT_API_BASE = 'https://api.voischat.cn'
-
-/**
- * The app's own BuildConfig pair, exactly what `voisBridgeAuth` defaults to.
- * Override with `VITE_APP_ID` / `VITE_APP_KEY` when targeting another backend.
- */
-const APP_ID = '<redacted sha256:f7e07cdb4ab0>'
-const APP_KEY = '<redacted sha256:10369aa188bc>'
 
 /**
  * The throwaway debug account from `@vois/webview-bridge`
@@ -87,8 +80,10 @@ function readFileIfPresent(path: string): string | undefined {
 }
 
 /**
- * Resolves the tool configuration. `process.env` beats `~/.vois/.env`, which
- * beats the built-in pair, mirroring how `loadEnv` treats the two sources.
+ * Resolves the tool configuration. `process.env` beats `~/.vois/.env`,
+ * mirroring how `loadEnv` treats the two sources. The signing pair has no
+ * built-in fallback: this repository is public, so `VITE_APP_ID` /
+ * `VITE_APP_KEY` must come from the environment or the machine-local file.
  * `voisEnvPath` replaces `~/.vois/.env`, mostly so tests can pin a fixture.
  */
 export function resolveConfig(
@@ -106,8 +101,8 @@ export function resolveConfig(
     ports,
     eventsFile,
     apiBase: env.VOIS_API_BASE ?? DEFAULT_API_BASE,
-    appId: env.VOIS_APP_ID ?? env.VITE_APP_ID ?? envFile.get('VITE_APP_ID') ?? APP_ID,
-    appKey: env.VOIS_APP_KEY ?? env.VITE_APP_KEY ?? envFile.get('VITE_APP_KEY') ?? APP_KEY,
+    appId: env.VOIS_APP_ID ?? env.VITE_APP_ID ?? envFile.get('VITE_APP_ID'),
+    appKey: env.VOIS_APP_KEY ?? env.VITE_APP_KEY ?? envFile.get('VITE_APP_KEY'),
     fixedAccount: {
       account: env.VOIS_DEBUG_ACCOUNT ?? FIXED_ACCOUNT.account,
       password: env.VOIS_DEBUG_PASSWORD ?? FIXED_ACCOUNT.password,

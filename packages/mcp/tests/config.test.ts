@@ -8,9 +8,9 @@ const envFixture = fileURLToPath(new URL('./fixtures/vois.env', import.meta.url)
 
 test('parseEnvFile reads KEY=VALUE lines and skips comments', () => {
   const values = parseEnvFile(
-    ['# comment', '', 'VITE_APP_ID=<redacted sha256:f7e07cdb4ab0>', 'SPACED =  value ', 'broken line'].join('\n'),
+    ['# comment', '', 'VITE_APP_ID=fixture-app-id', 'SPACED =  value ', 'broken line'].join('\n'),
   )
-  expect(values.get('VITE_APP_ID')).toBe('<redacted sha256:f7e07cdb4ab0>')
+  expect(values.get('VITE_APP_ID')).toBe('fixture-app-id')
   expect(values.get('SPACED')).toBe('value')
   expect(values.size).toBe(2)
 })
@@ -22,9 +22,10 @@ test('findRepoRoot walks up to the workspace root', () => {
   expect(findRepoRoot('/')).toBeUndefined()
 })
 
-test('resolveConfig defaults to the built-in app pair and ports', () => {
+test('resolveConfig leaves the signing pair unset when no source provides it', () => {
   const config = resolveConfig({}, {}, '/nonexistent/.env')
-  expect(config.appId).toBe('<redacted sha256:f7e07cdb4ab0>')
+  expect(config.appId).toBeUndefined()
+  expect(config.appKey).toBeUndefined()
   expect(config.ports).toEqual([3021, 5173, 8080])
   expect(config.apiBase).toBe('https://api.voischat.cn')
   expect(config.fixedAccount.account).toBe('16675441248')

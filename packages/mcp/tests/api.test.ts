@@ -32,8 +32,8 @@ function recordingFetch(status: number, payload: JsonValue): RecordedExchange {
 }
 
 test('generateV2Query signs md5(et + appKey) characters 12 to 20', () => {
-  const query = generateV2Query('<redacted sha256:f7e07cdb4ab0>', '<redacted sha256:10369aa188bc>', 1696000000000)
-  expect(query).toEqual({ appid: '<redacted sha256:f7e07cdb4ab0>', et: '1696000000', sign: 'd66372e2' })
+  const query = generateV2Query('fixture-app-id', 'fixture-app-key', 1696000000000)
+  expect(query).toEqual({ appid: 'fixture-app-id', et: '1696000000', sign: '359cc625' })
 })
 
 test('apiBaseUrl joins origins and paths both ways', () => {

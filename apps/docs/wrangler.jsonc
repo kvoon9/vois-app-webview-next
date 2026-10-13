@@ -1,0 +1,11 @@
+// Cloudflare Workers static-assets configuration for the docs site.
+// `pnpm --filter docs deploy` runs `nuxt generate && wrangler deploy`.
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "docs",
+  "compatibility_date": "2026-10-13",
+  "assets": {
+    "directory": ".output/public",
+    "not_found_handling": "404-page",
+  },
+}

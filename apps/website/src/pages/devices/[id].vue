@@ -133,8 +133,40 @@ async function copyDeviceNumber(): Promise<void> {
             </div>
           </dl>
 
+          <section v-if="device.simCard" class="mt-4">
+            <h2 class="section-title mb-4">{{ t('device.simCard') }}</h2>
+            <dl class="overflow-hidden panel">
+              <div class="flex items-center justify-between px-4 py-3">
+                <dt class="text-2nd-body text-text-secondary">{{ t('device.iccid') }}</dt>
+                <dd class="ml-4 text-right text-2nd-body">
+                  {{ device.simCard.iccid || t('device.notAvailable') }}
+                </dd>
+              </div>
+              <div class="flex items-center justify-between px-4 py-3">
+                <dt class="text-2nd-body text-text-secondary">{{ t('device.expireAt') }}</dt>
+                <dd class="ml-4 text-right text-2nd-body">
+                  {{ device.simCard.expiryDate || t('device.notAvailable') }}
+                </dd>
+              </div>
+              <div
+                v-if="device.simCard.recharge"
+                class="flex items-center justify-between px-4 py-3"
+              >
+                <dt class="text-2nd-body text-text-secondary">{{ t('device.simCardState') }}</dt>
+                <dd class="ml-4 text-right text-2nd-body text-danger">
+                  {{ t('device.simCardNeedRecharge') }}
+                </dd>
+              </div>
+            </dl>
+          </section>
+
           <RouterLink :to="`/devices/${deviceId}/groups`" class="mt-3 min-h-12 w-full nav-item">
             <span>{{ t('device.groups') }}</span>
+            <span class="row-chevron" aria-hidden="true" />
+          </RouterLink>
+
+          <RouterLink :to="`/devices/${deviceId}/reminders`" class="mt-3 min-h-12 w-full nav-item">
+            <span>{{ t('device.reminders') }}</span>
             <span class="row-chevron" aria-hidden="true" />
           </RouterLink>
         </template>

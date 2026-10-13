@@ -90,8 +90,10 @@ const saveMutation = useMutation({
       repeatInterval: repeatInterval.value,
     }
     if (isEdit.value) {
-      if (reminderId.value == null) throw new Error(t('device.invalidReminder'))
-      return updateDeviceReminder(reminderId.value, payload)
+      if (deviceId.value == null || reminderId.value == null) {
+        throw new Error(t('device.invalidReminder'))
+      }
+      return updateDeviceReminder(deviceId.value, reminderId.value, payload)
     }
     if (deviceId.value == null) throw new Error(t('device.invalidId'))
     return createDeviceReminder(deviceId.value, payload)
@@ -100,8 +102,10 @@ const saveMutation = useMutation({
 
 const removeMutation = useMutation({
   mutation: () => {
-    if (reminderId.value == null) throw new Error(t('device.invalidReminder'))
-    return removeDeviceReminder(reminderId.value)
+    if (deviceId.value == null || reminderId.value == null) {
+      throw new Error(t('device.invalidReminder'))
+    }
+    return removeDeviceReminder(deviceId.value, reminderId.value)
   },
 })
 

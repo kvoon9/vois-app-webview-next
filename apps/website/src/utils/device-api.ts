@@ -1,5 +1,13 @@
 import { weilaFetch } from '~/utils/api'
 
+/** The SIM card a device runs on; only present for devices that have one. */
+export interface SimCard {
+  iccid: string
+  expiryDate: string
+  /** True when the backend considers the card out of credit. */
+  recharge: boolean
+}
+
 /** A device that is currently connected to the account. */
 export interface Device {
   userId: number
@@ -12,6 +20,7 @@ export interface Device {
   activatedAt: string
   online: boolean
   shareLocation: boolean
+  simCard: SimCard | null
 }
 
 /** Settings shared by group and contact conversations. */
@@ -146,6 +155,17 @@ export interface EmergencyQuota {
 
 export type ReminderRepeat = 'once' | 'daily' | 'weekdays'
 
+/** Day numbers the reminder API stores; 1 is Monday and 7 is Sunday. */
+const WEEKDAYS = [1, 2, 3, 4, 5]
+const EVERY_DAY = [1, 2, 3, 4, 5, 6, 7]
+
+/** Repeat types the `ext/rmdr` endpoints accept alongside a day set. */
+const REPEAT_TYPES = {
+  once: 0,
+  daily: 1,
+  weekdays: 2,
+} satisfies Record<ReminderRepeat, number>
+
 export interface DeviceReminder {
   reminderId: number
   /** HH:mm */
@@ -158,6 +178,12 @@ export interface DeviceReminder {
   repeatCount: number
   /** Minutes. */
   repeatInterval: number
+}
+
+interface SimCardDto {
+  iccid?: string
+  expiry_date?: string
+  recharge?: boolean
 }
 
 interface DeviceDto {
@@ -176,6 +202,7 @@ interface DeviceDto {
   /** The real backend names this `location_share`; the mock used `share_location`. */
   location_share?: boolean
   share_location?: boolean
+  sim_card?: SimCardDto
 }
 
 interface SubuserGroupDto {
@@ -306,13 +333,21 @@ interface EmergencyQuotaDto {
 }
 
 interface DeviceReminderDto {
-  reminder_id: number
-  time: string
-  content: string
-  repeat: ReminderRepeat
-  ring_duration: number
-  repeat_count: number
-  repeat_interval: number
+  id: number
+  user_id: number
+  /** The reminder text (`content` in the UI model). */
+  name: string
+  /** Present on newer responses only; `repeated` carries the same story. */
+  repeated_type?: number
+  repeated?: number[]
+  /** Ring duration in seconds. */
+  duration: number
+  /** Retrigger gap in seconds. */
+  again_interval: number
+  /** Retrigger count. */
+  again_times: number
+  /** HH:mm */
+  reminder: string
 }
 
 type EmptyData = Record<string, never>
@@ -699,10 +734,15 @@ export async function removeEmergencyContact(
   return response.data
 }
 
+/**
+ * Reminders live behind the `ext` namespace and are keyed by the device's user
+ * id, which is the same value the rest of the device pages call `deviceId`.
+ */
 export async function getDeviceReminders(deviceId: number): Promise<DeviceReminder[]> {
-  const response = await weilaFetch<{ reminders: DeviceReminderDto[] }>('/v2/device/reminders', {
-    body: { device_id: deviceId },
-  })
+  const response = await weilaFetch<{ reminders: DeviceReminderDto[] }>(
+    '/v2/ext/rmdr/get-all-reminder',
+    { body: { user_id: deviceId } },
+  )
   return response.data.reminders.map(toReminder)
 }
 
@@ -715,31 +755,26 @@ export interface ReminderInput {
   repeatInterval: number
 }
 
-export async function createDeviceReminder(
-  deviceId: number,
-  input: ReminderInput,
-): Promise<number> {
-  const response = await weilaFetch<{ reminder_id: number }>('/v2/device/create-reminder', {
-    body: { device_id: deviceId, ...toReminderBody(input) },
+export async function createDeviceReminder(deviceId: number, input: ReminderInput): Promise<void> {
+  await weilaFetch<EmptyData>('/v2/ext/rmdr/add-reminder', {
+    body: { user_id: deviceId, ...toReminderBody(input) },
   })
-  return response.data.reminder_id
 }
 
 export async function updateDeviceReminder(
+  deviceId: number,
   reminderId: number,
   input: ReminderInput,
-): Promise<EmptyData> {
-  const response = await weilaFetch<EmptyData>('/v2/device/update-reminder', {
-    body: { reminder_id: reminderId, ...toReminderBody(input) },
+): Promise<void> {
+  await weilaFetch<EmptyData>('/v2/ext/rmdr/change-reminder', {
+    body: { id: reminderId, user_id: deviceId, ...toReminderBody(input) },
   })
-  return response.data
 }
 
-export async function removeDeviceReminder(reminderId: number): Promise<EmptyData> {
-  const response = await weilaFetch<EmptyData>('/v2/device/remove-reminder', {
-    body: { reminder_id: reminderId },
+export async function removeDeviceReminder(deviceId: number, reminderId: number): Promise<void> {
+  await weilaFetch<EmptyData>('/v2/ext/rmdr/delete-reminder', {
+    body: { user_id: deviceId, reminder_ids: [reminderId] },
   })
-  return response.data
 }
 
 function toDevice(device: DeviceDto): Device {
@@ -754,6 +789,16 @@ function toDevice(device: DeviceDto): Device {
     activatedAt: device.active_at ?? device.activated_at ?? '',
     online: device.online,
     shareLocation: device.location_share ?? device.share_location ?? false,
+    simCard: toSimCard(device.sim_card),
+  }
+}
+
+function toSimCard(card: SimCardDto | undefined): SimCard | null {
+  if (!card) return null
+  return {
+    iccid: card.iccid ?? '',
+    expiryDate: card.expiry_date ?? '',
+    recharge: card.recharge ?? false,
   }
 }
 
@@ -901,24 +946,38 @@ function toEmergencyContact(contact: EmergencyContactDto): EmergencyContact {
 
 function toReminder(reminder: DeviceReminderDto): DeviceReminder {
   return {
-    reminderId: reminder.reminder_id,
-    time: reminder.time,
-    content: reminder.content,
-    repeat: reminder.repeat,
-    ringDuration: reminder.ring_duration,
-    repeatCount: reminder.repeat_count,
-    repeatInterval: reminder.repeat_interval,
+    reminderId: reminder.id,
+    time: reminder.reminder,
+    content: reminder.name,
+    repeat: toRepeat(reminder),
+    ringDuration: reminder.duration,
+    repeatCount: reminder.again_times,
+    repeatInterval: Math.round(reminder.again_interval / 60),
   }
 }
 
-function toReminderBody(input: ReminderInput): Omit<DeviceReminderDto, 'reminder_id'> {
+/** `repeated_type` is authoritative when present; the stored day set says the same thing. */
+function toRepeat(reminder: DeviceReminderDto): ReminderRepeat {
+  if (reminder.repeated_type === REPEAT_TYPES.daily) return 'daily'
+  if (reminder.repeated_type === REPEAT_TYPES.weekdays) return 'weekdays'
+  if (reminder.repeated_type === REPEAT_TYPES.once) return 'once'
+  const days = reminder.repeated ?? []
+  if (days.length === 0) return 'once'
+  if (days.length >= EVERY_DAY.length) return 'daily'
+  return 'weekdays'
+}
+
+function toReminderBody(input: ReminderInput): Omit<DeviceReminderDto, 'id' | 'user_id'> {
   return {
-    time: input.time,
-    content: input.content,
-    repeat: input.repeat,
-    ring_duration: input.ringDuration,
-    repeat_count: input.repeatCount,
-    repeat_interval: input.repeatInterval,
+    name: input.content,
+    reminder: input.time,
+    repeated_type: REPEAT_TYPES[input.repeat],
+    repeated:
+      input.repeat === 'daily' ? [...EVERY_DAY] : input.repeat === 'weekdays' ? [...WEEKDAYS] : [],
+    duration: input.ringDuration,
+    again_times: input.repeatCount,
+    // The UI picks whole minutes; the API stores the gap in seconds.
+    again_interval: input.repeatInterval * 60,
   }
 }
 

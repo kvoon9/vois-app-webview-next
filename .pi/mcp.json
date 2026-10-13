@@ -3,6 +3,17 @@
     "vois-debug": {
       "command": "node",
       "args": ["packages/mcp/src/cli.ts"]
+    },
+    "rea": {
+      "type": "stdio",
+      "command": "~/.vois/tools/rea/node_modules/.bin/rea",
+      "args": ["mcp"],
+      "description": "Reverse engineering: native/Android/iOS artifacts, JS bundles, browser and runtime observation",
+      "env": {
+        "HOPPER_LAUNCHER_PATH": "!echo \"${HOPPER_LAUNCHER_PATH:-$HOME/Applications/Hopper Disassembler.app/Contents/MacOS/hopper}\"",
+        "REA_JADX_MCP_JAR": "!echo \"${REA_JADX_MCP_JAR:-$HOME/.vois/tools/jadx-headless-mcp-0.7.1-all.jar}\"",
+        "JAVA_HOME": "!echo \"${JAVA_HOME:-$(/opt/homebrew/bin/brew --prefix openjdk 2>/dev/null || echo /opt/homebrew/opt/openjdk)}\""
+      }
     }
   }
 }

@@ -46,11 +46,43 @@ question is "what changed in this file", not "read everything again".
 2. `node native/tools/extract.mjs <path-to-package>` — verifies the SHA-256
    against `index.json` when present, then extracts manifest/resources and
    decompiles into `.tmp/rev/<artifactId>/`.
+   For a quick look instead of a full extraction:
+
+   ```sh
+   node native/tools/extract.mjs --web                 # H5-contract classes, ~1 min
+   node native/tools/extract.mjs --class <fqcn>        # one class, ~6s
+   node native/tools/extract.mjs <id> --verify-only    # hash check only
+   ```
+
 3. Work the platform checklist (`android/README.md`) and update the topic docs.
 4. Copy the previous version's `inventory.json` to the new version directory and
    reconcile it; add the new entry to `native/index.json` with the SHA-256.
 5. Commit with a Conventional Commit, e.g.
    `docs(native): add android 5.1.0+601 contract`.
+
+## Local setup (per machine)
+
+Nothing here is committed; the project MCP entry in `.pi/mcp.json` finds it via
+`$HOME` or an environment override.
+
+```sh
+brew install jadx openjdk                     # jadx 1.5.6+, JDK with javac
+mkdir -p ~/.vois/tools && cd ~/.vois/tools
+curl -sSLO https://github.com/1013503897/jadx-headless-mcp/releases/download/v0.7.1/jadx-headless-mcp-0.7.1-all.jar
+shasum -a 256 jadx-headless-mcp-0.7.1-all.jar   # 6e5eacf5…ff75
+mkdir -p ~/.vois/tools/rea && cd ~/.vois/tools/rea && npm init -y && npm i rea-agents@6.4.0
+```
+
+- `~/.vois/tools/rea/node_modules/.bin/rea` is the pinned REA launcher used by
+  `.pi/mcp.json`; `npx` cannot be used inside this repo because its
+  `devEngines.packageManager` requires pnpm.
+- `REA_JADX_MCP_JAR` (default `~/.vois/tools/jadx-headless-mcp-0.7.1-all.jar`)
+  enables REA's Android provider; `JAVA_HOME` (default: Homebrew `openjdk`) gives
+  it a JDK with `javac`.
+- `HOPPER_LAUNCHER_PATH` defaults to
+  `~/Applications/Hopper Disassembler.app/Contents/MacOS/hopper` for native
+  analysis; Hopper's free demo is enough (see the REA Hopper notes).
+- Verify: `pi mcp list` should print `rea: connected, 170 tools (codemode, project)`.
 
 ## Ground rules for evidence
 

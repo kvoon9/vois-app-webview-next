@@ -7,8 +7,8 @@
     "tempad-dev": {
       "type": "stdio",
       "command": "node",
-      "args": ["~/.vois/tools/tempad-mcp/node_modules/@tempad-dev/mcp/dist/cli.mjs"],
-      "description": "TemPad Dev 0.11.0 (pin: extension must be 0.23.x): read Figma designs (code/screenshot/structure/design-system) from the connected browser tab, and author native Figma layers"
+      "args": ["scripts/tempad-dev-mcp.mjs"],
+      "description": "TemPad Dev: read Figma designs (code/screenshot/structure/design-system) from the connected browser tab, and author native Figma layers. Self-installing wrapper; pin in scripts/tempad-dev-mcp.mjs must pair with extension 0.23.x"
     },
     "rea": {
       "type": "stdio",

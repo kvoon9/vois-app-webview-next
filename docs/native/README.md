@@ -1,3 +1,8 @@
+---
+description: 'What the shipped Vois/Weila App promises the H5 bundle: layout of the contract reference and the reverse-engineering workflow.'
+navigation: false
+---
+
 # native — H5 ↔ Native contract reference
 
 What the shipped Vois/Weila App (`voistech.chat`) promises the H5 bundle in
@@ -5,7 +10,7 @@ What the shipped Vois/Weila App (`voistech.chat`) promises the H5 bundle in
 params, in-app entry points and payment. Reverse-engineered from the packages
 vendored in `vender/` (untracked, see below).
 
-This repo is public, so `native/` holds **first-party prose and
+This repo is public, so `docs/native/` holds **first-party prose and
 machine-readable facts**, never vendor code, keys, or the packages themselves:
 
 - No pasted decompiled source. Claims cite `class#method` plus the artifact
@@ -17,13 +22,13 @@ machine-readable facts**, never vendor code, keys, or the packages themselves:
 ## Layout
 
 ```
-native/
+docs/native/
 ├── index.json                  # artifact registry: identity, hash, docs, tooling
 ├── tools/
 │   └── extract.mjs             # verify a vendored package + extract it for analysis
 ├── android/
 │   ├── README.md               # method + checklist for a new Android package
-│   └── <versionName>+<versionCode>/
+│   └── v<versionName>+<versionCode>/
 │       ├── README.md           # version overview, class map, known unknowns
 │       ├── webview-container.md
 │       ├── bridge-protocol.md
@@ -35,29 +40,33 @@ native/
 │       └── evidence.md         # per-claim provenance and confidence
 └── ios/
     ├── README.md               # platform method + checklist, expected H5 contract
-    └── <versionName>+<buildNumber>/
+    └── v<versionName>+<buildNumber>/
         └── README.md           # version findings; deeper docs once verified
 ```
 
 `inventory.json` is the diff surface: when a new package lands, the review
 question is "what changed in this file", not "read everything again".
 
+Version directories carry a `v` prefix on purpose: Nuxt Content strips a
+leading `digits.` prefix from path slugs, so an unprefixed `5.0.4+504` would
+render at `/native/android/0.4+504/`.
+
 ## Adding a version
 
 1. Drop the package in `vender/` (never commit it) and note its filename.
-2. `node native/tools/extract.mjs <artifactId>` — verifies the recorded digest,
+2. `node docs/native/tools/extract.mjs <artifactId>` — verifies the recorded digest,
    then extracts manifest/resources and decompiles into `.tmp/rev/<artifactId>/`.
    For a quick look instead of a full extraction:
 
    ```sh
-   node native/tools/extract.mjs --web                 # H5-contract classes, ~1 min
-   node native/tools/extract.mjs --class <fqcn>        # one class, ~6s
-   node native/tools/extract.mjs <id> --verify-only    # hash check only
+   node docs/native/tools/extract.mjs --web                 # H5-contract classes, ~1 min
+   node docs/native/tools/extract.mjs --class <fqcn>        # one class, ~6s
+   node docs/native/tools/extract.mjs <id> --verify-only    # hash check only
    ```
 
 3. Work the platform checklist (`android/README.md`) and update the topic docs.
 4. Copy the previous version's `inventory.json` to the new version directory and
-   reconcile it; add the new entry to `native/index.json` with the SHA-256.
+   reconcile it; add the new entry to `docs/native/index.json` with the SHA-256.
 5. Commit with a Conventional Commit, e.g.
    `docs(native): add android 5.1.0+601 contract`.
 

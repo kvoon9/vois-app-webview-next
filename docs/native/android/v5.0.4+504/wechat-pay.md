@@ -1,3 +1,9 @@
+---
+description: 'The `wechat-app-prepay` request/response and ordering rules.'
+navigation: 
+  title: 'WeChat Pay'
+---
+
 # WeChat payment — `wechat-app-prepay`
 
 Provenance: `com.voistech.chat.ui.web.WechatPayHelper`,

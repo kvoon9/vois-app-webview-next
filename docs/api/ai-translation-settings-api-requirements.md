@@ -1,5 +1,5 @@
 ---
-title: AI 翻译设置：后端 API 需求
+description: 'AI 翻译设置所需的 API 契约建议，依据移动端交互探索整理。'
 ---
 
 # AI 翻译设置：后端 API 需求

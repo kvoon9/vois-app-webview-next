@@ -1,8 +1,13 @@
+---
+title: 'Overview'
+description: 'iOS 5.0.3+1 reconnaissance pass: container, entry points, payment approach; bridge keys not yet read.'
+---
+
 # iOS 5.0.3+1 (first pass)
 
 | Field       | Value                                                                                                                     |
 | ----------- | ------------------------------------------------------------------------------------------------------------------------- |
-| Artifact    | `ios-5.0.3+1` (see `native/index.json`)                                                                                   |
+| Artifact    | `ios-5.0.3+1` (see `docs/native/index.json`)                                                                                   |
 | Package     | `vender/VoisChat 2026-10-13, 11.40.xcarchive` (untracked)                                                                 |
 | Bundle id   | `com.voistech.wechat`                                                                                                     |
 | Version     | 5.0.3 (build 1)                                                                                                           |

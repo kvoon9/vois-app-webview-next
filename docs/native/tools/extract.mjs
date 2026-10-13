@@ -1,6 +1,6 @@
 #!/usr/bin/env node
-// Verify a vendored App package against native/index.json and extract it for analysis.
-// Full output lands in .tmp/rev/<artifactId>/ and is never committed; see native/README.md.
+// Verify a vendored App package against docs/native/index.json and extract it for analysis.
+// Full output lands in .tmp/rev/<artifactId>/ and is never committed; see docs/native/README.md.
 
 import { execFile } from 'node:child_process'
 import { createHash } from 'node:crypto'
@@ -11,8 +11,8 @@ import { fileURLToPath } from 'node:url'
 import { promisify } from 'node:util'
 
 const run = promisify(execFile)
-const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..')
-const indexPath = path.join(repoRoot, 'native/index.json')
+const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../..')
+const indexPath = path.join(repoRoot, 'docs/native/index.json')
 const workRoot = path.join(repoRoot, '.tmp/rev')
 
 /** Classes that carry the H5 contract; `--web` decompiles exactly these. */
@@ -57,19 +57,19 @@ async function exists(file) {
 }
 
 function usage() {
-  console.log(`usage: node native/tools/extract.mjs [<artifactId|packagePath>] [options]
+  console.log(`usage: node docs/native/tools/extract.mjs [<artifactId|packagePath>] [options]
 
   (no options)          decode resources + decompile all sources into .tmp/rev/<id>/
-  --verify-only         verify the package SHA-256 against native/index.json, then stop
+  --verify-only         verify the package SHA-256 against docs/native/index.json, then stop
   --force               rebuild the full extraction even when it already exists
   --class <fqcn>        decompile one class into .tmp/rev/<id>/classes/ (about 6s)
   --web                 decompile the H5-contract class set (see WEB_CLASSES)
   --out <dir>           output directory for --class/--web (default .tmp/rev/<id>/classes)
 
 examples:
-  node native/tools/extract.mjs --web
-  node native/tools/extract.mjs --class com.voistech.chat.ui.web.bridge.BridgeType
-  node native/tools/extract.mjs android-5.0.4+504 --verify-only`)
+  node docs/native/tools/extract.mjs --web
+  node docs/native/tools/extract.mjs --class com.voistech.chat.ui.web.bridge.BridgeType
+  node docs/native/tools/extract.mjs android-5.0.4+504 --verify-only`)
 }
 
 const argv = process.argv.slice(2)
@@ -111,7 +111,7 @@ if (wanted) {
       a.package?.vendoredPath === wanted ||
       a.package?.vendoredPath?.endsWith(`/${wanted}`),
   )
-  if (!artifact) fail(`no artifact in native/index.json matches ${wanted}`)
+  if (!artifact) fail(`no artifact in docs/native/index.json matches ${wanted}`)
 } else if (artifacts.length === 1) {
   ;[artifact] = artifacts
 } else {
@@ -151,7 +151,7 @@ if (has('--verify-only')) process.exit(0)
 
 if (kind !== 'apk') {
   fail(
-    `extraction is implemented for apk only (${artifact.id} is a ${kind}); inspect it with the ios/ tooling in native/ios/README.md`,
+    `extraction is implemented for apk only (${artifact.id} is a ${kind}); inspect it with the ios/ tooling in docs/native/ios/README.md`,
   )
 }
 

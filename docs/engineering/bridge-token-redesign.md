@@ -1,5 +1,5 @@
 ---
-title: Bridge 与 token 获取
+description: '业务页面只调业务 API 的前提下，token 获取的统一入口与 Bridge 协议设计。'
 ---
 
 # Bridge 与 token 获取

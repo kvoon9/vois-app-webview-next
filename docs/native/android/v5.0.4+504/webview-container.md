@@ -1,3 +1,9 @@
+---
+description: 'WebView activities, settings, UA, the compat gate, file chooser, and error handling.'
+navigation: 
+  title: 'WebView container'
+---
+
 # WebView container
 
 Provenance: `com.voistech.chat.ui.web.*` (activity, `BaseWebView`, `WebConfig`),
@@ -14,7 +20,7 @@ artifact `android-5.0.4+504`.
 `VoisWebActivity` takes its target as a parcelable `WebParam` (URL, optional fixed
 title, extra query params, `useDefaults` flag) or a bare `EXTRA_URL` string; with
 an empty URL it finishes immediately. `WebParam` query params are merged into the
-URL as described in [page-params.md](page-params.md).
+URL as described in [page-params.md](/native/android/v5.0.4+504/page-params).
 
 Title behavior: with a fixed title the bar is always shown; without one the bar
 appears only once the page reports a non-empty title (`onReceivedTitle` /

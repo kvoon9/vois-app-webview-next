@@ -1,3 +1,9 @@
+---
+description: 'The `yy://` transport and the `uniBridgeCall` request/response envelope, with the full dispatch-type list.'
+navigation: 
+  title: 'Bridge protocol'
+---
+
 # Bridge protocol — `uniBridgeCall`
 
 Provenance: `com.voistech.chat.ui.web.bridge.*`, `com.voistech.chat.ui.web.VoisWebActivity`,
@@ -93,8 +99,8 @@ closing, so the H5 can rely on the reply arriving. Back-press closing is a
 separate path: it walks WebView history and then finishes the activity without
 touching the bridge — the App does not send any "page closed" notification.
 
-`get-page-params` details live in [page-params.md](page-params.md),
-`wechat-app-prepay` in [wechat-pay.md](wechat-pay.md).
+`get-page-params` details live in [page-params.md](/native/android/v5.0.4+504/page-params),
+`wechat-app-prepay` in [wechat-pay.md](/native/android/v5.0.4+504/wechat-pay).
 
 ## Compatibility notes for the H5 side
 
@@ -103,7 +109,7 @@ touching the bridge — the App does not send any "page closed" notification.
   signal from native, so a page that never injects stays pending forever.
 - Android-only in this artifact. iOS is expected to expose the same `type`
   values through `webkit.messageHandlers.uniBridgeCall` with a `callbackName`
-  field instead of WVJB — see `native/ios/README.md` (inferred from the H5
+  field instead of WVJB — see `docs/native/ios/README.md` (inferred from the H5
   package, unverified).
 - The bridge lives on the current document. SPA navigation does not re-inject
   the script, and the native side keeps no per-route state: `get-page-params`

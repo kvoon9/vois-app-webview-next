@@ -1,8 +1,13 @@
+---
+title: 'Overview'
+description: 'Android 5.0.4+504 version overview: identity, class map, known unknowns, and the topic-doc index.'
+---
+
 # Android 5.0.4+504
 
 | Field           | Value                                                              |
 | --------------- | ------------------------------------------------------------------ |
-| Artifact        | `android-5.0.4+504` (see `native/index.json`)                      |
+| Artifact        | `android-5.0.4+504` (see `docs/native/index.json`)                      |
 | Package         | `vender/WL_V5.0.4_Code504_09181532.apk` (untracked)                |
 | SHA-256         | `ecb1f2a64ad7629bb3bbdb74f6e34f1bc8050348eceb05164299a28a2b581edf` |
 | `applicationId` | `com.voistech.chat`                                                |
@@ -33,14 +38,14 @@ gated surfaces — verify, do not assume.
 
 | Doc                                          | Content                                                             |
 | -------------------------------------------- | ------------------------------------------------------------------- |
-| [webview-container.md](webview-container.md) | activities, settings, UA, compat gate, file chooser, error handling |
-| [bridge-protocol.md](bridge-protocol.md)     | `yy://` transport, `uniBridgeCall` envelope, dispatch types         |
-| [page-params.md](page-params.md)             | the param pool, sources, filtering, URL merging                     |
-| [entry-points.md](entry-points.md)           | every native → H5 launch with its query params                      |
-| [wechat-pay.md](wechat-pay.md)               | `wechat-app-prepay` request/response and ordering rules             |
-| [scan-routing.md](scan-routing.md)           | QR payloads and which ones open the H5                              |
-| [inventory.json](inventory.json)             | machine-readable contract, diff across versions                     |
-| [evidence.md](evidence.md)                   | per-claim provenance, confidence, open questions                    |
+| [webview-container.md](/native/android/v5.0.4+504/webview-container) | activities, settings, UA, compat gate, file chooser, error handling |
+| [bridge-protocol.md](/native/android/v5.0.4+504/bridge-protocol)     | `yy://` transport, `uniBridgeCall` envelope, dispatch types         |
+| [page-params.md](/native/android/v5.0.4+504/page-params)             | the param pool, sources, filtering, URL merging                     |
+| [entry-points.md](/native/android/v5.0.4+504/entry-points)           | every native → H5 launch with its query params                      |
+| [wechat-pay.md](/native/android/v5.0.4+504/wechat-pay)               | `wechat-app-prepay` request/response and ordering rules             |
+| [scan-routing.md](/native/android/v5.0.4+504/scan-routing)           | QR payloads and which ones open the H5                              |
+| `inventory.json`             | machine-readable contract, diff across versions                     |
+| [evidence.md](/native/android/v5.0.4+504/evidence)                   | per-claim provenance, confidence, open questions                    |
 
 ## Class map
 
@@ -66,4 +71,4 @@ gated surfaces — verify, do not assume.
 - Nothing here is runtime-verified: no device or emulator run has been recorded
   for this artifact.
 - iOS behavior is documented separately and is not yet verified from an IPA —
-  see `native/ios/README.md`.
+  see `docs/native/ios/README.md`.

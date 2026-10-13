@@ -1,3 +1,9 @@
+---
+description: 'Every native → H5 launch URL with its query params.'
+navigation: 
+  title: 'Entry points'
+---
+
 # Native → H5 entry points
 
 Provenance: `com.voistech.chat.config.UrlConstant` and every

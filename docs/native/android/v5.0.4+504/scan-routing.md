@@ -1,3 +1,9 @@
+---
+description: 'QR payloads and which ones open the H5.'
+navigation: 
+  title: 'Scan routing'
+---
+
 # Scan routing — which QR payloads become H5 pages
 
 Provenance: `com.voistech.chat.ui.scan.ScanRouter#handleScanResult`,

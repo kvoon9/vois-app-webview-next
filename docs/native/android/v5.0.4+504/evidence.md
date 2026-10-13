@@ -1,3 +1,9 @@
+---
+description: 'Per-claim provenance, confidence, and open questions for android-5.0.4+504.'
+navigation: 
+  title: 'Evidence'
+---
+
 # Evidence — android-5.0.4+504
 
 Provenance for every factual claim in this directory. Nothing here was executed:
@@ -7,7 +13,7 @@ where the claim is about the JS side.
 ## Reproduce
 
 ```sh
-node native/tools/extract.mjs            # verifies SHA-256, decodes into .tmp/rev/android-5.0.4+504
+node docs/native/tools/extract.mjs            # verifies SHA-256, decodes into .tmp/rev/android-5.0.4+504
 ```
 
 - Package: `vender/WL_V5.0.4_Code504_09181532.apk`, SHA-256

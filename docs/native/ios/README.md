@@ -1,3 +1,8 @@
+---
+description: 'iOS method, checklist, and the expected H5 contract.'
+navigation: false
+---
+
 # iOS
 
 Native iOS (VoisChat) side of the H5 contract. Platform checklist mirrors
@@ -5,7 +10,7 @@ Native iOS (VoisChat) side of the H5 contract. Platform checklist mirrors
 
 | Version                        | Status                                                                              |
 | ------------------------------ | ----------------------------------------------------------------------------------- |
-| [`5.0.3+1`](5.0.3+1/README.md) | reconnaissance: container, entry points, payment approach; bridge keys not yet read |
+| [`5.0.3+1`](/native/ios/v5.0.3+1/readme) | reconnaissance: container, entry points, payment approach; bridge keys not yet read |
 
 ## Tools
 
@@ -15,7 +20,7 @@ Native iOS (VoisChat) side of the H5 contract. Platform checklist mirrors
 - `xcrun llvm-objdump --macho --disassemble <binary>` for raw code, `otool -oV`
   for ObjC class/method lists, `plutil -p Info.plist` for bundle facts.
 - REA native analysis with the Hopper provider (see the local setup section in
-  `native/README.md`) for pseudocode; the free Hopper demo is enough.
+  `docs/native/README.md`) for pseudocode; the free Hopper demo is enough.
 
 ## Checklist for a new archive (`*.xcarchive` or `*.ipa`)
 

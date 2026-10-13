@@ -1,3 +1,9 @@
+---
+description: 'The eight page params, their sources, filtering, and URL merging.'
+navigation: 
+  title: 'Page params'
+---
+
 # Page params — `get-page-params`
 
 Provenance: `com.voistech.chat.ui.base.VoisActivity#getWebApiDefaultQueryParams`,

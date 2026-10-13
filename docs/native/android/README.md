@@ -1,3 +1,8 @@
+---
+description: 'Method and checklist for a new Android package: tools, the first classes to diff, debug-only surfaces.'
+navigation: false
+---
+
 # Android reverse-engineering notes
 
 The H5-facing surface of the Android App is small and stable: one WebView
@@ -10,7 +15,7 @@ package.
 | Tool                                                                       | Use                                          | Notes                                                                                           |
 | -------------------------------------------------------------------------- | -------------------------------------------- | ----------------------------------------------------------------------------------------------- |
 | `jadx`                                                                     | resource decode + dex decompilation          | `brew install jadx`; 1.5.6 used for 5.0.4                                                       |
-| `native/tools/extract.mjs`                                                 | verify SHA-256, decode into `.tmp/rev/<id>`  | regenerates everything below                                                                    |
+| `docs/native/tools/extract.mjs`                                                 | verify SHA-256, decode into `.tmp/rev/<id>`  | regenerates everything below                                                                    |
 | REA Android provider (`inspect_android_package`, `search_android_classes`) | structured class/method search with Evidence | optional: needs `REA_JADX_MCP_JAR` (jadx-headless-mcp 0.7.1) plus a JDK in the MCP server's env |
 | `unzip -l`                                                                 | inventory of `lib/`, `assets/`               | assets carry the injected bridge JS                                                             |
 
@@ -55,7 +60,7 @@ hard-coded hosts exist in release.
 
 ## Recording results
 
-- Add the entry to `native/index.json` (SHA-256, size, identity) before writing
+- Add the entry to `docs/native/index.json` (SHA-256, size, identity) before writing
   any prose, so the docs can cite the artifact id.
 - Copy the previous version's `inventory.json`, then reconcile it key by key;
   the diff is the review artifact.

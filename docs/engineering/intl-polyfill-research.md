@@ -1,5 +1,5 @@
 ---
-title: Intl polyfill 研究
+description: '低端 Android WebView 上 Intl CLDR 数据被裁的根因分析与 polyfill 方案实测。'
 ---
 
 # Intl polyfill 研究

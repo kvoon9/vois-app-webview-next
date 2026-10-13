@@ -28,16 +28,16 @@
         { "name": "jadx", "version": "1.5.6", "role": "dex decompilation + resource decode" }
       ],
       "docs": [
-        "android/5.0.4+504/README.md",
-        "android/5.0.4+504/webview-container.md",
-        "android/5.0.4+504/bridge-protocol.md",
-        "android/5.0.4+504/page-params.md",
-        "android/5.0.4+504/entry-points.md",
-        "android/5.0.4+504/wechat-pay.md",
-        "android/5.0.4+504/scan-routing.md",
-        "android/5.0.4+504/evidence.md"
+        "android/v5.0.4+504/README.md",
+        "android/v5.0.4+504/webview-container.md",
+        "android/v5.0.4+504/bridge-protocol.md",
+        "android/v5.0.4+504/page-params.md",
+        "android/v5.0.4+504/entry-points.md",
+        "android/v5.0.4+504/wechat-pay.md",
+        "android/v5.0.4+504/scan-routing.md",
+        "android/v5.0.4+504/evidence.md"
       ],
-      "inventory": "android/5.0.4+504/inventory.json"
+      "inventory": "android/v5.0.4+504/inventory.json"
     },
     {
       "id": "ios-5.0.3+1",
@@ -66,7 +66,7 @@
         { "name": "xcrun swift-demangle", "role": "dSYM symbol pass" },
         { "name": "strings / plutil", "role": "URL literals and bundle facts" }
       ],
-      "docs": ["ios/5.0.3+1/README.md", "ios/README.md"]
+      "docs": ["ios/v5.0.3+1/README.md", "ios/README.md"]
     }
   ]
 }

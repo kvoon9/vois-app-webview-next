@@ -18,8 +18,10 @@
     "vite-plugin-vois-webview-debug": "^0.1.0"
   },
   "devDependencies": {
+    "@commitlint/config-conventional": "catalog:tooling",
     "@oxlint/plugins": "catalog:tooling",
     "bumpp": "^12.3.0",
+    "commitlint": "catalog:tooling",
     "eslint-plugin-slop": "catalog:tooling",
     "taze": "catalog:tooling",
     "vite-plus": "catalog:tooling"

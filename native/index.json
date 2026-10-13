@@ -1,0 +1,43 @@
+{
+  "version": 1,
+  "artifacts": [
+    {
+      "id": "android-5.0.4+504",
+      "platform": "android",
+      "app": {
+        "applicationId": "com.voistech.chat",
+        "versionName": "5.0.4",
+        "versionCode": 504,
+        "flavor": "baseCn",
+        "buildType": "debug",
+        "buildTime": "09181532",
+        "minSdk": 23,
+        "targetSdk": 35,
+        "compileSdk": 35,
+        "serverAddress": "https://api.voischat.cn"
+      },
+      "package": {
+        "filename": "WL_V5.0.4_Code504_09181532.apk",
+        "vendoredPath": "vender/WL_V5.0.4_Code504_09181532.apk",
+        "kind": "apk",
+        "size": 57443474,
+        "sha256": "ecb1f2a64ad7629bb3bbdb74f6e34f1bc8050348eceb05164299a28a2b581edf"
+      },
+      "analyzedAt": "2026-10-13",
+      "tooling": [
+        { "name": "jadx", "version": "1.5.6", "role": "dex decompilation + resource decode" }
+      ],
+      "docs": [
+        "android/5.0.4+504/README.md",
+        "android/5.0.4+504/webview-container.md",
+        "android/5.0.4+504/bridge-protocol.md",
+        "android/5.0.4+504/page-params.md",
+        "android/5.0.4+504/entry-points.md",
+        "android/5.0.4+504/wechat-pay.md",
+        "android/5.0.4+504/scan-routing.md",
+        "android/5.0.4+504/evidence.md"
+      ],
+      "inventory": "android/5.0.4+504/inventory.json"
+    }
+  ]
+}

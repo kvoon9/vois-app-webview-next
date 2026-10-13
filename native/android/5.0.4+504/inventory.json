@@ -1,0 +1,253 @@
+{
+  "$comment": "Machine-readable H5-facing contract for android-5.0.4+504. Diff this file across artifacts; prose lives next to it. Values are observations from the package (see evidence.md).",
+  "artifactId": "android-5.0.4+504",
+  "platform": "android",
+  "identity": {
+    "applicationId": "com.voistech.chat",
+    "versionName": "5.0.4",
+    "versionCode": 504,
+    "minSdk": 23,
+    "targetSdk": 35,
+    "compileSdk": 35,
+    "flavor": "baseCn",
+    "buildType": "debug",
+    "buildTime": "09181532",
+    "serverAddress": "https://api.voischat.cn"
+  },
+  "h5Base": {
+    "production": "https://api.voischat.cn/vois-app-webview-next/",
+    "debug": "http://192.168.1.87:5173"
+  },
+  "containers": [
+    {
+      "activity": "com.voistech.chat.ui.web.VoisWebActivity",
+      "bridge": true,
+      "layoutFlag": "app:useBridge=true",
+      "inputs": [
+        "WebParam parcelable (url, title, queryParams, useDefaults)",
+        "extra_url string",
+        "extra_title string"
+      ],
+      "emptyUrlCloses": true
+    },
+    {
+      "activity": "com.voistech.chat.ui.web.GenericWebViewActivity",
+      "bridge": false,
+      "inputs": ["extra_url string", "extra_title string"]
+    }
+  ],
+  "bridge": {
+    "handlerName": "uniBridgeCall",
+    "transport": {
+      "library": "com.github.lzyzsd.jsbridge (WVJB)",
+      "scheme": "yy://",
+      "queueSignal": "yy://__QUEUE_MESSAGE__/",
+      "fetchQueueReturn": "yy://return/_fetchQueue/<urlencoded JSON array>",
+      "returnPrefix": "yy://return/",
+      "injectedAsset": "assets/WebViewJavascriptBridge.js",
+      "injectionPoint": "android.webkit.WebViewClient.onPageFinished",
+      "readyEvent": "WebViewJavascriptBridgeReady",
+      "requestKeys": ["handlerName", "data", "callbackId"],
+      "responseKeys": ["responseId", "responseData"]
+    },
+    "envelope": {
+      "request": { "type": "string", "data": "object (optional)" },
+      "response": { "type": "string", "errcode": "int", "errmsg": "string", "data": "object" },
+      "successCode": 0,
+      "failureCode": -1,
+      "oneAnswerPerRequest": true
+    },
+    "types": {
+      "close-page": {
+        "requestData": "ignored",
+        "responseData": {},
+        "closesActivity": true,
+        "answersBeforeClose": true
+      },
+      "get-page-params": {
+        "requestData": { "params": "string[] (optional; absent/null/empty = all keys)" },
+        "responseData": "requested keys present in the pool → string values; unknown keys omitted"
+      },
+      "wechat-app-prepay": {
+        "requestData": {
+          "partnerid": "required",
+          "prepayid": "required",
+          "noncestr": "required",
+          "timestamp": "required",
+          "sign": "required",
+          "extdata": "optional"
+        },
+        "responseData": {
+          "wxpaycode": "int (raw WeChat errCode, always present)",
+          "prepayId": "present when non-empty",
+          "extdata": "present when non-empty",
+          "wxtransaction": "present when non-empty",
+          "wxopenId": "present when non-empty"
+        }
+      }
+    },
+    "errorMessages": [
+      "Missing type field",
+      "Unsupported type: <type>",
+      "Handler exception: <message>",
+      "Missing: <comma-separated field names>",
+      "Failed to send payment request (maybe WeChat not installed or version too low)",
+      "Duplicate request overridden"
+    ],
+    "nativeToJsHandlers": [],
+    "defaultHandler": null
+  },
+  "pageParams": {
+    "keys": [
+      "access-token",
+      "login-id",
+      "theme",
+      "lang",
+      "device-type",
+      "pkg-name",
+      "wxpay-appid",
+      "pay-method"
+    ],
+    "sources": {
+      "access-token": "IM account token of the App's signed-in account",
+      "login-id": "persisted app account id (int, default 0)",
+      "theme": "persisted theme mode 0=light, 1=dark, other=follow system",
+      "lang": "persisted language (zh → zh-CN, zh-rTW → zh-TW) or system locale (zh-CN, zh-TW, en)",
+      "device-type": "literal android",
+      "pkg-name": "applicationId",
+      "wxpay-appid": "public WeChat app id",
+      "pay-method": "literal wechat"
+    },
+    "values": {
+      "device-type": "android",
+      "pkg-name": "com.voistech.chat",
+      "wxpay-appid": "<redacted sha256:bf93fa384618>",
+      "pay-method": "wechat"
+    },
+    "precedence": ["launch WebParam query params", "app-wide defaults"],
+    "launchMerge": { "defaultOn": true, "hashAware": true, "keepsExistingKeys": true },
+    "serialization": "all values are strings"
+  },
+  "webview": {
+    "minMajorVersion": 45,
+    "requiredFeatures": [
+      "SERVICE_WORKER_BASIC_USAGE",
+      "PROXY_OVERRIDE",
+      "MULTI_PROCESS",
+      "POST_WEB_MESSAGE",
+      "RECEIVE_HTTP_ERROR",
+      "RECEIVE_WEB_RESOURCE_ERROR",
+      "WEB_RESOURCE_ERROR_GET_CODE",
+      "SAFE_BROWSING_ENABLE"
+    ],
+    "userAgentSuffix": "VoisChat/<versionName>",
+    "userAgentAppendedWhenAlreadyMarked": false,
+    "javaScriptEnabled": true,
+    "domStorageEnabled": true,
+    "fileAccess": "enabled including file:// cross-origin",
+    "mixedContentMode": "compatibility",
+    "cacheMode": "no-cache",
+    "mediaPlaybackRequiresUserGesture": false,
+    "geolocationEnabled": true,
+    "zoom": false,
+    "externalNavigation": false,
+    "sslErrors": "always cancelled",
+    "remoteDebugging": "BuildConfig.DEBUG",
+    "fileChooser": "ActivityResultContracts.StartActivityForResult; concurrent request rejected with null"
+  },
+  "entryPoints": [
+    {
+      "from": "profile help",
+      "constant": "HELP_URL",
+      "path": "/help",
+      "query": ["device-model", "device-manufacturer", "device-product", "device-sdk"],
+      "bridged": true
+    },
+    {
+      "from": "profile vip (debug only)",
+      "constant": "USER_WEB_SETTING",
+      "path": "/settings",
+      "query": [],
+      "bridged": true
+    },
+    {
+      "from": "session translation",
+      "constant": "USER_TRANSLATE_SETTING_URL",
+      "path": "/settings/friends/multi-translation",
+      "query": ["friend-id", "friend-type", "friend-skill"],
+      "bridged": true
+    },
+    {
+      "from": "user info / member info",
+      "constant": "REPORT_USER_URL",
+      "path": "/report-user",
+      "query": ["id"],
+      "bridged": true
+    },
+    {
+      "from": "group info",
+      "constant": "REPORT_GROUP_URL",
+      "path": "/report-group",
+      "query": ["id"],
+      "bridged": true
+    },
+    {
+      "from": "sub hardware settings",
+      "constant": "SUB_HARDWARE_GROUP_SETTING_URL",
+      "path": "/devices/groups",
+      "query": ["hardware-id"],
+      "bridged": true,
+      "note": "debug host in this build; no matching route in this repo"
+    },
+    {
+      "from": "system message review",
+      "constant": "server-provided webUrl",
+      "path": "varies",
+      "query": [],
+      "bridged": true
+    },
+    {
+      "from": "debug entry (debug only)",
+      "constant": "hard-coded",
+      "path": "/",
+      "query": [],
+      "bridged": true
+    },
+    {
+      "from": "scanned shared QR",
+      "constant": "scanned URL",
+      "path": "/shared/qrcode/…",
+      "query": ["copied from scanned URL"],
+      "bridged": true,
+      "defaultsMerged": false
+    }
+  ],
+  "scan": {
+    "webRule": {
+      "schemes": ["http", "https"],
+      "fragmentPathPrefix": "/shared/qrcode",
+      "defaultsMerged": false,
+      "querySource": ["outer query", "fragment query"]
+    },
+    "prefixes": {
+      "user": "https://user.weila.hk/share/qrcode/u/",
+      "group": "https://user.weila.hk/share/qrcode/g/",
+      "share": "https://user.weila.hk/share/home",
+      "hardwareBindPath": "/v2/qrcode/ext-bind"
+    }
+  },
+  "payment": {
+    "appId": "<redacted sha256:bf93fa384618>",
+    "packageValue": "Sign=WXPay",
+    "method": "wechat app pay (no JSAPI path)",
+    "pendingKey": "prepayid",
+    "duplicatePolicy": "previous callback answered with errcode -1",
+    "callbackTiming": "after WeChat returns to the App"
+  },
+  "unknowns": [
+    "release build values for debug-gated surfaces",
+    "release values for every entry point except USER_TRANSLATE_SETTING_URL",
+    "runtime behavior (no device run recorded for this artifact)",
+    "iOS equivalent of this contract"
+  ]
+}

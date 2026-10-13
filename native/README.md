@@ -34,7 +34,9 @@ native/
 │       ├── inventory.json      # machine-readable contract, diff across versions
 │       └── evidence.md         # per-claim provenance and confidence
 └── ios/
-    └── README.md               # what is known/expected on iOS, none verified yet
+    ├── README.md               # platform method + checklist, expected H5 contract
+    └── <versionName>+<buildNumber>/
+        └── README.md           # version findings; deeper docs once verified
 ```
 
 `inventory.json` is the diff surface: when a new package lands, the review
@@ -43,9 +45,8 @@ question is "what changed in this file", not "read everything again".
 ## Adding a version
 
 1. Drop the package in `vender/` (never commit it) and note its filename.
-2. `node native/tools/extract.mjs <path-to-package>` — verifies the SHA-256
-   against `index.json` when present, then extracts manifest/resources and
-   decompiles into `.tmp/rev/<artifactId>/`.
+2. `node native/tools/extract.mjs <artifactId>` — verifies the recorded digest,
+   then extracts manifest/resources and decompiles into `.tmp/rev/<artifactId>/`.
    For a quick look instead of a full extraction:
 
    ```sh

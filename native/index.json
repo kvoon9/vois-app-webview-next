@@ -38,6 +38,35 @@
         "android/5.0.4+504/evidence.md"
       ],
       "inventory": "android/5.0.4+504/inventory.json"
+    },
+    {
+      "id": "ios-5.0.3+1",
+      "platform": "ios",
+      "app": {
+        "bundleId": "com.voistech.wechat",
+        "versionName": "5.0.3",
+        "build": "1",
+        "minimumOS": "16.0",
+        "platformName": "iphoneos",
+        "serverAddress": "https://api.voischat.cn"
+      },
+      "package": {
+        "filename": "VoisChat 2026-10-13, 11.40.xcarchive",
+        "vendoredPath": "vender/VoisChat 2026-10-13, 11.40.xcarchive",
+        "kind": "xcarchive",
+        "size": 62444891,
+        "executable": {
+          "path": "Products/Applications/VoisChat.app/VoisChat",
+          "sha256": "9fa6afe7658e30e918873cf8cbf75262abf57f299106169c3a997c0fc3589e54"
+        }
+      },
+      "analyzedAt": "2026-10-13",
+      "analysisScope": "reconnaissance: symbols, entry-point URLs, bundle facts; bridge payload keys not yet disassembled",
+      "tooling": [
+        { "name": "xcrun swift-demangle", "role": "dSYM symbol pass" },
+        { "name": "strings / plutil", "role": "URL literals and bundle facts" }
+      ],
+      "docs": ["ios/5.0.3+1/README.md", "ios/README.md"]
     }
   ]
 }

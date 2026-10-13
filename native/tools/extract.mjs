@@ -122,20 +122,38 @@ const packagePath = path.join(repoRoot, artifact.package.vendoredPath)
 if (!(await exists(packagePath)))
   fail(`package missing: ${artifact.package.vendoredPath} (keep vendored packages untracked)`)
 
-const { size } = await stat(packagePath)
-if (size !== artifact.package.size) {
-  console.warn(`warning: size ${size} differs from index ${artifact.package.size}`)
+const kind = artifact.package.kind ?? 'apk'
+// An archive directory has no single digest; the index records its executable instead.
+const digestTarget = artifact.package.sha256
+  ? packagePath
+  : path.join(packagePath, artifact.package.executable?.path ?? '')
+const expectedDigest = artifact.package.sha256 ?? artifact.package.executable?.sha256
+
+// Only file-backed packages have a meaningful byte size in the index.
+if (artifact.package.sha256 !== undefined && artifact.package.size !== undefined) {
+  const { size } = await stat(packagePath)
+  if (size !== artifact.package.size) {
+    console.warn(`warning: size ${size} differs from index ${artifact.package.size}`)
+  }
 }
 
-const digest = await sha256(packagePath)
-if (digest !== artifact.package.sha256) {
-  fail(
-    `${artifact.package.filename} sha256 ${digest} does not match index ${artifact.package.sha256}`,
-  )
+if (expectedDigest !== undefined) {
+  const digest = await sha256(digestTarget)
+  if (digest !== expectedDigest) {
+    fail(`${artifact.package.filename} sha256 ${digest} does not match index ${expectedDigest}`)
+  }
+  console.log(`verified ${artifact.id} sha256=${digest}`)
+} else {
+  console.warn(`warning: ${artifact.id} has no recorded digest to verify`)
 }
-console.log(`verified ${artifact.id} sha256=${digest}`)
 
 if (has('--verify-only')) process.exit(0)
+
+if (kind !== 'apk') {
+  fail(
+    `extraction is implemented for apk only (${artifact.id} is a ${kind}); inspect it with the ios/ tooling in native/ios/README.md`,
+  )
+}
 
 const outDir = path.join(workRoot, artifact.id)
 const commandExists = async (name) => {

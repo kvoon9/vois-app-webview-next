@@ -1,3 +1,7 @@
+---
+title: Intl polyfill 研究
+---
+
 # Intl polyfill 研究
 
 > 2026-09-21。目标：让低端 Android 真机（ICU 数据被裁剪的 WebView）也能拿到正确的 Intl 输出。

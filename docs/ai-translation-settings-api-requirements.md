@@ -1,3 +1,7 @@
+---
+title: AI 翻译设置：后端 API 需求
+---
+
 # AI 翻译设置：后端 API 需求
 
 > 依据 `https://api.voischat.cn/aipay/index.html` 的移动端交互探索整理（2026-08-13）。

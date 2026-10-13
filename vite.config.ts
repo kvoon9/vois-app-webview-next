@@ -7,7 +7,12 @@ export default defineConfig({
   fmt: {
     semi: false,
     singleQuote: true,
-    ignorePatterns: ['.agents/skills/**', 'tools/oxlint/anti-slop/**'],
+    ignorePatterns: [
+      '.agents/skills/**',
+      'tools/oxlint/anti-slop/**',
+      'apps/docs/**',
+      'docs/**/*.md',
+    ],
   },
   lint: {
     jsPlugins: [
@@ -47,7 +52,7 @@ export default defineConfig({
       'anti-slop/require-safety-comment-for-type-assertion': 'error',
     },
     options: { typeAware: true, typeCheck: true },
-    ignorePatterns: ['.agents/skills/**', 'tools/oxlint/anti-slop/**'],
+    ignorePatterns: ['apps/docs/**', '.agents/skills/**', 'tools/oxlint/anti-slop/**'],
   },
   run: {
     cache: true,

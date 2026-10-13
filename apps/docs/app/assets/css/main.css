@@ -1,0 +1,37 @@
+@import 'tailwindcss';
+@import '@nuxt/ui';
+
+@source '../../';
+
+@theme {
+  --font-sans:
+    'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB',
+    'Microsoft YaHei', 'Helvetica Neue', Arial, sans-serif;
+  --font-mono:
+    ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', 'Courier New',
+    monospace;
+}
+
+html {
+  font-family: var(--font-sans);
+}
+
+/*
+ * The source documents contain 4-5 column tables whose cells hold long JSON
+ * strings, so table and inline-code content must be able to wrap instead of
+ * overflowing the page width.
+ */
+.prose table {
+  font-size: 0.8125rem;
+  line-height: 1.45;
+}
+
+.prose th,
+.prose td {
+  overflow-wrap: anywhere;
+}
+
+.prose :where(code):not(:where(pre code)) {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}

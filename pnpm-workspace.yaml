@@ -33,6 +33,14 @@ catalogs:
     taze: ^21.2.0
     typescript: ^7.0.2
     vite-plus: 0.3.0
+  docs:
+    '@iconify-json/lucide': ^1.2.143
+    '@nuxt/content': ^3.16.2
+    '@nuxt/ui': ^4.11.3
+    better-sqlite3: ^13.0.3
+    nuxt: ^4.6.1
+    tailwindcss: ^4.3.3
+    vue: 3.5.43
 overrides:
   vite: 'catalog:build'
   vitest: 'catalog:build'
@@ -44,6 +52,7 @@ peerDependencyRules:
     vite: '*'
     vitest: '*'
 allowBuilds:
+  better-sqlite3: true
   core-js: true
   esbuild: true
   vue-demi: true
@@ -62,6 +71,8 @@ minimumReleaseAgeExclude:
   - '@vue/compiler-vapor@3.6.0-rc.9'
   - vite-plugin-vois-webview-debug@0.1.0
   - '@vois/webview-bridge@0.5.1'
+  - '@iconify-json/lucide@1.2.143'
+  - '@nuxt/content@3.16.2'
 catalog:
   '@amap/amap-jsapi-loader': ^1.0.1
   '@formatjs/intl-displaynames': ^7.3.15

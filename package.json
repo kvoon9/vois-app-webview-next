@@ -6,6 +6,7 @@
   "scripts": {
     "prepare": "vp config",
     "dev:app": "vp run website#dev",
+    "dev:docs": "vp run docs#dev",
     "build:app": "vp run website#build",
     "preview:app": "vp run website#preview",
     "preview:production": "vp run website#build && cd apps/website && vp preview --base /vois-app-webview-next/ --host --port 8080 --debug",

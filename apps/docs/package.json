@@ -1,0 +1,24 @@
+{
+  "name": "docs",
+  "version": "0.10.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "nuxt dev --host=0.0.0.0 --port=4320",
+    "build": "nuxt build",
+    "generate": "nuxt generate",
+    "preview": "nuxt preview"
+  },
+  "dependencies": {
+    "@nuxt/content": "catalog:docs",
+    "@nuxt/ui": "catalog:docs",
+    "better-sqlite3": "catalog:docs",
+    "nuxt": "catalog:docs",
+    "vue": "catalog:docs"
+  },
+  "devDependencies": {
+    "@iconify-json/lucide": "catalog:docs",
+    "@iconify-json/ph": "catalog:",
+    "tailwindcss": "catalog:docs"
+  }
+}

@@ -13,6 +13,9 @@ dist-ssr
 *.local
 .env.local
 .tmp
+.nuxt
+.output
+.data
 
 # Editor directories and files
 .vscode/*

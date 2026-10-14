@@ -72,6 +72,21 @@ def win_of(app):
     return windows[0] if windows else None
 
 
+def window_state(app):
+    """'visible' | 'minimized' | 'absent'.
+
+    Chromium builds no accessibility tree for a hidden or minimized window, so an
+    empty tree means the window is not on screen, not that QQ changed its UI.
+    """
+    windows = get(app, kAXWindowsAttribute) or []
+    if not windows:
+        return 'absent'
+    for window in windows:
+        if not get(window, 'AXMinimized'):
+            return 'visible'
+    return 'minimized'
+
+
 def find_in(root, pred, maxdepth=60, budget=60000):
     return find(root, pred, maxdepth, budget)
 
@@ -274,7 +289,12 @@ def open_session(app, pid, name, timeout=8.0):
 
     box = search_field(app)
     if box is None:
-        raise RuntimeError('search box not found')
+        state = window_state(app)
+        if state == 'visible':
+            raise RuntimeError('search box not found in a visible QQ window; the UI may have changed, re-map it (references/qqctl.md)')
+        raise RuntimeError(
+            f"QQ's window is {state}: Chromium exposes no accessibility tree while it is hidden or "
+            'minimized, so bring QQ up (click it or open -a QQ) and retry')
     AXUIElementPerformAction(box, 'AXPress')
     time.sleep(0.25)
     setv(box, kAXValueAttribute, '')

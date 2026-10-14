@@ -1,0 +1,4 @@
+#!/bin/bash
+# qqctl — send QQ messages from the CLI on macOS (Accessibility API, no mouse hijacking)
+DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" && pwd)"
+exec uv run --quiet --project "$DIR" python "$DIR/qqctl.py" "$@"

@@ -1,0 +1,10 @@
+[project]
+name = "qqctl"
+version = "0.1.0"
+description = "Drive QQ for macOS from the CLI via the Accessibility API (no mouse hijacking)"
+requires-python = ">=3.9"
+dependencies = [
+  "pyobjc-framework-ApplicationServices",
+  "pyobjc-framework-Quartz",
+  "pyobjc-framework-Cocoa",
+]

@@ -47,6 +47,10 @@ The fixed account is for dev and debug preview only. Preview runs the production
 
 The ego-browser skill is installed at `.agents/skills/ego-browser` from `citrolabs/ego-lite`, and its CLI comes from the ego lite app.
 
+### Release skill
+
+`.pi/skills/release` owns shipping a version: `bumpp --recursive`, the tag push that triggers `.github/workflows/release.yml`, waiting for the GitHub Release, and the Chinese QQ notification sent through the local QQ desktop app. Its `references/` fixes the message format (`message-format.md`), the release pipeline (`pipeline.md`) and the QQ driver (`qqctl.md`). The notification body is commit-derived; changelogen was dropped because its markdown and blank lines do not survive a QQ message.
+
 ### Switching between worktree servers
 
 Each worktree's DevServer uses a different port (3021 for the main workspace). With the debug pipeline enabled, tap the header title to enter a port; it rewrites only the port and keeps host, path, query, and hash, so the launch params survive the switch.

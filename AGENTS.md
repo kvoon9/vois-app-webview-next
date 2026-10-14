@@ -27,15 +27,7 @@ cd <worktree> && vp install
 
 ## WebView Testing
 
-Run daily WebView flows against the DevServer, with hot reload, in a second Herdr pane. No build or Preview server is needed:
-
-```sh
-cd apps/website && vp dev --host --port 3021
-```
-
-The debug plugin captures auth, injects debug into all SPA routes, records events to `.tmp/vois-webview-debug/events.jsonl`, and clears them on restart. `isWebviewDebug()` (`~/composables/useWebviewDebug`) detects that server, so gate any debug-only UI behind it. Production Preview needs `--debug` to enable this pipeline.
-
-After upgrading dependencies, restart the DevServer. If stale dependency caches cause rendering or injection errors, restart with `vp dev --host --port 3021 --force` and reload the browser to rebuild the optimized dependencies.
+The app is developed and verified against the DevServer on port 3021. The debug plugin captures auth, injects debug into all SPA routes, records events to `.tmp/vois-webview-debug/events.jsonl`, and clears them on restart. `isWebviewDebug()` (`~/composables/useWebviewDebug`) detects that server, so gate any debug-only UI behind it. Production Preview needs `--debug` to enable this pipeline.
 
 The app has **one** token entry point: `bridge.getAccessToken()` from `~/utils/bridge`. An explicitly selected H5 account takes priority. Otherwise it requests native `get-page-params` with `{ page: currentRoutePath, params: ['access-token'] }`. If no usable token arrives, dev (`import.meta.env.DEV`) and debug preview (`isWebviewDebug()`) may call `getDebugAccessToken()` from `@vois/webview-bridge/debug` to log in with the existing fixed account. Production never enables that fallback. Concurrent callers share the whole native-read/login attempt; without an explicit selection, each later call tries native first again. Native readiness/response is bounded to 10 seconds; fallback login has its own 15-second network timeout. No new native protocol is required. Both HTTP requests and uploads use this entry point.
 
@@ -47,59 +39,13 @@ Website `usePageParams()` reads native's fixed web default fields from the bridg
 
 The fixed account is for dev and debug preview only. Preview runs the production artifact, so the runtime script marker injected by the debug server enables preview fallback; production hosting without that marker must never invoke fixed-account login.
 
-1. `cd apps/website && vp dev --host --port 3021` (hot reload in a second Herdr pane)
-2. Use `ego-browser` to open `http://localhost:3021/#/<route>` (hash routing) and test. Create one TaskSpace for the task and reuse its numeric ID in later rounds:
-
-```sh
-ego-browser nodejs <<'EOF'
-const task = await taskSpace("Vois WebView debugging");
-const page = task.page("p1");
-await page.goto("http://localhost:3021/#/settings/friends");
-console.log({ taskSpaceId: task.spaceId, page: page.label });
-console.log(await page.snapshot());
-EOF
-```
-
-The skill is installed at `.agents/skills/ego-browser` from `citrolabs/ego-lite` (`skills/ego-browser`). The CLI comes from the ego lite app. If `ego-browser` is unavailable, follow the skill's `references/install.md`; the user must complete first-run onboarding. Reuse the same TaskSpace and the shared profile without clearing browser storage or changing profiles. Website authentication is also tab-scoped, so the user and agent must use the same page when they need the same selected H5 account; a shared browser profile alone does not share `sessionStorage`. Follow the skill's handoff and completion workflow.
-
-Debug inputs: native's default fields (`login-id`, `theme`, `lang`, `device-type`, ...) come from the URL through the app-layer adapter (hash query wins over the outer search; token fields are ignored), while page-specific params (`uuid`, `hardware-id`, ...) are read directly from the route query. Examples: `#/settings/friends?login-id=456`, `#/devices?hardware-id=441`.
-
 `#/login` signs the debug session in as an external account (帐号/手机号 + 密码): the dev/debug server logs in on the TCP gateway, after which the token endpoint and the bridge's `login-id` answer serve that account for the page's life (a URL `login-id` still overrides).
 
-Never print auth parameters.
+### Verification skill
 
-### MCP debugging
+`.pi/skills/verify-vois-webview` owns every procedure for driving and proving this app: launching the DevServer (and the mock backend), `scripts/doctor.mjs`, driving with `ego-browser`, reading the debug capture, and the proof standards. Its `features/` directory is the maintained map of user-facing behavior — read it before testing a screen. `/skill:maintain-verification-skill` re-checks that map against source and a live session; `/skill:create-verification-skill` generates one for a project that has none.
 
-`packages/mcp` is an MCP stdio server (wired as `vois-debug` in `.pi/mcp.json`) that gives an agent the debug pipeline without a browser: `status` finds the debug server, `events` reads the capture (tokens redacted), `login` re-signs the fixed account or switches accounts, `token` verifies the mint, and `api` performs signed `/v2` calls as the signed-in account. It runs from source on Node >= 22.18 (`node packages/mcp/src/cli.ts`), probes ports `3021` / `5173` / `8080`, and never returns the token itself. See `packages/mcp/README.md`.
-
-### Reading captured events
-
-The server records what the page did. Read it with `vp run website#debug:logs`, or `curl http://127.0.0.1:3021/__debug/status` for the pipeline state. `🟢 WebView debug connected` confirms the pipeline; if it is missing, reload with `?debug-reload=1`.
-
-`debug:logs` prints event URLs and bodies verbatim, auth parameters included. Treat its output as secret.
-
-| Event       | Trigger                              |
-| ----------- | ------------------------------------ |
-| `lifecycle` | load, SPA nav, foreground/background |
-| `network`   | any `fetch()` (full URL + body)      |
-| `console`   | `log`/`warn`/`error`                 |
-| `error`     | unhandled rejection, `onerror`       |
-
-### Production preview
-
-Use this only when validating the production artifact or deployment subpath, or when explicitly requested. Daily development and UI testing use the DevServer on port 3021.
-
-`vp run preview:production` builds, then serves `dist/` under the same subpath a real
-deployment uses. `--base` is what puts it there, and `--debug` is what lets the page
-authenticate without a native bridge.
-
-```sh
-vp run preview:production   # http://localhost:8080/vois-app-webview-next/
-```
-
-Opening it is the point: the artifact only has relative asset paths (`base: './'`),
-so a regression that breaks subpath deployment shows up as a blank page here rather
-than in production.
+The ego-browser skill is installed at `.agents/skills/ego-browser` from `citrolabs/ego-lite`, and its CLI comes from the ego lite app.
 
 ### Switching between worktree servers
 

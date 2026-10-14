@@ -13,7 +13,7 @@
  * driver in scripts/qq (Accessibility API; see ../references/qqctl.md).
  *
  * Usage:
- *   node notify-release.mjs --tag v0.11.0 [--notes-file /tmp/notes.txt] [--to 我的手机]
+ *   node notify-release.mjs --tag v0.11.0 [--notes-file /tmp/notes.txt] [--to 'ai 全自动发版本消息测试']
  *   node notify-release.mjs --tag v0.11.0 --dry-run
  */
 import { execFileSync, spawnSync } from 'node:child_process'
@@ -98,7 +98,10 @@ export function compose({
   }
 }
 
-export function deliver(message, { to = '我的手机', dryRun = false } = {}) {
+/** Where release notifications go: a dedicated test group, not a personal chat. */
+export const DEFAULT_SESSION = 'ai 全自动发版本消息测试'
+
+export function deliver(message, { to = DEFAULT_SESSION, dryRun = false } = {}) {
   if (dryRun) return { ok: true, dryRun: true }
   const result = spawnSync(QQCTL, ['send', to, message], { encoding: 'utf8' })
   if (result.error) throw result.error
@@ -121,7 +124,7 @@ function main() {
   const { values } = parseArgs({
     options: {
       tag: { type: 'string' },
-      to: { type: 'string', default: '我的手机' },
+      to: { type: 'string', default: DEFAULT_SESSION },
       repo: { type: 'string' },
       url: { type: 'string' },
       notes: { type: 'string' },

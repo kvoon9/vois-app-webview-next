@@ -17,7 +17,7 @@
 import { execFileSync, spawnSync } from 'node:child_process'
 import { parseArgs } from 'node:util'
 import { git, latestTag, previousTag } from './changelog.mjs'
-import { compose, deliver } from './notify-release.mjs'
+import { DEFAULT_SESSION, compose, deliver } from './notify-release.mjs'
 
 const REPO_ROOT = execFileSync('git', ['rev-parse', '--show-toplevel'], { encoding: 'utf8' }).trim()
 const WORKFLOW = 'release.yml'
@@ -149,7 +149,7 @@ async function main() {
   const { values } = parseArgs({
     options: {
       type: { type: 'string', default: 'patch' },
-      to: { type: 'string', default: '我的手机' },
+      to: { type: 'string', default: DEFAULT_SESSION },
       repo: { type: 'string' },
       'dry-run': { type: 'boolean', default: false },
       'skip-bump': { type: 'boolean', default: false },

@@ -25,7 +25,7 @@ node .pi/skills/release/scripts/release.mjs --skip-bump --skip-watch --notes-fil
 | `--dry-run`                                      | print the plan; nothing is bumped, pushed or sent                                                             |
 | `--skip-bump` / `--skip-watch` / `--skip-notify` | run one part of the flow                                                                                      |
 | `--no-push`                                      | bump and tag locally, do not push (no workflow, no notification)                                              |
-| `--to`                                           | QQ conversation name, default `我的手机`                                                                      |
+| `--to`                                           | QQ conversation name, default `ai 全自动发版本消息测试`（not a personal chat）                                |
 | `--notes-file`                                   | send this body instead of the commit draft (see below)                                                        |
 | `--allow-dirty`                                  | skip the clean-tree check                                                                                     |
 | `--watch-timeout`                                | seconds to wait for the GitHub Release (default 300)                                                          |
@@ -58,6 +58,8 @@ gh release view v0.12.0 --json url,assets,isDraft
 
 The message is short, Chinese and plain text. The exact shape — title line, summary line, one line per section, no blank lines, no markdown, no emoji, and the fixed closing line `有空可更新一下 @大宝` — is **fixed in [references/message-format.md](references/message-format.md)**. Read it before composing a body. `buildMessage()` appends the closing line itself, so a `--notes-file` body must not repeat it.
 
+The default target is the `ai 全自动发版本消息测试` group (`DEFAULT_SESSION` in `scripts/notify-release.mjs`, shared by `release.mjs`); `--to` overrides it per run. Release notifications do not go to a personal chat.
+
 Two ways to produce the body:
 
 1. **Agent rewrite (preferred).** `node .pi/skills/release/scripts/changelog.mjs --json` prints the commits grouped by section; rewrite each item into concise Chinese following the format reference, write the body to a file, and pass `--notes-file`. The draft keeps raw English commit subjects, which read badly in a Chinese chat.
@@ -69,7 +71,7 @@ node .pi/skills/release/scripts/notify-release.mjs --tag v0.12.0 --dry-run
 node .pi/skills/release/scripts/notify-release.mjs --tag v0.12.0 --notes-file /tmp/notes.txt
 ```
 
-Delivery goes through `scripts/qq/qqctl`, which drives the QQ desktop app through the macOS Accessibility API plus key events addressed to QQ's own process. It does not move the mouse, does not use the keyboard for text, and never brings QQ to the front — a send runs while the user keeps working in another window. Every failure mode is in [references/qqctl.md](references/qqctl.md).
+Delivery goes through `scripts/qq/qqctl`, which drives the QQ desktop app through the macOS Accessibility API plus key events addressed to QQ's own process. It does not move the mouse, does not use the keyboard for text, and does not bring QQ to the front while sending — a send runs while the user keeps working in another window. It does repair the window itself, and both hidden states were verified end to end: a **closed** window is reopened, a **minimized** one is brought back and takes the paste too. A minimized window still depends on macOS granting QQ the focus for a moment, so if a delivery fails at `write`, one click on QQ and a re-run is the fix. Every failure mode is in [references/qqctl.md](references/qqctl.md).
 
 Say so when the notification fails instead of retrying silently: the release is already published, and a "sent" claim that never reached QQ is worse than a visible error.
 

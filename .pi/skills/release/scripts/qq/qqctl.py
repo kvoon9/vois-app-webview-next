@@ -15,6 +15,9 @@ own process (CGEventPostToPid), so:
   * the user's keyboard is never touched (text arrives as a paste),
   * QQ never has to come to the front: key events are posted to QQ's pid, which
     works while another app owns the focus,
+  * a minimized or closed QQ window is brought back first — Chromium exposes no
+    accessibility tree without a window on screen, so there would be nothing to
+    read —
   * the clipboard is borrowed and restored.
 
 Background worth keeping when editing:
@@ -25,6 +28,9 @@ Background worth keeping when editing:
   * A modifier chord must press and release the real modifier key; setting only
     the CGEventFlags bit leaves Command stuck and the next Return arrives as
     Cmd+Return, which QQ treats as a newline instead of send.
+  * Chromium addresses keys per window, and a window that lost key status drops
+    them; a window that came back through AX never had it. An activation request
+    macOS refuses still restores it — see `open_session`.
   * QQ does not expose the conversation name for a group, and the group's 群公告
     editor is an AXTextArea too, so the message box is picked by window-relative
     geometry, not by index.
@@ -46,7 +52,7 @@ from ApplicationServices import (
     kAXWindowsAttribute,
 )
 from AppKit import NSRunningApplication, NSWorkspace
-from CoreFoundation import kCFBooleanTrue
+from CoreFoundation import kCFBooleanFalse, kCFBooleanTrue
 
 SEND_KEY = 36
 CMD_KEY = 55
@@ -85,6 +91,43 @@ def window_state(app):
         if not get(window, 'AXMinimized'):
             return 'visible'
     return 'minimized'
+
+
+def _wait_visible(app, timeout):
+    deadline = time.time() + timeout
+    while time.time() < deadline:
+        if window_state(app) == 'visible':
+            return True
+        time.sleep(0.4)
+    return False
+
+
+def ensure_window(app, pid, timeout=12.0):
+    """Put a window back on screen and report the state afterwards.
+
+    QQ keeps running after its last window is closed, and Chromium builds its
+    accessibility tree per window, so a windowless app reads as an empty tree:
+    recovery belongs here, not in the caller.
+
+    `open -a` is the primary repair for both hidden states, not just the closed
+    one: it is the only activation macOS honours from a background process, and a
+    window that never came to the front cannot take the Cmd+V further down (a
+    purely AX un-minimize leaves the window visible but keyless, which is how a
+    send used to fail at `write`). Un-minimizing through AX stays as the fallback
+    for a `open` that left a minimized window minimized.
+    """
+    state = window_state(app)
+    if state == 'visible':
+        return state
+    subprocess.run(['open', '-a', '/Applications/QQ.app'], capture_output=True)
+    if _wait_visible(app, timeout):
+        return 'visible'
+    if state == 'minimized':
+        for window in get(app, kAXWindowsAttribute) or []:
+            setv(window, 'AXMinimized', kCFBooleanFalse)
+        if _wait_visible(app, timeout):
+            return 'visible'
+    return window_state(app)
 
 
 def find_in(root, pred, maxdepth=60, budget=60000):
@@ -213,13 +256,27 @@ def system_chord(code, modifier=CMD_KEY, flag=CMD_FLAG, delay=0.04):
     post(modifier, False, 0)
 
 
-def restore_frontmost(name):
+def restore_frontmost(name, attempts=2, pause=0.6):
+    """Hand the frontmost app back when a run took it.
+
+    Two tiers, because the first one is a request macOS refuses while another app
+    owns the focus: `activateWithOptions_`, then `open -a <bundle>` — the explicit
+    open the system does honour, and the same call that revives a closed QQ.
+    """
     if not name or name == 'QQ':
         return
     for app in NSWorkspace.sharedWorkspace().runningApplications():
-        if app.localizedName() == name:
+        if app.localizedName() != name:
+            continue
+        for _ in range(max(1, attempts)):
             app.activateWithOptions_(1 << 1)
-            return
+            time.sleep(pause)
+            if frontmost_name() == name:
+                return
+        bundle = app.bundleURL()
+        if bundle is not None:
+            subprocess.run(['open', '-a', bundle.path()], capture_output=True)
+        return
 
 
 # ---------------------------------------------------------------- clipboard
@@ -282,19 +339,45 @@ def matches(name, row_value):
 
 
 
-def open_session(app, pid, name, timeout=8.0):
-    """Open a conversation by name through QQ's search box."""
+def open_session(app, pid, name, timeout=8.0, attempts=2, nudge_timeout=3.0):
+    """Open a conversation by name, recovering the window and the flaky press.
+
+    A press QQ's dropdown did not honour is retried; a name with no search result
+    is not, because that means the name is wrong or the chat has no local history.
+    """
+    state = window_state(app)
+    if ensure_window(app, pid) != 'visible':
+        raise RuntimeError(
+            f"QQ's window is {window_state(app)} and could not be brought back; Chromium exposes "
+            'no accessibility tree while it is hidden or minimized, so open QQ by hand and retry')
+    note = '' if state == 'visible' else f' (window was {state})'
+
+    ok, info = False, ''
+    for attempt in range(max(1, attempts)):
+        if attempt or state != 'visible':
+            # Chromium addresses keys per window, and drops them once the window is
+            # not the key one any more — a window that came back through AX never
+            # was. The dropdown ignores the Return below until key status is back,
+            # and an activation request macOS *refuses* still restores it (only the
+            # frontmost app is left alone, which every caller restores afterwards).
+            activate_qq(pid, timeout=nudge_timeout)
+        ok, info = open_once(app, pid, name, timeout)
+        if ok or info.startswith('no search result'):
+            break
+        time.sleep(0.6)
+    return ok, f'{info}{note}'
+
+
+def open_once(app, pid, name, timeout=8.0):
+    """One search-box attempt; `open_session` owns the recovery and the retries."""
     if header_name(app) == name and message_box(app) is not None:
         return True, 'already open'
 
     box = search_field(app)
     if box is None:
-        state = window_state(app)
-        if state == 'visible':
-            raise RuntimeError('search box not found in a visible QQ window; the UI may have changed, re-map it (references/qqctl.md)')
         raise RuntimeError(
-            f"QQ's window is {state}: Chromium exposes no accessibility tree while it is hidden or "
-            'minimized, so bring QQ up (click it or open -a QQ) and retry')
+            f'search box not found in a {window_state(app)} QQ window; the UI may have changed, '
+            're-map it (references/qqctl.md)')
     AXUIElementPerformAction(box, 'AXPress')
     time.sleep(0.25)
     setv(box, kAXValueAttribute, '')
@@ -472,34 +555,54 @@ def activate_qq(pid, timeout=20.0):
 
 
 # ---------------------------------------------------------------- cli
+def with_focus_kept(previous, body):
+    """Run `body` and hand the frontmost app back when the run took it.
+
+    The recovered-window path asks macOS to activate QQ, and a request the system
+    honours would otherwise leave the user in QQ. Every early return has to restore
+    too, so the restore belongs in a `finally`.
+    """
+    try:
+        return body()
+    finally:
+        if previous and previous != 'QQ' and frontmost_name() == 'QQ':
+            restore_frontmost(previous)
+
+
 def cmd_send(args):
     pid = qq_pid()
     app = app_el(pid)
     previous = frontmost_name()
-    steps = []
-    ok, info = open_session(app, pid, args.session)
-    steps.append(['open_session', ok, info])
-    if not ok:
-        return {'ok': False, 'steps': steps}
-    ok, info = write_message(app, pid, args.text)
-    steps.append(['write', ok, info])
-    if not ok:
-        return {'ok': False, 'steps': steps}
-    send_message(pid)
-    steps.append(['send', True, ''])
-    sent = wait_sent(app, args.text)
-    steps.append(['verify', sent, ''])
-    # Never leave the user's focus somewhere else than we found it.
-    if previous and previous != 'QQ' and frontmost_name() == 'QQ':
-        restore_frontmost(previous)
-    return {'ok': sent, 'steps': steps}
+
+    def body():
+        steps = []
+        ok, info = open_session(app, pid, args.session)
+        steps.append(['open_session', ok, info])
+        if not ok:
+            return {'ok': False, 'steps': steps}
+        ok, info = write_message(app, pid, args.text)
+        steps.append(['write', ok, info])
+        if not ok:
+            return {'ok': False, 'steps': steps}
+        send_message(pid)
+        steps.append(['send', True, ''])
+        sent = wait_sent(app, args.text)
+        steps.append(['verify', sent, ''])
+        return {'ok': sent, 'steps': steps}
+
+    return with_focus_kept(previous, body)
 
 
 def cmd_open(args):
     pid = qq_pid()
     app = app_el(pid)
-    ok, info = open_session(app, pid, args.session)
-    return {'ok': ok, 'header': header_name(app), 'info': info}
+    previous = frontmost_name()
+
+    def body():
+        ok, info = open_session(app, pid, args.session)
+        return {'ok': ok, 'header': header_name(app), 'info': info}
+
+    return with_focus_kept(previous, body)
 
 
 def cmd_read(args):

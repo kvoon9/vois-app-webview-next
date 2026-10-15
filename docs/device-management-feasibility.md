@@ -4,7 +4,7 @@ description: '安卓 App 设备管理功能在 H5 端复刻的可行性结论：
 
 # 设备管理复刻可行性
 
-> 2026-10-15。材料有三份：安卓 APK 反编译源码（`vender/WL_V5.0.4_Code504_09181532.apk`，jadx 输出在本机 `/tmp/vois-apk/wl-src`）、Apipost 导出的真实接口文档（`api-reference/`，44 个 `/v2/subuser` 接口）、website 现状代码。本文是动手前的结论，确认后才开工。
+> 2026-10-15。材料有三份：安卓 APK 反编译源码（`vender/WL_V5.0.4_Code504_09181532.apk`，jadx 输出在本机 `/tmp/vois-apk/wl-src`）、Apipost 导出的真实接口文档（`api-reference/`，44 个 `/v2/subuser` 接口）、website 现状代码。本文是动手前的结论。2026-10-15 更新：Phase 0（删 mock）与 Phase 1（页面接真实 API）已落地，实时定位按轮询桥方案实现（见 `docs/native/android/v5.0.8+508/location-bridge.md`）；后端补接口项 A1-A11 待排期。
 >
 > 同日补充：v5.0.8 包（`WL_V5.0.8_Code508_10151723.apk`）逆向完成后，第 2 节的实时位置按实际落地的桥实现更新。
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Read-only check: is the DevServer instance on the probe port worth driving?
 //
-//   node .pi/skills/verify-vois-webview/scripts/doctor.mjs [--port 3021] [--json]
+//   node .pi/skills/verify-vois-webview/scripts/doctor.mjs [--port 3021] [--root <path>] [--json]
 //
 // Answers five questions with the debug pipeline's own primitives:
 //   1. Is a debug server answering /__debug/status?
@@ -20,7 +20,11 @@ import process from 'node:process'
 import { fileURLToPath } from 'node:url'
 
 const here = dirname(fileURLToPath(import.meta.url))
-const repoRoot = resolve(here, '../../../..')
+const argv0 = process.argv.slice(2)
+// --root overrides the repo the capture and git commands are read from, so a
+// doctor copy in one checkout can inspect a DevServer running in a worktree.
+const rootIndex = argv0.indexOf('--root')
+const repoRoot = rootIndex === -1 ? resolve(here, '../../../..') : resolve(argv0[rootIndex + 1])
 const eventsFile = join(repoRoot, 'apps/website/.tmp/vois-webview-debug/events.jsonl')
 
 const argv = process.argv.slice(2)

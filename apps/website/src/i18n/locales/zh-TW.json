@@ -283,7 +283,8 @@
     "myLocationTracking": "我的實時位置",
     "myLocationWaiting": "正在獲取我的位置…",
     "myLocationIdle": "我的位置未開始",
-    "realtimeDenied": "定位權限被拒絕，請在系統設置中開啟後重試。"
+    "realtimeDenied": "定位權限被拒絕，請在系統設置中開啟後重試。",
+    "myLocationError": "定位未啟動，可能是定位權限彈窗未處理，點擊重試"
   },
   "translation": {
     "loading": "載入中…",

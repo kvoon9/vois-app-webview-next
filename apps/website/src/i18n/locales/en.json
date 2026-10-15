@@ -283,7 +283,8 @@
     "myLocationTracking": "My live location",
     "myLocationWaiting": "Getting my location…",
     "myLocationIdle": "My location stopped",
-    "realtimeDenied": "Location permission denied. Enable it in system settings and retry."
+    "realtimeDenied": "Location permission denied. Enable it in system settings and retry.",
+    "myLocationError": "Location did not start; a permission dialog may be pending. Tap to retry"
   },
   "profile": {
     "media": "Media, links, docs",

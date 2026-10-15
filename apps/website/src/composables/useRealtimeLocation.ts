@@ -36,8 +36,14 @@ export interface RealtimeLocationSource {
 const GET_TIMEOUT_MS = 5_000
 /** A `start-location` may wait on the permission dialog, so it gets a long leash. */
 const START_TIMEOUT_MS = 90_000
-/** Retries for a `-1` start answer (e.g. a dialog from an earlier page still pending). */
+/** Retries for a plain `-1` start answer (bad params, unexpected state). */
 const MAX_START_RETRIES = 3
+/**
+ * Retries while native reports a permission dialog still pending. The dialog
+ * can legally sit unanswered for a long time, so this leash is loose; when it
+ * runs out the loop stops instead of hammering a stuck bridge forever.
+ */
+const MAX_PERMISSION_WAIT_RETRIES = 12
 
 function withTimeout<T>(promise: Promise<T>, ms: number, fallback: T): Promise<T> {
   return Promise.race([
@@ -155,6 +161,7 @@ export function useRealtimeLocation(options: UseRealtimeLocationOptions = {}): U
   let pollTimer: ReturnType<typeof setTimeout> | undefined
   let renewTimer: ReturnType<typeof setTimeout> | undefined
   let startRetries = 0
+  let permissionWaitRetries = 0
   let generation = 0
 
   function clearTimers(): void {
@@ -217,16 +224,25 @@ export function useRealtimeLocation(options: UseRealtimeLocationOptions = {}): U
       return
     }
     if (response.errcode !== 0) {
-      // `-1`: a permission request is still pending or params were refused.
-      if (startRetries < MAX_START_RETRIES) {
+      // `-1` with this message means the native permission dialog is up and
+      // the first start call is still waiting on it; keep waiting gently.
+      const dialogPending = response.errmsg.includes('permission request in progress')
+      if (dialogPending && permissionWaitRetries < MAX_PERMISSION_WAIT_RETRIES) {
+        permissionWaitRetries += 1
+        status.value = 'starting'
+        pollTimer = setTimeout(begin, intervalMs * 2)
+        return
+      }
+      if (!dialogPending && startRetries < MAX_START_RETRIES) {
         startRetries += 1
         pollTimer = setTimeout(begin, intervalMs)
-      } else {
-        status.value = 'error'
+        return
       }
+      status.value = 'error'
       return
     }
     startRetries = 0
+    permissionWaitRetries = 0
     session = {
       interval: response.data?.interval ?? intervalMs,
       time: response.data?.time ?? timeMs,

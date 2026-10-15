@@ -80,6 +80,11 @@ const myTime = computed(() => {
   return `${hh}:${mm}:${ss}`
 })
 
+/** One tap to restart the loop after it gave up (e.g. a stuck permission dialog). */
+function retryRealtime(): void {
+  if (realtime.status.value === 'error') realtime.start()
+}
+
 const myStatus = computed(() => {
   switch (realtime.status.value) {
     case 'tracking':
@@ -88,6 +93,8 @@ const myStatus = computed(() => {
       return t('device.myLocationWaiting')
     case 'denied':
       return t('device.realtimeDenied')
+    case 'error':
+      return t('device.myLocationError')
     case 'unsupported':
       return ''
     default:
@@ -112,7 +119,12 @@ const myStatus = computed(() => {
               {{ deviceTime }}
             </span>
           </p>
-          <p v-if="myStatus" class="mt-1 flex items-center text-2nd-body text-text-secondary">
+          <p
+            v-if="myStatus"
+            class="mt-1 flex items-center text-2nd-body text-text-secondary"
+            :class="realtime.status.value === 'error' ? 'cursor-pointer' : ''"
+            v-on="realtime.status.value === 'error' ? { click: retryRealtime } : {}"
+          >
             <span
               v-if="realtime.status.value === 'tracking'"
               class="mr-2 inline-block h-2 w-2 flex-none rounded-full bg-primary"

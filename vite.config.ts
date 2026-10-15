@@ -12,6 +12,7 @@ export default defineConfig({
       'tools/oxlint/anti-slop/**',
       'apps/docs/**',
       'docs/**/*.md',
+      'api-reference/**',
     ],
   },
   lint: {
@@ -56,6 +57,13 @@ export default defineConfig({
   },
   run: {
     cache: true,
+    tasks: {
+      // 联网拉取最新文档，缓存会重放过期结果
+      'docs:apipost': {
+        command: 'node scripts/apipost-doc-to-markdown.mjs',
+        cache: false,
+      },
+    },
   },
   resolve: {
     alias: {

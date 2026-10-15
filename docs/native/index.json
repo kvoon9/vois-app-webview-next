@@ -40,6 +40,34 @@
       "inventory": "android/v5.0.4+504/inventory.json"
     },
     {
+      "id": "android-5.0.8+508",
+      "platform": "android",
+      "app": {
+        "applicationId": "com.voistech.chat",
+        "versionName": "5.0.8",
+        "versionCode": 508,
+        "flavor": "baseCn",
+        "buildType": "debug",
+        "buildTime": "10151723",
+        "minSdk": 23,
+        "targetSdk": 36,
+        "compileSdk": 36,
+        "serverAddress": "https://api.voischat.cn"
+      },
+      "package": {
+        "filename": "WL_V5.0.8_Code508_10151723.apk",
+        "vendoredPath": "vender/WL_V5.0.8_Code508_10151723.apk",
+        "kind": "apk",
+        "size": 47140483,
+        "sha256": "9af0a149820a27cfda6835aa18140f80e4c07098d132ed6bca1168362c64d2de"
+      },
+      "analyzedAt": "2026-10-15",
+      "tooling": [
+        { "name": "jadx", "version": "1.5.6", "role": "dex decompilation + resource decode" }
+      ],
+      "docs": ["android/v5.0.8+508/location-bridge.md"]
+    },
+    {
       "id": "ios-5.0.3+1",
       "platform": "ios",
       "app": {

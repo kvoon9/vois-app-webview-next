@@ -14,7 +14,7 @@ package.
 
 | Tool                                                                       | Use                                          | Notes                                                                                           |
 | -------------------------------------------------------------------------- | -------------------------------------------- | ----------------------------------------------------------------------------------------------- |
-| `jadx`                                                                     | resource decode + dex decompilation          | `brew install jadx`; 1.5.6 used for 5.0.4                                                       |
+| `jadx`                                                                     | resource decode + dex decompilation          | `brew install jadx`; 1.5.6 used for 5.0.4 and 5.0.8                                              |
 | `docs/native/tools/extract.mjs`                                                 | verify SHA-256, decode into `.tmp/rev/<id>`  | regenerates everything below                                                                    |
 | REA Android provider (`inspect_android_package`, `search_android_classes`) | structured class/method search with Evidence | optional: needs `REA_JADX_MCP_JAR` (jadx-headless-mcp 0.7.1) plus a JDK in the MCP server's env |
 | `unzip -l`                                                                 | inventory of `lib/`, `assets/`               | assets carry the injected bridge JS                                                             |
@@ -32,7 +32,9 @@ readable tree; treat the errors as normal and check `.tmp/rev/<id>/jadx-sources.
    and `GenericWebViewActivity` (bridge-less). Re-check the layout in
    `res/layout/activity_session_web.xml` for `app:useBridge`.
 3. **Bridge types** — `ui/web/bridge/BridgeType.java` lists every dispatch type.
-   Diff this file first; it is the contract's front door.
+   Diff this file first; it is the contract's front door. So far the only diff
+   was 5.0.8 adding `start-location` / `get-location` —
+   see `docs/native/android/v5.0.8+508/location-bridge.md`.
 4. **Page params** — `ui/base/VoisActivity#getWebApiDefaultQueryParams` plus
    `getWebThemeMode` / `getWebLang` / `convertToStandardLang`; the handler in
    `ui/web/VoisWebActivity#registerBridgeHandlers`.

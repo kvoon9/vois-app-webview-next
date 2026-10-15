@@ -7,11 +7,7 @@ import PageHeader from '~/components/PageHeader.vue'
 import QueryState from '~/components/settings/QueryState.vue'
 import { parseRouteParamId } from '~/composables/useRouteParamId'
 import { useToast } from '~/composables/useToast'
-import {
-  getDeviceLocation,
-  updateDeviceTrackSetting,
-  type TrackFrequency,
-} from '~/utils/device-api'
+import { getDeviceTrackMode, setDeviceTrackMode, type TrackFrequency } from '~/utils/device-api'
 
 const route = useRoute()
 const { t } = useI18n({ useScope: 'global' })
@@ -28,15 +24,15 @@ const options: Array<{ value: TrackFrequency; label: string }> = [
 
 const deviceId = computed(() => parseRouteParamId(route.params.id))
 const { state, refetch: reload } = useQuery({
-  key: () => ['device-management', 'device', 'location', deviceId.value],
+  key: () => ['device-management', 'device', 'track-mode', deviceId.value],
   query: () => {
     if (deviceId.value == null) throw new Error(t('device.invalidDevice'))
-    return getDeviceLocation(deviceId.value)
+    return getDeviceTrackMode(deviceId.value)
   },
 })
 
 watch(
-  () => state.value.data?.reportFrequency,
+  () => state.value.data,
   (value) => {
     if (value) frequency.value = value
   },
@@ -46,7 +42,7 @@ watch(
 const { mutateAsync: saveFrequency, isLoading: saving } = useMutation({
   mutation: (value: TrackFrequency) => {
     if (deviceId.value == null) throw new Error(t('device.invalidDevice'))
-    return updateDeviceTrackSetting(deviceId.value, value)
+    return setDeviceTrackMode(deviceId.value, value)
   },
 })
 
@@ -56,7 +52,7 @@ async function choose(next: TrackFrequency): Promise<void> {
   frequency.value = next
   try {
     await saveFrequency(next)
-    await queryCache.invalidateQueries({ key: ['device-management', 'device', 'location'] })
+    await queryCache.invalidateQueries({ key: ['device-management', 'device', 'track-mode'] })
     showToast(t('device.trackSettingUpdated'))
   } catch (error) {
     frequency.value = previous
@@ -71,7 +67,7 @@ async function choose(next: TrackFrequency): Promise<void> {
     <main class="p-4">
       <QueryState :status="state.status" :error="state.error" @retry="reload()">
         <div
-          v-if="state.data"
+          v-if="state.data !== undefined"
           class="overflow-hidden rounded-large bg-surface-elevated"
           role="radiogroup"
           :aria-label="t('device.trackSetting')"

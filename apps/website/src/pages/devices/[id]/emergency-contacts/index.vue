@@ -40,18 +40,11 @@ const friendsFull = computed(
 )
 const phonesFull = computed(() => quota.value != null && phoneCount.value >= quota.value.phoneMax)
 
-function displayName(contact: EmergencyContact): string {
-  return contact.nick || contact.name
-}
-
-function contactNumber(contact: EmergencyContact): string {
-  return contact.userNum || contact.phone
-}
-
 const removeMutation = useMutation({
-  mutation: (contactId: number) => {
+  mutation: (target: EmergencyContact) => {
     if (deviceId.value == null) throw new Error(t('device.invalidId'))
-    return removeEmergencyContact(deviceId.value, contactId)
+    // SOS contacts carry no id; the server identifies them by number plus kind.
+    return removeEmergencyContact(deviceId.value, target.number, target.type)
   },
 })
 
@@ -70,7 +63,7 @@ function openAddPhone(): void {
 async function removeContact(): Promise<void> {
   if (!removing.value || removeMutation.isLoading.value) return
   try {
-    await removeMutation.mutateAsync(removing.value.contactId)
+    await removeMutation.mutateAsync(removing.value)
     removing.value = null
     await queryCache.invalidateQueries({ key: ['device-management', 'emergency-contacts'] })
     showToast(t('device.emergencyContactRemoved'))
@@ -106,12 +99,16 @@ async function removeContact(): Promise<void> {
           </section>
 
           <ul class="mt-4 overflow-hidden panel">
-            <li v-for="contact in contacts" :key="contact.contactId" class="flex items-center">
-              <Avatar :name="displayName(contact)" :src="contact.avatar" />
+            <li
+              v-for="contact in contacts"
+              :key="`${contact.type}-${contact.number}`"
+              class="flex items-center"
+            >
+              <Avatar :name="contact.name" :src="contact.avatar" />
               <span class="ml-3 min-w-0 flex-1">
-                <span class="block truncate text-body font-medium">{{ displayName(contact) }}</span>
+                <span class="block truncate text-body font-medium">{{ contact.name }}</span>
                 <span class="mt-0.5 block truncate text-small text-text-secondary">
-                  {{ contactNumber(contact) }}
+                  {{ contact.number }}
                 </span>
               </span>
               <button
@@ -164,7 +161,7 @@ async function removeContact(): Promise<void> {
       @cancel="removing = null"
       @confirm="removeContact"
     >
-      <p>{{ t('device.emergencyContactRemoveConfirm', { name: displayName(removing) }) }}</p>
+      <p>{{ t('device.emergencyContactRemoveConfirm', { name: removing.name }) }}</p>
     </BaseModal>
   </div>
 </template>

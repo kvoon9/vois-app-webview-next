@@ -9,40 +9,20 @@ import FieldEditModal from '~/components/FieldEditModal.vue'
 import ImageCropper from '~/components/ImageCropper.vue'
 import PageHeader from '~/components/PageHeader.vue'
 import QueryState from '~/components/settings/QueryState.vue'
-import ToggleSwitch from '~/components/ToggleSwitch.vue'
 import { usePageBack } from '~/composables/usePageBack'
 import { parseRouteParamId } from '~/composables/useRouteParamId'
 import { useToast } from '~/composables/useToast'
 import { weilaUpload } from '~/utils/api'
 import {
-  getDeviceGroups,
-  getGroupInfo,
-  getGroupMembers,
+  getGroupOverview,
   leaveDeviceGroup,
   updateGroupAvatar,
-  updateGroupIntro,
   updateGroupName,
-  updateGroupSettings,
   updateMyGroupNickname,
-  type GroupSettings,
+  type GroupInfo,
 } from '~/utils/device-api'
 
-type EditableField = 'name' | 'intro' | 'nickname'
-
-interface GroupDetail {
-  groupId: number
-  num: string
-  name: string
-  avatar: string
-  isCreator: boolean
-  memberCount: number
-  myNickname: string
-  intro: string
-  createdAt: string
-  settings: GroupSettings
-  /** False when the group info endpoint is unreachable; gates the settings block. */
-  infoAvailable: boolean
-}
+type EditableField = 'name' | 'nickname'
 
 const route = useRoute()
 const { t } = useI18n({ useScope: 'global' })
@@ -50,42 +30,23 @@ const queryCache = useQueryCache()
 const { showToast } = useToast()
 const { goBack } = usePageBack()
 
-const defaultGroupSettings: GroupSettings = {
-  muted: false,
-  shareLocation: false,
-  broadcast: false,
-  pinned: false,
-}
-
 const deviceId = computed(() => parseRouteParamId(route.params.id))
 const groupId = computed(() => parseRouteParamId(route.params.groupId))
 const editing = shallowRef<EditableField | null>(null)
 const editValue = shallowRef('')
 const exitConfirmation = shallowRef(false)
 
-async function load(): Promise<GroupDetail> {
+async function load(): Promise<GroupInfo> {
   if (deviceId.value == null || groupId.value == null) throw new Error(t('error.description'))
-  const [groups, members, info] = await Promise.all([
-    getDeviceGroups(deviceId.value),
-    getGroupMembers(deviceId.value, groupId.value),
-    // Tolerated failure: the group info endpoint is not live yet, so intro,
-    // created_at and settings fall back to their empty defaults below.
-    getGroupInfo(groupId.value).catch(() => null),
-  ])
-  const group = groups.find((item) => item.groupId === groupId.value)
-  if (!group) throw new Error(t('device.invalidGroup'))
-  return {
-    groupId: group.groupId,
-    num: group.num,
-    name: group.name,
-    avatar: group.avatar,
-    isCreator: group.isCreator,
-    memberCount: members.length,
-    myNickname: members.find((member) => member.userId === deviceId.value)?.nickname ?? '',
-    intro: info?.intro ?? '',
-    createdAt: info?.createdAt ?? '',
-    settings: info?.settings ?? defaultGroupSettings,
-    infoAvailable: info !== null,
+  try {
+    return await getGroupOverview(deviceId.value, groupId.value)
+  } catch (error) {
+    // The API layer reports a group outside the device's list with a bare
+    // message; surface the same localized error the page always showed.
+    if (error instanceof Error && error.message === 'group not found') {
+      throw new Error(t('device.invalidGroup'))
+    }
+    throw error
   }
 }
 
@@ -95,13 +56,10 @@ const { state, refetch: reload } = useQuery({
 })
 
 const group = computed(() => state.value.data ?? null)
-const groupSettings = computed(() => group.value?.settings ?? defaultGroupSettings)
 const isOwner = computed(() => group.value?.isCreator ?? false)
-const editingTitle = computed(() => {
-  if (editing.value === 'name') return t('device.groupName')
-  if (editing.value === 'intro') return t('device.groupIntroduction')
-  return t('device.groupNickname')
-})
+const editingTitle = computed(() =>
+  editing.value === 'name' ? t('device.groupName') : t('device.groupNickname'),
+)
 const myNickname = computed(() => group.value?.myNickname || t('device.groupNicknameUnset'))
 
 const nameMutation = useMutation({
@@ -111,24 +69,10 @@ const nameMutation = useMutation({
   },
 })
 
-const introMutation = useMutation({
-  mutation: (intro: string) => {
-    if (groupId.value == null) throw new Error(t('error.description'))
-    return updateGroupIntro(groupId.value, intro)
-  },
-})
-
 const nicknameMutation = useMutation({
   mutation: (nickname: string) => {
     if (deviceId.value == null || groupId.value == null) throw new Error(t('error.description'))
     return updateMyGroupNickname(deviceId.value, groupId.value, nickname)
-  },
-})
-
-const settingsMutation = useMutation({
-  mutation: (input: Partial<GroupSettings>) => {
-    if (groupId.value == null) throw new Error(t('error.description'))
-    return updateGroupSettings(groupId.value, input)
   },
 })
 
@@ -188,21 +132,14 @@ function onCropFailed(): void {
   if (file) void uploadAvatar(file, file.name)
 }
 
-const savingEdit = computed(
-  () =>
-    nameMutation.isLoading.value ||
-    introMutation.isLoading.value ||
-    nicknameMutation.isLoading.value,
-)
+const savingEdit = computed(() => nameMutation.isLoading.value || nicknameMutation.isLoading.value)
 
 function openEditor(kind: EditableField): void {
   const current = group.value
   if (!current) return
-  if (kind === 'intro' && (!isOwner.value || !current.infoAvailable)) return
   if (kind === 'name' && !isOwner.value) return
   editing.value = kind
-  editValue.value =
-    kind === 'name' ? current.name : kind === 'intro' ? current.intro : current.myNickname
+  editValue.value = kind === 'name' ? current.name : current.myNickname
 }
 
 function closeEditor(): void {
@@ -215,25 +152,11 @@ async function saveGroupField(value: string): Promise<void> {
 
   try {
     if (kind === 'name') await nameMutation.mutateAsync(value)
-    else if (kind === 'intro') await introMutation.mutateAsync(value)
     else await nicknameMutation.mutateAsync(value)
     editing.value = null
     await queryCache.invalidateQueries({ key: ['device-management'] })
     await reload()
     showToast(t('device.groupUpdated'))
-  } catch (error) {
-    showToast(error instanceof Error ? error.message : String(error), { type: 'error' })
-  }
-}
-
-async function toggleSetting(key: keyof GroupSettings): Promise<void> {
-  if (settingsMutation.isLoading.value || !group.value?.infoAvailable) return
-  const changes: Partial<GroupSettings> = { [key]: !groupSettings.value[key] }
-  try {
-    await settingsMutation.mutateAsync(changes)
-    await queryCache.invalidateQueries({ key: ['device-management'] })
-    await reload()
-    showToast(t('device.groupSettingsUpdated'))
   } catch (error) {
     showToast(error instanceof Error ? error.message : String(error), { type: 'error' })
   }
@@ -297,9 +220,6 @@ async function exitGroup(): Promise<void> {
             <p class="mt-3 text-small text-text-secondary">
               {{ t('device.groupNumber', { number: group.num }) }}
             </p>
-            <p v-show="false" class="mt-1 text-small text-text-secondary">
-              {{ t('device.createdAt', { date: group.createdAt || t('device.notAvailable') }) }}
-            </p>
           </section>
 
           <section class="overflow-hidden panel">
@@ -332,69 +252,6 @@ async function exitGroup(): Promise<void> {
                 <span class="row-chevron" aria-hidden="true" />
               </span>
             </button>
-
-            <button
-              v-show="false"
-              v-if="isOwner && group.infoAvailable"
-              type="button"
-              class="panel-row min-h-14 w-full py-3 text-left"
-              @click="openEditor('intro')"
-            >
-              <span class="flex-none text-2nd-body text-text-secondary">
-                {{ t('device.groupIntroduction') }}
-              </span>
-              <span class="ml-4 flex min-w-0 items-center text-right text-2nd-body">
-                <span class="truncate">{{ group.intro || t('device.notAvailable') }}</span>
-                <span class="row-chevron" aria-hidden="true" />
-              </span>
-            </button>
-            <div v-show="false" v-else class="panel-row min-h-14 py-3">
-              <span class="flex-none text-2nd-body text-text-secondary">
-                {{ t('device.groupIntroduction') }}
-              </span>
-              <span class="ml-4 min-w-0 truncate text-right text-2nd-body">
-                {{ group.intro || t('device.notAvailable') }}
-              </span>
-            </div>
-          </section>
-
-          <section v-show="false" class="mt-4 panel">
-            <div class="panel-row min-h-12 text-body">
-              <span>{{ t('device.muteNotifications') }}</span>
-              <ToggleSwitch
-                :checked="groupSettings.muted"
-                :disabled="settingsMutation.isLoading.value || !group.infoAvailable"
-                :aria-label="t('device.muteNotifications')"
-                @change="toggleSetting('muted')"
-              />
-            </div>
-            <div class="panel-row min-h-12 text-body">
-              <span>{{ t('device.shareLocation') }}</span>
-              <ToggleSwitch
-                :checked="groupSettings.shareLocation"
-                :disabled="settingsMutation.isLoading.value || !group.infoAvailable"
-                :aria-label="t('device.shareLocation')"
-                @change="toggleSetting('shareLocation')"
-              />
-            </div>
-            <div class="panel-row min-h-12 text-body">
-              <span>{{ t('device.voiceBroadcast') }}</span>
-              <ToggleSwitch
-                :checked="groupSettings.broadcast"
-                :disabled="settingsMutation.isLoading.value || !group.infoAvailable"
-                :aria-label="t('device.voiceBroadcast')"
-                @change="toggleSetting('broadcast')"
-              />
-            </div>
-            <div class="panel-row min-h-12 text-body">
-              <span>{{ t('device.stickOnTop') }}</span>
-              <ToggleSwitch
-                :checked="groupSettings.pinned"
-                :disabled="settingsMutation.isLoading.value || !group.infoAvailable"
-                :aria-label="t('device.stickOnTop')"
-                @change="toggleSetting('pinned')"
-              />
-            </div>
           </section>
 
           <RouterLink
@@ -423,7 +280,7 @@ async function exitGroup(): Promise<void> {
       v-if="editing"
       :title="editingTitle"
       :model-value="editValue"
-      :kind="editing === 'intro' ? 'description' : 'name'"
+      kind="name"
       :required="editing === 'name'"
       :loading="savingEdit"
       @cancel="closeEditor"

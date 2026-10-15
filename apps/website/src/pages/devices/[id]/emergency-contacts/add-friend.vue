@@ -2,28 +2,46 @@
 import { useMutation, useQuery, useQueryCache } from '@pinia/colada'
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useRoute, useRouter } from 'vue-router'
+import { useRoute } from 'vue-router'
 import Avatar from '~/components/Avatar.vue'
 import PageHeader from '~/components/PageHeader.vue'
 import QueryState from '~/components/settings/QueryState.vue'
 import { parseRouteParamId } from '~/composables/useRouteParamId'
+import { usePageBack } from '~/composables/usePageBack'
 import { useToast } from '~/composables/useToast'
-import { addEmergencyFriends, getEmergencyContacts, getFriends } from '~/utils/device-api'
+import {
+  addEmergencyFriendContact,
+  getDeviceFriends,
+  getEmergencyContacts,
+  type Friend,
+} from '~/utils/device-api'
 
 const { t } = useI18n({ useScope: 'global' })
 const route = useRoute()
-const router = useRouter()
 const queryCache = useQueryCache()
+const { goBack } = usePageBack()
 const { showToast } = useToast()
 const deviceId = computed(() => parseRouteParamId(route.params.id))
 
-async function load() {
+interface AddFriendData {
+  friends: Friend[]
+  existingIds: number[]
+  friendsFull: boolean
+}
+
+async function load(): Promise<AddFriendData> {
   if (deviceId.value == null) throw new Error(t('device.invalidId'))
   const [friends, emergency] = await Promise.all([
-    getFriends(),
+    getDeviceFriends(deviceId.value),
     getEmergencyContacts(deviceId.value),
   ])
-  return { friends, existingIds: emergency.contacts.map((contact) => contact.userId) }
+  // Friend slots only; phone entries carry userId 0 and must not match.
+  const existingIds = emergency.contacts
+    .filter((contact) => contact.type === 'friend')
+    .map((contact) => contact.userId)
+  const friendsFull =
+    emergency.quota.friendMax > 0 && existingIds.length >= emergency.quota.friendMax
+  return { friends, existingIds, friendsFull }
 }
 
 const { state, refetch: reload } = useQuery({
@@ -32,21 +50,26 @@ const { state, refetch: reload } = useQuery({
 })
 
 const existingIds = computed(() => new Set(state.value.data?.existingIds ?? []))
+const friendsFull = computed(() => state.value.data?.friendsFull ?? false)
 
 const addMutation = useMutation({
-  mutation: (userId: number) => {
+  mutation: (friendId: number) => {
     if (deviceId.value == null) throw new Error(t('device.invalidId'))
-    return addEmergencyFriends(deviceId.value, [userId])
+    return addEmergencyFriendContact(deviceId.value, friendId)
   },
 })
 
-async function addFriend(userId: number): Promise<void> {
-  if (existingIds.value.has(userId) || addMutation.isLoading.value) return
+async function addFriend(friendId: number): Promise<void> {
+  if (existingIds.value.has(friendId) || addMutation.isLoading.value) return
+  if (friendsFull.value) {
+    showToast(t('device.emergencyFriendsFull'), { type: 'error' })
+    return
+  }
   try {
-    await addMutation.mutateAsync(userId)
+    await addMutation.mutateAsync(friendId)
     await queryCache.invalidateQueries({ key: ['device-management', 'emergency-contacts'] })
     showToast(t('device.emergencyContactAdded'))
-    await router.push(`/devices/${deviceId.value}/emergency-contacts`)
+    goBack()
   } catch (error) {
     showToast(error instanceof Error ? error.message : String(error), { type: 'error' })
   }

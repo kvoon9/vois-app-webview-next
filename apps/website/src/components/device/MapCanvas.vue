@@ -13,6 +13,8 @@ import type { DeviceFence } from '~/utils/device-api'
 const props = defineProps<{
   center: AMapPoint
   marker?: AMapPoint | null
+  /** The viewer's own position (bridge GPS), drawn as a distinct blue dot. */
+  me?: AMapPoint | null
   fence?: DeviceFence | null
   track?: AMapPoint[]
 }>()
@@ -45,6 +47,19 @@ function drawOverlays(): void {
       new amap.value.Marker({
         position: pointValue(props.marker),
         title: t('device.deviceLocation'),
+      }),
+    )
+  }
+  if (props.me) {
+    nextOverlays.push(
+      new amap.value.Marker({
+        position: pointValue(props.me),
+        title: t('device.myLocation'),
+        // A small blue dot so the viewer's position reads differently from the
+        // device's default pin; AMap accepts inline HTML as marker content.
+        content:
+          '<div style="width:14px;height:14px;border-radius:50%;background:#2f7bf6;border:3px solid #fff;box-shadow:0 0 4px rgba(0,0,0,.4)"></div>',
+        offset: [-7, -7],
       }),
     )
   }

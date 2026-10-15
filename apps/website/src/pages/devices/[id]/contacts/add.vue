@@ -2,38 +2,36 @@
 import { useMutation, useQuery, useQueryCache } from '@pinia/colada'
 import { computed, shallowRef } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useRoute, useRouter } from 'vue-router'
+import { useRoute } from 'vue-router'
 import BaseModal from '~/components/BaseModal.vue'
 import Avatar from '~/components/Avatar.vue'
 import PageHeader from '~/components/PageHeader.vue'
 import QueryState from '~/components/settings/QueryState.vue'
 import { parseRouteParamId } from '~/composables/useRouteParamId'
+import { usePageBack } from '~/composables/usePageBack'
 import { useToast } from '~/composables/useToast'
-import {
-  addDeviceContacts,
-  getDeviceContacts,
-  getFriends,
-  type Contact,
-  type Friend,
-} from '~/utils/device-api'
+import { MAX_DESCRIPTION_LENGTH } from '~/utils/field-schema'
+import { getDeviceFriends, getFriends, inviteDeviceFriend, type Friend } from '~/utils/device-api'
 
 const { t } = useI18n({ useScope: 'global' })
 const route = useRoute()
-const router = useRouter()
 const queryCache = useQueryCache()
+const { goBack } = usePageBack()
 const { showToast } = useToast()
 const selectedIds = shallowRef<number[]>([])
 const confirmationOpen = shallowRef(false)
+// Draft of the application message; refilled with the default each time the dialog opens.
+const inviteMessage = shallowRef('')
 const deviceId = computed(() => parseRouteParamId(route.params.id))
 
 interface AddContactsData {
   friends: Friend[]
-  contacts: Contact[]
+  contacts: Friend[]
 }
 
 async function load(): Promise<AddContactsData> {
   if (deviceId.value == null) throw new Error(t('device.invalidId'))
-  const [friends, contacts] = await Promise.all([getFriends(), getDeviceContacts(deviceId.value)])
+  const [friends, contacts] = await Promise.all([getFriends(), getDeviceFriends(deviceId.value)])
   return { friends, contacts }
 }
 
@@ -55,10 +53,13 @@ const allSelected = computed(
     selectableFriends.value.every((friend) => selectedIds.value.includes(friend.userId)),
 )
 
-const addMutation = useMutation({
-  mutation: (contactIds: number[]) => {
+const inviteMutation = useMutation({
+  mutation: async (input: { inviteeIds: number[]; detail: string }) => {
     if (deviceId.value == null) throw new Error(t('device.invalidId'))
-    return addDeviceContacts(deviceId.value, contactIds)
+    // One application per picked friend, sent sequentially in list order.
+    for (const inviteeId of input.inviteeIds) {
+      await inviteDeviceFriend(deviceId.value, inviteeId, input.detail)
+    }
   },
 })
 
@@ -75,15 +76,22 @@ function toggleAll(): void {
     : selectableFriends.value.map((friend) => friend.userId)
 }
 
+function openConfirmation(): void {
+  inviteMessage.value = t('device.inviteDefaultMessage')
+  confirmationOpen.value = true
+}
+
 async function submit(): Promise<void> {
-  if (selectedIds.value.length === 0 || addMutation.isLoading.value) return
+  if (selectedIds.value.length === 0 || inviteMutation.isLoading.value) return
+  const detail = inviteMessage.value.trim() || t('device.inviteDefaultMessage')
   try {
-    await addMutation.mutateAsync(selectedIds.value)
+    await inviteMutation.mutateAsync({ inviteeIds: [...selectedIds.value], detail })
     confirmationOpen.value = false
     await queryCache.invalidateQueries({ key: ['device-management', 'contacts'] })
-    showToast(t('device.contactsAdded'))
-    await router.push(`/devices/${deviceId.value}/contacts`)
+    showToast(t('device.applicationSent'))
+    goBack()
   } catch (error) {
+    confirmationOpen.value = false
     showToast(error instanceof Error ? error.message : String(error), { type: 'error' })
   }
 }
@@ -159,14 +167,10 @@ async function submit(): Promise<void> {
           <button
             type="button"
             class="btn-primary mt-6"
-            :disabled="selectedCount === 0 || addMutation.isLoading.value"
-            @click="confirmationOpen = true"
+            :disabled="selectedCount === 0 || inviteMutation.isLoading.value"
+            @click="openConfirmation"
           >
-            {{
-              addMutation.isLoading.value
-                ? t('device.saving')
-                : t('device.confirmAddContacts', { count: selectedCount })
-            }}
+            {{ t('device.confirmAddContacts', { count: selectedCount }) }}
           </button>
         </template>
       </QueryState>
@@ -176,12 +180,24 @@ async function submit(): Promise<void> {
       v-if="confirmationOpen"
       :title="t('device.addContact')"
       :cancel-text="t('modal.cancel')"
-      :confirm-text="addMutation.isLoading.value ? t('device.saving') : t('modal.confirm')"
-      :dismissible="!addMutation.isLoading.value"
+      :confirm-text="inviteMutation.isLoading.value ? t('device.saving') : t('modal.confirm')"
+      :dismissible="!inviteMutation.isLoading.value"
       @cancel="confirmationOpen = false"
       @confirm="submit"
     >
       <p>{{ t('device.addContactsConfirm', { count: selectedCount }) }}</p>
+      <label class="mt-3 block text-body">
+        {{ t('device.inviteReason') }}
+        <textarea
+          v-model="inviteMessage"
+          class="input-field mt-2 min-h-24"
+          :maxlength="MAX_DESCRIPTION_LENGTH"
+          :placeholder="t('device.inviteReasonPlaceholder')"
+          :aria-label="t('device.inviteReason')"
+          :disabled="inviteMutation.isLoading.value"
+          rows="3"
+        />
+      </label>
     </BaseModal>
   </div>
 </template>

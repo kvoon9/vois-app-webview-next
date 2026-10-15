@@ -20,7 +20,7 @@ export interface TimeoutOptions {
 /** Request shape for `weilaFetch`. */
 export interface RequestOptions extends TimeoutOptions {
   method?: 'GET' | 'POST'
-  body?: Record<string, string | number | readonly (string | number)[] | undefined>
+  body?: Record<string, string | number | boolean | readonly (string | number)[] | undefined>
 }
 
 const APP_ID = import.meta.env.VITE_APP_ID

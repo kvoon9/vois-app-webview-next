@@ -7,7 +7,7 @@ import { parseRouteParamId } from '~/composables/useRouteParamId'
 import Avatar from '~/components/Avatar.vue'
 import PageHeader from '~/components/PageHeader.vue'
 import QueryState from '~/components/settings/QueryState.vue'
-import { getDeviceContacts, type Contact } from '~/utils/device-api'
+import { getDeviceFriends, type Friend } from '~/utils/device-api'
 
 const { t } = useI18n({ useScope: 'global' })
 const route = useRoute()
@@ -18,17 +18,13 @@ const { state, refetch: reload } = useQuery({
   key: () => ['device-management', 'contacts', deviceId.value],
   query: () => {
     if (deviceId.value == null) throw new Error(t('device.invalidId'))
-    return getDeviceContacts(deviceId.value)
+    return getDeviceFriends(deviceId.value)
   },
 })
 
 const contacts = computed(() => state.value.data ?? [])
 
-function displayName(contact: Contact): string {
-  return contact.remark.trim() || contact.nick
-}
-
-function openContact(contact: Contact): void {
+function openContact(contact: Friend): void {
   if (deviceId.value == null) return
   router.push(`/devices/${deviceId.value}/contacts/${contact.userId}`)
 }
@@ -74,7 +70,7 @@ function openContact(contact: Contact): void {
                 show-status
               />
               <span class="ml-3 min-w-0 flex-1">
-                <span class="block truncate text-body font-medium">{{ displayName(contact) }}</span>
+                <span class="block truncate text-body font-medium">{{ contact.nick }}</span>
                 <span class="mt-0.5 block truncate text-small text-text-secondary">
                   {{ contact.userNum }}
                 </span>

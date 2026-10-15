@@ -2,18 +2,19 @@
 import { useMutation, useQueryCache } from '@pinia/colada'
 import { computed, shallowRef } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useRoute, useRouter } from 'vue-router'
+import { useRoute } from 'vue-router'
 import { safeParse } from 'valibot'
 import PageHeader from '~/components/PageHeader.vue'
 import { parseRouteParamId } from '~/composables/useRouteParamId'
+import { usePageBack } from '~/composables/usePageBack'
 import { useToast } from '~/composables/useToast'
-import { addEmergencyPhone } from '~/utils/device-api'
+import { addEmergencyPhoneContact } from '~/utils/device-api'
 import { MAX_NAME_LENGTH, nameSchema } from '~/utils/field-schema'
 
 const { t } = useI18n({ useScope: 'global' })
 const route = useRoute()
-const router = useRouter()
 const queryCache = useQueryCache()
+const { goBack } = usePageBack()
 const { showToast } = useToast()
 const deviceId = computed(() => parseRouteParamId(route.params.id))
 const phone = shallowRef('')
@@ -30,7 +31,7 @@ const nameRules = computed(() =>
 const addMutation = useMutation({
   mutation: (input: { name: string; phone: string }) => {
     if (deviceId.value == null) throw new Error(t('device.invalidId'))
-    return addEmergencyPhone(deviceId.value, input.name, input.phone)
+    return addEmergencyPhoneContact(deviceId.value, input.name, input.phone)
   },
 })
 
@@ -50,7 +51,7 @@ async function save(): Promise<void> {
     await addMutation.mutateAsync({ name: trimmedName.output, phone: trimmedPhone })
     await queryCache.invalidateQueries({ key: ['device-management', 'emergency-contacts'] })
     showToast(t('device.emergencyContactAdded'))
-    await router.push(`/devices/${deviceId.value}/emergency-contacts`)
+    goBack()
   } catch (error) {
     showToast(error instanceof Error ? error.message : String(error), { type: 'error' })
   }

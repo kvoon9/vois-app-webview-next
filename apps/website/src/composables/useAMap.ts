@@ -35,6 +35,10 @@ interface AMapConstructorOptions {
 interface AMapMarkerOptions {
   position: [number, number]
   title?: string
+  /** Inline HTML marker content; overrides the default pin when present. */
+  content?: string
+  /** Pixel offset for custom content, [x, y] from top-left. */
+  offset?: [number, number]
 }
 
 interface AMapCircleOptions {

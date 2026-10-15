@@ -3,29 +3,97 @@ import { useQuery } from '@pinia/colada'
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { RouterLink, useRoute } from 'vue-router'
-import { parseRouteParamId } from '~/composables/useRouteParamId'
 import MapCanvas from '~/components/device/MapCanvas.vue'
 import PageHeader from '~/components/PageHeader.vue'
 import QueryState from '~/components/settings/QueryState.vue'
-import { getDeviceLocation } from '~/utils/device-api'
+import { parseRouteParamId } from '~/composables/useRouteParamId'
+import { createPageLocationSource, useRealtimeLocation } from '~/composables/useRealtimeLocation'
+import {
+  getDeviceFence,
+  getDeviceTrackMode,
+  getRecentTrackPoint,
+  type DeviceFence,
+  type TrackFrequency,
+  type TrackPoint,
+} from '~/utils/device-api'
 
-const route = useRoute()
 const { t } = useI18n({ useScope: 'global' })
+const route = useRoute()
 
 const deviceId = computed(() => parseRouteParamId(route.params.id))
+
+/** Fence + report mode + the day's last track point, all real endpoints. */
 const { state, refetch: reload } = useQuery({
   key: () => ['device-management', 'device', 'location', deviceId.value],
   query: () => {
     if (deviceId.value == null) throw new Error(t('device.invalidDevice'))
-    return getDeviceLocation(deviceId.value)
+    return Promise.all([
+      getDeviceFence(deviceId.value),
+      getDeviceTrackMode(deviceId.value),
+      getRecentTrackPoint(deviceId.value),
+    ])
   },
 })
 
-const location = computed(() => state.value.data ?? null)
-const center = computed(() => ({
-  lng: location.value?.lng ?? 114.0668,
-  lat: location.value?.lat ?? 22.6305,
-}))
+const fence = computed<DeviceFence | null>(() => state.value.data?.[0] ?? null)
+const reportFrequency = computed<TrackFrequency>(() => state.value.data?.[1] ?? 'off')
+const recentPoint = computed<TrackPoint | null>(() => state.value.data?.[2] ?? null)
+
+/**
+ * The phone's own live position through the bridge (`start-location` loop).
+ * In the DevServer this falls back to a walking debug dot so the flow is
+ * drivable without the app; the device's position never comes from here.
+ */
+const realtime = useRealtimeLocation({
+  source: createPageLocationSource({ lng: 114.0668, lat: 22.6305 }),
+  immediate: true,
+})
+
+const myMarker = computed(() => {
+  const fix = realtime.point.value
+  return fix ? { lng: fix.longitude, lat: fix.latitude } : null
+})
+
+/** The device's dot: the day's last track point until a fresher source exists. */
+const deviceMarker = computed(() =>
+  recentPoint.value ? { lng: recentPoint.value.lng, lat: recentPoint.value.lat } : null,
+)
+
+const center = computed(
+  () =>
+    deviceMarker.value ??
+    myMarker.value ?? {
+      lng: fence.value?.lng ?? 114.0668,
+      lat: fence.value?.lat ?? 22.6305,
+    },
+)
+
+const deviceTime = computed(() => recentPoint.value?.time.slice(11) ?? '')
+
+const myTime = computed(() => {
+  const fix = realtime.point.value
+  if (!fix) return ''
+  const date = new Date(fix.time)
+  const hh = `${date.getHours()}`.padStart(2, '0')
+  const mm = `${date.getMinutes()}`.padStart(2, '0')
+  const ss = `${date.getSeconds()}`.padStart(2, '0')
+  return `${hh}:${mm}:${ss}`
+})
+
+const myStatus = computed(() => {
+  switch (realtime.status.value) {
+    case 'tracking':
+      return t('device.myLocationTracking')
+    case 'starting':
+      return t('device.myLocationWaiting')
+    case 'denied':
+      return t('device.realtimeDenied')
+    case 'unsupported':
+      return ''
+    default:
+      return t('device.myLocationIdle')
+  }
+})
 </script>
 
 <template>
@@ -33,28 +101,35 @@ const center = computed(() => ({
     <PageHeader :title="t('device.locationAndFence')" />
     <main class="relative h-[calc(100svh-3.5rem)]">
       <QueryState :status="state.status" :error="state.error" @retry="reload()">
-        <template v-if="location">
-          <MapCanvas
-            :center="center"
-            :marker="{ lng: location.lng, lat: location.lat }"
-            :fence="location.fence"
-          />
-          <RouterLink
-            v-if="location.reportFrequency === 'off'"
-            :to="`/devices/${deviceId}/track-setting`"
-            class="absolute left-4 right-4 top-4 z-2 rounded-large bg-surface-elevated px-5 py-4 shadow-lg"
-          >
-            <span class="flex items-start">
-              <span
-                class="mr-3 h-7 w-7 flex-none flex items-center justify-center rounded-full border-2 border-primary text-header text-primary"
-                aria-hidden="true"
-              >
-                i
-              </span>
-              <span class="text-body font-medium">{{ t('device.fenceDisabledTip') }}</span>
+        <MapCanvas :center="center" :marker="deviceMarker" :me="myMarker" :fence="fence" />
+
+        <div
+          class="absolute left-4 right-4 top-4 z-2 rounded-large bg-surface-elevated px-5 py-4 shadow-lg"
+        >
+          <p class="flex items-center text-2nd-body">
+            <span>{{ t('device.deviceLocation') }}</span>
+            <span v-if="deviceTime" class="ml-auto pl-3 text-text-secondary">
+              {{ deviceTime }}
             </span>
-          </RouterLink>
-        </template>
+          </p>
+          <p v-if="myStatus" class="mt-1 flex items-center text-2nd-body text-text-secondary">
+            <span
+              v-if="realtime.status.value === 'tracking'"
+              class="mr-2 inline-block h-2 w-2 flex-none rounded-full bg-primary"
+              aria-hidden="true"
+            />
+            <span>{{ myStatus }}</span>
+            <span v-if="myTime" class="ml-auto pl-3">{{ myTime }}</span>
+          </p>
+        </div>
+
+        <RouterLink
+          v-if="reportFrequency === 'off' && deviceId != null"
+          :to="`/devices/${deviceId}/track-setting`"
+          class="absolute bottom-4 left-4 right-4 z-2 rounded-large bg-surface-elevated px-5 py-4 shadow-lg"
+        >
+          <span>{{ t('device.fenceDisabledTip') }}</span>
+        </RouterLink>
       </QueryState>
     </main>
   </div>

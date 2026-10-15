@@ -43,7 +43,7 @@ The fixed account is for dev and debug preview only. Preview runs the production
 
 ### Verification skill
 
-`.pi/skills/verify-vois-webview` owns every procedure for driving and proving this app: launching the DevServer (and the mock backend), `scripts/doctor.mjs`, driving with `ego-browser`, reading the debug capture, and the proof standards. Its `features/` directory is the maintained map of user-facing behavior — read it before testing a screen. `/skill:maintain-verification-skill` re-checks that map against source and a live session; `/skill:create-verification-skill` generates one for a project that has none.
+`.pi/skills/verify-vois-webview` owns every procedure for driving and proving this app: launching the DevServer, `scripts/doctor.mjs`, driving with `ego-browser`, reading the debug capture, and the proof standards. Its `features/` directory is the maintained map of user-facing behavior — read it before testing a screen. `/skill:maintain-verification-skill` re-checks that map against source and a live session; `/skill:create-verification-skill` generates one for a project that has none.
 
 The ego-browser skill is installed at `.agents/skills/ego-browser` from `citrolabs/ego-lite`, and its CLI comes from the ego lite app.
 

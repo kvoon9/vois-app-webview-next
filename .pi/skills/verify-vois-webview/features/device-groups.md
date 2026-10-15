@@ -25,7 +25,7 @@ A device's group page lists the groups it created and joined, and leads to a gro
 Preconditions:
 
 - The device-detail preconditions, plus a device id that owns or joined at least one group.
-- **Mode R.** These pages answer from `subuser/*`, which the mock does not implement.
+- These pages answer from the real `subuser/*` endpoints.
 
 - **Open.** From device detail choose 群组管理, or run `await page.goto("http://localhost:3021/#/devices/<id>/groups")`. The capture gains `POST /v2/subuser/group-get-all` with `errcode: 0`, and the header reads 群组管理.
 - **Read the sections.** `main` shows 我创建的 and 我加入的; each group row is a button whose text contains that group's `name` and `num`.

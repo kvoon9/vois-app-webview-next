@@ -27,9 +27,8 @@ const voisConfigDir = join(homedir(), '.vois')
 
 export default defineConfig(async ({ isPreview, command, mode }) => {
   const env = loadEnv(mode, voisConfigDir, 'VITE_')
+  // All /v2 traffic goes to the real backend; the local mock server is gone.
   const apiTarget = env.VITE_API_TARGET || 'https://api.voischat.cn'
-  // Group management went real first; everything else still targets the mock.
-  const subuserApiTarget = env.VITE_SUBUSER_API_TARGET || 'https://api.voischat.cn'
 
   // Fail loudly instead of shipping a bundle where appid/sign silently become
   // "undefined" (errcode 31). CI supplies both as secrets.
@@ -52,10 +51,6 @@ export default defineConfig(async ({ isPreview, command, mode }) => {
       port: 3021,
       forwardConsole: true,
       proxy: {
-        '/v2/subuser': {
-          target: subuserApiTarget,
-          changeOrigin: true,
-        },
         '/v2': {
           target: apiTarget,
           changeOrigin: true,
@@ -66,10 +61,6 @@ export default defineConfig(async ({ isPreview, command, mode }) => {
       host: true,
       port: 5173,
       proxy: {
-        '/v2/subuser': {
-          target: subuserApiTarget,
-          changeOrigin: true,
-        },
         '/v2': {
           target: apiTarget,
           changeOrigin: true,

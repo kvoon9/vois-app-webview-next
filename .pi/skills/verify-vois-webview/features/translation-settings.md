@@ -23,7 +23,7 @@ Translation settings lists the friends, groups, and devices an account can trans
 Preconditions:
 
 - `node .pi/skills/verify-vois-webview/scripts/doctor.mjs` exits 0.
-- **Mode R**: the mock answers `接口不存在` for every `account/translate/*` call.
+- Every `account/translate/*` call answers from the real API.
 - For the friends journey, the captured response must hold at least one friend.
 
 - **Open the index.** Run `await page.goto("http://localhost:3021/#/settings")`. Three rows appear: 好友翻译设置, 群组翻译设置, 设备翻译设置.

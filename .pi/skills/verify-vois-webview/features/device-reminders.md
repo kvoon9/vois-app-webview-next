@@ -19,7 +19,7 @@ A device's reminder page lists the alarms set on it, tells the user when there a
 
 Preconditions:
 
-- **Mode R** (this feature answers from the real API: `ext/rmdr/get-all-reminder`). In mode M the mock answers 接口不存在.
+- This feature answers from the real API: `ext/rmdr/get-all-reminder`.
 - The real device id.
 
 - **Open.** From device detail choose 提醒, or run `await page.goto("http://localhost:3021/#/devices/1848581/reminders")`. The header reads 提醒 and the capture gains `POST /v2/ext/rmdr/get-all-reminder` with `errcode: 0`.

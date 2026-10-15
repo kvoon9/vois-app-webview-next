@@ -12,30 +12,9 @@ Twelve features are mapped, covering every route under `src/pages` except `playg
 - Sign-in is the debug account, minted by `GET /__vois-bridge/access-token`. The shared ego-browser profile holds the session; never clear browser storage, create a profile, or change the account to make a journey pass.
 - The same account is driven by the user. Treat every `/v2` response as production data.
 
-### The app is mid-migration: two backend modes
+### One backend: the real API
 
-Half the routes still speak the old mock protocol and 404 against the real API. A run picks one mode, because switching needs a server restart, which truncates the capture.
-
-**Mode R — real backend (default).** `/v2` and `/v2/subuser` both go to `https://api.voischat.cn`.
-
-| Works                                                                     | Dead (HTTP 404 → screen shows 无法连接服务器)                   |
-| ------------------------------------------------------------------------- | --------------------------------------------------------------- |
-| device list, device detail, device groups, group members, group add-entry | `device/contacts`, `device/emergency-contacts`, `friend/list`   |
-| reminders                                                                 | `device/location`, `device/track`                               |
-| translation settings, accounts, help, report, QR activation               | `device/recharge-list`, `device/recharge-records`, `group/info` |
-
-**Mode M — mock backend.** Start the mock server, then restart the DevServer against it:
-
-```sh
-cd apps/mock-server && pnpm dev                              # nitro, port 3030, fixture data
-cd apps/website && VITE_API_TARGET=http://localhost:3030 vp dev --host --port 3021
-```
-
-Every endpoint that 404s in mode R is implemented there, with fixtures: devices `101` 工作手机 / `102` 备用手机, friends `小满` / `同事` / `阿南` …, recharge orders `8001` / `8002`. `VITE_SUBUSER_API_TARGET` is untouched, so `subuser/*` still answers from the real API: in mode M the device list shows the real fleet while the contact pages need the mock's device ids — enter those pages by URL.
-
-Unknown paths on the mock answer **HTTP 200** with `{"errcode":1,"errmsg":"接口不存在"}`, so mode M breaks the migrated surfaces (`ext/rmdr/*`, `account/translate/*`, `user/get-my-user-info`) with a screen that prints `接口不存在`.
-
-Record the mode with every artifact: `.../verify/<feature-id>/<mode-R|mode-M>/`.
+Every `/v2` route goes to the real backend (`https://api.voischat.cn`); the local mock server has been removed. Screens still mid-migration may call endpoints the backend does not implement yet — they fail with the UI's network-error state, which is itself the expected behavior to capture.
 
 ## Driving conventions
 
@@ -49,7 +28,7 @@ Record the mode with every artifact: `.../verify/<feature-id>/<mode-R|mode-M>/`.
 - Choose selectors by role and accessible name (`loc=role:button[name*="…"]`); fall back to `loc=css:…` and snapshot refs. Text is Simplified Chinese as rendered.
 - Wait for the `/v2` call that feeds a screen, not for a fixed sleep. `page.evaluate()` staying quiet plus the capture growing is the signal.
 - Capture the action, the resulting state, and the side effect together. A DOM change alone is not proof.
-- Read-only by default. Anything that writes needs an isolated target (mode M, where the mock covers it) or a safe observation (see the skill's Evidence section).
+- Read-only by default. Anything that writes needs a safe observation or a reversible target (see the skill's Evidence section); the mock backend no longer exists.
 - Never print or copy auth parameters (`token`, `sign`, `appid`, `access-token`) or unfiltered response bodies.
 - The shared profile injects a translation extension toolbar into every snapshot (扇贝翻译, 选区翻译, 高亮单词, 语境测词, 禅模式, 自定义工具栏). Those nodes are not app UI; ignore them.
 

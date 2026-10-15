@@ -18,7 +18,7 @@ The home screen lists the accounts saved in this browser, marks the current one,
 
 Preconditions:
 
-- **Mode R**: the account list renders from whatever the browser stored plus `POST /v2/user/get-my-user-info`; the mock answers `接口不存在` for that endpoint.
+- The account list renders from whatever the browser stored plus `POST /v2/user/get-my-user-info` (real endpoint).
 - The shared profile is already signed in as the debug account; do not sign out or switch accounts to make a journey pass.
 
 - **Home account list.** Run `await page.goto("http://localhost:3021/#/")`. The header reads 导航, the section heading 已登录帐号 lists each saved account with `nick`, `user_num` and the App 账号 tag, and the one in use carries 当前帐号. When the profile is already cached this page makes no call — that is expected, not a missing fetch.

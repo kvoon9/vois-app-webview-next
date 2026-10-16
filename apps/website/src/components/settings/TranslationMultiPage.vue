@@ -11,6 +11,7 @@ import QueryState from '~/components/settings/QueryState.vue'
 import ToggleSwitch from '~/components/ToggleSwitch.vue'
 import { parseAccountId, useAccountId } from '~/composables/useAccountId'
 import { usePageBack } from '~/composables/usePageBack'
+import { dismissSoftKeyboard } from '~/utils/soft-keyboard'
 import {
   initialLanguagePair,
   pickLanguagePair,
@@ -310,6 +311,7 @@ async function done(): Promise<void> {
               :aria-label="t('translation.searchLanguages')"
               :placeholder="t('translation.searchLanguages')"
               :disabled="!enabled"
+              @keydown.enter="dismissSoftKeyboard"
             />
 
             <p class="mt-4 text-2nd-body text-text-secondary">

@@ -10,7 +10,7 @@ Translation settings lists the friends, groups, and devices an account can trans
 - `groups-list` lists translation-enabled groups, or 暂无群组。
 - `group-members-settings` lists a group's members with their language pairs.
 - `devices-list` lists smart devices with their model and IMEI.
-- `multi-translation` edits a target's source/target languages in the multi-language mode.
+- `multi-translation` edits a target's source/target languages in the multi-language mode; its 搜索语言 field filters the 全部语言 list as the user types, and the keyboard's 搜索 key closes the keyboard so the result is visible.
 
 ## How to get to it (user POV)
 
@@ -35,6 +35,7 @@ Preconditions:
 - **Devices.** Choose 设备翻译设置 (`POST /v2/account/get-smart-devices`); each row shows the device's model and IMEI.
 - **Multi-translation, unsupported target.** Run `await page.goto("http://localhost:3021/#/settings/friends/multi-translation")` with no query. `main` reads 未找到该会话。 with a 重试 action. With `?friend-id=<id>` but no `friend-skill`, it reads 暂不支持该翻译模式 — a missing param is not treated as `0`.
 - **Multi-translation, supported target.** Use a friend whose `user_id` came from the capture: `await page.goto("http://localhost:3021/#/settings/friends/multi-translation?friend-id=<user_id>&friend-type=2&friend-skill=3")`. The header reads 互译设置 (the AI-translator title; without `friend-type=2` it reads 翻译设置), the target's `nick` and 微喇号 render, and 源语言 / 目标语言 show the stored pair above the 全部语言 list. `friend-skill=0` opens the translation-off editor instead.
+- **Language search.** Fill the 搜索语言 field (`page.fill('loc=css:input[name="translation-language-search"]', "日语")`): the list narrows to the matching rows while the field keeps focus. Press Enter (`page.press(<the same selector>, "Enter")`): `document.activeElement` becomes `body` and the narrowed list stays, which is what retracts the phone keyboard over the result.
 - **Proof.** Write `apps/website/.tmp/verify/translation-settings/mode-R/friends.aria.txt`, `.png`, `multi.aria.txt`, and `agreement.json` with `{ friends: N, apiFriends: N, userNum: "<num>", pair: "<src> → <tgt>" }`. Record which of groups/devices the run covered.
 
 ## Gotchas
@@ -46,3 +47,5 @@ Preconditions:
 - `friend-skill=3` is the multilingual skill; skills 1 and 2 (the Chinese-English editors) have their own page, so passing them here is a caller bug, not a page bug.
 - Language names come from i18n and follow the header language switcher; the default is 简体中文.
 - The 全部语言 list is long and rendered from `get-countries-lang`; assert the current pair, not the list length.
+- A desktop run cannot show the phone keyboard, so the search field's proof is focus: after Enter, `document.activeElement` is `body` rather than the field. The group-members modal's 搜索语言 field has the same behavior, but it needs an account that owns a group, which the debug account does not have.
+- The device-page filters (添加群组 filter, 群成员 search) narrow their lists live but still keep the keyboard up on Enter.

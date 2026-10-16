@@ -14,6 +14,7 @@ import {
 import { useDocumentVisibility } from '@vueuse/core'
 import { computed, shallowRef, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { dismissSoftKeyboard } from '~/utils/soft-keyboard'
 import {
   createTranslationLanguageOptions,
   filterTranslationLanguageOptions,
@@ -110,6 +111,7 @@ function selectLanguage(code: string): void {
             class="h-11 w-full rounded-standard bg-surface-input px-4 text-2nd-body text-text-primary outline-none opacity-75 transition-opacity focus-visible:opacity-100"
             :aria-label="t('translation.searchLanguages')"
             :placeholder="t('translation.searchLanguages')"
+            @keydown.enter="dismissSoftKeyboard"
           />
         </div>
 

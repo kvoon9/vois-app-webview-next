@@ -37,6 +37,7 @@ function fix(time: number): BridgeLocation {
 /** A transport double that answers every start and get until a test overrides it. */
 function fakeSource() {
   return {
+    permissions: vi.fn(async (): Promise<{ granted: boolean } | null> => ({ granted: true })),
     start: vi.fn(async (_interval: number, _time: number): Promise<StartLocationResponse> =>
       ok({ interval: _interval, time: _time }),
     ),
@@ -81,6 +82,7 @@ describe('useRealtimeLocation', () => {
     await flush()
 
     expect(api.status.value).toBe('tracking')
+    expect(api.permission.value).toBe('granted')
     expect(source.start).toHaveBeenCalledOnce()
     expect(source.start).toHaveBeenCalledWith(5000, 30000)
     expect(source.get).toHaveBeenCalledOnce()
@@ -144,7 +146,29 @@ describe('useRealtimeLocation', () => {
     scope.stop()
   })
 
-  it('locks out every start after native denies the permission', async () => {
+  it('sends start-location unconditionally while the probe says off', async () => {
+    const source = fakeSource()
+    source.permissions.mockResolvedValue({ granted: false })
+    let resolveStart: (v: StartLocationResponse) => void = () => {}
+    source.start.mockImplementationOnce(() => new Promise((r) => (resolveStart = r)))
+    const { scope, api } = setup({ source })
+
+    api.start()
+    await flush()
+
+    // The probe result is UI-only; the start call goes out regardless, and
+    // the pending native answer keeps the loop in its starting state.
+    expect(source.start).toHaveBeenCalledOnce()
+    expect(api.status.value).toBe('starting')
+    expect(api.permission.value).toBe('denied')
+
+    resolveStart(ok({ interval: 5000, time: 30000 }))
+    await flush()
+    expect(api.status.value).toBe('tracking')
+    scope.stop()
+  })
+
+  it('stops after a native 1001 and revives on an explicit retry', async () => {
     const source = fakeSource()
     source.start.mockResolvedValue({
       errcode: LOCATION_ERR_PERMISSION_DENIED,
@@ -159,14 +183,77 @@ describe('useRealtimeLocation', () => {
     expect(source.start).toHaveBeenCalledOnce()
     expect(source.get).not.toHaveBeenCalled()
 
-    api.start()
-    api.stop()
+    source.start.mockResolvedValue(ok({ interval: 5000, time: 30000 }))
     api.start()
     await flush()
 
-    expect(source.start).toHaveBeenCalledOnce()
-    expect(source.get).not.toHaveBeenCalled()
+    expect(api.status.value).toBe('tracking')
+    expect(source.start).toHaveBeenCalledTimes(2)
+    expect(source.get).toHaveBeenCalledOnce()
+    scope.stop()
+  })
+
+  it('skips the refocus round after a denial until the user retries', async () => {
+    const source = fakeSource()
+    source.start.mockResolvedValue({
+      errcode: LOCATION_ERR_PERMISSION_DENIED,
+      errmsg: 'denied',
+    })
+    const { scope, api } = setup({ source })
+
+    api.start()
+    await flush()
     expect(api.status.value).toBe('denied')
+
+    doc.visibilityState = 'hidden'
+    doc.dispatchEvent(new Event('visibilitychange'))
+    await flush()
+    doc.visibilityState = 'visible'
+    doc.dispatchEvent(new Event('visibilitychange'))
+    await flush()
+
+    // The contract forbids more calls in this run; refocus must not re-ask.
+    expect(api.status.value).toBe('denied')
+    expect(source.start).toHaveBeenCalledOnce()
+
+    source.start.mockResolvedValue(ok({ interval: 5000, time: 30000 }))
+    api.start()
+    await flush()
+    expect(api.status.value).toBe('tracking')
+    scope.stop()
+  })
+
+  it('treats an unavailable permission answer as unknown and still tracks', async () => {
+    const source = fakeSource()
+    source.permissions.mockResolvedValue(null)
+    const { scope, api } = setup({ source })
+
+    api.start()
+    await flush()
+
+    expect(api.status.value).toBe('tracking')
+    expect(api.permission.value).toBe('unknown')
+    expect(source.start).toHaveBeenCalledOnce()
+    scope.stop()
+  })
+
+  it('revives from the error state: a retry start reaches the bridge again', async () => {
+    const source = fakeSource()
+    source.start.mockResolvedValue({ errcode: LOCATION_ERR_INVALID, errmsg: 'refused' })
+    const { scope, api } = setup({ source })
+
+    api.start()
+    // 1 call + 3 retries at 5s intervals, then the loop gives up.
+    await vi.advanceTimersByTimeAsync(20_000)
+    expect(api.status.value).toBe('error')
+    expect(source.start).toHaveBeenCalledTimes(4)
+
+    source.start.mockResolvedValue(ok({ interval: 5000, time: 30000 }))
+    api.start()
+    await flush()
+
+    expect(api.status.value).toBe('tracking')
+    expect(source.start).toHaveBeenCalledTimes(5)
     scope.stop()
   })
 
@@ -233,6 +320,7 @@ describe('debugLocationSource', () => {
   it('refuses get before start, circles the center after, and expires', async () => {
     const source = debugLocationSource({ lng: 121.4, lat: 31.2 })
 
+    await expect(source.permissions()).resolves.toEqual({ granted: true })
     await expect(source.get()).resolves.toMatchObject({ errcode: LOCATION_ERR_INVALID })
 
     await expect(source.start(5000, 30000)).resolves.toMatchObject({ errcode: 0 })

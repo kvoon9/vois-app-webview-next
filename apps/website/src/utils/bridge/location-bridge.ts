@@ -9,6 +9,10 @@ import type { BridgeFn } from '@vois/webview-bridge'
  * then `get-location` is polled and answers the last known fix each time.
  * There is no stop message; the session simply expires, so keep `time` short
  * and renew it while the page still wants fixes.
+ *
+ * `get-permissions` (`WebPermissionBridge`, App build 10191150+) is the
+ * permission ground truth the loop checks before it ever calls
+ * `start-location`: a pure query that never raises a dialog.
  */
 
 /** Native clamps: interval ≥ 5s, time ∈ [15s, 60s] (`WebLocationBridge`). */
@@ -20,6 +24,22 @@ export const LOCATION_MAX_TIME_MS = 60_000
 export const LOCATION_ERR_INVALID = -1
 /** The user denied location permission; no further start/get call may be made. */
 export const LOCATION_ERR_PERMISSION_DENIED = 1001
+
+/**
+ * Permission groups `get-permissions` understands. Native maps each name onto
+ * its `PermissionUtil.PermissionGroup`; an unknown name is silently skipped,
+ * so the answer only carries names this build knows.
+ */
+export type BridgePermissionName =
+  | 'location'
+  | 'background-location'
+  | 'audio-recording'
+  | 'camera'
+  | 'nearby-devices'
+  | 'notification'
+
+/** The one group the realtime-location flow cares about. */
+export const LOCATION_PERMISSION = 'location'
 
 /** `start-location` response body. */
 export interface StartLocationData {
@@ -66,9 +86,21 @@ export interface GetLocationResponse {
   data?: GetLocationData
 }
 
+/**
+ * `get-permissions` response body: one boolean per requested group, keyed by
+ * the group name. Always `errcode: 0` on builds that have the handler.
+ */
+export interface GetPermissionsResponse {
+  errcode: number
+  errmsg: string
+  data?: Partial<Record<BridgePermissionName, boolean>>
+}
+
 declare module '@vois/webview-bridge' {
   interface BridgeProtocolMap {
     'start-location': BridgeFn<{ interval: number; time: number }, StartLocationResponse>
     'get-location': BridgeFn<Record<string, never>, GetLocationResponse>
+    /** `params` omitted or empty answers every group native knows. */
+    'get-permissions': BridgeFn<{ params?: BridgePermissionName[] }, GetPermissionsResponse>
   }
 }

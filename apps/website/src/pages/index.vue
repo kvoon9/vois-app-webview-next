@@ -7,6 +7,9 @@ import SavedLoginAccounts from '~/components/login/SavedLoginAccounts.vue'
 
 const { t } = useI18n({ useScope: 'global' })
 const loginEnabled = import.meta.env.DEV || isWebviewDebug()
+// Test tools ride the same gate: they talk to bridge protocols that only make
+// sense with the real App or the debug pipeline attached.
+const testToolsEnabled = loginEnabled
 </script>
 
 <template>
@@ -31,6 +34,10 @@ const loginEnabled = import.meta.env.DEV || isWebviewDebug()
         </RouterLink>
         <RouterLink to="/settings" class="min-h-12 w-full nav-item">
           <span>{{ t('settings.title') }}</span>
+          <span class="row-chevron" aria-hidden="true" />
+        </RouterLink>
+        <RouterLink v-if="testToolsEnabled" to="/permission-test" class="min-h-12 w-full nav-item">
+          <span>{{ t('home.permissionTest') }}</span>
           <span class="row-chevron" aria-hidden="true" />
         </RouterLink>
       </nav>

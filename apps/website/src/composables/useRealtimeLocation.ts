@@ -8,10 +8,12 @@ import { isWebviewDebug } from '~/composables/useWebviewDebug'
 import {
   LOCATION_ERR_INVALID,
   LOCATION_ERR_PERMISSION_DENIED,
+  LOCATION_PERMISSION,
   LOCATION_MAX_TIME_MS,
   LOCATION_MIN_INTERVAL_MS,
   type BridgeLocation,
   type GetLocationResponse,
+  type GetPermissionsResponse,
   type StartLocationResponse,
 } from '~/utils/bridge/location-bridge'
 
@@ -20,18 +22,33 @@ export type RealtimeLocationStatus =
   | 'idle'
   | 'starting'
   | 'tracking'
-  /** Native denied the permission; only a settings change can revive it. */
+  /**
+   * Native answered 1001: the user denied. The contract forbids further
+   * start/get in this run; a page re-enter or an explicit tap retry opens
+   * the next round.
+   */
   | 'denied'
   /** No native bridge and no debug simulation available. */
   | 'unsupported'
   | 'error'
 
+/** Result of the UI-only permission probe that rides along every start round. */
+export type RealtimePermission = 'unknown' | 'granted' | 'denied'
+
 /** Transport the loop talks to: the real bridge, a debug simulation, or a test double. */
 export interface RealtimeLocationSource {
+  /**
+   * Permission probe for UI labeling only. `null` when the bridge cannot
+   * answer (older build without `get-permissions`, or the query failed);
+   * never used to decide whether a call may go out.
+   */
+  permissions(): Promise<{ granted: boolean } | null>
   start(intervalMs: number, timeMs: number): Promise<StartLocationResponse>
   get(): Promise<GetLocationResponse>
 }
 
+/** How long a `get-permissions` probe may take before it counts as unknown. */
+const PERMISSION_TIMEOUT_MS = 5_000
 /** How long a `get-location` call may take before the poll counts as missed. */
 const GET_TIMEOUT_MS = 5_000
 /** A `start-location` may wait on the permission dialog, so it gets a long leash. */
@@ -39,9 +56,10 @@ const START_TIMEOUT_MS = 90_000
 /** Retries for a plain `-1` start answer (bad params, unexpected state). */
 const MAX_START_RETRIES = 3
 /**
- * Retries while native reports a permission dialog still pending. The dialog
- * can legally sit unanswered for a long time, so this leash is loose; when it
- * runs out the loop stops instead of hammering a stuck bridge forever.
+ * Retries while native reports the previous start-location still unanswered
+ * (its permission dialog is up). The dialog can legally sit unanswered for a
+ * long time, so this leash is loose; when it runs out the loop stops instead
+ * of hammering a stuck bridge forever.
  */
 const MAX_PERMISSION_WAIT_RETRIES = 12
 
@@ -55,6 +73,25 @@ function withTimeout<T>(promise: Promise<T>, ms: number, fallback: T): Promise<T
 /** The real transport: uniBridgeCall over the injected native bridge. */
 function bridgeSource(): RealtimeLocationSource {
   return {
+    async permissions() {
+      try {
+        const bridge = await whenWebviewBridge()
+        if (!bridge) return null
+        // SAFETY: the protocol map declares this response shape for 'get-permissions'.
+        const response = (await bridge.request('get-permissions', {
+          params: [LOCATION_PERMISSION],
+        })) as GetPermissionsResponse
+        if (response.errcode !== 0) return null
+        // A build without the handler (and the DevServer debug stand-in)
+        // answers an empty success; a missing key means unknown, not denied.
+        const granted = response.data?.[LOCATION_PERMISSION]
+        if (granted === undefined) return null
+        return { granted }
+      } catch {
+        // Old builds have no handler and frameworks answer oddly; treat as unknown.
+        return null
+      }
+    },
     async start(intervalMs, timeMs) {
       const bridge = await whenWebviewBridge()
       if (!bridge) throw new Error('bridge unavailable')
@@ -82,6 +119,9 @@ function bridgeSource(): RealtimeLocationSource {
 export function debugLocationSource(center: { lng: number; lat: number }): RealtimeLocationSource {
   const startedAt = { current: 0 }
   return {
+    async permissions() {
+      return { granted: true }
+    },
     async start() {
       startedAt.current = Date.now()
       return { errcode: 0, errmsg: 'debug', data: { interval: 3_000, time: 30_000 } }
@@ -133,16 +173,25 @@ export interface UseRealtimeLocation {
   point: ShallowRef<BridgeLocation | null>
   /** Coordinate system of `point`; AMap needs gcj02. */
   coordType: Ref<'gcj02' | 'wgs84'>
+  /** UI-only permission probe result; never gates a call. */
+  permission: Ref<RealtimePermission>
   start: () => void
   stop: () => void
 }
 
 /**
- * Polls the device's realtime location over the bridge. The H5 owns the loop:
- * `start-location` opens a bounded session, `get-location` is polled at the
- * interval, and the session is renewed just before it expires so fixes never
- * stop while the page is visible. Hidden tabs suspend polling; the page's
- * scope disposal stops it for good.
+ * Polls the device's realtime location over the bridge. Every mount and every
+ * refocus runs one fresh start round: `start-location` goes out
+ * unconditionally and native owns the permission dialog chain, so a
+ * no-permission user gets the native ask instead of an H5 gate. `0` opens the
+ * session and `get-location` is polled at the interval, renewed just before
+ * the session expires. A `get` `-1` means the session is gone and reopens it;
+ * a `start` `-1` means bad params or a still-unanswered previous call and
+ * retries with backoff, bounded. `1001` is an explicit denial and stops the
+ * run: no further start or get until the page is re-entered or the user taps
+ * retry. A start that never answers (its dialog abandoned via the settings
+ * jump) hits the 90s leash and lands in the retryable error state. The
+ * `get-permissions` probe rides along every round purely to label the UI.
  */
 export function useRealtimeLocation(options: UseRealtimeLocationOptions = {}): UseRealtimeLocation {
   const intervalMs = Math.max(
@@ -155,6 +204,7 @@ export function useRealtimeLocation(options: UseRealtimeLocationOptions = {}): U
   const status = ref<RealtimeLocationStatus>('idle')
   const point = shallowRef<BridgeLocation | null>(null)
   const coordType = ref<'gcj02' | 'wgs84'>('gcj02')
+  const permission = ref<RealtimePermission>('unknown')
 
   let running = false
   let session = { interval: intervalMs, time: timeMs }
@@ -196,6 +246,11 @@ export function useRealtimeLocation(options: UseRealtimeLocationOptions = {}): U
     if (!running) return
     if (response === null) {
       // A hung get counts as a missed poll, not an error.
+    } else if (response.errcode === LOCATION_ERR_PERMISSION_DENIED) {
+      // The contract stops start and get after an explicit denial.
+      status.value = 'denied'
+      running = false
+      return
     } else if (response.errcode === 0) {
       const fix = response.data?.location ?? null
       coordType.value = response.data?.coordType === 'wgs84' ? 'wgs84' : 'gcj02'
@@ -208,28 +263,40 @@ export function useRealtimeLocation(options: UseRealtimeLocationOptions = {}): U
     pollTimer = setTimeout(poll, session.interval)
   }
 
+  /** UI-only probe; its answer labels the wait, it never gates a call. */
+  async function refreshPermission(current: number): Promise<void> {
+    if (!source) return
+    const result = await withTimeout(source.permissions(), PERMISSION_TIMEOUT_MS, null)
+    if (current !== generation) return
+    permission.value = result === null ? 'unknown' : result.granted ? 'granted' : 'denied'
+  }
+
   async function begin(): Promise<void> {
     if (!running || !source) return
     status.value = 'starting'
     const current = ++generation
+    void refreshPermission(current)
     const response = await withTimeout(source.start(intervalMs, timeMs), START_TIMEOUT_MS, null)
     if (!running || current !== generation) return
     if (response === null) {
+      // Native never answered (e.g. its dialog was abandoned via the settings
+      // jump). Give up this round; a retry tap or the next refocus starts anew.
       status.value = 'error'
+      running = false
       return
     }
     if (response.errcode === LOCATION_ERR_PERMISSION_DENIED) {
+      // Explicit denial: the contract stops start and get for this run.
       status.value = 'denied'
       running = false
       return
     }
     if (response.errcode !== 0) {
-      // `-1` with this message means the native permission dialog is up and
-      // the first start call is still waiting on it; keep waiting gently.
+      // `-1`: bad params, or the previous call is still unanswered. Back off
+      // and retry, bounded; the pending-dialog flavor gets a looser leash.
       const dialogPending = response.errmsg.includes('permission request in progress')
       if (dialogPending && permissionWaitRetries < MAX_PERMISSION_WAIT_RETRIES) {
         permissionWaitRetries += 1
-        status.value = 'starting'
         pollTimer = setTimeout(begin, intervalMs * 2)
         return
       }
@@ -239,6 +306,7 @@ export function useRealtimeLocation(options: UseRealtimeLocationOptions = {}): U
         return
       }
       status.value = 'error'
+      running = false
       return
     }
     startRetries = 0
@@ -257,7 +325,7 @@ export function useRealtimeLocation(options: UseRealtimeLocationOptions = {}): U
       status.value = 'unsupported'
       return
     }
-    if (running || status.value === 'denied') return
+    if (running) return
     running = true
     void begin()
   }
@@ -273,7 +341,10 @@ export function useRealtimeLocation(options: UseRealtimeLocationOptions = {}): U
 
   if (options.immediate) start()
 
-  // Suspend while hidden (battery + no wasted polls), resume on return.
+  // Suspend while hidden (battery + no wasted polls). Every refocus runs one
+  // fresh start round, which also revives the loop after the user granted
+  // the permission in system settings. A 1001 denial skips it: the
+  // contract forbids more calls in that run.
   useEventListener(document, 'visibilitychange', () => {
     if (document.visibilityState === 'hidden') {
       stop()
@@ -283,7 +354,7 @@ export function useRealtimeLocation(options: UseRealtimeLocationOptions = {}): U
   })
   onScopeDispose(stop)
 
-  return { status, point, coordType, start, stop }
+  return { status, point, coordType, permission, start, stop }
 }
 
 /**

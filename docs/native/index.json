@@ -68,6 +68,35 @@
       "docs": ["android/v5.0.8+508/location-bridge.md"]
     },
     {
+      "id": "android-5.0.8+508-10191150",
+      "platform": "android",
+      "app": {
+        "applicationId": "com.voistech.chat",
+        "versionName": "5.0.8",
+        "versionCode": 508,
+        "flavor": "baseCn",
+        "buildType": "debug",
+        "buildTime": "10191150",
+        "minSdk": 23,
+        "targetSdk": 36,
+        "compileSdk": 36,
+        "serverAddress": "https://api.voischat.cn"
+      },
+      "package": {
+        "filename": "WL_V5.0.8_Code508_10191150.apk",
+        "vendoredPath": "vender/WL_V5.0.8_Code508_10191150.apk",
+        "kind": "apk",
+        "size": 47158186,
+        "sha256": "87aeb949dd698cecc5a99c51f6a72a0b007b9c7f96fcb6b72736907c45cee440"
+      },
+      "analyzedAt": "2026-10-19",
+      "analysisScope": "bridge delta over build 10151723: BridgeType, WebPermissionBridge, PermissionUtil, WebLocationBridge, VoisWebActivity registration, dialog string resources",
+      "tooling": [
+        { "name": "jadx", "version": "1.5.6", "role": "dex decompilation + resource decode" }
+      ],
+      "docs": ["android/v5.0.8+508/permission-bridge.md"]
+    },
+    {
       "id": "ios-5.0.3+1",
       "platform": "ios",
       "app": {

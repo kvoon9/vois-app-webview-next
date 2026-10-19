@@ -10,7 +10,10 @@ Provenance: `com.voistech.chat.ui.web.bridge.WebLocationBridge`,
 `com.voistech.chat.ui.web.VoisWebActivity` and `com.voistech.chat.ui.web.bridge.BridgeType`
 in artifact `android-5.0.8+508` (see `docs/native/index.json`; package
 `vender/WL_V5.0.8_Code508_10151723.apk`, 5.0.8 / code 508, flavor `baseCn`,
-debug build). Everything here is observed from the package.
+debug build). Everything here is observed from the package. Build `10191150`
+of the same version adds `get-permissions` on top — see
+[permission-bridge.md](/native/android/v5.0.8+508/permission-bridge) for that
+contract and the stranded-dialog behavior that shapes the H5 flow below.
 
 This is the one functional bridge change in 5.0.8 over 5.0.4: `BridgeType.java`
 gains `start-location` and `get-location`. Transport, dispatch and the response
@@ -148,5 +151,9 @@ device tracker.
 
 `apps/website/src/utils/bridge/location-bridge.ts` declares the protocol types
 and error constants, and `apps/website/src/composables/useRealtimeLocation.ts`
-runs the loop — start, poll at `interval`, renew one interval before the
-session expires, reopen on `-1`.
+runs the loop. The product contract keeps native's dialog chain in charge:
+every mount and every refocus sends `start-location` unconditionally, and the
+`get-permissions` probe only labels the wait in the UI. `0` opens the poll
+(`get` each interval, renew before expiry), a `get` `-1` reopens the session,
+a `start` `-1` retries with bounded backoff, and `1001` stops the run: no
+further start or get until the page is re-entered or the user taps retry.

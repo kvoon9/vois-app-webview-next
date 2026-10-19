@@ -14,7 +14,8 @@
   "home": {
     "title": "Navigation",
     "helpCenter": "Help center",
-    "deviceManagement": "Device management"
+    "deviceManagement": "Device management",
+    "permissionTest": "Permission test"
   },
   "login": {
     "title": "Sign in",
@@ -283,7 +284,8 @@
     "myLocationTracking": "My live location",
     "myLocationWaiting": "Getting my location…",
     "myLocationIdle": "My location stopped",
-    "realtimeDenied": "Location permission denied. Enable it in system settings and retry.",
+    "realtimePendingPermission": "Location permission is off. Allow it in the dialog, or enable it in system settings",
+    "realtimeDenied": "Location permission is off. Enable it in system settings, then tap here to retry.",
     "myLocationError": "Location did not start; a permission dialog may be pending. Tap to retry"
   },
   "profile": {
@@ -300,6 +302,24 @@
     "members": "Members",
     "userNumber": "Weila number: {id}",
     "notFound": "This conversation could not be found."
+  },
+  "permissionTest": {
+    "title": "Permission test",
+    "stateTitle": "Permission state",
+    "queryAll": "Query all",
+    "querying": "Querying…",
+    "granted": "Granted",
+    "denied": "Denied",
+    "notReturned": "Not returned",
+    "singleTitle": "Single query",
+    "locationTitle": "Location bridge",
+    "startLocation": "start-location (raises the native permission dialog)",
+    "getLocation": "get-location",
+    "waitingNative": "Waiting for native…",
+    "startHint": "Without the permission this raises native's dialog chain; a dialog abandoned via the settings jump may never answer, and repeated taps exercise the -1 duplicate-call answer.",
+    "logTitle": "Call log",
+    "logEmpty": "No calls yet",
+    "bridgeUnavailable": "Bridge unavailable"
   },
   "translation": {
     "loading": "Loading…",

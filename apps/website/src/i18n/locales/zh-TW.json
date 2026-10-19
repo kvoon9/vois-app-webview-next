@@ -14,7 +14,8 @@
   "home": {
     "title": "導航",
     "helpCenter": "說明中心",
-    "deviceManagement": "裝置管理"
+    "deviceManagement": "裝置管理",
+    "permissionTest": "權限測試"
   },
   "login": {
     "title": "登入",
@@ -283,8 +284,27 @@
     "myLocationTracking": "我的實時位置",
     "myLocationWaiting": "正在獲取我的位置…",
     "myLocationIdle": "我的位置未開始",
-    "realtimeDenied": "定位權限被拒絕，請在系統設置中開啟後重試。",
+    "realtimePendingPermission": "定位權限未開啟，請在彈窗中允許，或前往系統設定開啟",
+    "realtimeDenied": "定位權限未開啟，請在系統設定中開啟定位權限後，點此重試。",
     "myLocationError": "定位未啟動，可能是定位權限彈窗未處理，點擊重試"
+  },
+  "permissionTest": {
+    "title": "權限測試",
+    "stateTitle": "權限狀態",
+    "queryAll": "查詢全部",
+    "querying": "查詢中…",
+    "granted": "已授權",
+    "denied": "未授權",
+    "notReturned": "未返回",
+    "singleTitle": "單項查詢",
+    "locationTitle": "定位橋接",
+    "startLocation": "start-location（觸發原生權限彈窗）",
+    "getLocation": "get-location",
+    "waitingNative": "等待原生應答…",
+    "startHint": "無權限時會觸發原生的權限彈窗鏈路；彈窗被「去設定」跳走時這一調用可能永遠不應答，重複點擊可驗證「未返回又重複調用」的 -1 應答。",
+    "logTitle": "調用日誌",
+    "logEmpty": "暫無調用",
+    "bridgeUnavailable": "橋接不可用"
   },
   "translation": {
     "loading": "載入中…",

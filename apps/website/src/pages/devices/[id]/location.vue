@@ -80,9 +80,13 @@ const myTime = computed(() => {
   return `${hh}:${mm}:${ss}`
 })
 
-/** One tap to restart the loop after it gave up (e.g. a stuck permission dialog). */
+/** One tap to restart the loop after it gave up or hit a permission wall. */
+const canRetryRealtime = computed(
+  () => realtime.status.value === 'error' || realtime.status.value === 'denied',
+)
+
 function retryRealtime(): void {
-  if (realtime.status.value === 'error') realtime.start()
+  if (canRetryRealtime.value) realtime.start()
 }
 
 const myStatus = computed(() => {
@@ -90,7 +94,11 @@ const myStatus = computed(() => {
     case 'tracking':
       return t('device.myLocationTracking')
     case 'starting':
-      return t('device.myLocationWaiting')
+      // While native's dialog holds the start answer, the permission probe
+      // labels the wait; it never changes what gets called.
+      return realtime.permission.value === 'denied'
+        ? t('device.realtimePendingPermission')
+        : t('device.myLocationWaiting')
     case 'denied':
       return t('device.realtimeDenied')
     case 'error':
@@ -122,8 +130,8 @@ const myStatus = computed(() => {
           <p
             v-if="myStatus"
             class="mt-1 flex items-center text-2nd-body text-text-secondary"
-            :class="realtime.status.value === 'error' ? 'cursor-pointer' : ''"
-            v-on="realtime.status.value === 'error' ? { click: retryRealtime } : {}"
+            :class="canRetryRealtime ? 'cursor-pointer' : ''"
+            v-on="canRetryRealtime ? { click: retryRealtime } : {}"
           >
             <span
               v-if="realtime.status.value === 'tracking'"

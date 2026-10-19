@@ -14,7 +14,8 @@
   "home": {
     "title": "导航",
     "helpCenter": "帮助中心",
-    "deviceManagement": "设备管理"
+    "deviceManagement": "设备管理",
+    "permissionTest": "权限测试"
   },
   "login": {
     "title": "登录",
@@ -283,8 +284,27 @@
     "myLocationTracking": "我的实时位置",
     "myLocationWaiting": "正在获取我的位置…",
     "myLocationIdle": "我的位置未开始",
-    "realtimeDenied": "定位权限被拒绝，请在系统设置中开启后重试。",
+    "realtimePendingPermission": "定位权限未开启，请在弹窗中允许，或前往系统设置开启",
+    "realtimeDenied": "定位权限未开启，请在系统设置中开启定位权限后，点此重试。",
     "myLocationError": "定位未启动，可能是定位权限弹窗未处理，点击重试"
+  },
+  "permissionTest": {
+    "title": "权限测试",
+    "stateTitle": "权限状态",
+    "queryAll": "查询全部",
+    "querying": "查询中…",
+    "granted": "已授权",
+    "denied": "未授权",
+    "notReturned": "未返回",
+    "singleTitle": "单项查询",
+    "locationTitle": "定位桥接",
+    "startLocation": "start-location（触发原生权限弹窗）",
+    "getLocation": "get-location",
+    "waitingNative": "等待原生应答…",
+    "startHint": "无权限时会触发原生的权限弹窗链路；弹窗被「去设置」跳走时这一调用可能永远不应答，重复点击可验证「未返回又重复调用」的 -1 应答。",
+    "logTitle": "调用日志",
+    "logEmpty": "暂无调用",
+    "bridgeUnavailable": "桥接不可用"
   },
   "translation": {
     "loading": "加载中…",

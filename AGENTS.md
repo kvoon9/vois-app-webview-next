@@ -27,6 +27,19 @@ cd <worktree> && vp install
 
 Machines running the local `kvoon.worktree-hooks` herdr plugin execute the `herdr-worktree.yaml` hooks automatically on worktree creation (`vp install` there covers the dependency step); without the plugin, follow the manual steps above.
 
+## Feature lanes and acceptance
+
+Features ship as lanes: one lane = one worktree + one branch (`worktree/<lane>`) + one PR against main, built by delegated subagents. Create the worktree with `herdr worktree create --branch worktree/<lane> --base main` (or `herdr_worktree_jump`), never bare `git worktree add`. Keep lanes file-disjoint; anything touching the same file serializes.
+
+- **Agent roles**: code agents run on the `deepseek-flash` template; judgment, review, and anything visual run on the `judge` template (glm-5.3-flash with image input). Always pass `agent_type` explicitly; a generic subagent inherits the parent model.
+- **Briefs are self-contained** (subagents see no parent conversation): file pointers, constraints, lanes to stay out of, and acceptance criteria written as measurable checks. Point subagents at `.pi/skills/verify-vois-webview/features/` when the touched screen has a behavior map.
+- **Gates, exit codes only**: never pipe gate commands into `tail` (the pipe masks the failure exit), and never chain them with `;` (the chain continues past a failure). Run `vp run ready` (check, test, build) and require exit 0, on the committed tree. CI repeats `vp check && vp test` on every PR; build stays a local gate.
+- **Browser evidence** comes from the verification skill's pipeline: the lane worktree's own DevServer port, `scripts/doctor.mjs`, ego-browser drives, and `.tmp/vois-webview-debug/events.jsonl` captures. Report measurements and captured events, not adjectives.
+- **Vision acceptance for UI changes**: before pushing, screenshot the changed views at the primary phone size (375×812) and, when the change touches layout geometry, sweep the small-phone edge (320×568) too; then have a `judge` agent review the PNGs against the intended design. Fix and re-shoot until confirmed.
+- **Push once per lane**: commit freely in the worktree, but push only when the lane is review-ready, and afterwards only for review fixups. Every push starts a CI run, yet only a lane's final commit is reviewed. `vp run ready` locally is the feedback loop; pushing is not a checkpoint.
+- **PRs**: one per lane, title under Conventional Commits, body carries evidence (measurements, capture excerpts, screenshot paths, known trade-offs). The push and `gh pr create` both need the kvoon9 account (`gh auth switch --user kvoon9`, switch back afterwards — see Release). Humans review and merge.
+- **Landing**: from the main checkout, commit everything in the worktree first (`git add -A`), then `git cherry-pick`, never `git merge`. Conflicts: keep both sides (union), then `git -c core.editor=true cherry-pick --continue`. After landing, verify (`vp install` if deps changed, `vp run ready` exit 0), then `herdr worktree remove --workspace <ID>` and `git branch -D <branch>`.
+
 ## WebView Testing
 
 The app is developed and verified against the DevServer on port 3021. The debug plugin captures auth, injects debug into all SPA routes, records events to `.tmp/vois-webview-debug/events.jsonl`, and clears them on restart. `isWebviewDebug()` (`~/composables/useWebviewDebug`) detects that server, so gate any debug-only UI behind it. Production Preview needs `--debug` to enable this pipeline.

@@ -1,0 +1,8 @@
+# Hooks run by the local herdr plugin (kvoon.worktree-setup) when a new worktree
+# of this repo is created. Machines without the plugin simply ignore this file
+# and follow the manual steps in AGENTS.md.
+#
+# Available env: $WORKTREE, $MAIN (main checkout), $REPO_NAME, $BRANCH, $EVENT.
+hooks:
+  created:
+    - vp install

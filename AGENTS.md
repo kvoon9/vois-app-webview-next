@@ -25,6 +25,8 @@ cd <worktree> && vp install
 
 `~/.vois/.env` holds `VITE_APP_ID` / `VITE_APP_KEY` (build) and the AMap keys the device-location page needs. `vite.config.ts` points `envDir` there, so every worktree shares one copy; CI has no such directory and injects the same names as `process.env`, which wins over the file.
 
+Machines running the local `kvoon.worktree-hooks` herdr plugin execute the `herdr-worktree.yaml` hooks automatically on worktree creation (`vp install` there covers the dependency step); without the plugin, follow the manual steps above.
+
 ## WebView Testing
 
 The app is developed and verified against the DevServer on port 3021. The debug plugin captures auth, injects debug into all SPA routes, records events to `.tmp/vois-webview-debug/events.jsonl`, and clears them on restart. `isWebviewDebug()` (`~/composables/useWebviewDebug`) detects that server, so gate any debug-only UI behind it. Production Preview needs `--debug` to enable this pipeline.

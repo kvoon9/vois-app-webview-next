@@ -13,9 +13,19 @@ const BaseModal = defineAsyncComponent(() => import('~/components/BaseModal.vue'
 
 const { t } = useI18n()
 
-defineProps<{
-  title: string
-}>()
+withDefaults(
+  defineProps<{
+    title: string
+    /**
+     * Opt-out flag for the native tab roots: only a page that passes `:back="false"`
+     * hides the arrow. The default is kept next to the `back !== false` guard below:
+     * Vue casts an absent Boolean prop to `false`, so without the default a page that
+     * merely forgets the prop would lose its arrow.
+     */
+    back?: boolean
+  }>(),
+  { back: true },
+)
 
 const { goBack } = usePageBack()
 
@@ -55,8 +65,9 @@ async function copyCurrentUrl(): Promise<void> {
 <template>
   <header class="sticky top-0 z-10 h-14 flex items-center justify-center bg-surface">
     <button
+      v-if="back !== false"
       type="button"
-      class="absolute left-0 top-1/2 -translate-y-1/2 flex items-center justify-center w-11 h-11"
+      class="absolute left-7 top-1/2 -translate-y-1/2 flex items-center justify-center w-11 h-11"
       :aria-label="t('nav.back')"
       @click="goBack()"
     >

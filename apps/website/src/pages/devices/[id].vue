@@ -207,70 +207,49 @@ function onCropFailed(): void {
             </p>
           </section>
 
-          <!-- Card 1: identity. The SIM rows only exist for devices with a card. -->
+          <!-- Card 1: identity. Rows read "label: value" on one line, as the app does;
+               py-1.5 keeps the 36px pitch that 16px text + 24px line leaves. -->
           <section class="mt-2 overflow-hidden panel">
-            <div class="flex items-center justify-between px-4 py-3">
-              <span class="text-2nd-body text-text-secondary">{{ t('device.model') }}</span>
-              <span class="ml-4 text-right text-2nd-body">
-                {{ device.product || t('device.notAvailable') }}
-              </span>
+            <div class="px-4 py-1.5 text-body">
+              {{ t('device.model') }}: {{ device.product || t('device.notAvailable') }}
             </div>
-            <div class="flex items-center justify-between px-4 py-3">
-              <span class="text-2nd-body text-text-secondary">{{ t('device.deviceNumber') }}</span>
-              <span class="ml-4 flex min-w-0 items-center text-right text-2nd-body">
-                <span class="truncate">{{ device.imei || t('device.notAvailable') }}</span>
-                <button
-                  v-if="device.imei"
-                  type="button"
-                  class="ml-2 flex-none text-small text-text-secondary focus-visible:ring-2 focus-visible:ring-primary/40"
-                  :aria-label="t('device.copyDeviceNumber')"
-                  @click="copyDeviceNumber"
-                >
-                  {{ t('device.copy') }}
-                </button>
+            <div class="flex items-center px-4 py-1.5 text-body">
+              <span class="min-w-0 truncate">
+                {{ t('device.deviceNumber') }}: {{ device.imei || t('device.notAvailable') }}
               </span>
+              <button
+                v-if="device.imei"
+                type="button"
+                class="ml-2 flex-none text-small text-text-secondary focus-visible:ring-2 focus-visible:ring-primary/40"
+                :aria-label="t('device.copyDeviceNumber')"
+                @click="copyDeviceNumber"
+              >
+                {{ t('device.copy') }}
+              </button>
             </div>
-            <div class="flex items-center justify-between px-4 py-3">
-              <span class="text-2nd-body text-text-secondary">{{ t('device.version') }}</span>
-              <span class="ml-4 text-right text-2nd-body">
-                {{ device.version || t('device.notAvailable') }}
-              </span>
+            <div class="px-4 py-1.5 text-body">
+              {{ t('device.version') }}: {{ device.version || t('device.notAvailable') }}
             </div>
-            <div class="flex items-center justify-between px-4 py-3">
-              <span class="text-2nd-body text-text-secondary">{{ t('device.userNumber') }}</span>
-              <span class="ml-4 text-right text-2nd-body">
-                {{ device.userNum || t('device.notAvailable') }}
-              </span>
+            <div class="px-4 py-1.5 text-body">
+              {{ t('device.userNumber') }}: {{ device.userNum || t('device.notAvailable') }}
             </div>
             <template v-if="device.simCard">
-              <div class="flex items-center justify-between px-4 py-3">
-                <span class="text-2nd-body text-text-secondary">{{ t('device.iccid') }}</span>
-                <span class="ml-4 text-right text-2nd-body">
-                  {{ device.simCard.iccid || t('device.notAvailable') }}
-                </span>
+              <div class="px-4 py-1.5 text-body">
+                {{ t('device.iccid') }}: {{ device.simCard.iccid || t('device.notAvailable') }}
               </div>
-              <div class="flex items-center justify-between px-4 py-3">
-                <span class="text-2nd-body text-text-secondary">{{ t('device.expireAt') }}</span>
-                <span class="ml-4 text-right text-2nd-body">
-                  {{ device.simCard.expiryDate || t('device.notAvailable') }}
-                </span>
+              <div class="px-4 py-1.5 text-body">
+                {{ t('device.expireAt') }}:
+                {{ device.simCard.expiryDate || t('device.notAvailable') }}
               </div>
-              <div
-                v-if="device.simCard.recharge"
-                class="flex items-center justify-between px-4 py-3"
-              >
-                <span class="text-2nd-body text-text-secondary">
-                  {{ t('device.simCardState') }}
-                </span>
-                <span class="ml-4 text-right text-2nd-body text-danger">
-                  {{ t('device.simCardNeedRecharge') }}
-                </span>
+              <div v-if="device.simCard.recharge" class="px-4 py-1.5 text-body">
+                {{ t('device.simCardState') }}:
+                <span class="text-danger">{{ t('device.simCardNeedRecharge') }}</span>
               </div>
             </template>
             <RouterLink
               v-if="device.simCard"
               :to="`/devices/${deviceId}/recharge-records`"
-              class="min-h-12 w-full panel-row text-body"
+              class="min-h-14 w-full panel-row text-body"
             >
               <span>{{ t('device.rechargeRecords') }}</span>
               <span class="row-chevron" aria-hidden="true" />
@@ -278,7 +257,7 @@ function onCropFailed(): void {
             <RouterLink
               v-if="device.simCard?.recharge"
               to="/devices/recharge"
-              class="min-h-12 w-full panel-row text-body"
+              class="min-h-14 w-full panel-row text-body"
             >
               <span>{{ t('device.rechargeDevices') }}</span>
               <span class="row-chevron" aria-hidden="true" />
@@ -286,24 +265,24 @@ function onCropFailed(): void {
           </section>
 
           <!-- Card 2: management -->
-          <div class="mt-4 overflow-hidden panel">
+          <div class="mt-3 overflow-hidden panel">
             <RouterLink
               :to="`/devices/${deviceId}/groups`"
-              class="min-h-12 w-full panel-row text-body"
+              class="min-h-14 w-full panel-row text-body"
             >
               <span>{{ t('device.groups') }}</span>
               <span class="row-chevron" aria-hidden="true" />
             </RouterLink>
             <RouterLink
               :to="`/devices/${deviceId}/contacts`"
-              class="min-h-12 w-full panel-row text-body"
+              class="min-h-14 w-full panel-row text-body"
             >
               <span>{{ t('device.contacts') }}</span>
               <span class="row-chevron" aria-hidden="true" />
             </RouterLink>
             <RouterLink
               :to="`/devices/${deviceId}/emergency-contacts`"
-              class="min-h-12 w-full panel-row text-body"
+              class="min-h-14 w-full panel-row text-body"
             >
               <span>{{ t('device.emergencyContactSettings') }}</span>
               <span class="row-chevron" aria-hidden="true" />
@@ -311,8 +290,8 @@ function onCropFailed(): void {
           </div>
 
           <!-- Card 3: position; the share switch leads, the rest navigate. -->
-          <div class="mt-4 overflow-hidden panel">
-            <div class="panel-row min-h-12">
+          <div class="mt-3 overflow-hidden panel">
+            <div class="panel-row min-h-14">
               <span class="text-body">{{ t('device.locationShare') }}</span>
               <ToggleSwitch
                 :checked="device.shareLocation"
@@ -322,28 +301,28 @@ function onCropFailed(): void {
             </div>
             <RouterLink
               :to="`/devices/${deviceId}/location`"
-              class="min-h-12 w-full panel-row text-body"
+              class="min-h-14 w-full panel-row text-body"
             >
               <span>{{ t('device.locationAndFence') }}</span>
               <span class="row-chevron" aria-hidden="true" />
             </RouterLink>
             <RouterLink
               :to="`/devices/${deviceId}/track`"
-              class="min-h-12 w-full panel-row text-body"
+              class="min-h-14 w-full panel-row text-body"
             >
               <span>{{ t('device.trackRecords') }}</span>
               <span class="row-chevron" aria-hidden="true" />
             </RouterLink>
             <RouterLink
               :to="`/devices/${deviceId}/track-setting`"
-              class="min-h-12 w-full panel-row text-body"
+              class="min-h-14 w-full panel-row text-body"
             >
               <span>{{ t('device.trackSetting') }}</span>
               <span class="row-chevron" aria-hidden="true" />
             </RouterLink>
             <RouterLink
               :to="`/devices/${deviceId}/reminders`"
-              class="min-h-12 w-full panel-row text-body"
+              class="min-h-14 w-full panel-row text-body"
             >
               <span>{{ t('device.reminders') }}</span>
               <span class="row-chevron" aria-hidden="true" />
@@ -351,10 +330,10 @@ function onCropFailed(): void {
           </div>
 
           <!-- Card 4: destructive action, its own card at the bottom. -->
-          <div class="mt-4 overflow-hidden panel">
+          <div class="mt-3 overflow-hidden panel">
             <button
               type="button"
-              class="min-h-12 w-full panel-row text-body text-danger focus-visible:ring-2 focus-visible:ring-primary/40"
+              class="min-h-14 w-full panel-row text-body text-danger focus-visible:ring-2 focus-visible:ring-primary/40"
               @click="unbindConfirm = true"
             >
               <span>{{ t('device.unbind') }}</span>

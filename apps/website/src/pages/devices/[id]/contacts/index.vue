@@ -39,25 +39,25 @@ function openContact(contact: Friend): void {
   <div class="page">
     <PageHeader :title="t('device.contacts')" />
 
-    <main class="p-4">
+    <main class="p-4 flex flex-col min-h-[calc(100svh-3.5rem)]">
       <nav class="panel" :aria-label="t('device.addContact')">
         <router-link
           :to="`/devices/${deviceId}/contacts/add`"
-          class="min-h-12 flex items-center justify-between px-4 text-body"
+          class="min-h-15 flex items-center justify-between px-4 text-body"
         >
           <span>{{ t('device.addFromFriends') }}</span>
           <span class="row-chevron" aria-hidden="true" />
         </router-link>
         <router-link
           :to="`/devices/${deviceId}/contacts/search`"
-          class="min-h-12 flex items-center justify-between px-4 text-body"
+          class="min-h-15 flex items-center justify-between px-4 text-body"
         >
           <span>{{ t('device.searchContacts') }}</span>
           <span class="row-chevron" aria-hidden="true" />
         </router-link>
       </nav>
 
-      <section class="mt-4 min-h-32 card">
+      <section class="mt-3 min-h-32 flex-1 card pt-2">
         <h2 class="text-2nd-body font-semibold text-text-secondary">
           {{ t('device.addedContacts') }}
         </h2>
@@ -70,7 +70,7 @@ function openContact(contact: Friend): void {
             <li v-for="contact in contacts" :key="contact.userId">
               <button
                 type="button"
-                class="min-h-12 w-full flex items-center text-left"
+                class="min-h-15 w-full flex items-center text-left"
                 @click="openContact(contact)"
               >
                 <Avatar :name="contact.nick" :src="contact.avatar" />

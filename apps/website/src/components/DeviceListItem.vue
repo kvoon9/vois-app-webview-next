@@ -25,7 +25,7 @@ defineEmits<{
 </script>
 
 <template>
-  <li class="card flex items-center" :class="{ 'opacity-60': online === false }">
+  <li class="card flex items-center">
     <button
       type="button"
       class="min-w-0 flex flex-1 items-center text-left"

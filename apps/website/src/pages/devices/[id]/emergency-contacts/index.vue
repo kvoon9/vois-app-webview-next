@@ -48,14 +48,27 @@ const removeMutation = useMutation({
   },
 })
 
+/** Native keeps the entries tappable and explains the cap in a toast. */
 function openAddFriend(): void {
-  if (deviceId.value != null && !friendsFull.value) {
+  if (friendsFull.value) {
+    showToast(t('device.emergencyFriendsLimit', { max: quota.value?.friendMax ?? 0 }), {
+      type: 'error',
+    })
+    return
+  }
+  if (deviceId.value != null) {
     router.push(`/devices/${deviceId.value}/emergency-contacts/add-friend`)
   }
 }
 
 function openAddPhone(): void {
-  if (deviceId.value != null && !phonesFull.value) {
+  if (phonesFull.value) {
+    showToast(t('device.emergencyPhonesLimit', { max: quota.value?.phoneMax ?? 0 }), {
+      type: 'error',
+    })
+    return
+  }
+  if (deviceId.value != null) {
     router.push(`/devices/${deviceId.value}/emergency-contacts/add-phone`)
   }
 }
@@ -128,21 +141,11 @@ async function removeContact(): Promise<void> {
           </ul>
 
           <nav class="mt-4 space-y-3" :aria-label="t('device.emergencyContactAdd')">
-            <button
-              type="button"
-              class="min-h-14 w-full nav-item disabled:opacity-50"
-              :disabled="friendsFull"
-              @click="openAddFriend"
-            >
+            <button type="button" class="min-h-14 w-full nav-item" @click="openAddFriend">
               <span>{{ t('device.emergencyAddFriend') }}</span>
               <span class="i-ph-plus text-2xl text-text-secondary" aria-hidden="true" />
             </button>
-            <button
-              type="button"
-              class="min-h-14 w-full nav-item disabled:opacity-50"
-              :disabled="phonesFull"
-              @click="openAddPhone"
-            >
+            <button type="button" class="min-h-14 w-full nav-item" @click="openAddPhone">
               <span>{{ t('device.emergencyAddPhone') }}</span>
               <span class="i-ph-plus text-2xl text-text-secondary" aria-hidden="true" />
             </button>

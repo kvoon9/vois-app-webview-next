@@ -12,15 +12,27 @@ import { useToast } from '~/composables/useToast'
 import {
   createDeviceReminder,
   getDeviceReminders,
+  reminderDaysFor,
   removeDeviceReminder,
   updateDeviceReminder,
   type ReminderRepeat,
 } from '~/utils/device-api'
+import { reminderRepeatLabel } from '~/utils/reminder-repeat-label'
 
 const RING_DURATIONS = [30, 60, 120, 180, 300, 600]
 const REPEAT_COUNTS = [0, 1, 2, 3, 5, 10]
 const REPEAT_INTERVALS = [1, 2, 3, 5, 10]
-const REPEATS: ReminderRepeat[] = ['once', 'daily', 'weekdays']
+/** Native's picker: three presets plus a per-day custom rule. */
+const REPEATS: ReminderRepeat[] = ['once', 'daily', 'weekdays', 'custom']
+const DAY_KEYS = [
+  'reminderDayMon',
+  'reminderDayTue',
+  'reminderDayWed',
+  'reminderDayThu',
+  'reminderDayFri',
+  'reminderDaySat',
+  'reminderDaySun',
+] as const
 
 const { t } = useI18n({ useScope: 'global' })
 const route = useRoute()
@@ -51,6 +63,9 @@ const timeLabel = computed(() => {
 })
 const content = shallowRef('')
 const repeat = shallowRef<ReminderRepeat>('once')
+const repeatDays = shallowRef<number[]>([])
+const customDaysOpen = shallowRef(false)
+const customDraft = shallowRef<number[]>([])
 const ringDuration = shallowRef(30)
 const repeatCount = shallowRef(3)
 const repeatInterval = shallowRef(5)
@@ -72,6 +87,7 @@ watch(
     time.value = reminder.time
     content.value = reminder.content
     repeat.value = reminder.repeat
+    repeatDays.value = reminder.repeatDays
     ringDuration.value = reminder.ringDuration
     repeatCount.value = reminder.repeatCount
     repeatInterval.value = reminder.repeatInterval
@@ -85,6 +101,7 @@ const saveMutation = useMutation({
       time: time.value,
       content: content.value,
       repeat: repeat.value,
+      repeatDays: reminderDaysFor(repeat.value, repeatDays.value),
       ringDuration: ringDuration.value,
       repeatCount: repeatCount.value,
       repeatInterval: repeatInterval.value,
@@ -115,6 +132,11 @@ async function backToList(): Promise<void> {
 
 async function save(): Promise<void> {
   if (saveMutation.isLoading.value) return
+  // Native refuses an empty reminder before it writes.
+  if (content.value.trim().length === 0) {
+    showToast(t('device.reminderContentRequired'), { type: 'error' })
+    return
+  }
   try {
     await saveMutation.mutateAsync()
     await queryCache.invalidateQueries({ key: ['device-management', 'reminders'] })
@@ -138,9 +160,29 @@ async function removeReminder(): Promise<void> {
 }
 
 function repeatText(value: ReminderRepeat): string {
-  if (value === 'daily') return t('device.reminderDaily')
-  if (value === 'weekdays') return t('device.reminderWeekdays')
-  return t('device.reminderOnce')
+  return reminderRepeatLabel(t, value, repeatDays.value)
+}
+
+/** The picker lists presets by name, not by the currently chosen days. */
+function repeatOptionText(value: ReminderRepeat): string {
+  if (value === 'custom') return t('device.reminderCustom')
+  return reminderRepeatLabel(t, value, [])
+}
+
+function toggleDraftDay(day: number): void {
+  customDraft.value = customDraft.value.includes(day)
+    ? customDraft.value.filter((item) => item !== day)
+    : [...customDraft.value, day].sort((a, b) => a - b)
+}
+
+function confirmCustomDays(): void {
+  if (customDraft.value.length === 0) {
+    showToast(t('device.reminderCustomDaysRequired'), { type: 'error' })
+    return
+  }
+  repeat.value = 'custom'
+  repeatDays.value = customDraft.value
+  customDaysOpen.value = false
 }
 
 function durationLabel(seconds: number): string {
@@ -165,12 +207,19 @@ const optionRows: OptionRow[] = [
   {
     key: 'repeat',
     label: t('device.reminderRepeat'),
-    options: REPEATS.map((value) => ({ value, text: repeatText(value) })),
+    options: REPEATS.map((value) => ({ value, text: repeatOptionText(value) })),
     current: () => repeat.value,
-    text: repeatText,
+    text: repeatOptionText,
     choose: (value) => {
       const match = REPEATS.find((option) => option === value)
-      if (match !== undefined) repeat.value = match
+      if (match === undefined) return
+      if (match === 'custom') {
+        customDraft.value = [...repeatDays.value]
+        customDaysOpen.value = true
+        return
+      }
+      repeat.value = match
+      repeatDays.value = reminderDaysFor(match, repeatDays.value)
     },
   },
   {
@@ -215,6 +264,8 @@ const optionRows: OptionRow[] = [
 const activeRow = shallowRef<OptionRow | null>(null)
 
 function currentText(row: OptionRow): string {
+  // The repeat row shows the rule itself (the chosen days), not an option label.
+  if (row.key === 'repeat') return repeatText(repeat.value)
   const match = row.options.find((option) => option.value === row.current())
   return match ? match.text : t('device.notAvailable')
 }
@@ -338,6 +389,29 @@ const headerTitle = computed(() =>
             :class="option.value === activeRow?.current() ? 'radio-on' : 'radio-off'"
             aria-hidden="true"
           />
+        </button>
+      </div>
+    </BaseModal>
+
+    <BaseModal
+      v-if="customDaysOpen"
+      :title="t('device.reminderCustomDays')"
+      :cancel-text="t('modal.cancel')"
+      :confirm-text="t('modal.confirm')"
+      @cancel="customDaysOpen = false"
+      @confirm="confirmCustomDays"
+    >
+      <div class="flex flex-wrap justify-center">
+        <button
+          v-for="(key, index) in DAY_KEYS"
+          :key="key"
+          type="button"
+          class="chip mx-1 my-1"
+          :class="customDraft.includes(index + 1) ? 'chip-selected' : 'chip-unselected'"
+          :aria-pressed="customDraft.includes(index + 1)"
+          @click="toggleDraftDay(index + 1)"
+        >
+          {{ t(`device.${key}`) }}
         </button>
       </div>
     </BaseModal>

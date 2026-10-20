@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { parseDate, type DateValue } from '@internationalized/date'
+import { getLocalTimeZone, parseDate, today, type DateValue } from '@internationalized/date'
 import {
   CalendarCell,
   CalendarCellTrigger,
@@ -72,6 +72,7 @@ function confirm(): void {
             :fixed-weeks="true"
             :initial-focus="true"
             :prevent-deselect="true"
+            :max-value="today(getLocalTimeZone())"
           >
             <CalendarHeader class="flex items-center justify-between px-2">
               <CalendarPrev

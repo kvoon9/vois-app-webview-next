@@ -29,7 +29,7 @@ const deviceId = computed(() => parseRouteParamId(route.params.id))
 const groupId = computed(() => parseRouteParamId(route.params.groupId))
 const memberId = computed(() => parseRouteParamId(route.params.memberId))
 
-async function load(): Promise<{ member: GroupMember; isCreator: boolean }> {
+async function load(): Promise<{ member: GroupMember; canManage: boolean }> {
   if (deviceId.value == null) throw new Error(t('error.description'))
   if (groupId.value == null) throw new Error(t('error.description'))
   if (memberId.value == null) throw new Error(t('error.description'))
@@ -39,10 +39,9 @@ async function load(): Promise<{ member: GroupMember; isCreator: boolean }> {
   ])
   const member = members.find((item) => item.userId === memberId.value)
   if (!member) throw new Error(t('device.noMatchingMembers'))
-  return {
-    member,
-    isCreator: groups.find((item) => item.groupId === groupId.value)?.isCreator ?? false,
-  }
+  // Native lets a group admin manage members too, not just the creator.
+  const group = groups.find((item) => item.groupId === groupId.value)
+  return { member, canManage: (group?.isCreator ?? false) || (group?.isAdmin ?? false) }
 }
 
 const { state, refetch: reload } = useQuery({
@@ -50,10 +49,10 @@ const { state, refetch: reload } = useQuery({
   query: load,
 })
 const member = computed(() => state.value.data?.member ?? null)
-/** Only the current owner (this device) manages members; never target itself. */
+/** The owner or an admin manages members, but never the device itself. */
 const canManage = computed(
   () =>
-    (state.value.data?.isCreator ?? false) &&
+    (state.value.data?.canManage ?? false) &&
     member.value != null &&
     member.value.userId !== deviceId.value,
 )

@@ -171,7 +171,7 @@ function onCropFailed(): void {
             <button
               type="button"
               class="rounded-full focus-visible:ring-2 focus-visible:ring-primary/40"
-              :aria-label="t('device.changeAvatar')"
+              :aria-label="t('device.changeDeviceAvatar')"
               @click="pickAvatar"
             >
               <Avatar :name="device.nick" :src="device.avatar" size="lg" />
@@ -274,33 +274,30 @@ function onCropFailed(): void {
             />
           </div>
 
-          <nav class="mt-3">
+          <nav class="mt-3 space-y-3">
             <RouterLink :to="`/devices/${deviceId}/location`" class="min-h-12 w-full nav-item">
               <span>{{ t('device.locationAndFence') }}</span>
               <span class="row-chevron" aria-hidden="true" />
             </RouterLink>
-            <RouterLink :to="`/devices/${deviceId}/track`" class="mt-1 min-h-12 w-full nav-item">
+            <RouterLink :to="`/devices/${deviceId}/track`" class="min-h-12 w-full nav-item">
               <span>{{ t('device.trackRecords') }}</span>
               <span class="row-chevron" aria-hidden="true" />
             </RouterLink>
-            <RouterLink
-              :to="`/devices/${deviceId}/track-setting`"
-              class="mt-1 min-h-12 w-full nav-item"
-            >
+            <RouterLink :to="`/devices/${deviceId}/track-setting`" class="min-h-12 w-full nav-item">
               <span>{{ t('device.trackSetting') }}</span>
               <span class="row-chevron" aria-hidden="true" />
             </RouterLink>
-            <RouterLink :to="`/devices/${deviceId}/groups`" class="mt-1 min-h-12 w-full nav-item">
+            <RouterLink :to="`/devices/${deviceId}/groups`" class="min-h-12 w-full nav-item">
               <span>{{ t('device.groups') }}</span>
               <span class="row-chevron" aria-hidden="true" />
             </RouterLink>
-            <RouterLink :to="`/devices/${deviceId}/contacts`" class="mt-1 min-h-12 w-full nav-item">
+            <RouterLink :to="`/devices/${deviceId}/contacts`" class="min-h-12 w-full nav-item">
               <span>{{ t('device.contacts') }}</span>
               <span class="row-chevron" aria-hidden="true" />
             </RouterLink>
             <RouterLink
               :to="`/devices/${deviceId}/emergency-contacts`"
-              class="mt-1 min-h-12 w-full nav-item"
+              class="min-h-12 w-full nav-item"
             >
               <span>{{ t('device.emergencyContactSettings') }}</span>
               <span class="row-chevron" aria-hidden="true" />
@@ -308,7 +305,7 @@ function onCropFailed(): void {
             <RouterLink
               v-if="device.simCard?.recharge"
               to="/devices/recharge"
-              class="mt-1 min-h-12 w-full nav-item"
+              class="min-h-12 w-full nav-item"
             >
               <span>{{ t('device.rechargeDevices') }}</span>
               <span class="row-chevron" aria-hidden="true" />
@@ -316,15 +313,12 @@ function onCropFailed(): void {
             <RouterLink
               v-if="device.simCard"
               :to="`/devices/${deviceId}/recharge-records`"
-              class="mt-1 min-h-12 w-full nav-item"
+              class="min-h-12 w-full nav-item"
             >
               <span>{{ t('device.rechargeRecords') }}</span>
               <span class="row-chevron" aria-hidden="true" />
             </RouterLink>
-            <RouterLink
-              :to="`/devices/${deviceId}/reminders`"
-              class="mt-1 min-h-12 w-full nav-item"
-            >
+            <RouterLink :to="`/devices/${deviceId}/reminders`" class="min-h-12 w-full nav-item">
               <span>{{ t('device.reminders') }}</span>
               <span class="row-chevron" aria-hidden="true" />
             </RouterLink>
@@ -368,6 +362,7 @@ function onCropFailed(): void {
     <ImageCropper
       v-if="avatarFile"
       :file="avatarFile"
+      :title="t('device.cropDeviceAvatar')"
       @cancel="avatarFile = null"
       @confirm="onCropConfirmed"
       @failed="onCropFailed"

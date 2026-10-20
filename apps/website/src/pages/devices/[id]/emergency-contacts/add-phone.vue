@@ -65,16 +65,16 @@ async function save(): Promise<void> {
     <main class="p-4">
       <section class="flex justify-center py-6">
         <span
-          class="flex h-20 w-20 items-center justify-center rounded-standard bg-surface-muted text-3xl text-text-secondary"
+          class="flex h-20 w-20 items-center justify-center rounded-full bg-surface-muted text-4xl text-text-secondary"
           aria-hidden="true"
         >
-          👤
+          <span class="i-ph-user" />
         </span>
       </section>
 
       <section class="overflow-hidden panel">
-        <label class="flex items-center">
-          <span class="text-lg text-text-secondary" aria-hidden="true">📱</span>
+        <label class="min-h-14 flex items-center px-4">
+          <span class="i-ph-device-mobile text-lg text-text-secondary" aria-hidden="true" />
           <input
             v-model="phone"
             class="ml-3 min-w-0 flex-1 bg-transparent text-body outline-none opacity-75 transition-opacity focus:opacity-100 placeholder:text-text-secondary"
@@ -85,8 +85,8 @@ async function save(): Promise<void> {
             :disabled="addMutation.isLoading.value"
           />
         </label>
-        <label class="flex items-center px-4 py-3">
-          <span class="text-lg text-text-secondary" aria-hidden="true">👤</span>
+        <label class="min-h-14 flex items-center px-4">
+          <span class="i-ph-user text-lg text-text-secondary" aria-hidden="true" />
           <input
             v-model="name"
             class="ml-3 min-w-0 flex-1 bg-transparent text-body outline-none opacity-75 transition-opacity focus:opacity-100 placeholder:text-text-secondary"

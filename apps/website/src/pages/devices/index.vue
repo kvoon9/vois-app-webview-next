@@ -2,7 +2,7 @@
 import { useQuery } from '@pinia/colada'
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
-import Avatar from '~/components/Avatar.vue'
+import DeviceListItem from '~/components/DeviceListItem.vue'
 import PageHeader from '~/components/PageHeader.vue'
 import QueryState from '~/components/settings/QueryState.vue'
 import { getConnectedDevices, type Device } from '~/utils/device-api'
@@ -33,33 +33,15 @@ function openDevice(device: Device): void {
         @retry="reload()"
       >
         <ul class="space-y-3">
-          <li
+          <DeviceListItem
             v-for="device in state.data"
             :key="device.userId"
-            class="rounded-standard p-4"
-            :class="device.online ? 'bg-surface-selected' : 'bg-surface-muted opacity-70'"
-          >
-            <button
-              type="button"
-              class="min-w-0 w-full flex items-center text-left"
-              @click="openDevice(device)"
-            >
-              <Avatar
-                :name="device.nick"
-                :src="device.avatar"
-                :online="device.online"
-                show-status
-                :status-label="t(device.online ? 'device.online' : 'device.offline')"
-              />
-              <span class="ml-3 min-w-0 flex-1">
-                <span class="block truncate text-body font-medium">{{ device.nick }}</span>
-                <span class="mt-0.5 block truncate text-small text-text-secondary">
-                  {{ device.product }}
-                </span>
-              </span>
-              <span aria-hidden="true" class="row-chevron" />
-            </button>
-          </li>
+            :name="device.nick"
+            :avatar="device.avatar"
+            :online="device.online"
+            :product="device.product"
+            @click="openDevice(device)"
+          />
         </ul>
       </QueryState>
     </main>

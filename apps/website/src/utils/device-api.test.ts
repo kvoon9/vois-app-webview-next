@@ -408,9 +408,10 @@ describe('device API', () => {
           nick: '小明明',
           avatar: 'http://cdn/m.png',
           online: false,
+          remark: '小明明',
           registeredAt: '2025-01-01',
         },
-        { userId: 56, userNum: '6003', nick: '小红', avatar: '', online: false },
+        { userId: 56, userNum: '6003', nick: '小红', avatar: '', online: false, remark: '' },
       ])
       expect(weilaFetch).toHaveBeenCalledWith('/v2/subuser/manager-get-all-friend')
     })
@@ -439,9 +440,10 @@ describe('device API', () => {
           nick: '小明明',
           avatar: '',
           online: false,
+          remark: '小明明',
           registeredAt: '2025-01-01',
         },
-        { userId: 56, userNum: '6003', nick: '小红', avatar: '', online: false },
+        { userId: 56, userNum: '6003', nick: '小红', avatar: '', online: false, remark: '' },
       ])
       expect(weilaFetch).toHaveBeenCalledWith('/v2/subuser/friend-get-all', {
         body: { user_id: 9 },
@@ -454,7 +456,7 @@ describe('device API', () => {
       )
 
       await expect(searchDeviceUsers(9, '6002')).resolves.toEqual([
-        { userId: 55, userNum: '6002', nick: '小明', avatar: '', online: false },
+        { userId: 55, userNum: '6002', nick: '小明', avatar: '', online: false, remark: '' },
       ])
       expect(weilaFetch).toHaveBeenCalledWith('/v2/subuser/friend-search-user', {
         body: { user_id: 9, key: '6002' },
@@ -869,6 +871,7 @@ describe('device API', () => {
           time: '09:30',
           content: '吃药',
           repeat: 'weekdays',
+          repeatDays: [1, 2, 3, 4, 5],
           ringDuration: 60,
           repeatCount: 3,
           repeatInterval: 5,
@@ -892,6 +895,52 @@ describe('device API', () => {
 
       const reminders = await getDeviceReminders(1848581)
       expect(reminders.map((item) => item.repeat)).toEqual(['once', 'daily', 'weekdays'])
+    })
+
+    it('keeps a monthly rule instead of folding it into weekdays', async () => {
+      weilaFetch.mockResolvedValue(
+        ok({ reminders: [{ ...apiReminder, repeated_type: 3, repeated: [15] }] }),
+      )
+
+      const reminders = await getDeviceReminders(1848581)
+      expect(reminders.map((item) => [item.repeat, item.repeatDays])).toEqual([['monthly', [15]]])
+    })
+
+    it('treats a weekly rule outside Monday-Friday as custom', async () => {
+      weilaFetch.mockResolvedValue(
+        ok({ reminders: [{ ...apiReminder, repeated_type: 2, repeated: [6, 7] }] }),
+      )
+
+      const reminders = await getDeviceReminders(1848581)
+      expect(reminders.map((item) => [item.repeat, item.repeatDays])).toEqual([['custom', [6, 7]]])
+    })
+
+    it('sends a custom weekly rule with its own day set', async () => {
+      weilaFetch.mockResolvedValue(ok({}))
+
+      await updateDeviceReminder(1848581, 116, {
+        time: '09:30',
+        content: '吃药',
+        repeat: 'custom',
+        repeatDays: [6, 7],
+        ringDuration: 60,
+        repeatCount: 3,
+        repeatInterval: 5,
+      })
+
+      expect(weilaFetch).toHaveBeenCalledWith('/v2/ext/rmdr/change-reminder', {
+        body: {
+          id: 116,
+          user_id: 1848581,
+          name: '吃药',
+          reminder: '09:30',
+          repeated_type: 2,
+          repeated: [6, 7],
+          duration: 60,
+          again_times: 3,
+          again_interval: 300,
+        },
+      })
     })
 
     it('writes the repeat type, day set and seconds the API expects', async () => {

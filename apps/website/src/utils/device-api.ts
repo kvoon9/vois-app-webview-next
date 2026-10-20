@@ -105,6 +105,8 @@ export interface Friend {
   nick: string
   avatar: string
   online: boolean
+  /** The device's remark for this friend, as returned (empty when unset). */
+  remark?: string
   /** Registration date (`YYYY-MM-DD`) from the subuser endpoints. */
   registeredAt?: string
   /** Some user responses include the profile signature. */
@@ -163,7 +165,7 @@ export interface RenewOrderRecord {
   createdAt: string
 }
 
-export type ReminderRepeat = 'once' | 'daily' | 'weekdays'
+export type ReminderRepeat = 'once' | 'daily' | 'weekdays' | 'custom' | 'monthly'
 
 /** Day numbers the reminder API stores; 1 is Monday and 7 is Sunday. */
 const WEEKDAYS = [1, 2, 3, 4, 5]
@@ -174,6 +176,8 @@ const REPEAT_TYPES = {
   once: 0,
   daily: 1,
   weekdays: 2,
+  custom: 2,
+  monthly: 3,
 } satisfies Record<ReminderRepeat, number>
 
 export interface DeviceReminder {
@@ -182,6 +186,8 @@ export interface DeviceReminder {
   time: string
   content: string
   repeat: ReminderRepeat
+  /** Weekly (1-7, Monday first) or monthly (1-31) day numbers; empty otherwise. */
+  repeatDays: number[]
   /** Seconds. */
   ringDuration: number
   /** Times. */
@@ -481,6 +487,7 @@ export async function getDeviceFriends(deviceId: number): Promise<Friend[]> {
       nick: friend.remark || friend.nick,
       avatar: friend.avatar,
       online: false,
+      remark: friend.remark ?? '',
     }
     if (friend.created_at !== undefined) mapped.registeredAt = friend.created_at
     return mapped
@@ -786,6 +793,8 @@ export interface ReminderInput {
   time: string
   content: string
   repeat: ReminderRepeat
+  /** Required for `custom` and `monthly`; the presets derive their own day set. */
+  repeatDays?: number[]
   ringDuration: number
   repeatCount: number
   repeatInterval: number
@@ -873,6 +882,7 @@ function toFriend(friend: SubuserFriendDto): Friend {
     nick: friend.remark || friend.nick,
     avatar: friend.avatar,
     online: false,
+    remark: friend.remark ?? '',
   }
   if (friend.created_at !== undefined) mapped.registeredAt = friend.created_at
   return mapped
@@ -947,22 +957,41 @@ function toReminder(reminder: DeviceReminderDto): DeviceReminder {
     reminderId: reminder.id,
     time: reminder.reminder,
     content: reminder.name,
-    repeat: toRepeat(reminder),
+    ...toRepeat(reminder),
     ringDuration: reminder.duration,
     repeatCount: reminder.again_times,
     repeatInterval: Math.round(reminder.again_interval / 60),
   }
 }
 
-/** `repeated_type` is authoritative when present; the stored day set says the same thing. */
-function toRepeat(reminder: DeviceReminderDto): ReminderRepeat {
-  if (reminder.repeated_type === REPEAT_TYPES.daily) return 'daily'
-  if (reminder.repeated_type === REPEAT_TYPES.weekdays) return 'weekdays'
-  if (reminder.repeated_type === REPEAT_TYPES.once) return 'once'
-  const days = reminder.repeated ?? []
-  if (days.length === 0) return 'once'
-  if (days.length >= EVERY_DAY.length) return 'daily'
-  return 'weekdays'
+/**
+ * `repeated_type` is authoritative when present; the stored day set says the same
+ * thing. A weekly rule whose days are not Monday-Friday is a custom one, and a
+ * monthly rule stays monthly so editing another field never rewrites it.
+ */
+function toRepeat(reminder: DeviceReminderDto): Pick<DeviceReminder, 'repeat' | 'repeatDays'> {
+  const days = [...(reminder.repeated ?? [])].sort((a, b) => a - b)
+  if (reminder.repeated_type === REPEAT_TYPES.monthly)
+    return { repeat: 'monthly', repeatDays: days }
+  if (reminder.repeated_type === REPEAT_TYPES.daily) return { repeat: 'daily', repeatDays: days }
+  if (reminder.repeated_type === REPEAT_TYPES.once) return { repeat: 'once', repeatDays: [] }
+  if (reminder.repeated_type === REPEAT_TYPES.weekdays) {
+    const weekdays = days.length === WEEKDAYS.length && days.every((day, i) => day === WEEKDAYS[i])
+    return { repeat: weekdays ? 'weekdays' : 'custom', repeatDays: days }
+  }
+  // Older responses carry only the day set.
+  if (days.length === 0) return { repeat: 'once', repeatDays: [] }
+  if (days.length === EVERY_DAY.length) return { repeat: 'daily', repeatDays: days }
+  const weekdays = days.every((day, i) => day === WEEKDAYS[i])
+  return { repeat: weekdays ? 'weekdays' : 'custom', repeatDays: days }
+}
+
+/** Weekly and monthly rules carry their own days; the fixed three keep the API's set. */
+export function reminderDaysFor(repeat: ReminderRepeat, days: number[]): number[] {
+  if (repeat === 'daily') return [...EVERY_DAY]
+  if (repeat === 'weekdays') return [...WEEKDAYS]
+  if (repeat === 'custom' || repeat === 'monthly') return [...days].sort((a, b) => a - b)
+  return []
 }
 
 function toReminderBody(input: ReminderInput): Omit<DeviceReminderDto, 'id' | 'user_id'> {
@@ -970,8 +999,7 @@ function toReminderBody(input: ReminderInput): Omit<DeviceReminderDto, 'id' | 'u
     name: input.content,
     reminder: input.time,
     repeated_type: REPEAT_TYPES[input.repeat],
-    repeated:
-      input.repeat === 'daily' ? [...EVERY_DAY] : input.repeat === 'weekdays' ? [...WEEKDAYS] : [],
+    repeated: reminderDaysFor(input.repeat, input.repeatDays ?? []),
     duration: input.ringDuration,
     again_times: input.repeatCount,
     // The UI picks whole minutes; the API stores the gap in seconds.

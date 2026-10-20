@@ -9,6 +9,7 @@ import PageHeader from '~/components/PageHeader.vue'
 import QueryState from '~/components/settings/QueryState.vue'
 import { parseRouteParamId } from '~/composables/useRouteParamId'
 import { useToast } from '~/composables/useToast'
+import { MAX_DESCRIPTION_LENGTH } from '~/utils/field-schema'
 import {
   getDeviceFriends,
   inviteDeviceFriend,
@@ -23,6 +24,8 @@ const deviceId = computed(() => parseRouteParamId(route.params.id))
 const keyword = shallowRef('')
 const searchedKeyword = shallowRef('')
 const selected = shallowRef<Friend | null>(null)
+// Draft of the application message, refilled with the default each time the dialog opens.
+const inviteMessage = shallowRef('')
 /** Users whose friend application was sent from this page; approval state is page-local. */
 const appliedIds = shallowRef<Set<number>>(new Set())
 
@@ -70,7 +73,9 @@ function rowState(user: Friend): 'added' | 'applied' | 'open' {
 }
 
 function choose(user: Friend): void {
-  if (rowState(user) === 'open') selected.value = user
+  if (rowState(user) !== 'open') return
+  inviteMessage.value = t('device.inviteDefaultMessage')
+  selected.value = user
 }
 
 async function confirmApply(): Promise<void> {
@@ -79,7 +84,7 @@ async function confirmApply(): Promise<void> {
   try {
     await inviteMutation.mutateAsync({
       inviteeId: user.userId,
-      detail: t('device.inviteDefaultMessage'),
+      detail: inviteMessage.value.trim() || t('device.inviteDefaultMessage'),
     })
     selected.value = null
     appliedIds.value = new Set([...appliedIds.value, user.userId])
@@ -125,7 +130,7 @@ async function confirmApply(): Promise<void> {
         <ul v-else class="mt-6 space-y-3">
           <li v-for="user in results" :key="user.userId" class="card">
             <div class="flex items-center">
-              <Avatar :name="user.nick" :src="user.avatar" :online="user.online" show-status />
+              <Avatar :name="user.nick" :src="user.avatar" />
               <span class="ml-3 min-w-0 flex-1">
                 <span class="block truncate text-body font-medium">{{ user.nick }}</span>
                 <span class="mt-0.5 block truncate text-small text-text-secondary">{{
@@ -168,6 +173,18 @@ async function confirmApply(): Promise<void> {
       @confirm="confirmApply"
     >
       <p>{{ t('device.addContactConfirm', { name: selected.nick }) }}</p>
+      <label class="mt-3 block text-body">
+        {{ t('device.inviteReason') }}
+        <textarea
+          v-model="inviteMessage"
+          class="input-field mt-2 min-h-24"
+          :maxlength="MAX_DESCRIPTION_LENGTH"
+          :placeholder="t('device.inviteReasonPlaceholder')"
+          :aria-label="t('device.inviteReason')"
+          :disabled="inviteMutation.isLoading.value"
+          rows="3"
+        />
+      </label>
     </BaseModal>
   </div>
 </template>

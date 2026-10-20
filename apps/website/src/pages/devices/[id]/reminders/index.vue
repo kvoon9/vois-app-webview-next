@@ -7,6 +7,7 @@ import { parseRouteParamId } from '~/composables/useRouteParamId'
 import PageHeader from '~/components/PageHeader.vue'
 import QueryState from '~/components/settings/QueryState.vue'
 import { getDeviceReminders } from '~/utils/device-api'
+import { reminderRepeatLabel } from '~/utils/reminder-repeat-label'
 
 const { t } = useI18n({ useScope: 'global' })
 const route = useRoute()
@@ -21,13 +22,10 @@ const { state, refetch: reload } = useQuery({
   },
 })
 
-const reminders = computed(() => state.value.data ?? [])
-
-function repeatLabel(repeat: string): string {
-  if (repeat === 'daily') return t('device.reminderDaily')
-  if (repeat === 'weekdays') return t('device.reminderWeekdays')
-  return t('device.reminderOnce')
-}
+/** Native sorts by the clock time, not by creation order. */
+const reminders = computed(() =>
+  [...(state.value.data ?? [])].sort((a, b) => a.time.localeCompare(b.time)),
+)
 
 function openNew(): void {
   if (deviceId.value == null) return
@@ -62,7 +60,7 @@ function openReminder(reminderId: number): void {
               <span class="block text-title font-semibold">{{ reminder.time }}</span>
               <span class="mt-1 block truncate text-2nd-body">{{ reminder.content }}</span>
               <span class="mt-1 block text-small text-text-secondary">
-                {{ repeatLabel(reminder.repeat) }}
+                {{ reminderRepeatLabel(t, reminder.repeat, reminder.repeatDays) }}
               </span>
             </button>
           </li>

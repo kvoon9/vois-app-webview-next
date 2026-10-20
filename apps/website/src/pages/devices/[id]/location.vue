@@ -39,6 +39,13 @@ const fence = computed<DeviceFence | null>(() => state.value.data?.[0] ?? null)
 const reportFrequency = computed<TrackFrequency>(() => state.value.data?.[1] ?? 'off')
 const recentPoint = computed<TrackPoint | null>(() => state.value.data?.[2] ?? null)
 
+/** Native warns on both `off` and `low`: the fence cannot fire either way. */
+const fenceWarning = computed(() => {
+  if (reportFrequency.value === 'off') return t('device.fenceDisabledTip')
+  if (reportFrequency.value === 'low') return t('device.fenceLowFrequencyTip')
+  return ''
+})
+
 /**
  * The phone's own live position through the bridge (`start-location` loop).
  * In the DevServer this falls back to a walking debug dot so the flow is
@@ -144,11 +151,11 @@ const myStatus = computed(() => {
         </div>
 
         <RouterLink
-          v-if="reportFrequency === 'off' && deviceId != null"
+          v-if="fenceWarning && deviceId != null"
           :to="`/devices/${deviceId}/track-setting`"
           class="absolute bottom-4 left-4 right-4 z-2 rounded-large bg-surface-elevated px-5 py-4 shadow-lg"
         >
-          <span>{{ t('device.fenceDisabledTip') }}</span>
+          <span>{{ fenceWarning }}</span>
         </RouterLink>
       </QueryState>
     </main>

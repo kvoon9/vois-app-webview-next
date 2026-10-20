@@ -63,12 +63,7 @@ function openContact(contact: Friend): void {
               class="w-full flex items-center text-left"
               @click="openContact(contact)"
             >
-              <Avatar
-                :name="contact.nick"
-                :src="contact.avatar"
-                :online="contact.online"
-                show-status
-              />
+              <Avatar :name="contact.nick" :src="contact.avatar" />
               <span class="ml-3 min-w-0 flex-1">
                 <span class="block truncate text-body font-medium">{{ contact.nick }}</span>
                 <span class="mt-0.5 block truncate text-small text-text-secondary">

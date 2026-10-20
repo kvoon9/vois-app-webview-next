@@ -15,8 +15,10 @@ const props = withDefaults(
   defineProps<{
     file: File
     outputSize?: number
+    /**Modal title; the device page crops a device avatar, groups a group avatar.*/
+    title?: string
   }>(),
-  { outputSize: 512 },
+  { outputSize: 512, title: undefined },
 )
 
 const emit = defineEmits<{
@@ -139,7 +141,7 @@ async function confirmCrop(): Promise<void> {
 
 <template>
   <BaseModal
-    :title="t('device.cropAvatar')"
+    :title="props.title ?? t('device.cropAvatar')"
     :cancel-text="t('modal.cancel')"
     :confirm-text="t('modal.confirm')"
     @cancel="emit('cancel')"

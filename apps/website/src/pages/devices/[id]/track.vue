@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { getLocalTimeZone, today } from '@internationalized/date'
+import { getLocalTimeZone, parseDate, today } from '@internationalized/date'
 import { useQuery } from '@pinia/colada'
 import { computed, shallowRef, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
@@ -87,7 +87,56 @@ const recent = computed(() => {
   const point = recentState.value.data
   return point ? toMapPoint(point) : null
 })
-const track = computed(() => trackState.value.data?.map(toMapPoint) ?? [])
+const track = computed(() => filterJumps(trackState.value.data ?? []).map(toMapPoint))
+
+/** The date the map shows, as native's `M/d` tag. */
+const dateLabel = computed(() => {
+  const date = parseDate(selectedDate.value)
+  return `${date.month}/${date.day}`
+})
+
+/** Great-circle distance in meters; the track comes in one coordinate system. */
+function distance(a: TrackPoint, b: TrackPoint): number {
+  const rad = Math.PI / 180
+  const dLat = (b.lat - a.lat) * rad
+  const dLng = (b.lng - a.lng) * rad
+  const h =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(a.lat * rad) * Math.cos(b.lat * rad) * Math.sin(dLng / 2) ** 2
+  return 2 * 6371000 * Math.asin(Math.sqrt(h))
+}
+
+function timeOf(point: TrackPoint): number {
+  return Date.parse(point.time.replace(' ', 'T'))
+}
+
+function speed(a: TrackPoint, b: TrackPoint): number {
+  const seconds = (timeOf(b) - timeOf(a)) / 1000
+  return seconds > 0 ? distance(a, b) / seconds : 0
+}
+
+/**
+ * Drop isolated GPS spikes the way native does: a dot flies away and comes
+ * straight back. A point is a spike when both hops exceed 100 m/s while its
+ * neighbours are close to each other; real movement keeps the point.
+ */
+function filterJumps(points: TrackPoint[]): TrackPoint[] {
+  if (points.length < 3) return points
+  const kept: TrackPoint[] = []
+  for (let i = 0; i < points.length; i++) {
+    const point = points[i]!
+    const previous = points[i - 1]
+    const next = points[i + 1]
+    if (previous && next) {
+      const inSpeed = speed(previous, point)
+      const outSpeed = speed(point, next)
+      const skipSpeed = speed(previous, next)
+      if (inSpeed > 100 && outSpeed > 100 && skipSpeed <= 100) continue
+    }
+    kept.push(point)
+  }
+  return kept
+}
 const center = computed(() => recent.value ?? track.value[0] ?? DEFAULT_CENTER)
 
 watch(
@@ -110,6 +159,11 @@ function confirmDate(date: string): void {
   <div class="page">
     <PageHeader :title="t('device.trackRecords')" />
     <main class="relative h-[calc(100svh-3.5rem)]">
+      <span
+        class="absolute left-4 top-2 z-20 h-10 flex items-center rounded-small bg-surface-elevated px-3 text-2nd-body"
+      >
+        {{ dateLabel }}
+      </span>
       <button
         type="button"
         class="absolute right-14 top-2 z-20 h-10 w-10 flex items-center justify-center rounded-small text-primary focus-visible:ring-2 focus-visible:ring-primary/40"
@@ -123,6 +177,12 @@ function confirmDate(date: string): void {
         <template v-if="recentState.data !== undefined">
           <QueryState :status="trackState.status" :error="trackState.error" @retry="reloadTrack()">
             <MapCanvas :center="center" :marker="recent" :track="track" />
+            <p
+              v-if="trackState.status === 'success' && track.length === 0"
+              class="absolute left-1/2 top-16 z-10 -translate-x-1/2 rounded-small bg-surface-elevated px-4 py-2 text-2nd-body text-text-secondary"
+            >
+              {{ t('device.noTrackForDate') }}
+            </p>
           </QueryState>
         </template>
       </QueryState>

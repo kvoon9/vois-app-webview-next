@@ -11,8 +11,8 @@ import { usePageBack } from '~/composables/usePageBack'
 import { useToast } from '~/composables/useToast'
 import {
   addEmergencyFriendContact,
-  getDeviceFriends,
   getEmergencyContacts,
+  getFriends,
   type Friend,
 } from '~/utils/device-api'
 
@@ -31,8 +31,9 @@ interface AddFriendData {
 
 async function load(): Promise<AddFriendData> {
   if (deviceId.value == null) throw new Error(t('device.invalidId'))
+  // Native picks SOS friends from the account's address book, not the device's own list.
   const [friends, emergency] = await Promise.all([
-    getDeviceFriends(deviceId.value),
+    getFriends(),
     getEmergencyContacts(deviceId.value),
   ])
   // Friend slots only; phone entries carry userId 0 and must not match.
@@ -97,12 +98,7 @@ async function addFriend(friendId: number): Promise<void> {
                 :disabled="existingIds.has(friend.userId) || addMutation.isLoading.value"
                 @click="addFriend(friend.userId)"
               >
-                <Avatar
-                  :name="friend.nick"
-                  :src="friend.avatar"
-                  :online="friend.online"
-                  show-status
-                />
+                <Avatar :name="friend.nick" :src="friend.avatar" />
                 <span class="ml-3 min-w-0 flex-1">
                   <span class="block truncate text-body">{{ friend.nick }}</span>
                   <span class="mt-0.5 block truncate text-small text-text-secondary">

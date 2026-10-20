@@ -63,7 +63,8 @@ function drawOverlays(): void {
       }),
     )
   }
-  if (props.fence) {
+  // Native only draws an enabled fence; a disabled one stays configured but invisible.
+  if (props.fence && props.fence.enable) {
     nextOverlays.push(
       new amap.value.Circle({
         center: pointValue(props.fence),

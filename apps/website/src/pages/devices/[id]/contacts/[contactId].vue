@@ -64,8 +64,8 @@ const removeMutation = useMutation({
 
 function openRemarkEditor(): void {
   if (!contact.value) return
-  // The friend list folds the remark into `nick`, so the current name is the draft.
-  remark.value = contact.value.nick
+  // `nick` falls back to the remark, so edit the remark itself rather than the display name.
+  remark.value = contact.value.remark ?? ''
   editingRemark.value = true
 }
 
@@ -104,13 +104,7 @@ async function removeContact(): Promise<void> {
       <QueryState :status="state.status" :error="state.error" @retry="reload()">
         <template v-if="contact">
           <section class="flex flex-col items-center py-4 text-center">
-            <Avatar
-              :name="contact.nick"
-              :src="contact.avatar"
-              :online="contact.online"
-              show-status
-              size="lg"
-            />
+            <Avatar :name="contact.nick" :src="contact.avatar" size="lg" />
             <h2 class="mt-3 text-header font-semibold">{{ contact.nick }}</h2>
             <p class="mt-1 text-small text-text-secondary">{{ contact.userNum }}</p>
           </section>
@@ -120,12 +114,6 @@ async function removeContact(): Promise<void> {
               <dt class="text-2nd-body text-text-secondary">{{ t('device.registeredAt') }}</dt>
               <dd class="ml-4 text-right text-2nd-body">
                 {{ contact.registeredAt || t('device.notAvailable') }}
-              </dd>
-            </div>
-            <div class="px-4 py-3">
-              <dt class="text-2nd-body text-text-secondary">{{ t('device.signature') }}</dt>
-              <dd class="mt-1 text-2nd-body">
-                {{ contact.signature || t('device.notAvailable') }}
               </dd>
             </div>
           </dl>

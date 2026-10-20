@@ -107,6 +107,7 @@ async function submit(): Promise<void> {
           <button
             type="button"
             class="min-h-12 w-full flex items-center justify-between py-3 text-left"
+            :aria-pressed="allSelected"
             :disabled="selectableFriends.length === 0"
             @click="toggleAll"
           >
@@ -131,16 +132,12 @@ async function submit(): Promise<void> {
               v-for="friend in state.data.friends"
               :key="friend.userId"
               type="button"
+              :aria-pressed="selectedIds.includes(friend.userId)"
               class="min-h-16 w-full flex items-center px-4 text-left disabled:opacity-50"
               :disabled="existingIds.has(friend.userId)"
               @click="toggleFriend(friend)"
             >
-              <Avatar
-                :name="friend.nick"
-                :src="friend.avatar"
-                :online="friend.online"
-                show-status
-              />
+              <Avatar :name="friend.nick" :src="friend.avatar" />
               <span class="ml-3 min-w-0 flex-1">
                 <span class="block truncate text-body">{{ friend.nick }}</span>
                 <span class="mt-0.5 block truncate text-small text-text-secondary">{{

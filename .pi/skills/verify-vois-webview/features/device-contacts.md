@@ -4,10 +4,10 @@ A device's contact page lists the people added to that device and offers two way
 
 ## Sub-features
 
-- `contacts-list` lists the device's friends with the device's remark (or `nick`), 微喇号, and online state, or its empty state.
+- `contacts-list` lists the device's friends with the device's remark (or `nick`) and 微喇号, or its empty state. Friend endpoints carry no `online` field, so rows show no presence dot.
 - `contacts-add` lists the account's friends, marks the ones already added, and invites the selected ones.
 - `contacts-search` searches 微喇号 before inviting.
-- `contacts-detail` shows one contact with 注册时间, 签名, 备注, and 删除联系人.
+- `contacts-detail` shows one contact with 注册时间, 备注, and 删除联系人. `friend-get-all` has no `signature`, so the 签名 row is gone.
 - `emergency-list` shows the 温馨提示, the remaining SOS call quota, and the current emergency contacts.
 - `emergency-add-friend` adds one of the account's friends to the SOS list.
 - `emergency-add-phone` adds a raw phone entry to the SOS list.
@@ -31,9 +31,9 @@ Preconditions:
 - **Agree with the capture.** The number of contact rows equals `responseBody.data.friends.length`; a row's name is `remark || nick`.
 - **Add from friends.** Choose 从好友添加. The URL becomes `#/devices/1848581/contacts/add`; the capture gains `POST /v2/subuser/manager-get-all-friend` (the picker) and `POST /v2/subuser/friend-get-all` (to mark 已添加). Each row shows its `nick` and `user_num`, a friend already on the device carries 已添加, and 全选 plus the "添加 N 位联系人" count follow the selection.
 - **Add (write).** Confirming the picker calls `POST /v2/subuser/friend-invite` once per selected friend with body `{ user_id, invitee_id, detail }`. Stop at the confirmation; see Gotchas.
-- **Search.** From the contacts page choose 搜索并添加 (`#/devices/1848581/contacts/search`): 请输入微喇号 with a 搜索 action, and no call until it is used. Submitting runs `POST /v2/subuser/friend-search-user` with body `{ user_id, key }`; the results are `responseBody.data.users`. Choosing a result and confirming runs `friend-invite`.
-- **Contact detail.** Choose a contact row (`#/devices/1848581/contacts/<contactId>`); the page resolves it from `friend-get-all`. The header is the contact's name; `main` shows 注册时间, 签名, 备注 (edit runs `friend-change-remark` with `{ user_id, friend_id, remark }`), and 删除联系人 (runs `friend-delete` with `{ user_id, friend_id }`).
-- **Emergency list.** Run `await page.goto("http://localhost:3021/#/devices/1848581/emergency-contacts")` (`POST /v2/subuser/emergency-contact-get`, `errcode: 0`). The header reads 紧急联系人设置 and the page shows 温馨提示 with the two limits (微喇好友最大数量 `sos_friend_limit`, 手机号最大数量 `sos_phone_limit`), 剩余SOS紧急电话通知次数为 `<sos_times>`, the current contacts, and the buttons 添加好友 and 添加电话联系人 (each disabled once its quota is full).
+- **Search.** From the contacts page choose 搜索并添加 (`#/devices/1848581/contacts/search`): 请输入微喇号 with a 搜索 action, and no call until it is used. Submitting runs `POST /v2/subuser/friend-search-user` with body `{ user_id, key }`; the results are `responseBody.data.users`. Choosing a result opens the application dialog with an editable reason (default 我想添加你为好友。); confirming runs `friend-invite`.
+- **Contact detail.** Choose a contact row (`#/devices/1848581/contacts/<contactId>`); the page resolves it from `friend-get-all`. The header is the contact's name; `main` shows 注册时间, 签名, 备注 (edit runs `friend-change-remark` with `{ user_id, friend_id, remark }`), and 删除联系人 (runs `friend-delete` with `{ user_id, friend_id }`). The 备注 editor starts from `remark`, not from the display name.
+- **Emergency list.** Run `await page.goto("http://localhost:3021/#/devices/1848581/emergency-contacts")` (`POST /v2/subuser/emergency-contact-get`, `errcode: 0`). The header reads 紧急联系人设置 and the page shows 温馨提示 with the two limits (微喇好友最大数量 `sos_friend_limit`, 手机号最大数量 `sos_phone_limit`), 剩余SOS紧急电话通知次数为 `<sos_times>`, the current contacts, and the buttons 添加好友 and 添加电话联系人. Both stay tappable when their quota is full and answer with a 最多可添加 N 个… toast, as native does.
 - **Emergency add entries.** Choose each: 添加好友 opens `#/devices/1848581/emergency-contacts/add-friend`, 添加电话联系人 opens `#/devices/1848581/emergency-contacts/add-phone`.
 - **Emergency add (write).** add-friend lists `manager-get-all-friend` with already-added rows marked 已添加; choosing one runs `emergency-contact-add-friend` with `{ user_id, friend_id }`. add-phone takes a name and a phone and runs `emergency-contact-add-phone` with `{ user_id, name, number }`.
 - **Emergency remove (write).** The − action on a contact row runs `emergency-contact-delete` with `{ user_id, number, type }` (`type` 1 for phone, 2 for friend). Deletion is keyed by number plus kind, not by an id.

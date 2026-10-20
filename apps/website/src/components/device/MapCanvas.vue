@@ -17,6 +17,12 @@ const props = defineProps<{
   me?: AMapPoint | null
   fence?: DeviceFence | null
   track?: AMapPoint[]
+  /** Let the map report taps, for picking a fence centre. */
+  picker?: boolean
+}>()
+
+const emit = defineEmits<{
+  pick: [point: AMapPoint]
 }>()
 
 const { t } = useI18n({ useScope: 'global' })
@@ -105,6 +111,11 @@ onMounted(async () => {
     })
     map.value.addControl(new amap.value.Scale())
     map.value.addControl(new amap.value.ToolBar())
+    if (props.picker) {
+      map.value.on('click', (event) =>
+        emit('pick', { lng: event.lnglat.lng, lat: event.lnglat.lat }),
+      )
+    }
     drawOverlays()
   } catch (reason) {
     error.value = reason instanceof Error ? reason.message : String(reason)

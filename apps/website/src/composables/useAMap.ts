@@ -16,7 +16,12 @@ export interface AMapOverlay {
   setMap(map: AMapMap | null): void
 }
 
+export interface AMapMapEvent {
+  lnglat: { lng: number; lat: number }
+}
+
 export interface AMapMap {
+  on(event: 'click', handler: (event: AMapMapEvent) => void): void
   addControl(control: AMapControl): void
   add(overlays: AMapOverlay | AMapOverlay[]): void
   remove(overlays: AMapOverlay | AMapOverlay[]): void

@@ -148,6 +148,17 @@ const myStatus = computed(() => {
             <span>{{ myStatus }}</span>
             <span v-if="myTime" class="ml-auto pl-3">{{ myTime }}</span>
           </p>
+
+          <!-- The fence lives in a row of this card: a floating button would sit on
+               top of AMap's zoom controls and the dev-only devtools toggle. -->
+          <RouterLink
+            v-if="deviceId != null"
+            :to="`/devices/${deviceId}/fence`"
+            class="mt-2 min-h-10 flex items-center justify-between text-body"
+          >
+            <span>{{ fence ? t('device.fenceEdit') : t('device.fenceAdd') }}</span>
+            <span class="row-chevron" aria-hidden="true" />
+          </RouterLink>
         </div>
 
         <RouterLink

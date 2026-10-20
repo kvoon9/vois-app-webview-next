@@ -44,6 +44,8 @@ const reminderId = computed(() => parseRouteParamId(route.params.reminderId))
 const isEdit = computed(() => reminderId.value != null)
 const editingContent = shallowRef(false)
 const contentDraft = shallowRef('')
+/** The "content is empty" prompt that stands between 确定 and an empty save. */
+const contentPrompt = shallowRef(false)
 const deleteConfirmation = shallowRef(false)
 
 function currentTime(): string {
@@ -132,9 +134,10 @@ async function backToList(): Promise<void> {
 
 async function save(): Promise<void> {
   if (saveMutation.isLoading.value) return
-  // Native refuses an empty reminder before it writes.
+  // Native refuses an empty reminder before it writes, and offers the content
+  // editor instead of just refusing: 取消 stays here, 确定 opens the editor.
   if (content.value.trim().length === 0) {
-    showToast(t('device.reminderContentRequired'), { type: 'error' })
+    contentPrompt.value = true
     return
   }
   try {
@@ -203,25 +206,27 @@ interface OptionRow {
   choose: (value: string | number) => void
 }
 
-const optionRows: OptionRow[] = [
-  {
-    key: 'repeat',
-    label: t('device.reminderRepeat'),
-    options: REPEATS.map((value) => ({ value, text: repeatOptionText(value) })),
-    current: () => repeat.value,
-    text: repeatOptionText,
-    choose: (value) => {
-      const match = REPEATS.find((option) => option === value)
-      if (match === undefined) return
-      if (match === 'custom') {
-        customDraft.value = [...repeatDays.value]
-        customDaysOpen.value = true
-        return
-      }
-      repeat.value = match
-      repeatDays.value = reminderDaysFor(match, repeatDays.value)
-    },
+const repeatRow: OptionRow = {
+  key: 'repeat',
+  label: t('device.reminderRepeat'),
+  options: REPEATS.map((value) => ({ value, text: repeatOptionText(value) })),
+  current: () => repeat.value,
+  text: repeatOptionText,
+  choose: (value) => {
+    const match = REPEATS.find((option) => option === value)
+    if (match === undefined) return
+    if (match === 'custom') {
+      customDraft.value = [...repeatDays.value]
+      customDaysOpen.value = true
+      return
+    }
+    repeat.value = match
+    repeatDays.value = reminderDaysFor(match, repeatDays.value)
   },
+}
+
+/** The ring settings keep their native order: duration, count, interval. */
+const ringRows: OptionRow[] = [
   {
     key: 'ringDuration',
     label: t('device.reminderRingDuration'),
@@ -260,14 +265,31 @@ const optionRows: OptionRow[] = [
   },
 ]
 
+/** The content row opens the text editor rather than a single-select sheet. */
+const contentRow = { key: 'content', label: t('device.reminderContent') } as const
+type ContentRow = typeof contentRow
+type FormRow = OptionRow | ContentRow
+
+/**
+ * Native's field order: 重复, 内容, then 响铃时长 / 重复响铃次数 / 重复响铃间隔.
+ * The content row sits among the pickers, so the list is composed by hand.
+ */
+const formRows: FormRow[] = [repeatRow, contentRow, ...ringRows]
+
 /** Which option row's picker sheet is open, if any. */
 const activeRow = shallowRef<OptionRow | null>(null)
 
-function currentText(row: OptionRow): string {
+function rowText(row: FormRow): string {
+  if (row.key === 'content') return content.value || t('device.notAvailable')
   // The repeat row shows the rule itself (the chosen days), not an option label.
   if (row.key === 'repeat') return repeatText(repeat.value)
   const match = row.options.find((option) => option.value === row.current())
   return match ? match.text : t('device.notAvailable')
+}
+
+function openRow(row: FormRow): void {
+  if (row.key === 'content') openContentEditor()
+  else activeRow.value = row
 }
 
 function chooseOption(value: string | number): void {
@@ -278,6 +300,12 @@ function chooseOption(value: string | number): void {
 function openContentEditor(): void {
   contentDraft.value = content.value
   editingContent.value = true
+}
+
+/** 确定 on the empty-content prompt: close it and open the editor it points at. */
+function editContentFromPrompt(): void {
+  contentPrompt.value = false
+  openContentEditor()
 }
 
 function saveContent(value: string): void {
@@ -320,25 +348,18 @@ const headerTitle = computed(() =>
           />
         </section>
 
-        <button type="button" class="min-h-14 mt-4 w-full nav-item" @click="openContentEditor">
-          <span>{{ t('device.reminderContent') }}</span>
-          <span class="ml-3 min-w-0 flex items-center text-text-secondary">
-            <span class="truncate">{{ content || t('device.notAvailable') }}</span>
-            <span class="row-chevron" aria-hidden="true" />
-          </span>
-        </button>
-
-        <div class="mt-3 space-y-3">
+        <!-- Five separate rows, in the native order: 重复, 内容, then the ring settings. -->
+        <div class="mt-4 space-y-3">
           <button
-            v-for="row in optionRows"
+            v-for="row in formRows"
             :key="row.key"
             type="button"
             class="min-h-14 w-full nav-item"
-            @click="activeRow = row"
+            @click="openRow(row)"
           >
             <span>{{ row.label }}</span>
             <span class="ml-3 min-w-0 flex items-center text-text-secondary">
-              <span class="truncate">{{ currentText(row) }}</span>
+              <span class="truncate">{{ rowText(row) }}</span>
               <span class="row-chevron" aria-hidden="true" />
             </span>
           </button>
@@ -359,7 +380,7 @@ const headerTitle = computed(() =>
     <BaseModal
       v-if="activeRow"
       :title="activeRow.label"
-      :cancel-text="t('modal.close')"
+      :cancel-text="t('modal.cancel')"
       @cancel="activeRow = null"
     >
       <template #footer>
@@ -369,7 +390,7 @@ const headerTitle = computed(() =>
             class="modal-action bg-surface-field text-text-primary"
             @click="activeRow = null"
           >
-            {{ t('modal.close') }}
+            {{ t('modal.cancel') }}
           </button>
         </div>
       </template>
@@ -416,9 +437,21 @@ const headerTitle = computed(() =>
       </div>
     </BaseModal>
 
+    <!-- Native's empty-content check: 取消 stays on the form, 确定 opens the editor. -->
+    <BaseModal
+      v-if="contentPrompt"
+      :title="t('device.reminderContentTitle')"
+      :cancel-text="t('modal.cancel')"
+      :confirm-text="t('modal.ok')"
+      @cancel="contentPrompt = false"
+      @confirm="editContentFromPrompt"
+    >
+      <p>{{ t('device.reminderContentRequired') }}</p>
+    </BaseModal>
+
     <FieldEditModal
       v-if="editingContent"
-      :title="t('device.reminderContent')"
+      :title="t('device.reminderContentTitle')"
       :model-value="contentDraft"
       kind="description"
       :multiline="false"

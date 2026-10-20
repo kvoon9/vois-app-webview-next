@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { useQuery } from '@pinia/colada'
-import { computed } from 'vue'
+import { computed, shallowRef } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { RouterLink, useRoute } from 'vue-router'
+import { RouterLink, useRoute, useRouter } from 'vue-router'
+import BaseModal from '~/components/BaseModal.vue'
 import MapCanvas from '~/components/device/MapCanvas.vue'
 import PageHeader from '~/components/PageHeader.vue'
 import QueryState from '~/components/settings/QueryState.vue'
@@ -19,6 +20,7 @@ import {
 
 const { t } = useI18n({ useScope: 'global' })
 const route = useRoute()
+const router = useRouter()
 
 const deviceId = computed(() => parseRouteParamId(route.params.id))
 
@@ -75,8 +77,6 @@ const center = computed(
     },
 )
 
-const deviceTime = computed(() => recentPoint.value?.time.slice(11) ?? '')
-
 const myTime = computed(() => {
   const fix = realtime.point.value
   if (!fix) return ''
@@ -116,6 +116,26 @@ const myStatus = computed(() => {
       return t('device.myLocationIdle')
   }
 })
+
+/** Native's 围栏 shortcut: explain the gesture first, then open the editor. */
+const addConfirmation = shallowRef(false)
+
+function openFenceEditor(): void {
+  if (deviceId.value == null) return
+  void router.push(`/devices/${deviceId.value}/fence`)
+}
+
+function openFence(): void {
+  // An existing fence goes straight to the editor, where it is editable and
+  // deletable; only a missing fence asks for confirmation first.
+  if (fence.value) openFenceEditor()
+  else addConfirmation.value = true
+}
+
+function startFence(): void {
+  addConfirmation.value = false
+  openFenceEditor()
+}
 </script>
 
 <template>
@@ -125,20 +145,29 @@ const myStatus = computed(() => {
       <QueryState :status="state.status" :error="state.error" @retry="reload()">
         <MapCanvas :center="center" :marker="deviceMarker" :me="myMarker" :fence="fence" />
 
-        <div
-          class="absolute left-4 right-4 top-4 z-2 rounded-large bg-surface-elevated px-5 py-4 shadow-lg"
-        >
-          <p class="flex items-center text-2nd-body">
-            <span>{{ t('device.deviceLocation') }}</span>
-            <span v-if="deviceTime" class="ml-auto pl-3 text-text-secondary">
-              {{ deviceTime }}
-            </span>
-          </p>
-          <p
+        <!-- Native chrome: a vertical stack of round white buttons on the right.
+             Sharing has no bridge call behind it, so it stays out. -->
+        <div class="absolute right-4 top-4 z-2 flex flex-col space-y-3">
+          <button
+            type="button"
+            class="h-12 w-12 flex items-center justify-center rounded-full bg-surface-elevated text-primary shadow-lg"
+            :aria-label="fence ? t('device.fenceEdit') : t('device.fenceAdd')"
+            @click="openFence"
+          >
+            <span class="i-ph-crosshair text-xl" aria-hidden="true" />
+          </button>
+        </div>
+
+        <div class="absolute bottom-4 left-4 right-4 z-2 flex flex-col items-start space-y-2">
+          <!-- The live location runs in the background, so it reports as one
+               compact line instead of native-free card furniture. -->
+          <button
             v-if="myStatus"
-            class="mt-1 flex items-center text-2nd-body text-text-secondary"
-            :class="canRetryRealtime ? 'cursor-pointer' : ''"
-            v-on="canRetryRealtime ? { click: retryRealtime } : {}"
+            type="button"
+            class="min-h-9 flex items-center rounded-full bg-surface-elevated px-3 text-small text-text-secondary shadow-lg"
+            :class="canRetryRealtime ? '' : 'pointer-events-none'"
+            :aria-label="myStatus"
+            @click="retryRealtime"
           >
             <span
               v-if="realtime.status.value === 'tracking'"
@@ -146,29 +175,29 @@ const myStatus = computed(() => {
               aria-hidden="true"
             />
             <span>{{ myStatus }}</span>
-            <span v-if="myTime" class="ml-auto pl-3">{{ myTime }}</span>
-          </p>
+            <span v-if="myTime" class="ml-2">{{ myTime }}</span>
+          </button>
 
-          <!-- The fence lives in a row of this card: a floating button would sit on
-               top of AMap's zoom controls and the dev-only devtools toggle. -->
           <RouterLink
-            v-if="deviceId != null"
-            :to="`/devices/${deviceId}/fence`"
-            class="mt-2 min-h-10 flex items-center justify-between text-body"
+            v-if="fenceWarning && deviceId != null"
+            :to="`/devices/${deviceId}/track-setting`"
+            class="w-full rounded-large bg-surface-elevated px-4 py-3 text-2nd-body shadow-lg"
           >
-            <span>{{ fence ? t('device.fenceEdit') : t('device.fenceAdd') }}</span>
-            <span class="row-chevron" aria-hidden="true" />
+            {{ fenceWarning }}
           </RouterLink>
         </div>
-
-        <RouterLink
-          v-if="fenceWarning && deviceId != null"
-          :to="`/devices/${deviceId}/track-setting`"
-          class="absolute bottom-4 left-4 right-4 z-2 rounded-large bg-surface-elevated px-5 py-4 shadow-lg"
-        >
-          <span>{{ fenceWarning }}</span>
-        </RouterLink>
       </QueryState>
     </main>
+
+    <BaseModal
+      v-if="addConfirmation"
+      :title="t('device.fenceAdd')"
+      :cancel-text="t('modal.cancel')"
+      :confirm-text="t('modal.confirm')"
+      @cancel="addConfirmation = false"
+      @confirm="startFence"
+    >
+      <p>{{ t('device.fenceAddConfirm') }}</p>
+    </BaseModal>
   </div>
 </template>

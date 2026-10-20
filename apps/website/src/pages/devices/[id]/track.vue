@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { getLocalTimeZone, parseDate, today } from '@internationalized/date'
 import { useQuery } from '@pinia/colada'
-import { computed, shallowRef, watch } from 'vue'
+import { computed, onUnmounted, shallowRef, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute } from 'vue-router'
 import MapCanvas from '~/components/device/MapCanvas.vue'
@@ -10,7 +10,6 @@ import PageHeader from '~/components/PageHeader.vue'
 import QueryState from '~/components/settings/QueryState.vue'
 import { parseRouteParamId } from '~/composables/useRouteParamId'
 import type { AMapPoint } from '~/composables/useAMap'
-import { useToast } from '~/composables/useToast'
 import { getDeviceTrack, getRecentTrackPoint, type TrackPoint } from '~/utils/device-api'
 
 /** Fallback center (Shenzhen) while there is no fix and no track point yet. */
@@ -62,10 +61,12 @@ function toMapPoint(point: TrackPoint): AMapPoint {
 
 const route = useRoute()
 const { t } = useI18n({ useScope: 'global' })
-const { showToast } = useToast()
-const calendarOpen = shallowRef(false)
+/** Native opens the date picker as the page appears, today preselected. */
+const calendarOpen = shallowRef(true)
 const selectedDate = shallowRef(today(getLocalTimeZone()).toString())
 const awaitingDate = shallowRef<string | null>(null)
+/** The date pill only appears once a day has actually been confirmed. */
+const dateConfirmed = shallowRef(false)
 
 const deviceId = computed(() => parseRouteParamId(route.params.id))
 const { state: recentState, refetch: reloadRecent } = useQuery({
@@ -139,47 +140,78 @@ function filterJumps(points: TrackPoint[]): TrackPoint[] {
 }
 const center = computed(() => recent.value ?? track.value[0] ?? DEFAULT_CENTER)
 
+/**
+ * An empty day reports through the bottom toast native uses, which times out on
+ * its own: the map stays bare afterwards instead of holding a floating pill.
+ */
+const emptyToast = shallowRef(false)
+let emptyToastTimer: ReturnType<typeof setTimeout> | undefined
+
+function showEmptyToast(): void {
+  emptyToast.value = true
+  clearTimeout(emptyToastTimer)
+  emptyToastTimer = setTimeout(() => {
+    emptyToast.value = false
+  }, 2600)
+}
+
+onUnmounted(() => {
+  clearTimeout(emptyToastTimer)
+})
+
 watch(
   () => trackState.value.status,
   (status) => {
     if (status !== 'success' || awaitingDate.value !== selectedDate.value) return
-    if (track.value.length === 0) showToast(t('device.noTrackForDate'), { type: 'info' })
+    if (track.value.length === 0) showEmptyToast()
     awaitingDate.value = null
   },
 )
 
 function confirmDate(date: string): void {
+  const unchanged = date === selectedDate.value
   awaitingDate.value = date
   selectedDate.value = date
+  dateConfirmed.value = true
   calendarOpen.value = false
+  // Confirming the same day keeps the query key, so the watcher never fires and
+  // an empty day would stay silent; report it here instead.
+  if (unchanged && trackState.value.status === 'success' && track.value.length === 0) {
+    showEmptyToast()
+    awaitingDate.value = null
+  }
 }
 </script>
 
 <template>
   <div class="page">
-    <PageHeader :title="t('device.trackRecords')" />
+    <PageHeader :title="t('device.trackRecords')">
+      <template #action>
+        <button
+          type="button"
+          class="absolute right-3 top-1/2 h-11 w-11 -translate-y-1/2 flex items-center justify-center text-primary focus-visible:ring-2 focus-visible:ring-primary/40"
+          :aria-label="t('device.selectDate')"
+          @click="calendarOpen = true"
+        >
+          <span class="i-ph-calendar-blank text-title" aria-hidden="true" />
+        </button>
+      </template>
+    </PageHeader>
     <main class="relative h-[calc(100svh-3.5rem)]">
       <span
-        class="absolute left-4 top-2 z-20 h-10 flex items-center rounded-small bg-surface-elevated px-3 text-2nd-body"
+        v-if="dateConfirmed"
+        class="absolute right-4 top-3 z-20 h-8 flex items-center rounded-full bg-surface-elevated px-3 text-2nd-body shadow-lg"
       >
         {{ dateLabel }}
       </span>
-      <button
-        type="button"
-        class="absolute right-14 top-2 z-20 h-10 w-10 flex items-center justify-center rounded-small text-primary focus-visible:ring-2 focus-visible:ring-primary/40"
-        :aria-label="t('device.selectDate')"
-        @click="calendarOpen = true"
-      >
-        <span class="i-ph-calendar-blank text-title" aria-hidden="true" />
-      </button>
 
       <QueryState :status="recentState.status" :error="recentState.error" @retry="reloadRecent()">
         <template v-if="recentState.data !== undefined">
           <QueryState :status="trackState.status" :error="trackState.error" @retry="reloadTrack()">
             <MapCanvas :center="center" :marker="recent" :track="track" />
             <p
-              v-if="trackState.status === 'success' && track.length === 0"
-              class="absolute left-1/2 top-16 z-10 -translate-x-1/2 rounded-small bg-surface-elevated px-4 py-2 text-2nd-body text-text-secondary"
+              v-if="emptyToast"
+              class="absolute bottom-6 left-4 right-4 z-10 mx-auto max-w-sm rounded-standard bg-surface-elevated px-4 py-3 text-center text-2nd-body text-text-secondary shadow-lg"
             >
               {{ t('device.noTrackForDate') }}
             </p>

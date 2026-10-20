@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useMutation, useQuery, useQueryCache } from '@pinia/colada'
-import { computed } from 'vue'
+import { computed, shallowRef } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute } from 'vue-router'
 import Avatar from '~/components/Avatar.vue'
@@ -52,6 +52,22 @@ const { state, refetch: reload } = useQuery({
 
 const existingIds = computed(() => new Set(state.value.data?.existingIds ?? []))
 const friendsFull = computed(() => state.value.data?.friendsFull ?? false)
+// Filter over the account's address book; the SOS quota is checked on tap, as in the app.
+const keyword = shallowRef('')
+/** Native lists contacts by name in pinyin order, not by API order. */
+function byName(left: Friend, right: Friend): number {
+  return left.nick.localeCompare(right.nick, 'zh-Hans-CN')
+}
+
+const visibleFriends = computed(() => {
+  const query = keyword.value.trim().toLowerCase()
+  const friends = [...(state.value.data?.friends ?? [])].sort(byName)
+  if (!query) return friends
+  return friends.filter(
+    (friend) =>
+      friend.nick.toLowerCase().includes(query) || friend.userNum.toLowerCase().includes(query),
+  )
+})
 
 const addMutation = useMutation({
   mutation: (friendId: number) => {
@@ -82,16 +98,30 @@ async function addFriend(friendId: number): Promise<void> {
     <PageHeader :title="t('device.emergencyPickFriend')" />
 
     <main class="p-4">
+      <div class="relative">
+        <span
+          class="i-ph-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-lg text-text-secondary"
+          aria-hidden="true"
+        />
+        <input
+          v-model="keyword"
+          type="search"
+          class="w-full rounded-standard bg-surface-field py-3 pl-11 pr-4 text-body text-text-primary outline-none placeholder:text-text-secondary"
+          :placeholder="t('device.contactSearchPlaceholder')"
+          :aria-label="t('device.contactSearchPlaceholder')"
+        />
+      </div>
+
       <QueryState :status="state.status" :error="state.error" @retry="reload()">
         <template v-if="state.data">
           <p
-            v-if="state.data.friends.length === 0"
+            v-if="visibleFriends.length === 0"
             class="py-12 text-center text-body text-text-secondary"
           >
-            {{ t('device.noCandidates') }}
+            {{ keyword.trim() ? t('device.noUsersFound') : t('device.noCandidates') }}
           </p>
-          <ul v-else class="overflow-hidden panel">
-            <li v-for="friend in state.data.friends" :key="friend.userId">
+          <ul v-else class="mt-4 overflow-hidden panel">
+            <li v-for="friend in visibleFriends" :key="friend.userId">
               <button
                 type="button"
                 class="min-h-16 w-full flex items-center px-4 text-left disabled:opacity-50"
@@ -99,12 +129,7 @@ async function addFriend(friendId: number): Promise<void> {
                 @click="addFriend(friend.userId)"
               >
                 <Avatar :name="friend.nick" :src="friend.avatar" />
-                <span class="ml-3 min-w-0 flex-1">
-                  <span class="block truncate text-body">{{ friend.nick }}</span>
-                  <span class="mt-0.5 block truncate text-small text-text-secondary">
-                    {{ friend.userNum }}
-                  </span>
-                </span>
+                <span class="ml-3 min-w-0 flex-1 truncate text-body">{{ friend.nick }}</span>
                 <span
                   v-if="existingIds.has(friend.userId)"
                   class="ml-2 text-small text-text-secondary"

@@ -25,6 +25,9 @@ function openDevice(device: Device): void {
     <PageHeader :title="t('device.title')" />
 
     <main class="p-4">
+      <h2 class="mb-3 text-2nd-body font-semibold text-text-secondary">
+        {{ t('device.connectedDevices') }}
+      </h2>
       <QueryState
         :status="state.status"
         :error="state.error"
@@ -38,7 +41,6 @@ function openDevice(device: Device): void {
             :key="device.userId"
             :name="device.nick"
             :avatar="device.avatar"
-            :online="device.online"
             :product="device.product"
             @click="openDevice(device)"
           />

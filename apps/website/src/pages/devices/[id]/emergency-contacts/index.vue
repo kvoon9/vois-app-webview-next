@@ -97,59 +97,74 @@ async function removeContact(): Promise<void> {
             <h2 class="text-header font-semibold">{{ t('device.emergencyTips') }}</h2>
             <ul class="mt-3 space-y-2 text-small text-text-secondary">
               <li>
-                {{
-                  t('device.emergencyTipQuota', {
-                    friendMax: state.data.quota.friendMax,
-                    phoneMax: state.data.quota.phoneMax,
-                  })
-                }}
+                <i18n-t keypath="device.emergencyTipQuota" scope="global">
+                  <template #friendMax>
+                    <span class="text-danger">{{ state.data.quota.friendMax }}</span>
+                  </template>
+                  <template #phoneMax>
+                    <span class="text-danger">{{ state.data.quota.phoneMax }}</span>
+                  </template>
+                </i18n-t>
               </li>
               <li>{{ t('device.emergencyTipNotify') }}</li>
               <li>
-                {{ t('device.emergencyTipSos', { sos: state.data.quota.sosRemaining }) }}
+                <i18n-t keypath="device.emergencyTipSos" scope="global">
+                  <template #sos>
+                    <span class="text-danger">{{ state.data.quota.sosRemaining }}</span>
+                  </template>
+                </i18n-t>
               </li>
             </ul>
           </section>
 
-          <ul class="mt-4 overflow-hidden panel">
-            <li
-              v-for="contact in contacts"
-              :key="`${contact.type}-${contact.number}`"
-              class="flex items-center"
+          <nav class="mt-4 panel" :aria-label="t('device.emergencyContactAdd')">
+            <button
+              type="button"
+              class="min-h-12 w-full flex items-center justify-between px-4 text-left text-body"
+              @click="openAddFriend"
             >
-              <Avatar :name="contact.name" :src="contact.avatar" />
-              <span class="ml-3 min-w-0 flex-1">
-                <span class="block truncate text-body font-medium">{{ contact.name }}</span>
-                <span class="mt-0.5 block truncate text-small text-text-secondary">
-                  {{ contact.number }}
-                </span>
-              </span>
-              <button
-                type="button"
-                class="ml-3 flex-none text-danger"
-                :aria-label="t('device.emergencyContactRemove')"
-                :disabled="removeMutation.isLoading.value"
-                @click="removing = contact"
-              >
-                <span
-                  class="flex h-6 w-6 items-center justify-center rounded-full border border-current"
-                  aria-hidden="true"
-                  >−</span
-                >
-              </button>
-            </li>
-          </ul>
-
-          <nav class="mt-4 space-y-3" :aria-label="t('device.emergencyContactAdd')">
-            <button type="button" class="min-h-14 w-full nav-item" @click="openAddFriend">
               <span>{{ t('device.emergencyAddFriend') }}</span>
-              <span class="i-ph-plus text-2xl text-text-secondary" aria-hidden="true" />
+              <span class="row-chevron" aria-hidden="true" />
             </button>
-            <button type="button" class="min-h-14 w-full nav-item" @click="openAddPhone">
+            <button
+              type="button"
+              class="min-h-12 w-full flex items-center justify-between px-4 text-left text-body"
+              @click="openAddPhone"
+            >
               <span>{{ t('device.emergencyAddPhone') }}</span>
-              <span class="i-ph-plus text-2xl text-text-secondary" aria-hidden="true" />
+              <span class="row-chevron" aria-hidden="true" />
             </button>
           </nav>
+
+          <section class="mt-4 min-h-32 card">
+            <h2 class="text-2nd-body font-semibold text-text-secondary">
+              {{ t('device.addedContacts') }}
+            </h2>
+            <ul v-if="contacts.length > 0" class="mt-3 space-y-3">
+              <li
+                v-for="contact in contacts"
+                :key="`${contact.type}-${contact.number}`"
+                class="min-h-12 flex items-center"
+              >
+                <Avatar :name="contact.name" :src="contact.avatar" />
+                <span class="ml-3 min-w-0 flex-1">
+                  <span class="block truncate text-body font-medium">{{ contact.name }}</span>
+                  <span class="mt-0.5 block truncate text-small text-text-secondary">
+                    {{ contact.number }}
+                  </span>
+                </span>
+                <button
+                  type="button"
+                  class="icon-button ml-3 h-9 w-9 text-danger"
+                  :aria-label="t('device.emergencyContactRemove')"
+                  :disabled="removeMutation.isLoading.value"
+                  @click="removing = contact"
+                >
+                  <span class="i-ph-minus text-lg" aria-hidden="true" />
+                </button>
+              </li>
+            </ul>
+          </section>
         </template>
       </QueryState>
     </main>

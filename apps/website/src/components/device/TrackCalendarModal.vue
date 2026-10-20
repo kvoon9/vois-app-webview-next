@@ -151,7 +151,7 @@ function confirm(): void {
               class="h-12 flex-1 rounded-button bg-primary text-header font-medium text-primary-text"
               @click="confirm"
             >
-              {{ t('modal.confirm') }}
+              {{ t('modal.ok') }}
             </button>
           </footer>
         </DialogContent>

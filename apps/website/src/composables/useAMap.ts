@@ -20,6 +20,18 @@ export interface AMapMapEvent {
   lnglat: { lng: number; lat: number }
 }
 
+export interface AMapGeocodeResult {
+  regeocode?: { formattedAddress?: string }
+}
+
+/** The slice of AMap's Geocoder plugin this app calls. */
+export interface AMapGeocoder {
+  getAddress(
+    lnglat: [number, number],
+    callback: (status: string, result: AMapGeocodeResult) => void,
+  ): void
+}
+
 export interface AMapMap {
   on(event: 'click', handler: (event: AMapMapEvent) => void): void
   addControl(control: AMapControl): void
@@ -70,7 +82,8 @@ export interface AMapApi {
   Circle: new (options: AMapCircleOptions) => AMapOverlay
   Polyline: new (options: AMapLineOptions) => AMapOverlay
   Scale: new () => AMapControl
-  ToolBar: new () => AMapControl
+  ToolBar: new (options?: { position?: string }) => AMapControl
+  Geocoder: new (options?: { radius?: number }) => AMapGeocoder
 }
 
 const amapInstance = shallowRef<AMapApi | null>(null)
@@ -93,7 +106,7 @@ export function useAMap() {
     loadingPromise = loadAMapSdk({
       key,
       version: '2.0',
-      plugins: ['AMap.Scale', 'AMap.ToolBar'],
+      plugins: ['AMap.Scale', 'AMap.ToolBar', 'AMap.Geocoder'],
     })
       .then((amap) => {
         // SAFETY: the loader resolves the documented AMap JSAPI constructor namespace.
@@ -107,9 +120,27 @@ export function useAMap() {
     return loadingPromise
   }
 
+  /**
+   * Resolves a point to a street address through AMap's Geocoder plugin. The
+   * fence stores coordinates only, so the address is display sugar: the caller
+   * keeps the coordinates when the lookup fails (offline, plugin unavailable).
+   */
+  async function reverseGeocode(point: AMapPoint): Promise<string> {
+    const amap = await loadAMap()
+    const geocoder = new amap.Geocoder({ radius: 500 })
+    return new Promise((resolve, reject) => {
+      geocoder.getAddress([point.lng, point.lat], (status, result) => {
+        const address = result?.regeocode?.formattedAddress
+        if (status === 'complete' && address) resolve(address)
+        else reject(new Error(`Reverse geocode failed: ${status}`))
+      })
+    })
+  }
+
   return {
     isLoaded: computed(() => amapInstance.value !== null),
     loadAMap,
+    reverseGeocode,
   }
 }
 

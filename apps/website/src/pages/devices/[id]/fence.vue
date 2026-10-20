@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useMutation, useQuery, useQueryCache } from '@pinia/colada'
-import { computed, shallowRef, watch } from 'vue'
+import { computed, onMounted, shallowRef, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute } from 'vue-router'
 import BaseModal from '~/components/BaseModal.vue'
@@ -8,7 +8,7 @@ import MapCanvas from '~/components/device/MapCanvas.vue'
 import PageHeader from '~/components/PageHeader.vue'
 import QueryState from '~/components/settings/QueryState.vue'
 import { parseRouteParamId } from '~/composables/useRouteParamId'
-import type { AMapPoint } from '~/composables/useAMap'
+import { useAMap, type AMapPoint } from '~/composables/useAMap'
 import { usePageBack } from '~/composables/usePageBack'
 import { useToast } from '~/composables/useToast'
 import {
@@ -33,6 +33,7 @@ const route = useRoute()
 const queryCache = useQueryCache()
 const { goBack } = usePageBack()
 const { showToast } = useToast()
+const { reverseGeocode } = useAMap()
 
 const deviceId = computed(() => parseRouteParamId(route.params.id))
 
@@ -50,18 +51,29 @@ const recentPoint = computed<TrackPoint | null>(() => state.value.data?.[1] ?? n
 const center = shallowRef<AMapPoint | null>(null)
 const radius = shallowRef(300)
 const name = shallowRef('')
+const address = shallowRef('')
+/**
+ * Native leaves 围栏中心 empty until the centre is set: the seeded position only
+ * places the map, it does not claim to be the user's choice.
+ */
+const picked = shallowRef(false)
 const deleteConfirmation = shallowRef(false)
 
-/** Seed the draft from the stored fence, else from the last known position. */
+/** Reverse-geocode replies can land out of order; only the latest one may win. */
+let geocodeRequest = 0
+
+/** Seeds the draft from the stored fence, else from the last known position. */
 watch(
   () => state.value.data,
   (data) => {
     if (!data) return
     const stored = data[0]
     if (stored) {
-      center.value = { lng: stored.lng, lat: stored.lat }
+      const storedCenter = { lng: stored.lng, lat: stored.lat }
+      center.value = storedCenter
       radius.value = stored.radius
       name.value = stored.name
+      void showAddress(storedCenter)
       return
     }
     const recent = data[1]
@@ -69,6 +81,11 @@ watch(
   },
   { immediate: true },
 )
+
+/** Native explains the gesture once on entry, then gets out of the map's way. */
+onMounted(() => {
+  showToast(t('device.fencePickHint'), { type: 'info' })
+})
 
 const mapCenter = computed(() => center.value ?? recentPoint.value ?? DEFAULT_CENTER)
 
@@ -86,8 +103,39 @@ const preview = computed<DeviceFence | null>(() =>
     : null,
 )
 
+function formatPoint(point: AMapPoint): string {
+  return `${point.lng.toFixed(5)}, ${point.lat.toFixed(5)}`
+}
+
+/**
+ * The address of the centre. Until one is picked the row stays empty like
+ * native; when the lookup is unavailable the coordinates keep it informative.
+ */
+const centerText = computed(() => {
+  if (!center.value || !(picked.value || fence.value)) return ''
+  return address.value || formatPoint(center.value)
+})
+
+async function showAddress(point: AMapPoint): Promise<void> {
+  const request = ++geocodeRequest
+  try {
+    const next = await reverseGeocode(point)
+    if (request === geocodeRequest) address.value = next
+  } catch {
+    // Coordinates are the fallback; the row never shows a stale address.
+    if (request === geocodeRequest) address.value = ''
+  }
+}
+
 function pickCenter(point: AMapPoint): void {
   center.value = point
+  picked.value = true
+  void showAddress(point)
+}
+
+/** Native's ± buttons step the radius by 50 m and clamp to 200–1000 m. */
+function stepRadius(delta: number): void {
+  radius.value = Math.min(MAX_RADIUS, Math.max(MIN_RADIUS, radius.value + delta))
 }
 
 const saveMutation = useMutation({
@@ -171,37 +219,70 @@ async function removeFence(): Promise<void> {
           @pick="pickCenter"
         />
 
-        <p
-          class="absolute left-4 right-4 top-4 z-2 rounded-large bg-surface-elevated px-5 py-4 text-2nd-body shadow-lg"
+        <!-- Radius sits at the top like native: the two end labels name the
+             range, the round buttons step it, the slider carries the green dot. -->
+        <section
+          class="absolute left-0 right-0 top-0 z-2 rounded-b-[28px] bg-surface-elevated px-4 pb-4 pt-3 shadow-lg"
         >
-          {{ t('device.fencePickHint') }}
-        </p>
+          <div class="flex items-center">
+            <button
+              type="button"
+              class="h-9 w-9 flex-none flex items-center justify-center rounded-full bg-surface-muted text-header text-text-primary"
+              aria-label="-50"
+              @click="stepRadius(-RADIUS_STEP)"
+            >
+              −
+            </button>
+            <span class="ml-3 flex-none text-small text-text-secondary">
+              {{ t('device.fenceRadiusValue', { n: MIN_RADIUS }) }}
+            </span>
+            <input
+              v-model.number="radius"
+              type="range"
+              :min="MIN_RADIUS"
+              :max="MAX_RADIUS"
+              :step="RADIUS_STEP"
+              class="mx-3 min-w-0 flex-1 accent-primary"
+              :aria-label="t('device.fenceRadius')"
+            />
+            <span class="mr-3 flex-none text-small text-text-secondary">
+              {{ t('device.fenceRadiusValue', { n: MAX_RADIUS }) }}
+            </span>
+            <button
+              type="button"
+              class="h-9 w-9 flex-none flex items-center justify-center rounded-full bg-surface-muted text-header text-text-primary"
+              aria-label="+50"
+              @click="stepRadius(RADIUS_STEP)"
+            >
+              +
+            </button>
+          </div>
+        </section>
 
         <section
-          class="absolute bottom-0 left-0 right-0 z-2 rounded-t-[28px] bg-surface-dialog px-5 pb-6 pt-5"
+          class="absolute bottom-0 left-0 right-0 z-2 rounded-t-[28px] bg-surface-dialog px-5 pb-6 pt-4"
         >
-          <div class="flex items-center justify-between">
-            <span class="text-body">{{ t('device.fenceRadius') }}</span>
+          <div class="min-h-11 flex items-center justify-between">
+            <span class="flex-none text-body">{{ t('device.fenceCenter') }}</span>
+            <span class="ml-4 min-w-0 flex-1 text-right text-2nd-body text-text-secondary">
+              {{ centerText }}
+            </span>
+          </div>
+          <div class="min-h-11 flex items-center justify-between">
+            <span class="flex-none text-body">{{ t('device.fenceRadius') }}</span>
             <span class="text-2nd-body text-text-secondary">
               {{ t('device.fenceRadiusValue', { n: radius }) }}
             </span>
           </div>
-          <input
-            v-model.number="radius"
-            type="range"
-            :min="MIN_RADIUS"
-            :max="MAX_RADIUS"
-            :step="RADIUS_STEP"
-            class="mt-2 w-full accent-primary"
-            :aria-label="t('device.fenceRadius')"
-          />
 
-          <label class="mt-4 min-h-14 flex items-center rounded-standard bg-surface-elevated px-4">
-            <span class="text-2nd-body text-text-secondary">{{ t('device.fenceName') }}</span>
+          <label class="mt-3 min-h-14 flex items-center rounded-standard bg-surface-elevated px-4">
+            <span class="flex-none text-2nd-body text-text-secondary">
+              {{ t('device.fenceName') }}
+            </span>
             <input
               v-model="name"
               type="text"
-              class="ml-3 min-w-0 flex-1 bg-transparent text-body outline-none placeholder:text-text-secondary"
+              class="ml-3 min-w-0 flex-1 bg-transparent text-right text-body outline-none placeholder:text-text-secondary"
               :maxlength="MAX_NAME_LENGTH"
               :placeholder="t('device.fenceNamePlaceholder')"
               :aria-label="t('device.fenceName')"
@@ -214,7 +295,7 @@ async function removeFence(): Promise<void> {
             :disabled="saveMutation.isLoading.value"
             @click="save"
           >
-            {{ saveMutation.isLoading.value ? t('device.saving') : t('modal.ok') }}
+            {{ saveMutation.isLoading.value ? t('device.saving') : t('device.fenceSave') }}
           </button>
 
           <button

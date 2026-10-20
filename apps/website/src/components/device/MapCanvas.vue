@@ -75,10 +75,12 @@ function drawOverlays(): void {
       new amap.value.Circle({
         center: pointValue(props.fence),
         radius: props.fence.radius,
+        // The fence reads as a translucent green disc on the map (native draws
+        // one); the H5 brand green replaces native's pure #00FF00 stroke.
         strokeColor: '#16c784',
         strokeWeight: 2,
-        fillColor: '#83c7d4',
-        fillOpacity: 0.22,
+        fillColor: '#16c784',
+        fillOpacity: 0.15,
       }),
     )
   }
@@ -110,7 +112,9 @@ onMounted(async () => {
       resizeEnable: true,
     })
     map.value.addControl(new amap.value.Scale())
-    map.value.addControl(new amap.value.ToolBar())
+    // Native keeps zoom bottom-right (the scale and logo own bottom-left) and
+    // leaves the top corners to the compass and the page's own buttons.
+    map.value.addControl(new amap.value.ToolBar({ position: 'RB' }))
     if (props.picker) {
       map.value.on('click', (event) =>
         emit('pick', { lng: event.lnglat.lng, lat: event.lnglat.lat }),

@@ -65,52 +65,48 @@ async function save(): Promise<void> {
     <main class="p-4">
       <section class="flex justify-center py-6">
         <span
-          class="flex h-20 w-20 items-center justify-center rounded-full bg-surface-muted text-4xl text-text-secondary"
+          class="h-24 w-24 flex items-center justify-center rounded-large bg-surface-muted text-4xl text-text-secondary"
           aria-hidden="true"
         >
           <span class="i-ph-user" />
         </span>
       </section>
 
-      <section class="overflow-hidden panel">
-        <label class="min-h-14 flex items-center px-4">
-          <span class="i-ph-device-mobile text-lg text-text-secondary" aria-hidden="true" />
-          <input
-            v-model="phone"
-            class="ml-3 min-w-0 flex-1 bg-transparent text-body outline-none opacity-75 transition-opacity focus:opacity-100 placeholder:text-text-secondary"
-            type="tel"
-            inputmode="tel"
-            maxlength="16"
-            :placeholder="t('device.emergencyPhonePlaceholder')"
-            :disabled="addMutation.isLoading.value"
-          />
-        </label>
-        <label class="min-h-14 flex items-center px-4">
-          <span class="i-ph-user text-lg text-text-secondary" aria-hidden="true" />
-          <input
-            v-model="name"
-            class="ml-3 min-w-0 flex-1 bg-transparent text-body outline-none opacity-75 transition-opacity focus:opacity-100 placeholder:text-text-secondary"
-            type="text"
-            :maxlength="MAX_NAME_LENGTH"
-            :placeholder="t('device.emergencyNamePlaceholder')"
-            :disabled="addMutation.isLoading.value"
-            @keyup.enter="save"
-          />
-        </label>
-      </section>
+      <div class="space-y-3">
+        <input
+          v-model="phone"
+          class="input-field"
+          type="tel"
+          inputmode="tel"
+          maxlength="16"
+          :placeholder="t('device.emergencyPhonePlaceholder')"
+          :aria-label="t('device.emergencyPhonePlaceholder')"
+          :disabled="addMutation.isLoading.value"
+        />
+        <input
+          v-model="name"
+          class="input-field"
+          type="text"
+          :maxlength="MAX_NAME_LENGTH"
+          :placeholder="t('device.emergencyNamePlaceholder')"
+          :aria-label="t('device.emergencyNamePlaceholder')"
+          :disabled="addMutation.isLoading.value"
+          @keyup.enter="save"
+        />
+      </div>
+
+      <p class="mt-4 text-center text-small text-text-secondary">
+        {{ t('device.emergencyTipNotify') }}
+      </p>
 
       <button
         type="button"
-        class="btn-primary mt-6"
+        class="mt-6 btn-primary"
         :disabled="addMutation.isLoading.value"
         @click="save"
       >
         {{ addMutation.isLoading.value ? t('device.saving') : t('device.emergencySave') }}
       </button>
-
-      <p class="mt-4 text-center text-small text-text-secondary">
-        {{ t('device.emergencyTipNotify') }}
-      </p>
     </main>
   </div>
 </template>

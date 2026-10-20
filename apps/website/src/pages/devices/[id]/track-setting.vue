@@ -66,9 +66,11 @@ async function choose(next: TrackFrequency): Promise<void> {
     <PageHeader :title="t('device.trackSetting')" />
     <main class="p-4">
       <QueryState :status="state.status" :error="state.error" @retry="reload()">
+        <!-- One panel, four rows, the dot on the right: native's single-group
+             radio list. The divider native draws stays out (no borders). -->
         <div
           v-if="state.data !== undefined"
-          class="overflow-hidden rounded-large bg-surface-elevated"
+          class="panel overflow-hidden"
           role="radiogroup"
           :aria-label="t('device.trackSetting')"
         >
@@ -76,7 +78,7 @@ async function choose(next: TrackFrequency): Promise<void> {
             v-for="option in options"
             :key="option.value"
             type="button"
-            class="min-h-16 w-full flex items-center justify-between px-5 text-left disabled:opacity-60"
+            class="panel-row min-h-16 w-full text-left disabled:opacity-60"
             :aria-checked="frequency === option.value"
             role="radio"
             :disabled="saving"

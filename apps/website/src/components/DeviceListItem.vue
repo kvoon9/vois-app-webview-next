@@ -4,18 +4,12 @@ import Avatar from '~/components/Avatar.vue'
 withDefaults(
   defineProps<{
     avatar?: string | null
-    imei?: string
     name: string
-    online?: boolean
     product?: string
-    userNum?: string
   }>(),
   {
     avatar: null,
-    imei: '',
-    online: undefined,
     product: '',
-    userNum: '',
   },
 )
 
@@ -25,21 +19,14 @@ defineEmits<{
 </script>
 
 <template>
-  <li class="card flex items-center">
-    <button
-      type="button"
-      class="min-w-0 flex flex-1 items-center text-left"
-      @click="$emit('click')"
-    >
-      <Avatar :name="name" :src="avatar" :online="online" :show-status="online !== undefined" />
+  <li>
+    <!-- The button owns the card fill so the whole row is the tap target. -->
+    <button type="button" class="w-full card flex items-center text-left" @click="$emit('click')">
+      <Avatar :name="name" :src="avatar" />
       <span class="ml-3 min-w-0 flex-1">
         <span class="block truncate text-body font-medium">{{ name }}</span>
-        <span v-if="product || imei" class="mt-0.5 block truncate text-small text-text-secondary">
-          {{ product }}<template v-if="product && imei"> · </template
-          ><template v-if="imei">IMEI {{ imei }}</template>
-        </span>
-        <span v-else-if="userNum" class="mt-0.5 block truncate text-small text-text-secondary">
-          {{ userNum }}
+        <span v-if="product" class="mt-0.5 block truncate text-small text-text-secondary">
+          {{ product }}
         </span>
       </span>
       <span class="row-chevron" aria-hidden="true" />

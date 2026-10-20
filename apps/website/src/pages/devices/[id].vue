@@ -157,7 +157,7 @@ function onCropFailed(): void {
 <template>
   <RouterView v-if="route.name !== '/devices/[id]'" />
   <div v-else class="page">
-    <PageHeader :title="device?.nick ?? t('device.title')" />
+    <PageHeader :title="t('device.detailTitle')" />
     <main class="p-4">
       <QueryState
         :status="state.status"
@@ -167,15 +167,23 @@ function onCropFailed(): void {
         @retry="reload()"
       >
         <template v-if="device">
-          <section class="flex flex-col items-center py-4 text-center">
-            <button
-              type="button"
-              class="rounded-full focus-visible:ring-2 focus-visible:ring-primary/40"
-              :aria-label="t('device.changeDeviceAvatar')"
-              @click="pickAvatar"
-            >
-              <Avatar :name="device.nick" :src="device.avatar" size="lg" />
-            </button>
+          <section class="flex flex-col items-center pt-2 pb-4 text-center">
+            <div class="relative">
+              <button
+                type="button"
+                class="block rounded-full focus-visible:ring-2 focus-visible:ring-primary/40"
+                :aria-label="t('device.changeDeviceAvatar')"
+                @click="pickAvatar"
+              >
+                <Avatar :name="device.nick" :src="device.avatar" size="lg" />
+              </button>
+              <span
+                class="pointer-events-none absolute right-0 bottom-0 flex h-6 w-6 items-center justify-center rounded-full bg-surface-elevated text-small text-text-secondary"
+                aria-hidden="true"
+              >
+                <span class="i-ph-pencil-simple" />
+              </span>
+            </div>
             <input
               ref="avatarInput"
               type="file"
@@ -194,143 +202,165 @@ function onCropFailed(): void {
                 <span class="i-ph-pencil-simple" aria-hidden="true" />
               </button>
             </div>
+            <p class="mt-1 text-small text-text-secondary">
+              {{ t('device.activatedAt') }}: {{ device.activatedAt || t('device.notAvailable') }}
+            </p>
           </section>
 
-          <dl class="mt-2 overflow-hidden panel">
+          <!-- Card 1: identity. The SIM rows only exist for devices with a card. -->
+          <section class="mt-2 overflow-hidden panel">
             <div class="flex items-center justify-between px-4 py-3">
-              <dt class="text-2nd-body text-text-secondary">{{ t('device.activatedAt') }}</dt>
-              <dd class="ml-4 text-right text-2nd-body">
-                {{ device.activatedAt || t('device.notAvailable') }}
-              </dd>
-            </div>
-            <div class="flex items-center justify-between px-4 py-3">
-              <dt class="text-2nd-body text-text-secondary">{{ t('device.model') }}</dt>
-              <dd class="ml-4 text-right text-2nd-body">
+              <span class="text-2nd-body text-text-secondary">{{ t('device.model') }}</span>
+              <span class="ml-4 text-right text-2nd-body">
                 {{ device.product || t('device.notAvailable') }}
-              </dd>
+              </span>
             </div>
             <div class="flex items-center justify-between px-4 py-3">
-              <dt class="text-2nd-body text-text-secondary">{{ t('device.deviceNumber') }}</dt>
-              <dd class="ml-4 flex min-w-0 items-center text-right text-2nd-body">
+              <span class="text-2nd-body text-text-secondary">{{ t('device.deviceNumber') }}</span>
+              <span class="ml-4 flex min-w-0 items-center text-right text-2nd-body">
                 <span class="truncate">{{ device.imei || t('device.notAvailable') }}</span>
                 <button
                   v-if="device.imei"
                   type="button"
-                  class="icon-button ml-2 p-1 focus-visible:ring-2 focus-visible:ring-primary/40"
+                  class="ml-2 flex-none text-small text-text-secondary focus-visible:ring-2 focus-visible:ring-primary/40"
                   :aria-label="t('device.copyDeviceNumber')"
                   @click="copyDeviceNumber"
                 >
-                  <span class="i-ph-copy" aria-hidden="true" />
+                  {{ t('device.copy') }}
                 </button>
-              </dd>
+              </span>
             </div>
             <div class="flex items-center justify-between px-4 py-3">
-              <dt class="text-2nd-body text-text-secondary">{{ t('device.version') }}</dt>
-              <dd class="ml-4 text-right text-2nd-body">
+              <span class="text-2nd-body text-text-secondary">{{ t('device.version') }}</span>
+              <span class="ml-4 text-right text-2nd-body">
                 {{ device.version || t('device.notAvailable') }}
-              </dd>
+              </span>
             </div>
             <div class="flex items-center justify-between px-4 py-3">
-              <dt class="text-2nd-body text-text-secondary">{{ t('device.userNumber') }}</dt>
-              <dd class="ml-4 text-right text-2nd-body">
+              <span class="text-2nd-body text-text-secondary">{{ t('device.userNumber') }}</span>
+              <span class="ml-4 text-right text-2nd-body">
                 {{ device.userNum || t('device.notAvailable') }}
-              </dd>
+              </span>
             </div>
-          </dl>
-
-          <section v-if="device.simCard" class="mt-4">
-            <h2 class="section-title mb-4">{{ t('device.simCard') }}</h2>
-            <dl class="overflow-hidden panel">
+            <template v-if="device.simCard">
               <div class="flex items-center justify-between px-4 py-3">
-                <dt class="text-2nd-body text-text-secondary">{{ t('device.iccid') }}</dt>
-                <dd class="ml-4 text-right text-2nd-body">
+                <span class="text-2nd-body text-text-secondary">{{ t('device.iccid') }}</span>
+                <span class="ml-4 text-right text-2nd-body">
                   {{ device.simCard.iccid || t('device.notAvailable') }}
-                </dd>
+                </span>
               </div>
               <div class="flex items-center justify-between px-4 py-3">
-                <dt class="text-2nd-body text-text-secondary">{{ t('device.expireAt') }}</dt>
-                <dd class="ml-4 text-right text-2nd-body">
+                <span class="text-2nd-body text-text-secondary">{{ t('device.expireAt') }}</span>
+                <span class="ml-4 text-right text-2nd-body">
                   {{ device.simCard.expiryDate || t('device.notAvailable') }}
-                </dd>
+                </span>
               </div>
               <div
                 v-if="device.simCard.recharge"
                 class="flex items-center justify-between px-4 py-3"
               >
-                <dt class="text-2nd-body text-text-secondary">{{ t('device.simCardState') }}</dt>
-                <dd class="ml-4 text-right text-2nd-body text-danger">
+                <span class="text-2nd-body text-text-secondary">
+                  {{ t('device.simCardState') }}
+                </span>
+                <span class="ml-4 text-right text-2nd-body text-danger">
                   {{ t('device.simCardNeedRecharge') }}
-                </dd>
+                </span>
               </div>
-            </dl>
-          </section>
-
-          <div class="mt-3 flex min-h-12 items-center justify-between px-4 panel">
-            <span class="text-2nd-body">{{ t('device.locationShare') }}</span>
-            <ToggleSwitch
-              :checked="device.shareLocation"
-              :aria-label="t('device.locationShare')"
-              @change="onShareLocationChange"
-            />
-          </div>
-
-          <nav class="mt-3 space-y-3">
-            <RouterLink :to="`/devices/${deviceId}/location`" class="min-h-12 w-full nav-item">
-              <span>{{ t('device.locationAndFence') }}</span>
-              <span class="row-chevron" aria-hidden="true" />
-            </RouterLink>
-            <RouterLink :to="`/devices/${deviceId}/track`" class="min-h-12 w-full nav-item">
-              <span>{{ t('device.trackRecords') }}</span>
-              <span class="row-chevron" aria-hidden="true" />
-            </RouterLink>
-            <RouterLink :to="`/devices/${deviceId}/track-setting`" class="min-h-12 w-full nav-item">
-              <span>{{ t('device.trackSetting') }}</span>
-              <span class="row-chevron" aria-hidden="true" />
-            </RouterLink>
-            <RouterLink :to="`/devices/${deviceId}/groups`" class="min-h-12 w-full nav-item">
-              <span>{{ t('device.groups') }}</span>
-              <span class="row-chevron" aria-hidden="true" />
-            </RouterLink>
-            <RouterLink :to="`/devices/${deviceId}/contacts`" class="min-h-12 w-full nav-item">
-              <span>{{ t('device.contacts') }}</span>
-              <span class="row-chevron" aria-hidden="true" />
-            </RouterLink>
+            </template>
             <RouterLink
-              :to="`/devices/${deviceId}/emergency-contacts`"
-              class="min-h-12 w-full nav-item"
+              v-if="device.simCard"
+              :to="`/devices/${deviceId}/recharge-records`"
+              class="min-h-12 w-full panel-row text-body"
             >
-              <span>{{ t('device.emergencyContactSettings') }}</span>
+              <span>{{ t('device.rechargeRecords') }}</span>
               <span class="row-chevron" aria-hidden="true" />
             </RouterLink>
             <RouterLink
               v-if="device.simCard?.recharge"
               to="/devices/recharge"
-              class="min-h-12 w-full nav-item"
+              class="min-h-12 w-full panel-row text-body"
             >
               <span>{{ t('device.rechargeDevices') }}</span>
               <span class="row-chevron" aria-hidden="true" />
             </RouterLink>
+          </section>
+
+          <!-- Card 2: management -->
+          <div class="mt-4 overflow-hidden panel">
             <RouterLink
-              v-if="device.simCard"
-              :to="`/devices/${deviceId}/recharge-records`"
-              class="min-h-12 w-full nav-item"
+              :to="`/devices/${deviceId}/groups`"
+              class="min-h-12 w-full panel-row text-body"
             >
-              <span>{{ t('device.rechargeRecords') }}</span>
+              <span>{{ t('device.groups') }}</span>
               <span class="row-chevron" aria-hidden="true" />
             </RouterLink>
-            <RouterLink :to="`/devices/${deviceId}/reminders`" class="min-h-12 w-full nav-item">
+            <RouterLink
+              :to="`/devices/${deviceId}/contacts`"
+              class="min-h-12 w-full panel-row text-body"
+            >
+              <span>{{ t('device.contacts') }}</span>
+              <span class="row-chevron" aria-hidden="true" />
+            </RouterLink>
+            <RouterLink
+              :to="`/devices/${deviceId}/emergency-contacts`"
+              class="min-h-12 w-full panel-row text-body"
+            >
+              <span>{{ t('device.emergencyContactSettings') }}</span>
+              <span class="row-chevron" aria-hidden="true" />
+            </RouterLink>
+          </div>
+
+          <!-- Card 3: position; the share switch leads, the rest navigate. -->
+          <div class="mt-4 overflow-hidden panel">
+            <div class="panel-row min-h-12">
+              <span class="text-body">{{ t('device.locationShare') }}</span>
+              <ToggleSwitch
+                :checked="device.shareLocation"
+                :aria-label="t('device.locationShare')"
+                @change="onShareLocationChange"
+              />
+            </div>
+            <RouterLink
+              :to="`/devices/${deviceId}/location`"
+              class="min-h-12 w-full panel-row text-body"
+            >
+              <span>{{ t('device.locationAndFence') }}</span>
+              <span class="row-chevron" aria-hidden="true" />
+            </RouterLink>
+            <RouterLink
+              :to="`/devices/${deviceId}/track`"
+              class="min-h-12 w-full panel-row text-body"
+            >
+              <span>{{ t('device.trackRecords') }}</span>
+              <span class="row-chevron" aria-hidden="true" />
+            </RouterLink>
+            <RouterLink
+              :to="`/devices/${deviceId}/track-setting`"
+              class="min-h-12 w-full panel-row text-body"
+            >
+              <span>{{ t('device.trackSetting') }}</span>
+              <span class="row-chevron" aria-hidden="true" />
+            </RouterLink>
+            <RouterLink
+              :to="`/devices/${deviceId}/reminders`"
+              class="min-h-12 w-full panel-row text-body"
+            >
               <span>{{ t('device.reminders') }}</span>
               <span class="row-chevron" aria-hidden="true" />
             </RouterLink>
-          </nav>
+          </div>
 
-          <button
-            type="button"
-            class="mt-4 min-h-12 w-full rounded-large border border-danger/40 px-4 text-body text-danger focus-visible:ring-2 focus-visible:ring-primary/40"
-            @click="unbindConfirm = true"
-          >
-            {{ t('device.unbind') }}
-          </button>
+          <!-- Card 4: destructive action, its own card at the bottom. -->
+          <div class="mt-4 overflow-hidden panel">
+            <button
+              type="button"
+              class="min-h-12 w-full panel-row text-body text-danger focus-visible:ring-2 focus-visible:ring-primary/40"
+              @click="unbindConfirm = true"
+            >
+              <span>{{ t('device.unbind') }}</span>
+              <span class="row-chevron" aria-hidden="true" />
+            </button>
+          </div>
         </template>
       </QueryState>
     </main>
@@ -348,9 +378,9 @@ function onCropFailed(): void {
 
     <BaseModal
       v-if="unbindConfirm"
-      :title="t('device.unbind')"
+      :title="t('modal.tips')"
       :cancel-text="t('modal.cancel')"
-      :confirm-text="unbinding ? t('device.saving') : t('modal.confirm')"
+      :confirm-text="unbinding ? t('device.saving') : t('modal.ok')"
       :dismissible="!unbinding"
       tone="danger"
       @cancel="unbindConfirm = false"

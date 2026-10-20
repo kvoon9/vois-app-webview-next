@@ -58,8 +58,8 @@ function openReminder(reminderId: number): void {
               @click="openReminder(reminder.reminderId)"
             >
               <span class="block text-title font-semibold">{{ reminder.time }}</span>
-              <span class="mt-1 block truncate text-2nd-body">{{ reminder.content }}</span>
-              <span class="mt-1 block text-small text-text-secondary">
+              <span class="mt-1 block truncate text-body">{{ reminder.content }}</span>
+              <span class="mt-1 block text-2nd-body text-text-secondary">
                 {{ reminderRepeatLabel(t, reminder.repeat, reminder.repeatDays) }}
               </span>
             </button>

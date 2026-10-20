@@ -13,7 +13,7 @@
     "expire_time": "9999-12-31T23:59:59+08:00",
     "updated_at": "2026-09-10T13:18:06+08:00",
     "created_at": "2026-09-10T13:18:06+08:00",
-    "project_name": "微喇内部WEB接口",
+    "project_name": "微喇WEB接口",
     "branch_name": "main",
     "created_user": {
       "uid": "4015b",

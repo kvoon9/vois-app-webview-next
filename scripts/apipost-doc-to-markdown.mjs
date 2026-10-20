@@ -11,14 +11,15 @@
  *   vp run docs:apipost                       # 用内置的默认分享链接
  *   node scripts/apipost-doc-to-markdown.mjs <文档URL|issue_id> [-o 输出目录] [--single 文件名]
  *
- * 默认输出 api-reference/<项目名>/，保留 ApiPost 的中文目录层级。
+ * 默认输出 api-reference/<项目英文名>/，目录与文件名一律 ASCII：
+ * 目录查 FOLDER_SLUGS，接口文件名取 URL 末段。
  * 注意不能挪进 docs/：apps/docs 的 @nuxt/content 会把路径逐段 slugify，
  * 中文段一律变成空串（“群组”、“加入群组”都是 ""），几十个接口会撞到同一个路径。
  * 仓库是公开的，所以示例参数里的 token / sign 默认打码，用 --keep-secrets 可以保留原值。
  */
 
 import { mkdir, readdir, readFile, stat, writeFile } from 'node:fs/promises'
-import { dirname, join, posix } from 'node:path'
+import { dirname, join, posix, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const ORIGIN = 'https://docs.apipost.net'
@@ -76,8 +77,59 @@ const cell = (value) =>
     .replace(/\|/g, '\\|')
     .replace(/\r?\n/g, '<br>')
 
-/** 目录名和文件名里的 / 与保留字符会变成非法路径或意外层级。 */
-const safeName = (name) => (name || '未命名').replace(/[/\\:*?"<>|]/g, '_').trim()
+/**
+ * 目录名和文件名必须是纯 ASCII。
+ *
+ * ApiPost 的目录树是中文的，但中文段一旦进了 git 路径，Windows 的 GBK 解码、
+ * macOS 的 Unicode 归一化、以及各命令行工具的转义都会让同一个文件对不上。
+ * 所以目录查表转英文 slug，接口文件名直接取 URL 末段（本来就是 ASCII）；
+ * 查不到的目录直接报错，新增目录要先补一条英文名，而不是悄悄落成中文路径。
+ */
+const FOLDER_SLUGS = {
+  管理员: 'manager',
+  围栏: 'geofence',
+  轨迹: 'track',
+  流量卡: 'simcard',
+  提醒: 'reminder',
+  紧急联系人: 'emergency-contact',
+  设备: 'device',
+  好友: 'friend',
+  群组: 'group',
+}
+
+const asciiSlug = (name) =>
+  String(name ?? '')
+    .replace(/[^\x20-\x7E]/g, '')
+    .replace(/[^A-Za-z0-9._-]+/g, '-')
+    .replace(/^[-.]+|[-.]+$/g, '')
+    .toLowerCase()
+
+/** 混合名（subuser管理）丢掉中文尾巴，纯中文名查表，其余报错。 */
+function folderSlug(name) {
+  const trimmed = String(name ?? '').trim()
+  const slug = FOLDER_SLUGS[trimmed] || asciiSlug(trimmed)
+  if (!slug) throw new Error(`目录名 "${trimmed}" 没有英文 slug，请在 FOLDER_SLUGS 里补一条`)
+  return slug
+}
+
+/** 接口文件名取 URL 末段（device-get-detail）；没有 URL 时才退回目录名。 */
+function endpointSlug(api, fallbackName) {
+  const path = String(api?.url || '')
+    .split('?')[0]
+    .replace(/\/+$/, '')
+  const last = path.split('/').filter(Boolean).pop() || ''
+  return asciiSlug(last) || folderSlug(fallbackName)
+}
+
+/** 上游项目名带“内部”，这份快照在公开仓库里，落盘前去掉。 */
+const sanitizeProjectName = (name) =>
+  String(name ?? '')
+    .replace(/内部/g, '')
+    .trim()
+
+/** 输出目录名：英文项目名。 */
+const PROJECT_DIRS = { 微喇WEB接口: 'weila-webapi' }
+const projectDirName = (title) => PROJECT_DIRS[title] || folderSlug(title)
 
 /** 凭据类参数名：值只是文档快照，泄露无益，公开仓库里默认打码。 */
 const SECRET_KEY =
@@ -309,10 +361,12 @@ async function main() {
   }
   sortNodes(rootNodes)
 
+  // 快照不进上游的“内部”字样，README 与 _raw.json 用同一个清洗后的名字
+  if (tree.project_name) tree.project_name = sanitizeProjectName(tree.project_name)
   const projectName = tree.project_name || ''
   const docTitle = projectName || tree.name || items[0]?.name || 'ApiPost 文档'
 
-  // 保留 ApiPost 的中文目录层级
+  // 保留 ApiPost 的目录层级，但每一段都换成 ASCII slug
   const files = new Map()
   const fileNames = new Set()
   const flattened = []
@@ -320,13 +374,14 @@ async function main() {
   const assignPaths = (nodes, dir) => {
     for (const node of nodes) {
       if (node.isFolder) {
-        assignPaths(node.children, posix.join(dir, safeName(node.name)))
+        assignPaths(node.children, posix.join(dir, folderSlug(node.name)))
         continue
       }
       const folder = dir ? `${dir}/` : ''
-      let relPath = `${folder}${safeName(node.name)}.md`
+      const slug = endpointSlug(issuesById.get(node.id), node.name)
+      let relPath = `${folder}${slug}.md`
       for (let suffix = 2; fileNames.has(relPath); suffix++)
-        relPath = `${folder}${safeName(node.name)}-${suffix}.md`
+        relPath = `${folder}${slug}-${suffix}.md`
       fileNames.add(relPath)
       node.relPath = relPath
       files.set(relPath, renderEndpoint(issuesById.get(node.id), breadcrumbsFor(node.id)))
@@ -351,7 +406,8 @@ async function main() {
 
   // 不能放进 docs/：apps/docs 的 @nuxt/content 会把路径逐段 slugify，中文段一律变空串
   const outDir =
-    args.outDir || join(fileURLToPath(new URL('..', import.meta.url)), 'api-reference', docTitle)
+    args.outDir ||
+    join(fileURLToPath(new URL('..', import.meta.url)), 'api-reference', projectDirName(docTitle))
   const source = `${ORIGIN}/docs/detail/${issueId}`
   await prepareOutDir(outDir)
   for (const [relPath, content] of files) await writeFileEnsured(join(outDir, relPath), content)
@@ -385,7 +441,11 @@ async function main() {
   )
 }
 
-main().catch((error) => {
-  console.error(`失败: ${error.message}`)
-  process.exit(1)
-})
+// 只有直接执行才跑，方便测试/脚本 import 复用上面的命名规则
+if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url))
+  main().catch((error) => {
+    console.error(`失败: ${error.message}`)
+    process.exit(1)
+  })
+
+export { endpointSlug, folderSlug, projectDirName, sanitizeProjectName }

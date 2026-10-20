@@ -252,6 +252,8 @@
     "emergencyAddPhone": "Add Phone Contact",
     "emergencyAddPhoneTitle": "Add Phone Contact",
     "emergencyPickFriend": "Add Weila contact",
+    "emergencyAddNotFriend": "That friend is not a device contact yet. Invite them from the contact management page first.",
+    "emergencyNeedsDeviceFriend": "Invite device contacts from the contact management page first.",
     "emergencyAlreadyAdded": "Added",
     "emergencyFriendsLimit": "You can add at most {max} friends.",
     "emergencyPhonesLimit": "You can add at most {max} phone contacts.",

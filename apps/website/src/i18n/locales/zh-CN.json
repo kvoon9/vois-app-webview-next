@@ -252,6 +252,8 @@
     "emergencyAddPhone": "添加电话联系人",
     "emergencyAddPhoneTitle": "添加电话联系人",
     "emergencyPickFriend": "添加微喇联系人",
+    "emergencyAddNotFriend": "该好友还不是设备联系人，请先在「联系人管理」中邀请对方。",
+    "emergencyNeedsDeviceFriend": "请先在「联系人管理」中邀请设备联系人。",
     "emergencyAlreadyAdded": "已添加",
     "emergencyFriendsLimit": "最多可添加{max}个好友",
     "emergencyPhonesLimit": "最多可添加{max}个电话联系人",

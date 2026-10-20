@@ -11,8 +11,8 @@ import { usePageBack } from '~/composables/usePageBack'
 import { useToast } from '~/composables/useToast'
 import {
   addEmergencyFriendContact,
+  getDeviceFriends,
   getEmergencyContacts,
-  getFriends,
   type Friend,
 } from '~/utils/device-api'
 
@@ -31,9 +31,10 @@ interface AddFriendData {
 
 async function load(): Promise<AddFriendData> {
   if (deviceId.value == null) throw new Error(t('device.invalidId'))
-  // Native picks SOS friends from the account's address book, not the device's own list.
+  // The API only accepts a device friend as an SOS contact (errcode 300 otherwise),
+  // so the picker lists the device's own contacts rather than the account's address book.
   const [friends, emergency] = await Promise.all([
-    getFriends(),
+    getDeviceFriends(deviceId.value),
     getEmergencyContacts(deviceId.value),
   ])
   // Friend slots only; phone entries carry userId 0 and must not match.
@@ -88,7 +89,11 @@ async function addFriend(friendId: number): Promise<void> {
     showToast(t('device.emergencyContactAdded'))
     goBack()
   } catch (error) {
-    showToast(error instanceof Error ? error.message : String(error), { type: 'error' })
+    const message = error instanceof Error ? error.message : String(error)
+    // The backend answers 300 "不是好友" for anyone who is not a device contact yet.
+    showToast(message === '不是好友' ? t('device.emergencyAddNotFriend') : message, {
+      type: 'error',
+    })
   }
 }
 </script>
@@ -114,12 +119,17 @@ async function addFriend(friendId: number): Promise<void> {
 
       <QueryState :status="state.status" :error="state.error" @retry="reload()">
         <template v-if="state.data">
-          <p
-            v-if="visibleFriends.length === 0"
-            class="py-12 text-center text-body text-text-secondary"
-          >
-            {{ keyword.trim() ? t('device.noUsersFound') : t('device.noCandidates') }}
-          </p>
+          <template v-if="visibleFriends.length === 0">
+            <p class="py-12 text-center text-2nd-body text-text-secondary">
+              {{ keyword.trim() ? t('device.noUsersFound') : t('device.noCandidates') }}
+            </p>
+            <p
+              v-if="!keyword.trim() && !friendsFull"
+              class="px-4 text-center text-small text-text-secondary"
+            >
+              {{ t('device.emergencyNeedsDeviceFriend') }}
+            </p>
+          </template>
           <ul v-else class="mt-4 overflow-hidden panel">
             <li v-for="friend in visibleFriends" :key="friend.userId">
               <button

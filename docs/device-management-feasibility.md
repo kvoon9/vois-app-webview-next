@@ -7,6 +7,8 @@ description: '安卓 App 设备管理功能在 H5 端复刻的可行性结论：
 > 2026-10-15。材料有三份：安卓 APK 反编译源码（`vender/WL_V5.0.4_Code504_09181532.apk`，jadx 输出在本机 `/tmp/vois-apk/wl-src`）、Apipost 导出的真实接口文档（`api-reference/`，44 个 `/v2/subuser` 接口）、website 现状代码。本文是动手前的结论。2026-10-15 更新：Phase 0（删 mock）与 Phase 1（页面接真实 API）已落地，实时定位按轮询桥方案实现（见 `docs/native/android/v5.0.8+508/location-bridge.md`）；后端补接口项 A1-A11 待排期。
 >
 > 同日补充：v5.0.8 包（`WL_V5.0.8_Code508_10151723.apk`）逆向完成后，第 2 节的实时位置按实际落地的桥实现更新。
+>
+> **2026-10-20 状态**：本文之后已落地的事项——真实 API 迁移（mock server 已删除，联系人 / 紧急联系人 / 位置轨迹 / 充值 / 群详情全部走 `/v2/subuser/*`）、围栏增删改（含围栏中心逆地理与半径步进）、提醒重复规则（自定义星期与每月档）、native UI/UX 对齐（`docs/uiux-alignment-plan.md` 的 blocking 项已全部处理）、weila-mcp 同步（调试服务器已对齐当前接口契约）。正文保留当时的可行性判断记录；其中「在调 mock」「待排期」「待做」一类**现状**描述是 2026-10-15 的快照，不再是当前事实。当前状态见 `docs/device-management-status.md`。
 
 ## 总结论
 
@@ -43,7 +45,7 @@ description: '安卓 App 设备管理功能在 H5 端复刻的可行性结论：
 | 解绑设备 | `device-unbind` | 新增页面。注意返回值是「解绑后剩余好友列表」，按解绑成功处理就行 |
 | 轨迹回放 | `track-get` | `track.vue` 在调 mock；地图用现成的 `useAMap` |
 | 轨迹上报模式（省电档） | `track-get-mode`、`track-set-mode` | `track-setting.vue` 在调 mock。档位枚举 0 关 / 1 低 / 2 中 / 3 高，和安卓一致 |
-| 电子围栏 | `geofence-set`、`geofence-get`、`geofence-delete` | `location.vue` 只读展示 mock。可以做成和安卓一样的完整交互：地图选点、半径 200–1000 米步进 50、命名。一个设备只有一个围栏 |
+| 电子围栏 | `geofence-set`、`geofence-get`、`geofence-delete` | 已实现完整交互（2026-10-20）：地图选点、半径 200–1000 米步进 50、命名、删除。一个设备只有一个围栏 |
 | 紧急联系人（SOS） | `emergency-contact-get`、`-add-friend`、`-add-phone`、`-delete` | 3 个页面在调 mock。配额和剩余次数（`sos_friend_limit`、`sos_phone_limit`、`sos_times`）都在 get 的返回里，安卓要单独调 v1 拿的 SOS 次数也省了 |
 | 提醒 | `reminder-add`、`-change`、`-delete`、`-get`、`-get-all` | 已在用真实的 `/v2/ext/rmdr/*`（安卓同一套），可以先不迁，也可以顺手换成实名版 |
 | 设备好友 | `friend-get-all`、`-search-user`、`-invite`、`-delete`、`-change-remark` | `contacts/` 下 4 个页面在调 mock，重写成 friend 系列 |
@@ -122,7 +124,7 @@ iOS 走内购（`ios-app-prepay`），而 v2 建单接口的返回字段（`amou
 
 1. 删 mock（上面第 5 节的清单，半天）。
 2. 存量页面换真实接口：`[id].vue`、充值两页、联系人四页、紧急联系人三页、位置轨迹三页、群详情去 mock。这一步不依赖任何新增接口，支付先接桥、A1 没好就提示去 App 付。
-3. 新增能力：围栏编辑、解绑入口、提醒「每月」档、`[id].vue` 菜单入口恢复；A2、A5 到位后补能力显隐和「最近位置」。
+3. 新增能力：围栏编辑、解绑入口、提醒「每月」档、`[id].vue` 菜单入口恢复——均已落地（见 `docs/device-management-status.md`）；A2、A5 仍未交付，能力显隐和「最近位置」继续等后端。
 4. 联动项：A1 好了支付收尾；实时位置轮询桥已随安卓 5.0.8 落地（第 2 节）；A6 往后的接口随后端节奏。
 5. 验收：ego-browser 全流程过一遍，verify skill 的 feature 文档同步更新，iOS 内购回归一次。
 

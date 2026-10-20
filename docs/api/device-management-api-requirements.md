@@ -5,6 +5,7 @@ description: '设备管理系列页面的真实后端接口盘点：已验证清
 # 设备管理：后端 v2 API 需求
 
 > 历史文档（2026-10-13）。大部分诉求已由 `api-reference/` 的 44 个 `/v2/subuser/*` 接口满足，页面迁移结论见 `docs/device-management-feasibility.md`；本文保留作接口谈判记录。
+> 当前实现状态见 `docs/device-management-status.md`；字段与路径以 `api-reference/` 为准。
 > 整理时间：2026-10-13
 > 依据：真实后端探测（调试账号 1541034，名下设备 1848581）+ Apipost 文档《微喇内部WEB接口 / main》（`docs.apipost.net`，共 298 个接口）
 > 约束：H5 只能调用 `/v2`，并沿用现有 web 签名（query `appid` / `et` / `sign` / `token`）。**不能用 `/v1`**——那套是原生签名：`?access-token=` + body `{app_id, et, sign}`。

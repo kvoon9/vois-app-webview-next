@@ -1,7 +1,10 @@
 # 设备管理页 UI/UX 对齐清单（原生 v5.0.8 → Vue H5）
 
+> 状态（2026-10-20）：本文是 2026-10-20 的第一轮逐屏清单，保留当时的证据、差异判读与分级。
+> 其中 blocking 项已全部处理完；当前实际状态、未完成项与阻塞方见 `docs/device-management-status.md`。
+
 - 只读审查，未修改任何源码；本文件为唯一新增文件。
-- 原生证据根：`/tmp/vois-apk/wl508/`（`sources/com/voistech/chat/ui/activity/hardware/`、`resources/res/layout/`、`values/strings.xml`、`values/colors.xml`）；H5 根：`/Users/kvoon/weila/vois-app-webview-next-uiux-align/apps/website/src/`。
+- 原生证据根：`/tmp/vois-apk/wl508/`（`sources/com/voistech/chat/ui/activity/hardware/`、`resources/res/layout/`、`values/strings.xml`、`values/colors.xml`）；H5 根：`apps/website/src/`。
 - 分级：**blocking** = 首屏可见的结构/文案/权限/交互不一致；**minor** = 状态或细节；**needs-media** = 需录屏判断；**设计系统差异 — 保留 H5** = 原生 0.5/2dp 分隔线、描边、勾选图标等与 H5 无边框规范冲突，不在 H5 复刻。
 - H5 设计基准：`apps/website/uno.config.ts:114-154`（page/panel/nav-item/card/btn/fab/radio/row-chevron）与 `src/styles/base.css:2-19`。
 - 颜色：原生 `window_bg #f9fafb`、`card_bg #ffffff`、`primary_text #000000`（colors.xml:34,414,445）与 H5 `base.css:9-19` 基本一致；原生 `green_primary #00bb90`（colors.xml:148）vs H5 `primary #54b893`（base.css:2）→ **设计系统差异 — 保留 H5**。

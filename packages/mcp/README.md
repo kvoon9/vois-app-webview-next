@@ -31,8 +31,24 @@ from TypeScript on Node >= 22.18, so `pi mcp` can start it without a build:
 | `api`    | Signed `/v2` call with the session token, exactly as `weilaFetch` builds it.       |
 
 Secrets never come back: `login` and `token` withhold the token, `events` and
-`api` redact credential keys (`token`, `access-token`, `password`, ...) and
-credential query parameters before anything is formatted.
+`api` redact credential keys (`token`, `access-token`, `access_token`, `password`,
+...) and credential query parameters before anything is formatted.
+
+## 端点
+
+`/v2` is the only API version this repo speaks; `/v1` belongs to native signing
+and is out of reach. The `api` tool takes any path and signs it like the page.
+
+- Device management: `/v2/subuser/*` (devices, fence, track, friends, groups,
+  emergency contacts, SIM cards)
+- Reminders: `/v2/ext/rmdr/*` (get-all, add, change, delete)
+- User and account: `/v2/user/get-my-user-info`, `/v2/account/*` (translation)
+- QR codes: `/v2/qrcode/*`
+- Uploads: `/v2/common/upload-file` wants a multipart body, which the tool cannot
+  send, so uploads have to go through the page.
+
+Field-level contracts live in `api-reference/`, which still documents the
+superseded `/v2/subuser/reminder-*` endpoints; the app calls `/v2/ext/rmdr/*`.
 
 ## Finding the server
 
@@ -50,7 +66,7 @@ cd apps/website && vp dev --host --port 3021
 | ------------------------------------------------------------------------ | ----------------------------------------------------------------- | ----------------------------- |
 | `VOIS_DEBUG_PORTS`                                                       | `3021,5173,8080`                                                  | Probe list                    |
 | `VOIS_DEBUG_EVENTS_FILE`                                                 | `apps/website/.tmp/vois-webview-debug/events.jsonl`               | Capture to read               |
-| `VOIS_API_BASE`                                                          | `https://api.voischat.cn`                                         | API origin for the `api` tool |
+| `VITE_API_TARGET` (env or `~/.vois/.env`), then `VOIS_API_BASE`          | `https://api.voischat.cn`                                         | API origin for the `api` tool |
 | `VOIS_APP_ID` / `VOIS_APP_KEY`                                           | `VITE_*` from the environment or `~/.vois/.env`; no built-in pair | API signing (`api`)           |
 | `VOIS_DEBUG_ACCOUNT` / `VOIS_DEBUG_PASSWORD` / `VOIS_DEBUG_COUNTRY_CODE` | the throwaway debug account from `@vois/webview-bridge`           | Fixed account for `login`     |
 

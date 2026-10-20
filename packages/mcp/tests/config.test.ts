@@ -46,6 +46,24 @@ test('resolveConfig prefers VOIS_, then VITE_, then the .vois env file', () => {
   expect(fromVoisEnv.appId).toBe('from-vois')
 })
 
+test('resolveConfig targets VITE_API_TARGET before VOIS_API_BASE', () => {
+  const fromEnv = resolveConfig({ VITE_API_TARGET: 'https://target.example' }, {}, envFixture)
+  expect(fromEnv.apiBase).toBe('https://target.example')
+
+  const fromVoisFile = resolveConfig({}, {}, envFixture)
+  expect(fromVoisFile.apiBase).toBe('https://file-target.example')
+
+  const fromVoisEnv = resolveConfig(
+    { VOIS_API_BASE: 'https://vois.example' },
+    {},
+    '/nonexistent/.env',
+  )
+  expect(fromVoisEnv.apiBase).toBe('https://vois.example')
+
+  const blank = resolveConfig({ VITE_API_TARGET: '' }, {}, '/nonexistent/.env')
+  expect(blank.apiBase).toBe('https://api.voischat.cn')
+})
+
 test('resolveConfig honors port and file overrides', () => {
   const overridden = resolveConfig(
     {},
@@ -69,6 +87,8 @@ test('resolveConfig lets env replace the fixed debug account', () => {
     {},
     '/nonexistent/.env',
   )
+  // The configured country code is only a fallback: the login tool derives the
+  // effective one from the account shape (see tools.test.ts).
   expect(config.fixedAccount).toEqual({
     account: '13800000000',
     password: 'secret',

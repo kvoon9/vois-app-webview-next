@@ -81,10 +81,12 @@ function readFileIfPresent(path: string): string | undefined {
 
 /**
  * Resolves the tool configuration. `process.env` beats `~/.vois/.env`,
- * mirroring how `loadEnv` treats the two sources. The signing pair has no
- * built-in fallback: this repository is public, so `VITE_APP_ID` /
- * `VITE_APP_KEY` must come from the environment or the machine-local file.
- * `voisEnvPath` replaces `~/.vois/.env`, mostly so tests can pin a fixture.
+ * mirroring how `loadEnv` treats the two sources. `VITE_API_TARGET` decides the
+ * API origin first, as the website's proxy does, then `VOIS_API_BASE` and
+ * `DEFAULT_API_BASE`. The signing pair has no built-in fallback: this repository
+ * is public, so `VITE_APP_ID` / `VITE_APP_KEY` must come from the environment or
+ * the machine-local file. `voisEnvPath` replaces `~/.vois/.env`, mostly so tests
+ * can pin a fixture.
  */
 export function resolveConfig(
   env: NodeJS.ProcessEnv,
@@ -100,7 +102,9 @@ export function resolveConfig(
   return {
     ports,
     eventsFile,
-    apiBase: env.VOIS_API_BASE ?? DEFAULT_API_BASE,
+    apiBase:
+      firstSet(env.VITE_API_TARGET, envFile.get('VITE_API_TARGET'), env.VOIS_API_BASE) ??
+      DEFAULT_API_BASE,
     appId: env.VOIS_APP_ID ?? env.VITE_APP_ID ?? envFile.get('VITE_APP_ID'),
     appKey: env.VOIS_APP_KEY ?? env.VITE_APP_KEY ?? envFile.get('VITE_APP_KEY'),
     fixedAccount: {
@@ -109,6 +113,11 @@ export function resolveConfig(
       countryCode: env.VOIS_DEBUG_COUNTRY_CODE ?? FIXED_ACCOUNT.countryCode,
     },
   }
+}
+
+/** First candidate that is a non-empty string, so a blank env entry never wins. */
+function firstSet(...candidates: (string | undefined)[]): string | undefined {
+  return candidates.find((value) => value !== undefined && value !== '')
 }
 
 /** Parses a comma-separated port list; `undefined` when nothing parses. */

@@ -7,6 +7,7 @@ test('redactJson withholds credential keys and keeps the rest', () => {
     redactJson({
       token: 't1',
       'access-token': 't2',
+      access_token: 't2b',
       accessToken: 't3',
       password: 'p',
       Authorization: 'Bearer t4',
@@ -16,6 +17,7 @@ test('redactJson withholds credential keys and keeps the rest', () => {
   ).toEqual({
     token: REDACTED,
     'access-token': REDACTED,
+    access_token: REDACTED,
     accessToken: REDACTED,
     password: REDACTED,
     Authorization: REDACTED,
@@ -40,6 +42,9 @@ test('redactJson strips sensitive query parameters from URL strings', () => {
 test('redactJson strips sensitive query parameters from path-only URLs', () => {
   expect(redactJson('/v2/list?access-token=abc&page=1')).toBe(
     `/v2/list?access-token=${encodeURIComponent(REDACTED)}&page=1`,
+  )
+  expect(redactJson('/v2/list?access_token=abc&page=1')).toBe(
+    `/v2/list?access_token=${encodeURIComponent(REDACTED)}&page=1`,
   )
 })
 

@@ -7,10 +7,12 @@ export const REDACTED = '[redacted]'
 
 /**
  * Keys whose whole value is withheld. Matches the app's own bridge-log redaction
- * (`access-token` / `accessToken` / `token`) plus the password family.
+ * (`access-token` / `accessToken` / `access_token` / `token`) plus the password
+ * family.
  */
 const SENSITIVE_KEYS = new Set([
   'access-token',
+  'access_token',
   'accesstoken',
   'authorization',
   'password',
@@ -19,7 +21,7 @@ const SENSITIVE_KEYS = new Set([
 ])
 
 /** Query parameter names stripped from URL-shaped strings. */
-const SENSITIVE_QUERY_PARAMS = new Set(['access-token', 'password', 'token'])
+const SENSITIVE_QUERY_PARAMS = new Set(['access-token', 'access_token', 'password', 'token'])
 
 /** True when a key names a credential and its value must be withheld. */
 function isSensitiveKey(key: string): boolean {

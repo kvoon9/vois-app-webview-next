@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs'
 import * as v from 'valibot'
 import type { JsonObject, JsonValue } from './json.ts'
 import { asJsonObject, decodeField, readNumber, readString, readValue } from './json.ts'
-import type { ResolvedConfig } from './config.ts'
+import type { DebugCredentials, ResolvedConfig } from './config.ts'
 import type { DebugServerStatus, FetchLike } from './debug-server.ts'
 import { loginDebugAccount, probeDebugServer, readDebugSession } from './debug-server.ts'
 import {
@@ -185,12 +185,39 @@ function eventsTool(config: ResolvedConfig): McpTool {
   }
 }
 
+/** Mainland mobile numbers, the only accounts that log in with country code `86`. */
+const MAINLAND_MOBILE = /^1[3-9]\d{9}$/
+
+/**
+ * Country code a login needs, derived as `useAccounts.signIn` does: `86` for a
+ * mainland mobile number and `0` for a 微喇号. `undefined` leaves the choice to
+ * the configured default in `config.ts`.
+ */
+export function countryCodeForAccount(account: string): string | undefined {
+  if (account === '') return undefined
+  return MAINLAND_MOBILE.test(account) ? '86' : '0'
+}
+
+/** Fills in the country code: the explicit one, then the account's rule, then `fallback`. */
+function withCountryCode(
+  account: string,
+  password: string,
+  explicit: string | undefined,
+  fallback: string,
+): DebugCredentials {
+  return {
+    account,
+    password,
+    countryCode: explicit ?? countryCodeForAccount(account) ?? fallback,
+  }
+}
+
 /** `login`: switch or refresh the account the debug session signs in as. */
 function loginTool(config: ResolvedConfig, fetchImpl: FetchLike): McpTool {
   return {
     name: 'login',
     description:
-      'Sign the debug session in as an account. With no arguments it re-signs the fixed debug account; with account and password it switches to that account. Pages pick up the new login-id and token on their next read. The token itself is never returned.',
+      'Sign the debug session in as an account. With no arguments it re-signs the fixed debug account; with account and password it switches to that account. The token endpoint serves the new token on its next read, but a page reads the login-id only once when it loads: reload it to pick the new one up, and a credential session chosen inside the H5 app still overrides the login-id. The token itself is never returned.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -202,13 +229,17 @@ function loginTool(config: ResolvedConfig, fetchImpl: FetchLike): McpTool {
           type: 'string',
           description: 'Account password; required together with account',
         },
-        countryCode: { type: 'string', description: 'Phone country code, default 86' },
+        countryCode: {
+          type: 'string',
+          description:
+            'Phone country code; derived from the account when omitted (86 for a mobile number, 0 for a 微喇号)',
+        },
       },
     },
     run: async (args) => {
       const account = readString(args, 'account')
       const password = readString(args, 'password')
-      const countryCode = readString(args, 'countryCode') ?? '86'
+      const countryCode = readString(args, 'countryCode')
       if ((account === undefined) !== (password === undefined)) {
         return textResult(
           'Pass account and password together, or neither to re-sign the fixed debug account.',
@@ -219,10 +250,11 @@ function loginTool(config: ResolvedConfig, fetchImpl: FetchLike): McpTool {
       const status = await firstAliveStatus(config, fetchImpl)
       if (status === null) return textResult(START_HINT, true)
 
+      const fixed = config.fixedAccount
       const credentials =
         account !== undefined && password !== undefined
-          ? { account, password, countryCode }
-          : config.fixedAccount
+          ? withCountryCode(account, password, countryCode, fixed.countryCode)
+          : withCountryCode(fixed.account, fixed.password, countryCode, fixed.countryCode)
       const session = await loginDebugAccount(status.port, credentials, fetchImpl)
       const who =
         session.userId === undefined
@@ -271,7 +303,7 @@ function apiTool(config: ResolvedConfig, fetchImpl: FetchLike): McpTool {
     inputSchema: {
       type: 'object',
       properties: {
-        path: { type: 'string', description: 'API path starting with /v1 or /v2' },
+        path: { type: 'string', description: 'API path starting with /v2' },
         method: { type: 'string', enum: ['GET', 'POST'], description: 'HTTP method, default POST' },
         body: { type: 'object', description: 'JSON request body (POST only)' },
         query: {
@@ -286,7 +318,7 @@ function apiTool(config: ResolvedConfig, fetchImpl: FetchLike): McpTool {
     run: async (args) => {
       const path = readString(args, 'path')
       if (path === undefined || path === '')
-        return textResult('path is required, for example /v2/subuser/list', true)
+        return textResult('path is required, for example /v2/subuser/manager-get-all-device', true)
       if (config.appId === undefined || config.appKey === undefined)
         return textResult(SIGNING_PAIR_HINT, true)
       const method = readString(args, 'method') === 'GET' ? 'GET' : 'POST'

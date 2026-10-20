@@ -21,6 +21,25 @@ export async function copyText(text: string, clipboard: ClipboardAccess): Promis
   }
 }
 
+/**
+ * The App's own clipboard ahead of the browser's. `writeNative` reports whether
+ * native took the text. A `false` answer, meaning an App build without the bridge
+ * method or a bridge that stayed silent, hands the job to the browser layers in
+ * the order `copyText` already uses.
+ */
+export function webviewClipboard(
+  writeNative: (text: string) => Promise<boolean>,
+  browser: ClipboardAccess = browserClipboard(),
+): ClipboardAccess {
+  return {
+    writeText: async (text) => {
+      if (await writeNative(text)) return
+      await browser.writeText(text)
+    },
+    copyViaSelection: browser.copyViaSelection,
+  }
+}
+
 /** The real browser clipboard: the async API plus the legacy command as a fallback. */
 export function browserClipboard(): ClipboardAccess {
   return {

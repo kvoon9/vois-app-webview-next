@@ -14,6 +14,7 @@ import { usePageBack } from '~/composables/usePageBack'
 import { parseRouteParamId } from '~/composables/useRouteParamId'
 import { useToast } from '~/composables/useToast'
 import { weilaUpload } from '~/utils/api'
+import { copyToClipboard } from '~/utils/bridge/clipboard-bridge'
 import {
   getDeviceDetail,
   unbindDevice,
@@ -101,14 +102,12 @@ async function confirmUnbind(): Promise<void> {
   }
 }
 
+/** Copies through the shared path: the App's clipboard, then the web APIs, then a selection. */
 async function copyDeviceNumber(): Promise<void> {
-  if (!device.value?.imei) return
-  try {
-    await navigator.clipboard.writeText(device.value.imei)
-    showToast(t('device.copied'))
-  } catch {
-    showToast(t('device.copyFailed'), { type: 'error' })
-  }
+  const imei = device.value?.imei
+  if (!imei) return
+  if (await copyToClipboard(imei)) showToast(t('device.copied'))
+  else showToast(t('device.copyFailed'), { type: 'error' })
 }
 
 const avatarInput = useTemplateRef<HTMLInputElement>('avatarInput')

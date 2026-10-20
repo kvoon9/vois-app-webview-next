@@ -4,7 +4,7 @@ import { useI18n } from 'vue-i18n'
 import LanguageSwitcher from '~/components/LanguageSwitcher.vue'
 import { isWebviewDebug } from '~/composables/useWebviewDebug'
 import { usePageBack } from '~/composables/usePageBack'
-import { browserClipboard, copyText } from '~/utils/clipboard'
+import { copyToClipboard } from '~/utils/bridge/clipboard-bridge'
 import { previewPortHref, reloadPreview } from '~/utils/preview-port'
 
 // Debug-preview only. Loading it lazily keeps the dialog runtime out of the
@@ -55,10 +55,11 @@ function confirmPort(): void {
 /**
  * Reports the result inside the dialog rather than through the toast host, whose
  * layer sits under the teleported overlay. Clipboard writes are blocked on the
- * plain-HTTP LAN preview the phone uses, so failure is expected here, not rare.
+ * plain-HTTP LAN preview the phone uses; inside the App the native bridge copies
+ * regardless, so a failure here means every path refused.
  */
 async function copyCurrentUrl(): Promise<void> {
-  copyFailed.value = !(await copyText(currentUrl.value, browserClipboard()))
+  copyFailed.value = !(await copyToClipboard(currentUrl.value))
 }
 </script>
 

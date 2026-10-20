@@ -97,6 +97,35 @@
       "docs": ["android/v5.0.8+508/permission-bridge.md"]
     },
     {
+      "id": "android-5.0.8+508-10201402",
+      "platform": "android",
+      "app": {
+        "applicationId": "com.voistech.chat",
+        "versionName": "5.0.8",
+        "versionCode": 508,
+        "flavor": "baseCn",
+        "buildType": "debug",
+        "buildTime": "10201402",
+        "minSdk": 23,
+        "targetSdk": 36,
+        "compileSdk": 36,
+        "serverAddress": "https://api.voischat.cn"
+      },
+      "package": {
+        "filename": "WL_V5.0.8_Code508_10201402.apk",
+        "vendoredPath": "vender/WL_V5.0.8_Code508_10201402.apk",
+        "kind": "apk",
+        "size": 47159388,
+        "sha256": "cfc697901d1b07c7fc784102b879ee3b8d7963ea1bf9af6f67e28e1051e25830"
+      },
+      "analyzedAt": "2026-10-20",
+      "analysisScope": "bridge delta over build 10191150: BridgeType, WebClipboardBridge, VoisWebActivity registration",
+      "tooling": [
+        { "name": "jadx", "version": "1.5.6", "role": "dex decompilation + resource decode" }
+      ],
+      "docs": ["android/v5.0.8+508/clipboard-bridge.md"]
+    },
+    {
       "id": "ios-5.0.3+1",
       "platform": "ios",
       "app": {

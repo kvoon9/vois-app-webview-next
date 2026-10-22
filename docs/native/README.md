@@ -119,4 +119,8 @@ mkdir -p ~/.vois/tools/rea && cd ~/.vois/tools/rea && npm init -y && npm i rea-a
 | `get-page-params`         | `apps/website/src/composables/usePageParams.ts`                   |
 | `access-token`            | `apps/website/src/utils/bridge/client.ts`                         |
 | `close-page`              | `apps/website/src/composables/usePageBack.ts`                     |
+| `start-location` / `get-location` | `apps/website/src/composables/useRealtimeLocation.ts`     |
+| `get-permissions`         | `apps/website/src/pages/permission-test.vue` (probe in the same composable) |
+| `write-clipboard`         | `apps/website/src/utils/bridge/clipboard-bridge.ts`                |
+| `read-clipboard`          | none yet — typed in `clipboard-bridge.ts`, no caller            |
 | `wechat-app-prepay`       | none yet — documented in `android/*/wechat-pay.md` for future use |

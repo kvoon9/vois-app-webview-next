@@ -10,6 +10,12 @@ What the shipped Vois/Weila App (`voistech.chat`) promises the H5 bundle in
 params, in-app entry points and payment. Reverse-engineered from the packages
 vendored in `vender/` (untracked, see below).
 
+The platform-neutral, normative contract lives in
+[bridge-contract.md](/native/bridge-contract): channel handshake, response
+envelope, every protocol's fields and error codes, page params, and the iOS
+implementation checklist. The version documents under `android/` and `ios/` are
+the evidence and per-platform status, not a second copy of the field spec.
+
 This repo is public, so `docs/native/` holds **first-party prose and
 machine-readable facts**, never vendor code, keys, or the packages themselves:
 
@@ -24,6 +30,7 @@ machine-readable facts**, never vendor code, keys, or the packages themselves:
 ```
 docs/native/
 ├── index.json                  # artifact registry: identity, hash, docs, tooling
+├── bridge-contract.md          # normative, platform-neutral H5 ↔ App data spec
 ├── tools/
 │   └── extract.mjs             # verify a vendored package + extract it for analysis
 ├── android/
@@ -124,3 +131,5 @@ mkdir -p ~/.vois/tools/rea && cd ~/.vois/tools/rea && npm init -y && npm i rea-a
 | `write-clipboard`         | `apps/website/src/utils/bridge/clipboard-bridge.ts`                |
 | `read-clipboard`          | none yet — typed in `clipboard-bridge.ts`, no caller            |
 | `wechat-app-prepay`       | none yet — documented in `android/*/wechat-pay.md` for future use |
+
+Full field definitions and error codes for every row: [bridge-contract.md](/native/bridge-contract).

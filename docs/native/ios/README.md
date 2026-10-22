@@ -44,13 +44,16 @@ Native iOS (VoisChat) side of the H5 contract. Platform checklist mirrors
 
 ## Expected contract (from the H5 package, still partly unverified)
 
+The complete field-level spec is [bridge-contract.md](/native/bridge-contract);
+this table only tracks what an iOS artifact still needs to confirm.
+
 | Aspect      | Expectation                                                                                 |
 | ----------- | ------------------------------------------------------------------------------------------- |
 | Channel     | `window.webkit.messageHandlers.uniBridgeCall.postMessage(...)`, no ready event → H5 polls   |
 | Request     | `{ type, data, callbackName? }` where `callbackName` is an identifier-safe name             |
 | Response    | native calls `window[callbackName](jsonString)`; envelope `{ type, errcode, errmsg, data }` |
-| Types       | `close-page`, `get-page-params`, plus an Apple-payment type                                 |
-| Page params | same keys as Android, `device-type` value unknown (`ios`?)                                  |
+| Types       | `close-page`, `get-page-params`, `ios-app-prepay`; 5.0.8's location / permission / clipboard types are untested on iOS |
+| Page params | same keys as Android; `device-type` expected `ios`, `pay-method` expected `apple_iap`, `pkg-name` expected the iOS bundle id |
 
 Update the table as soon as an artifact confirms or contradicts each row, and
 record the evidence location next to the claim.

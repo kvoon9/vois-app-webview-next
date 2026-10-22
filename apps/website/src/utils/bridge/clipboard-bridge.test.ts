@@ -1,15 +1,15 @@
 import { afterEach, describe, expect, it, vi } from 'vite-plus/test'
+import type { WriteClipboardRes } from '@vois/webview-bridge/vois'
 import {
   createNativeClipboard,
   type ClipboardBridge,
   type NativeClipboardSource,
-  type WriteClipboardResponse,
 } from './clipboard-bridge'
 
 const imei = '861490079048881'
 
 /** A bridge whose every request is answered by `answer`, with the call recorded. */
-function bridgeDouble(answer: () => Promise<WriteClipboardResponse>) {
+function bridgeDouble(answer: () => Promise<WriteClipboardRes>) {
   const request = vi.fn(answer)
   const bridge: ClipboardBridge = { request }
   return { bridge, request }

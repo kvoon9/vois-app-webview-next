@@ -8,7 +8,7 @@ import {
   LOCATION_MAX_TIME_MS,
   LOCATION_MIN_INTERVAL_MS,
   type BridgePermissionName,
-  type GetPermissionsResponse,
+  type GetPermissionsRes,
 } from '~/utils/bridge/location-bridge'
 
 const { t } = useI18n({ useScope: 'global' })
@@ -64,9 +64,7 @@ function withBridge(): Promise<WebviewBridge | null> {
   ])
 }
 
-async function callPermissions(
-  params: BridgePermissionName[],
-): Promise<GetPermissionsResponse | null> {
+async function callPermissions(params: BridgePermissionName[]): Promise<GetPermissionsRes | null> {
   const bridge = await withBridge()
   if (!bridge) {
     pushLog('get-permissions', JSON.stringify({ params }), t('permissionTest.bridgeUnavailable'))
@@ -82,7 +80,7 @@ async function callPermissions(
   }
 }
 
-function absorbGrants(response: GetPermissionsResponse | null): void {
+function absorbGrants(response: GetPermissionsRes | null): void {
   if (response?.errcode === 0 && response.data) {
     grants.value = { ...grants.value, ...response.data }
   }

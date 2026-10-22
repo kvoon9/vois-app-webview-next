@@ -1,6 +1,7 @@
 // @env browser
 
-import { isAndroid, isIOS, type BridgeFn } from '@vois/webview-bridge'
+import { isAndroid, isIOS } from '@vois/webview-bridge'
+import type { WriteClipboard, WriteClipboardRes } from '@vois/webview-bridge/vois'
 import { whenWebviewBridge } from '~/composables/useWebviewBridge'
 import { copyText, webviewClipboard } from '~/utils/clipboard'
 
@@ -13,43 +14,17 @@ import { copyText, webviewClipboard } from '~/utils/clipboard'
  * `errcode: -1 "Unsupported type: write-clipboard"` (`VoisWebActivity`). Nothing
  * here can tell that answer from a refusal, and both mean the same thing: fall
  * back to the web paths. The answer is the capability, so no version check.
+ *
+ * The wire types are the package's built-in map (`@vois/webview-bridge/vois`);
+ * this module keeps the timeout, the fallback chain and the injectable seam.
  */
 
 /** Native stays silent only when the bridge never arrives; the web paths then take over. */
 const NATIVE_CLIPBOARD_TIMEOUT_MS = 1_000
 
-/**
- * `write-clipboard` request body. `sensitive` marks the clip
- * `android.content.extra.IS_SENSITIVE`, so the Android 13+ preview hides it;
- * older builds ignore the flag.
- */
-export interface WriteClipboardParams {
-  text: string
-  sensitive?: boolean
-}
-
-export interface WriteClipboardResponse {
-  errcode: number
-  errmsg: string
-}
-
-/** `data.text` is the clipboard's text, `''` when the clip is empty or unreadable. */
-export interface ReadClipboardResponse {
-  errcode: number
-  errmsg: string
-  data?: { text?: string }
-}
-
-declare module '@vois/webview-bridge' {
-  interface BridgeProtocolMap {
-    'write-clipboard': BridgeFn<WriteClipboardParams, WriteClipboardResponse>
-    'read-clipboard': BridgeFn<Record<string, never>, ReadClipboardResponse>
-  }
-}
-
 /** The only part of the ready bridge a clipboard write needs. */
 export interface ClipboardBridge {
-  request: (type: 'write-clipboard', data: WriteClipboardParams) => Promise<WriteClipboardResponse>
+  request: (type: 'write-clipboard', data: WriteClipboard) => Promise<WriteClipboardRes>
 }
 
 /** What `createNativeClipboard` needs, injected so both answers are testable. */

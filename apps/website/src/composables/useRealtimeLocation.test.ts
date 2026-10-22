@@ -5,8 +5,8 @@ import {
   LOCATION_ERR_INVALID,
   LOCATION_ERR_PERMISSION_DENIED,
   type BridgeLocation,
-  type GetLocationResponse,
-  type StartLocationResponse,
+  type GetLocationRes,
+  type StartLocationRes,
 } from '~/utils/bridge/location-bridge'
 
 // The composable only reaches the real bridge when no test source is passed,
@@ -38,10 +38,10 @@ function fix(time: number): BridgeLocation {
 function fakeSource() {
   return {
     permissions: vi.fn(async (): Promise<{ granted: boolean } | null> => ({ granted: true })),
-    start: vi.fn(async (_interval: number, _time: number): Promise<StartLocationResponse> =>
+    start: vi.fn(async (_interval: number, _time: number): Promise<StartLocationRes> =>
       ok({ interval: _interval, time: _time }),
     ),
-    get: vi.fn(async (): Promise<GetLocationResponse> => ok({ location: fix(1000) })),
+    get: vi.fn(async (): Promise<GetLocationRes> => ok({ location: fix(1000) })),
   }
 }
 
@@ -149,7 +149,7 @@ describe('useRealtimeLocation', () => {
   it('sends start-location unconditionally while the probe says off', async () => {
     const source = fakeSource()
     source.permissions.mockResolvedValue({ granted: false })
-    let resolveStart: (v: StartLocationResponse) => void = () => {}
+    let resolveStart: (v: StartLocationRes) => void = () => {}
     source.start.mockImplementationOnce(() => new Promise((r) => (resolveStart = r)))
     const { scope, api } = setup({ source })
 

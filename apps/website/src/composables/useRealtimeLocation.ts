@@ -12,9 +12,9 @@ import {
   LOCATION_MAX_TIME_MS,
   LOCATION_MIN_INTERVAL_MS,
   type BridgeLocation,
-  type GetLocationResponse,
-  type GetPermissionsResponse,
-  type StartLocationResponse,
+  type GetLocationRes,
+  type GetPermissionsRes,
+  type StartLocationRes,
 } from '~/utils/bridge/location-bridge'
 
 /** Lifecycle of the polling loop. */
@@ -43,8 +43,8 @@ export interface RealtimeLocationSource {
    * never used to decide whether a call may go out.
    */
   permissions(): Promise<{ granted: boolean } | null>
-  start(intervalMs: number, timeMs: number): Promise<StartLocationResponse>
-  get(): Promise<GetLocationResponse>
+  start(intervalMs: number, timeMs: number): Promise<StartLocationRes>
+  get(): Promise<GetLocationRes>
 }
 
 /** How long a `get-permissions` probe may take before it counts as unknown. */
@@ -80,7 +80,7 @@ function bridgeSource(): RealtimeLocationSource {
         // SAFETY: the protocol map declares this response shape for 'get-permissions'.
         const response = (await bridge.request('get-permissions', {
           params: [LOCATION_PERMISSION],
-        })) as GetPermissionsResponse
+        })) as GetPermissionsRes
         if (response.errcode !== 0) return null
         // A build without the handler (and the DevServer debug stand-in)
         // answers an empty success; a missing key means unknown, not denied.
@@ -100,14 +100,14 @@ function bridgeSource(): RealtimeLocationSource {
         time: timeMs,
       })
       // SAFETY: the protocol map declares this response shape for 'start-location'.
-      return response as StartLocationResponse
+      return response as StartLocationRes
     },
     async get() {
       const bridge = await whenWebviewBridge()
       if (!bridge) throw new Error('bridge unavailable')
       const response = await bridge.request('get-location', {})
       // SAFETY: the protocol map declares this response shape for 'get-location'.
-      return response as GetLocationResponse
+      return response as GetLocationRes
     },
   }
 }

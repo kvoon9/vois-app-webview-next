@@ -13,7 +13,7 @@ navigation:
 | 标记 | 含义 |
 | --- | --- |
 | **已观测** | 从 Android APK（5.0.4 / 5.0.8）反编译确认，证据在对应版本文档 |
-| **H5 约定** | `@vois/webview-bridge@0.5.1` 的实际行为，改协议前先看这一层 |
+| **H5 约定** | `@vois/webview-bridge@0.6.0` 的实际行为，改协议前先看这一层 |
 | **待验证** | 依据 H5 约定与平台能力推导，iOS 未确认 |
 
 字段名与 JSON 结构是协议的一部分，不能改名、不能省略必填字段。
@@ -444,14 +444,19 @@ H5 目前只用它给等待文案打标签，**从不**用它决定是否发 `st
 
 微信 App 支付。iOS 不实现，走 `ios-app-prepay`。
 
-请求字段存在**两套命名**，接线前必须统一：
+请求字段以原生实际读取的为准（`@vois/webview-bridge@0.6.0` 的 `WechatPrepay` 已对齐）：
 
-| 来源 | 字段 |
-| --- | --- |
-| Android 实现（已观测） | `partnerid`、`prepayid`、`noncestr`、`timestamp`、`sign`、`extdata`（可选） |
-| H5 包类型 `WechatPrepay` | `appid`、`partnerid`、`prepay_id`、`noncestr`、`timestamp`（number）、`sign`、`extdata`（可选） |
+| 字段 | 类型 | 必填 | 说明 |
+| --- | --- | --- | --- |
+| `partnerid` | string | 是 | 微信商户号 |
+| `prepayid` | string | 是 | 同时也是待处理支付的关联键 |
+| `noncestr` | string | 是 | |
+| `timestamp` | string \| number | 是 | 微信要求秒级时间戳，原生原样转发 |
+| `sign` | string | 是 | |
+| `extdata` | string | 否 | 透传给微信 |
+| `appid` | string | 否 | **原生忽略**：appId 由 App 用自身构建配置传给 OpenSDK |
 
-目前 H5 没有调用方，所以没有触发不一致；**真正接入支付前，先把 `prepayid` / `prepay_id` 和 `appid` 是否传对齐**，否则一端会报 `Missing: ...`。
+早期 H5 类型用的是 `prepay_id`，原生读的是 `prepayid`；`0.6.0` 已按原生改名，不要再写回 `prepay_id`，否则原生回 `Missing: prepayid`。H5 目前仍没有调用方。
 
 响应（H5 类型 `WechatPayRes`，Android 已观测）：
 
@@ -466,15 +471,17 @@ H5 目前只用它给等待文案打标签，**从不**用它决定是否发 `st
 
 | 字段 | 类型 | 说明 |
 | --- | --- | --- |
-| `wxpaycode` | integer | 微信返回的原始 `errCode`，始终存在；与 `errcode: 0` 同时为 0 才是成功 |
+| `wxpaycode` | integer | 微信返回的原始 `errCode`；与 `errcode: 0` 同时为 0 才是成功 |
 | `prepayId` | string | 非空时返回 |
 | `extdata` / `wxtransaction` / `wxopenId` | string | 非空时返回 |
+
+即时失败（如微信未安装）时 `data` 是 `{}`，连 `wxpaycode` 都没有，所以 H5 类型里 `data` 及上述字段全部可选。
 
 支付是延迟应答：用户从微信返回后 native 才回包，可能跨页面。同一个 `prepayid` 的第二次请求会顶掉第一次，被顶掉的回 `-1 "Duplicate request overridden"`；页面销毁后挂起的回调丢弃。完整规则见 [/native/android/v5.0.4+504/wechat-pay](/native/android/v5.0.4+504/wechat-pay)。
 
 ### 3.9 `ios-app-prepay`（iOS，待验证）
 
-H5 包已声明该协议，本仓库没有调用方；iOS 原生实现尚未从安装包确认。字段按 `@vois/webview-bridge@0.5.1` 的类型：
+H5 包已声明该协议，本仓库没有调用方；iOS 原生实现尚未从安装包确认。字段按 `@vois/webview-bridge@0.6.0` 的类型：
 
 ```json
 {
@@ -644,7 +651,7 @@ let text = UIPasteboard.general.string ?? ""       // read-clipboard
 
 ### 5.5 支付
 
-- Android：`wechat-app-prepay`，字段命名先与 H5 类型对齐（见 3.8）。
+- Android：`wechat-app-prepay`，字段已与 H5 类型对齐（`prepayid`，见 3.8），原生不要再改名。
 - iOS：`ios-app-prepay`，待确认（见 3.9）。StoreKit 交易完成后回一次应答；用户取消、失败、恢复购买分别对应不同 `errcode`，需要与 H5 约定。
 - 支付是唯一可能长时间延迟应答的协议；`callbackName` 要跨页面存活到交易结束，页面销毁则丢弃。
 
@@ -718,5 +725,4 @@ H5 侧实现与行为说明：[/engineering/bridge-5.0.8-additions](/engineering
 - iOS 实际 handler 名、请求体类型、回调函数名（`docs/native/ios/v5.0.3+1` 只做了侦察，payload key 尚未读出）。
 - `ios-app-prepay` 的真实字段与响应形状。
 - `device-type` / `pay-method` / `pkg-name` 的 iOS 取值需与后端确认。
-- `wechat-app-prepay` 的 `prepayid` / `prepay_id` 命名不一致（H5 无调用方，接线前统一）。
 - H5 实时点未对 `wgs84` 做偏移；iOS 若返回 `wgs84` 需要先补 H5 或固定 `gcj02`。

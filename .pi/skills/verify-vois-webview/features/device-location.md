@@ -4,8 +4,8 @@ A device's location page pins the device's last track point of the day, its fenc
 
 ## Sub-features
 
-- `location-device` pins the device's last track point of the day as the map marker (its AMap title is 设备位置) plus the fence on the canvas. There is no 设备位置 card and no device time label on screen.
-- `location-fence-entry` is one round crosshair button at the top-right: 添加围栏 with no fence, 修改围栏 with one. The 共享 button native draws is intentionally absent.
+- `location-device` pins the device's last track point of the day as the map marker — native's MapUserAvatar build: a blue bearing droplet behind a white ring and a 36px round avatar (the nick's initial when there is no avatar) — plus the fence on the canvas, drawn no matter its enable state (a deliberate H5 deviation: native hides disabled fences). There is no 设备位置 card and no device time label on screen.
+- `location-fence-entry` is one white rounded square at the top-right with a crosshair icon over the 围栏 label: 添加围栏 with no fence, 修改围栏 with one. The 共享 button native draws has no bridge call behind it and stays out. The map itself carries native-style chrome: compass top-left, a locate-me button bottom-left (centres the map on 我的位置), zoom +/− bottom-right, a whitesmoke map style, and the fence drawn as native's pure-green thin stroke over an 8% black fill with no centre marker.
 - `location-fence` adds, edits, and deletes the device's single electronic fence: 添加围栏 asks for confirmation first, an existing fence goes straight to the editor, the top strip steps the radius (− / 200 米 / slider / 1000 米 / +), the sheet carries 围栏中心 / 围栏半径 / 围栏名称 and a full-width 保存, and 删除围栏 appears only for an existing fence.
 - `location-mine` shows the phone's own position from the `start-location`/`get-location` bridge as a compact bottom pill labelled 我的实时位置 (else 我的位置未开始, 正在获取我的位置…, the denied guidance, or the tap-to-retry error).
 - `location-fence-warning` warns that the fence cannot take effect while track reporting is off or low.

@@ -11,6 +11,8 @@ import {
 import bearingUrl from '~/assets/map/icon_user_share_location_bearing.png'
 import ringUrl from '~/assets/map/icon_user_share_location_circle.png'
 import devicePinUrl from '~/assets/map/ic_location_marker.png'
+import compassUrl from '~/assets/map/ic_compass.png'
+import myLocationUrl from '~/assets/map/ic_my_location.png'
 import type { DeviceFence } from '~/utils/device-api'
 
 const props = defineProps<{
@@ -39,6 +41,9 @@ const map = shallowRef<AMapMap | null>(null)
 const amap = shallowRef<AMapApi | null>(null)
 const overlays = shallowRef<AMapOverlay[]>([])
 const error = shallowRef<string | null>(null)
+/** The fence id the camera already framed; refits only when a new one loads. */
+const fittedFenceId = shallowRef<number | null>(null)
+let fenceCircleForFit: AMapOverlay | null = null
 
 function pointValue(point: AMapPoint): [number, number] {
   return [point.lng, point.lat]
@@ -73,6 +78,7 @@ function drawOverlays(): void {
   if (!map.value || !amap.value) return
   removeOverlays()
   map.value.setCenter(pointValue(props.center))
+  fenceCircleForFit = null
 
   const nextOverlays: AMapOverlay[] = []
   if (props.marker) {
@@ -102,15 +108,16 @@ function drawOverlays(): void {
   // Native paints the fence pure green over an 8% black fill and draws no
   // centre marker on the viewer page, just the disc.
   if (props.fence) {
-    nextOverlays.push(
-      new amap.value.Circle({
-        center: pointValue(props.fence),
-        radius: props.fence.radius,
-        strokeColor: '#00FF00',
-        strokeWeight: 5,
-        fillColor: 'rgba(0,0,0,0.08)',
-      }),
-    )
+    const fenceCircle = new amap.value.Circle({
+      center: pointValue(props.fence),
+      radius: props.fence.radius,
+      strokeColor: '#00FF00',
+      // Native's 5 physical px ≈ 2 css px on a 2.75x phone screen.
+      strokeWeight: 2,
+      fillColor: '#000000',
+      fillOpacity: 0.08,
+    })
+    nextOverlays.push(fenceCircle)
     // Only the editor carries a centre marker: native's fence editor pins
     // the centre with the red location pin, centre-anchored.
     if (props.picker) {
@@ -123,6 +130,7 @@ function drawOverlays(): void {
         }),
       )
     }
+    fenceCircleForFit = fenceCircle
   }
   if (props.track && props.track.length > 1) {
     nextOverlays.push(
@@ -140,6 +148,13 @@ function drawOverlays(): void {
 
   overlays.value = nextOverlays
   if (nextOverlays.length > 0) map.value.add(nextOverlays)
+
+  // Native frames the whole fence on entry. Refit once per fence id so user
+  // panning after that stays put; the picker page keeps its own camera.
+  if (props.fence && !props.picker && props.fence.id !== fittedFenceId.value) {
+    fittedFenceId.value = props.fence.id
+    if (fenceCircleForFit) map.value.setFitView([fenceCircleForFit], false, [80, 80, 120, 80])
+  }
 }
 
 onMounted(async () => {
@@ -151,11 +166,11 @@ onMounted(async () => {
       zoom: 14,
       viewMode: '2D',
       resizeEnable: true,
+      // Native ships a desaturated light map style; whitesmoke is the
+      // closest built-in AMap style (grey renders dark).
+      mapStyle: 'amap://styles/whitesmoke',
     })
     map.value.addControl(new amap.value.Scale())
-    // Native keeps zoom bottom-right (the scale and logo own bottom-left) and
-    // leaves the top corners to the compass and the page's own buttons.
-    map.value.addControl(new amap.value.ToolBar({ position: 'RB' }))
     if (props.picker) {
       map.value.on('click', (event) =>
         emit('pick', { lng: event.lnglat.lng, lat: event.lnglat.lat }),
@@ -167,8 +182,27 @@ onMounted(async () => {
   }
 })
 
+function centerOnMe(): void {
+  if (map.value && props.me) map.value.setCenter(pointValue(props.me))
+}
+
+function zoomIn(): void {
+  map.value?.zoomIn()
+}
+
+function zoomOut(): void {
+  map.value?.zoomOut()
+}
+
 watch(
-  () => [props.center, props.marker, props.markerAvatar, props.fence, props.track],
+  () => [
+    props.center,
+    props.marker,
+    props.markerAvatar,
+    props.markerName,
+    props.fence,
+    props.track,
+  ],
   () => drawOverlays(),
   { deep: true },
 )
@@ -183,6 +217,42 @@ onUnmounted(() => {
 <template>
   <div class="relative h-full min-h-80 w-full overflow-hidden bg-surface-muted">
     <div ref="container" class="h-full min-h-80 w-full" />
+
+    <!-- Native map chrome: compass top-left, locate-me bottom-left above the
+         scale, zoom bottom-right. The page's own buttons stack over these. -->
+    <img
+      :src="compassUrl"
+      alt=""
+      aria-hidden="true"
+      class="left-4 top-4 h-10 w-10 absolute drop-shadow"
+    />
+    <button
+      type="button"
+      class="bottom-20 left-4 h-12 w-12 absolute flex items-center justify-center rounded-xl bg-surface-elevated shadow-lg"
+      :aria-label="t('device.myLocation')"
+      @click="centerOnMe"
+    >
+      <img :src="myLocationUrl" alt="" class="h-6 w-6" />
+    </button>
+    <div class="bottom-4 right-4 absolute flex flex-col space-y-1.5">
+      <button
+        type="button"
+        class="h-11 w-11 flex items-center justify-center rounded-lg border border-fill bg-surface-elevated text-header text-text-primary shadow-sm"
+        aria-label="+"
+        @click="zoomIn"
+      >
+        <span class="i-ph-plus-bold text-xl" aria-hidden="true" />
+      </button>
+      <button
+        type="button"
+        class="h-11 w-11 flex items-center justify-center rounded-lg border border-fill bg-surface-elevated text-header text-text-primary shadow-sm"
+        aria-label="-"
+        @click="zoomOut"
+      >
+        <span class="i-ph-minus-bold text-xl" aria-hidden="true" />
+      </button>
+    </div>
+
     <div
       v-if="error"
       class="absolute inset-0 flex items-center justify-center bg-surface-muted/90 p-8 text-center text-body text-text-secondary"

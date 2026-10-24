@@ -326,7 +326,8 @@
     "myLocationIdle": "My location stopped",
     "realtimePendingPermission": "Location permission is off. Allow it in the dialog, or enable it in system settings",
     "realtimeDenied": "Location permission is off. Enable it in system settings, then tap here to retry.",
-    "myLocationError": "Location did not start; a permission dialog may be pending. Tap to retry"
+    "myLocationError": "Location did not start; a permission dialog may be pending. Tap to retry",
+    "fenceButton": "Fence"
   },
   "profile": {
     "media": "Media, links, docs",

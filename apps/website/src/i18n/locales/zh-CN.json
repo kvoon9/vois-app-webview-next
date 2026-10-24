@@ -326,7 +326,8 @@
     "myLocationIdle": "我的位置未开始",
     "realtimePendingPermission": "定位权限未开启，请在弹窗中允许，或前往系统设置开启",
     "realtimeDenied": "定位权限未开启，请在系统设置中开启定位权限后，点此重试。",
-    "myLocationError": "定位未启动，可能是定位权限弹窗未处理，点击重试"
+    "myLocationError": "定位未启动，可能是定位权限弹窗未处理，点击重试",
+    "fenceButton": "围栏"
   },
   "permissionTest": {
     "title": "权限测试",

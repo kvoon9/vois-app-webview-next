@@ -39,6 +39,8 @@ export interface AMapMap {
   remove(overlays: AMapOverlay | AMapOverlay[]): void
   setCenter(center: [number, number]): void
   setFitView(overlays?: AMapOverlay[], immediately?: boolean, padding?: number[]): void
+  zoomIn(): void
+  zoomOut(): void
   destroy(): void
 }
 
@@ -47,6 +49,7 @@ interface AMapConstructorOptions {
   zoom?: number
   viewMode?: '2D' | '3D'
   resizeEnable?: boolean
+  mapStyle?: string
 }
 
 interface AMapMarkerOptions {
@@ -64,7 +67,7 @@ interface AMapCircleOptions {
   strokeColor: string
   strokeWeight: number
   fillColor: string
-  fillOpacity: number
+  fillOpacity?: number
 }
 
 interface AMapLineOptions {

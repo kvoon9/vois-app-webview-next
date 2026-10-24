@@ -163,20 +163,24 @@ function startFence(): void {
           :fence="fence"
         />
 
-        <!-- Native chrome: a vertical stack of round white buttons on the right.
-             Sharing has no bridge call behind it, so it stays out. -->
-        <div class="absolute right-4 top-4 z-2 flex flex-col space-y-3">
+        <!-- Native chrome: a vertical stack of white rounded squares on the
+             right, icon over label. Sharing has no bridge call behind it, so
+             it stays out. -->
+        <div class="right-4 top-4 z-2 absolute flex flex-col space-y-3">
           <button
             type="button"
-            class="h-12 w-12 flex items-center justify-center rounded-full bg-surface-elevated text-primary shadow-lg"
+            class="h-14 w-14 flex flex-col items-center justify-center rounded-xl bg-surface-elevated shadow-lg"
             :aria-label="fence ? t('device.fenceEdit') : t('device.fenceAdd')"
             @click="openFence"
           >
-            <span class="i-ph-crosshair text-xl" aria-hidden="true" />
+            <span class="i-ph-crosshair text-2xl text-text-primary" aria-hidden="true" />
+            <span class="mt-0.5 text-xs leading-none text-text-primary">
+              {{ t('device.fenceButton') }}
+            </span>
           </button>
         </div>
 
-        <div class="absolute bottom-4 left-4 right-4 z-2 flex flex-col items-start space-y-2">
+        <div class="bottom-36 left-4 right-4 z-2 absolute flex flex-col items-start space-y-2">
           <!-- The live location runs in the background, so it reports as one
                compact line instead of native-free card furniture. -->
           <button

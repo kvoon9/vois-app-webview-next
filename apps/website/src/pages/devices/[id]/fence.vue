@@ -211,13 +211,7 @@ async function removeFence(): Promise<void> {
 
     <main class="relative h-[calc(100svh-3.5rem)]">
       <QueryState :status="state.status" :error="state.error" @retry="reload()">
-        <MapCanvas
-          picker
-          :center="mapCenter"
-          :fence="preview"
-          :marker="center"
-          @pick="pickCenter"
-        />
+        <MapCanvas picker :center="mapCenter" :fence="preview" @pick="pickCenter" />
 
         <!-- Radius sits at the top like native: the two end labels name the
              range, the round buttons step it, the slider carries the green dot. -->

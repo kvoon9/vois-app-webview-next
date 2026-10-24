@@ -128,7 +128,8 @@ function drawOverlays(): void {
     nextOverlays.push(
       new amap.value.Polyline({
         path: props.track.map(pointValue),
-        strokeColor: '#16c784',
+        // Native's track line is the same pure green as the fence.
+        strokeColor: '#00FF00',
         strokeWeight: 5,
         strokeOpacity: 0.95,
         lineJoin: 'round',

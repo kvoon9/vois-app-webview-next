@@ -254,7 +254,8 @@ type DeviceFenceWire = DeviceFenceDto | null | []
 
 interface DeviceFenceDto {
   id: number
-  enable: number
+  /** The real backend omits `enable` on fences it created as enabled. */
+  enable?: number
   name: string
   latitude: number
   longitude: number
@@ -891,7 +892,7 @@ function toFriend(friend: SubuserFriendDto): Friend {
 function toDeviceFence(fence: DeviceFenceDto): DeviceFence {
   return {
     id: fence.id,
-    enable: fence.enable === 1,
+    enable: fence.enable !== 0,
     name: fence.name,
     lng: fence.longitude,
     lat: fence.latitude,

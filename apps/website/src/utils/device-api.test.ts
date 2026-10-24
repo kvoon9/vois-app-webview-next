@@ -336,6 +336,17 @@ describe('device API', () => {
             },
           }),
         )
+        .mockResolvedValueOnce(
+          ok({
+            geofence: {
+              id: 3,
+              name: '家',
+              latitude: 31.2,
+              longitude: 121.4,
+              radius: 500,
+            },
+          }),
+        )
 
       await expect(getDeviceFence(9)).resolves.toEqual({
         id: 3,
@@ -348,6 +359,14 @@ describe('device API', () => {
       await expect(getDeviceFence(9)).resolves.toEqual({
         id: 3,
         enable: false,
+        name: '家',
+        lng: 121.4,
+        lat: 31.2,
+        radius: 500,
+      })
+      await expect(getDeviceFence(9)).resolves.toEqual({
+        id: 3,
+        enable: true,
         name: '家',
         lng: 121.4,
         lat: 31.2,

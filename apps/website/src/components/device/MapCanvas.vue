@@ -8,8 +8,8 @@ import {
   type AMapOverlay,
   type AMapPoint,
 } from '~/composables/useAMap'
-import locationIconUrl from '~/assets/map/ic_location.png'
-import selectPinUrl from '~/assets/map/ic_location_select.png'
+import bearingUrl from '~/assets/map/icon_user_share_location_bearing.png'
+import ringUrl from '~/assets/map/icon_user_share_location_circle.png'
 import devicePinUrl from '~/assets/map/ic_location_marker.png'
 import type { DeviceFence } from '~/utils/device-api'
 
@@ -20,7 +20,7 @@ const props = defineProps<{
   markerAvatar?: string | null
   /** The device's nick; its initial stands in when there is no avatar. */
   markerName?: string
-  /** The viewer's own position (bridge GPS), drawn as the blue droplet. */
+  /** The viewer's own position (bridge GPS), drawn as the my-location dot. */
   me?: AMapPoint | null
   fence?: DeviceFence | null
   track?: AMapPoint[]
@@ -44,19 +44,22 @@ function pointValue(point: AMapPoint): [number, number] {
   return [point.lng, point.lat]
 }
 
-/** ic_location_marker.png is a 2x asset: 106px asset, 53px on screen. The pin
- * ships with the white avatar window baked in at (19, 14), 15px across. */
+/** Native renders the position marker as its MapUserAvatar view: a blue
+ * bearing droplet (63dp) behind a white ring (40.5dp) and a 36dp round avatar,
+ * all concentric at the anchor. The avatar sits on the ring; the droplet body
+ * shows around it and the tail points up. */
 function deviceMarkerContent(): string {
   const avatar = props.markerAvatar?.replace(/"/g, '%22')
   const inner = avatar
-    ? `<img src="${avatar}" alt="" style="position:absolute;inset:0;width:15px;height:15px;border-radius:50%;object-fit:cover">`
-    : `<span style="width:15px;height:15px;display:flex;align-items:center;justify-content:center;font-size:9px;line-height:1;color:#6b7280">${
+    ? `<img src="${avatar}" alt="" style="position:absolute;inset:0;width:36px;height:36px;border-radius:50%;object-fit:cover">`
+    : `<span style="width:36px;height:36px;display:flex;align-items:center;justify-content:center;font-size:16px;line-height:1;color:#6b7280;background:#fff">${
         props.markerName?.trim().slice(0, 1) || '?'
       }</span>`
   return (
-    `<div style="position:relative;width:53px;height:53px">` +
-    `<img src="${devicePinUrl}" alt="" style="position:absolute;inset:0;width:53px;height:53px">` +
-    `<span style="position:absolute;left:19px;top:14px;width:15px;height:15px;border-radius:50%;overflow:hidden">${inner}</span>` +
+    `<div style="position:relative;width:63px;height:63px">` +
+    `<img src="${bearingUrl}" alt="" style="position:absolute;inset:0;width:63px;height:63px">` +
+    `<img src="${ringUrl}" alt="" style="position:absolute;left:11.25px;top:11.75px;width:40.5px;height:39.5px">` +
+    `<span style="position:absolute;left:13.5px;top:13.5px;width:36px;height:36px;border-radius:50%;overflow:hidden">${inner}</span>` +
     `</div>`
   )
 }
@@ -78,7 +81,8 @@ function drawOverlays(): void {
         position: pointValue(props.marker),
         title: t('device.deviceLocation'),
         content: deviceMarkerContent(),
-        offset: [-26.5, -51],
+        // Native anchors the marker view at its centre (anchor 0.5, 0.5).
+        offset: [-31.5, -31.5],
       }),
     )
   }
@@ -87,36 +91,38 @@ function drawOverlays(): void {
       new amap.value.Marker({
         position: pointValue(props.me),
         title: t('device.myLocation'),
-        // Native's blue droplet: the round body sits on the fix, the tail
-        // points away; the body centre is at (17.25, 20.25) of a 32px draw.
-        content: `<img src="${locationIconUrl}" alt="" style="width:32px;height:32px">`,
-        offset: [-17.25, -20.25],
+        // Native shows the viewer through AMap's built-in my-location blue
+        // dot; the web stand-in is the same small dot with a white ring.
+        content:
+          '<div style="width:14px;height:14px;border-radius:50%;background:#2f7bf6;border:3px solid #fff;box-shadow:0 0 4px rgba(0,0,0,.4)"></div>',
+        offset: [-10, -10],
       }),
     )
   }
+  // Native paints the fence pure green over an 8% black fill and draws no
+  // centre marker on the viewer page, just the disc.
   if (props.fence) {
     nextOverlays.push(
       new amap.value.Circle({
         center: pointValue(props.fence),
         radius: props.fence.radius,
-        // The fence reads as a translucent green disc on the map (native draws
-        // one); the H5 brand green replaces native's pure #00FF00 stroke.
-        strokeColor: '#16c784',
-        strokeWeight: 2,
-        fillColor: '#16c784',
-        fillOpacity: 0.15,
+        strokeColor: '#00FF00',
+        strokeWeight: 5,
+        fillColor: 'rgba(0,0,0,0.08)',
       }),
     )
-    // The centre carries native's red pick balloon, the same one the editor
-    // uses; a bare disc has no visible anchor.
-    nextOverlays.push(
-      new amap.value.Marker({
-        position: pointValue(props.fence),
-        title: t('device.fenceCenter'),
-        content: `<img src="${selectPinUrl}" alt="" style="width:21px;height:44px">`,
-        offset: [-10.5, -44],
-      }),
-    )
+    // Only the editor carries a centre marker: native's fence editor pins
+    // the centre with the red location pin, centre-anchored.
+    if (props.picker) {
+      nextOverlays.push(
+        new amap.value.Marker({
+          position: pointValue(props.fence),
+          title: t('device.fenceCenter'),
+          content: `<img src="${devicePinUrl}" alt="" style="width:53px;height:53px">`,
+          offset: [-26.5, -26.5],
+        }),
+      )
+    }
   }
   if (props.track && props.track.length > 1) {
     nextOverlays.push(

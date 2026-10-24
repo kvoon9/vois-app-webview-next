@@ -119,14 +119,16 @@ function drawOverlays(): void {
     })
     nextOverlays.push(fenceCircle)
     // Only the editor carries a centre marker: native's fence editor pins
-    // the centre with the red location pin, centre-anchored.
+    // the centre with the red location pin. The needle tip anchors the point
+    // (the pin is 53px, tip 2px above its bottom edge) so the needle touches
+    // the picked spot instead of floating over it.
     if (props.picker) {
       nextOverlays.push(
         new amap.value.Marker({
           position: pointValue(props.fence),
           title: t('device.fenceCenter'),
           content: `<img src="${devicePinUrl}" alt="" style="width:53px;height:53px">`,
-          offset: [-26.5, -26.5],
+          offset: [-26.5, -51],
         }),
       )
     }

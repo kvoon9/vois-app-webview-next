@@ -10,7 +10,12 @@ import PageHeader from '~/components/PageHeader.vue'
 import QueryState from '~/components/settings/QueryState.vue'
 import { parseRouteParamId } from '~/composables/useRouteParamId'
 import type { AMapPoint } from '~/composables/useAMap'
-import { getDeviceTrack, getRecentTrackPoint, type TrackPoint } from '~/utils/device-api'
+import {
+  getDeviceDetail,
+  getDeviceTrack,
+  getRecentTrackPoint,
+  type TrackPoint,
+} from '~/utils/device-api'
 
 /** Fallback center (Shenzhen) while there is no fix and no track point yet. */
 const DEFAULT_CENTER: AMapPoint = { lng: 114.0668, lat: 22.6305 }
@@ -69,6 +74,17 @@ const awaitingDate = shallowRef<string | null>(null)
 const dateConfirmed = shallowRef(false)
 
 const deviceId = computed(() => parseRouteParamId(route.params.id))
+
+/** Same key as the device-detail page, so the avatar pin shares its cache. */
+const { state: deviceState } = useQuery({
+  key: () => ['device-management', 'device', deviceId.value],
+  query: () => {
+    if (deviceId.value == null) throw new Error(t('device.invalidDevice'))
+    return getDeviceDetail(deviceId.value)
+  },
+})
+const device = computed(() => deviceState.value.data ?? null)
+
 const { state: recentState, refetch: reloadRecent } = useQuery({
   key: () => ['device-management', 'device', 'recent-point', deviceId.value],
   query: () => {
@@ -208,7 +224,13 @@ function confirmDate(date: string): void {
       <QueryState :status="recentState.status" :error="recentState.error" @retry="reloadRecent()">
         <template v-if="recentState.data !== undefined">
           <QueryState :status="trackState.status" :error="trackState.error" @retry="reloadTrack()">
-            <MapCanvas :center="center" :marker="recent" :track="track" />
+            <MapCanvas
+              :center="center"
+              :marker="recent"
+              :marker-avatar="device?.avatar ?? null"
+              :marker-name="device?.nick ?? ''"
+              :track="track"
+            />
             <p
               v-if="emptyToast"
               class="absolute bottom-6 left-4 right-4 z-10 mx-auto max-w-sm rounded-standard bg-surface-elevated px-4 py-3 text-center text-2nd-body text-text-secondary shadow-lg"

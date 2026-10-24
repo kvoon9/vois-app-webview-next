@@ -10,6 +10,7 @@ import QueryState from '~/components/settings/QueryState.vue'
 import { parseRouteParamId } from '~/composables/useRouteParamId'
 import { createPageLocationSource, useRealtimeLocation } from '~/composables/useRealtimeLocation'
 import {
+  getDeviceDetail,
   getDeviceFence,
   getDeviceTrackMode,
   getRecentTrackPoint,
@@ -36,6 +37,16 @@ const { state, refetch: reload } = useQuery({
     ])
   },
 })
+
+/** Same key as the device-detail page, so navigating back and forth shares the cache. */
+const { state: deviceState } = useQuery({
+  key: () => ['device-management', 'device', deviceId.value],
+  query: () => {
+    if (deviceId.value == null) throw new Error(t('device.invalidDevice'))
+    return getDeviceDetail(deviceId.value)
+  },
+})
+const device = computed(() => deviceState.value.data ?? null)
 
 const fence = computed<DeviceFence | null>(() => state.value.data?.[0] ?? null)
 const reportFrequency = computed<TrackFrequency>(() => state.value.data?.[1] ?? 'off')
@@ -143,7 +154,14 @@ function startFence(): void {
     <PageHeader :title="t('device.locationAndFence')" />
     <main class="relative h-[calc(100svh-3.5rem)]">
       <QueryState :status="state.status" :error="state.error" @retry="reload()">
-        <MapCanvas :center="center" :marker="deviceMarker" :me="myMarker" :fence="fence" />
+        <MapCanvas
+          :center="center"
+          :marker="deviceMarker"
+          :marker-avatar="device?.avatar ?? null"
+          :marker-name="device?.nick ?? ''"
+          :me="myMarker"
+          :fence="fence"
+        />
 
         <!-- Native chrome: a vertical stack of round white buttons on the right.
              Sharing has no bridge call behind it, so it stays out. -->

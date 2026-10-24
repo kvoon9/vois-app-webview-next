@@ -8,12 +8,19 @@ import {
   type AMapOverlay,
   type AMapPoint,
 } from '~/composables/useAMap'
+import locationIconUrl from '~/assets/map/ic_location.png'
+import selectPinUrl from '~/assets/map/ic_location_select.png'
+import devicePinUrl from '~/assets/map/ic_location_marker.png'
 import type { DeviceFence } from '~/utils/device-api'
 
 const props = defineProps<{
   center: AMapPoint
   marker?: AMapPoint | null
-  /** The viewer's own position (bridge GPS), drawn as a distinct blue dot. */
+  /** The device's avatar, drawn inside the location pin's white window. */
+  markerAvatar?: string | null
+  /** The device's nick; its initial stands in when there is no avatar. */
+  markerName?: string
+  /** The viewer's own position (bridge GPS), drawn as the blue droplet. */
   me?: AMapPoint | null
   fence?: DeviceFence | null
   track?: AMapPoint[]
@@ -37,6 +44,23 @@ function pointValue(point: AMapPoint): [number, number] {
   return [point.lng, point.lat]
 }
 
+/** ic_location_marker.png is a 2x asset: 106px asset, 53px on screen. The pin
+ * ships with the white avatar window baked in at (19, 14), 15px across. */
+function deviceMarkerContent(): string {
+  const avatar = props.markerAvatar?.replace(/"/g, '%22')
+  const inner = avatar
+    ? `<img src="${avatar}" alt="" style="position:absolute;inset:0;width:15px;height:15px;border-radius:50%;object-fit:cover">`
+    : `<span style="width:15px;height:15px;display:flex;align-items:center;justify-content:center;font-size:9px;line-height:1;color:#6b7280">${
+        props.markerName?.trim().slice(0, 1) || '?'
+      }</span>`
+  return (
+    `<div style="position:relative;width:53px;height:53px">` +
+    `<img src="${devicePinUrl}" alt="" style="position:absolute;inset:0;width:53px;height:53px">` +
+    `<span style="position:absolute;left:19px;top:14px;width:15px;height:15px;border-radius:50%;overflow:hidden">${inner}</span>` +
+    `</div>`
+  )
+}
+
 function removeOverlays(): void {
   if (map.value && overlays.value.length > 0) map.value.remove(overlays.value)
   overlays.value = []
@@ -53,6 +77,8 @@ function drawOverlays(): void {
       new amap.value.Marker({
         position: pointValue(props.marker),
         title: t('device.deviceLocation'),
+        content: deviceMarkerContent(),
+        offset: [-26.5, -51],
       }),
     )
   }
@@ -61,11 +87,10 @@ function drawOverlays(): void {
       new amap.value.Marker({
         position: pointValue(props.me),
         title: t('device.myLocation'),
-        // A small blue dot so the viewer's position reads differently from the
-        // device's default pin; AMap accepts inline HTML as marker content.
-        content:
-          '<div style="width:14px;height:14px;border-radius:50%;background:#2f7bf6;border:3px solid #fff;box-shadow:0 0 4px rgba(0,0,0,.4)"></div>',
-        offset: [-7, -7],
+        // Native's blue droplet: the round body sits on the fix, the tail
+        // points away; the body centre is at (17.25, 20.25) of a 32px draw.
+        content: `<img src="${locationIconUrl}" alt="" style="width:32px;height:32px">`,
+        offset: [-17.25, -20.25],
       }),
     )
   }
@@ -82,13 +107,14 @@ function drawOverlays(): void {
         fillOpacity: 0.15,
       }),
     )
-    // The centre carries the default pin, like the editor's pick marker;
-    // the small-dot look belongs to the viewer's own position, and a bare
-    // disc has no visible anchor.
+    // The centre carries native's red pick balloon, the same one the editor
+    // uses; a bare disc has no visible anchor.
     nextOverlays.push(
       new amap.value.Marker({
         position: pointValue(props.fence),
         title: t('device.fenceCenter'),
+        content: `<img src="${selectPinUrl}" alt="" style="width:21px;height:44px">`,
+        offset: [-10.5, -44],
       }),
     )
   }
@@ -135,7 +161,7 @@ onMounted(async () => {
 })
 
 watch(
-  () => [props.center, props.marker, props.fence, props.track],
+  () => [props.center, props.marker, props.markerAvatar, props.fence, props.track],
   () => drawOverlays(),
   { deep: true },
 )

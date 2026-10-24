@@ -82,15 +82,13 @@ function drawOverlays(): void {
         fillOpacity: 0.15,
       }),
     )
-    // A small green dot marks the centre, distinct from the device pin and
-    // the viewer's blue dot; without it the disc has no visible anchor.
+    // The centre carries the default pin, like the editor's pick marker;
+    // the small-dot look belongs to the viewer's own position, and a bare
+    // disc has no visible anchor.
     nextOverlays.push(
       new amap.value.Marker({
         position: pointValue(props.fence),
         title: t('device.fenceCenter'),
-        content:
-          '<div style="width:12px;height:12px;border-radius:50%;background:#16c784;border:2px solid #fff;box-shadow:0 0 4px rgba(0,0,0,.4)"></div>',
-        offset: [-8, -8],
       }),
     )
   }

@@ -43,3 +43,4 @@ Preconditions:
 - 确定 is a write against a real device, which rings on hardware the user may be wearing. Stop at the filled form.
 - `delete-reminder` has a known backend bug (answers success, keeps the row); verify a delete only when the run is explicitly about it, and expect the list to keep the reminder.
 - This list is per device: a reminder added on another device does not appear here.
+- The page itself does not gate on capability. Device detail hides its 提醒 row when the captured `device-get-detail` carries `reminder_support: false`, but this route still renders for such a device when reached directly.

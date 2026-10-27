@@ -58,7 +58,10 @@ description: WEBAPI / v2 / subuser管理 / 设备 · POST http://localhost/v2/su
 			"nick": "wl1254036",
 			"avatar": "https://cdn.voischat.cn/weila/avatar/default/user.png",
 			"location_share": false,
+			"location_support": true,
+			"reminder_support": true,
 			"online": false,
+			"battery": 0,
 			"sim_card": {
 				"iccid": "8986112124008462514",
 				"expiry_date": "2026-10-31",
@@ -87,7 +90,10 @@ description: WEBAPI / v2 / subuser管理 / 设备 · POST http://localhost/v2/su
 | data.device.nick | string | 是 | 昵称 | wl1254036 |
 | data.device.avatar | string | 是 | 头像 | https://cdn.voischat.cn/weila/avatar/default/user.png |
 | data.device.location_share | boolean | 是 | 位置共享 | false |
+| data.device.location_support | boolean | 是 | 是否支持位置分享（设备能力，只读） | true |
+| data.device.reminder_support | boolean | 是 | 是否支持提醒功能（设备能力，只读） | true |
 | data.device.online | boolean | 是 | 在线状态 | false |
+| data.device.battery | number | 是 | 设备电量 0~100，0 表示电量数据过期 | 0 |
 | data.device.sim_card | object | 是 | 流量卡信息 |  |
 | data.device.sim_card.iccid | string | 是 | ICCID | 8986112124008462514 |
 | data.device.sim_card.expiry_date | string | 是 | 流量卡过期 | 2026-10-31 |

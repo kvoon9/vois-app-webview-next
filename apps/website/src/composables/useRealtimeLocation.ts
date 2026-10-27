@@ -482,14 +482,34 @@ export function useRealtimeLocation(options: UseRealtimeLocationOptions = {}): U
 }
 
 /**
- * Picks the transport for a page: the real bridge, or the DevServer debug
- * simulation when no native injected one (so ego-browser runs work).
+ * True when the URL asks for the browser geolocation transport; the hash
+ * query wins over the outer search, like the debug page params do. Read only
+ * on the debug server, where it makes the fallback drivable with the debug
+ * capture running.
+ */
+function debugGeolocationOverride(): boolean {
+  const layers = [new URLSearchParams(window.location.search)]
+  const separator = window.location.hash.indexOf('?')
+  if (separator >= 0) layers.push(new URLSearchParams(window.location.hash.slice(separator + 1)))
+  let asked: string | null = null
+  for (const query of layers) asked = query.get('location-source') ?? asked
+  return asked === 'geolocation'
+}
+
+/**
+ * Picks the transport for a page: the real bridge when native injected one,
+ * the debug simulation in dev and on the DevServer (so ego-browser runs
+ * work), and the browser's geolocation in plain H5. On the debug server,
+ * `?location-source=geolocation` forces the browser source ahead of the
+ * bridge (the debug bridge answers location itself, so the override is the
+ * only way to drive the fallback there); production never reads it.
  */
 export function createPageLocationSource(center: {
   lng: number
   lat: number
 }): RealtimeLocationSource | null {
+  if (isWebviewDebug() && debugGeolocationOverride()) return browserLocationSource()
   if (isSupportBridge()) return bridgeSource()
   if (import.meta.env.DEV || isWebviewDebug()) return debugLocationSource(center)
-  return null
+  return browserLocationSource()
 }

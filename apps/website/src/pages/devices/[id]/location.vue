@@ -60,9 +60,9 @@ const fenceWarning = computed(() => {
 })
 
 /**
- * The phone's own live position through the bridge (`start-location` loop).
- * In the DevServer this falls back to a walking debug dot so the flow is
- * drivable without the app; the device's position never comes from here.
+ * The phone's own live position: the bridge loop (`start-location`) in the
+ * app, the walking debug dot on the DevServer, and the browser's geolocation
+ * in plain H5. The device's position never comes from here.
  */
 const realtime = useRealtimeLocation({
   source: createPageLocationSource({ lng: 114.0668, lat: 22.6305 }),

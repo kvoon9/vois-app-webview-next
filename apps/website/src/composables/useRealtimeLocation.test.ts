@@ -2,9 +2,11 @@ import { EffectScope } from 'vue'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vite-plus/test'
 import {
   browserLocationSource,
+  createPageLocationSource,
   debugLocationSource,
   useRealtimeLocation,
 } from './useRealtimeLocation'
+import { isWebviewDebug } from '~/composables/useWebviewDebug'
 import { wgs84ToGcj02 } from '~/utils/coords'
 import {
   LOCATION_ERR_INVALID,
@@ -15,13 +17,16 @@ import {
 } from '~/utils/bridge/location-bridge'
 
 // The composable only reaches the real bridge when no test source is passed,
-// but the module graph still pulls these in; keep them inert under test.
+// but the module graph still pulls these in; keep them inert under test. The
+// debug flag stays a vi.fn so the selection tests can flip it per case.
 vi.mock('~/composables/useWebviewBridge', () => ({ whenWebviewBridge: async () => null }))
-vi.mock('~/composables/useWebviewDebug', () => ({ isWebviewDebug: () => false }))
+vi.mock('~/composables/useWebviewDebug', () => ({ isWebviewDebug: vi.fn(() => false) }))
 
 afterEach(() => {
   vi.useRealTimers()
   vi.unstubAllGlobals()
+  vi.unstubAllEnvs()
+  vi.mocked(isWebviewDebug).mockReset()
 })
 
 /** An OK bridge answer around `data`. */
@@ -91,6 +96,11 @@ function fakeGeolocation() {
 
 type FakeGeolocation = ReturnType<typeof fakeGeolocation>
 
+/** A desktop UA, so the real `isSupportBridge()` answers false. */
+const DESKTOP_UA = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) Vitest'
+/** A WebView UA, so the same check answers true. */
+const ANDROID_UA = 'Mozilla/5.0 (Linux; Android 13; Mobile) Vitest'
+
 /** A permission status the source can await. */
 function permissionStatus(state: PermissionState) {
   // SAFETY: the source only reads `state` off the status object.
@@ -110,12 +120,18 @@ function permissionsApi(state: PermissionState | 'throw'): Permissions {
 
 /**
  * Stubs the global navigator with the fake geolocation; pass a permissions API
- * for the probe tests, or none to model an engine without one.
+ * for the probe tests, or none to model an engine without one. The desktop UA
+ * keeps the real `isSupportBridge()` false, as a plain browser page would.
  */
 function stubNavigator(geo: FakeGeolocation, permissions?: Permissions) {
-  const stubbed = { geolocation: geo, permissions }
+  const stubbed = { geolocation: geo, permissions, userAgent: DESKTOP_UA }
   if (!permissions) delete stubbed.permissions
   vi.stubGlobal('navigator', stubbed)
+}
+
+/** Stubs the page URL the override and the transport selection read. */
+function stubLocation(search: string, hash: string) {
+  vi.stubGlobal('window', { location: { search, hash } })
 }
 
 /** A browser fix pushed into the watch; only the GPS coordinates matter. */
@@ -720,5 +736,99 @@ describe('the loop releasing its source', () => {
     await vi.advanceTimersByTimeAsync(20_000)
     expect(source.stop).toHaveBeenCalledTimes(3)
     scope.stop()
+  })
+})
+
+describe('createPageLocationSource', () => {
+  const center = { lng: 114.0668, lat: 22.6305 }
+
+  it('prefers the bridge whenever the UA says an app WebView', async () => {
+    const geo = fakeGeolocation()
+    vi.stubGlobal('navigator', { geolocation: geo, userAgent: ANDROID_UA })
+    stubLocation('', '#/devices/1/location')
+
+    const source = createPageLocationSource(center)!
+    await expect(source.start(5000, 30000)).rejects.toThrow('bridge unavailable')
+    expect(geo.watchPosition).not.toHaveBeenCalled()
+  })
+
+  it('picks the debug dot in dev when no bridge exists', async () => {
+    const geo = fakeGeolocation()
+    stubNavigator(geo)
+    stubLocation('', '#/devices/1/location')
+    vi.stubEnv('DEV', true)
+
+    const source = createPageLocationSource(center)!
+    await expect(source.start(5000, 30000)).resolves.toMatchObject({ errmsg: 'debug' })
+    expect(geo.watchPosition).not.toHaveBeenCalled()
+  })
+
+  it('picks the browser geolocation in plain H5', () => {
+    const geo = fakeGeolocation()
+    stubNavigator(geo)
+    stubLocation('', '#/devices/1/location')
+    vi.stubEnv('DEV', false)
+
+    const source = createPageLocationSource(center)!
+    void source.start(5000, 30000)
+    expect(geo.watchPosition).toHaveBeenCalledOnce()
+  })
+
+  it('reports unsupported in plain H5 when the browser has no geolocation', () => {
+    vi.stubGlobal('navigator', { userAgent: DESKTOP_UA })
+    stubLocation('', '#/devices/1/location')
+    vi.stubEnv('DEV', false)
+
+    expect(createPageLocationSource(center)).toBeNull()
+  })
+
+  it('forces the browser source on the debug server when the query asks for it', () => {
+    const geo = fakeGeolocation()
+    // The debug server itself makes isSupportBridge() true; the override has
+    // to win over that, or the fallback could never be driven there.
+    vi.mocked(isWebviewDebug).mockReturnValue(true)
+    vi.stubGlobal('navigator', { geolocation: geo, userAgent: ANDROID_UA })
+    stubLocation('', '#/devices/1/location?location-source=geolocation')
+
+    const source = createPageLocationSource(center)!
+    void source.start(5000, 30000)
+    expect(geo.watchPosition).toHaveBeenCalledOnce()
+  })
+
+  it('ignores the override off the debug server or without the query', async () => {
+    const geo = fakeGeolocation()
+    stubNavigator(geo)
+    stubLocation('', '#/devices/1/location?location-source=geolocation')
+    vi.stubEnv('DEV', true)
+
+    // Not the debug server: the query is inert and dev picks the debug dot.
+    const source = createPageLocationSource(center)!
+    await expect(source.start(5000, 30000)).resolves.toMatchObject({ errmsg: 'debug' })
+    expect(geo.watchPosition).not.toHaveBeenCalled()
+
+    // The debug server without the query: the bridge wins (it is `true` there).
+    vi.mocked(isWebviewDebug).mockReturnValue(true)
+    vi.stubGlobal('navigator', { geolocation: fakeGeolocation(), userAgent: ANDROID_UA })
+    stubLocation('', '#/devices/1/location')
+    const bridged = createPageLocationSource(center)!
+    await expect(bridged.start(5000, 30000)).rejects.toThrow('bridge unavailable')
+  })
+
+  it('lets the hash query carry the override over the outer search', async () => {
+    const geo = fakeGeolocation()
+    vi.mocked(isWebviewDebug).mockReturnValue(true)
+    stubNavigator(geo)
+    vi.stubEnv('DEV', false)
+
+    stubLocation('?location-source=bridge', '#/devices/1/location?location-source=geolocation')
+    const source = createPageLocationSource(center)!
+    void source.start(5000, 30000)
+    expect(geo.watchPosition).toHaveBeenCalledOnce()
+
+    geo.watchPosition.mockClear()
+    stubLocation('?location-source=geolocation', '#/devices/1/location?location-source=bridge')
+    const notOverridden = createPageLocationSource(center)!
+    await expect(notOverridden.start(5000, 30000)).resolves.toMatchObject({ errmsg: 'debug' })
+    expect(geo.watchPosition).not.toHaveBeenCalled()
   })
 })

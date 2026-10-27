@@ -44,6 +44,17 @@ const error = shallowRef<string | null>(null)
 /** The fence id the camera already framed; refits only when a new one loads. */
 const fittedFenceId = shallowRef<number | null>(null)
 let fenceCircleForFit: AMapOverlay | null = null
+/** Viewer fit padding [top, right, bottom, left]; clears the location page's
+ * bottom status pill. */
+const VIEWER_FIT_AVOID = [80, 80, 120, 80]
+/** Editor fit padding [top, right, bottom, left]; clears the fence editor's
+ * radius strip and the bottom sheet at its tallest, delete button included. */
+const EDITOR_FIT_AVOID = [80, 40, 328, 40]
+/** The fence geometry the editor camera last framed; plain state like
+ * fenceCircleForFit. Save and delete leave via goBack and unmount the page,
+ * so it dies with the component. A refactor that keeps the map mounted
+ * across saves must reset it, or the gate would skip the next entry's fit. */
+let lastFitted: { lng: number; lat: number; radius: number } | null = null
 
 function pointValue(point: AMapPoint): [number, number] {
   return [point.lng, point.lat]
@@ -151,12 +162,30 @@ function drawOverlays(): void {
   overlays.value = nextOverlays
   if (nextOverlays.length > 0) map.value.add(nextOverlays)
 
-  // Native frames the whole fence on entry. Refit once per fence id so user
-  // panning after that stays put; the picker page keeps its own camera.
-  if (props.fence && !props.picker && props.fence.id !== fittedFenceId.value) {
-    fittedFenceId.value = props.fence.id
-    if (fenceCircleForFit) map.value.setFitView([fenceCircleForFit], false, [80, 80, 120, 80])
+  // Native frames the fence on entry. The viewer gates on fence id so user
+  // panning stays put; the editor gates on geometry, since its preview id is
+  // constant (0 for a new fence) while geometry is what changes.
+  if (!props.fence || !fenceCircleForFit) return
+  if (!props.picker) {
+    if (props.fence.id !== fittedFenceId.value) {
+      fittedFenceId.value = props.fence.id
+      map.value.setFitView([fenceCircleForFit], false, VIEWER_FIT_AVOID)
+    }
+    return
   }
+  // Name is outside the gate: typing it must not move the camera. A
+  // centre-only change does not refit either: the setCenter follow above
+  // already moves the camera, so the user's manual zoom survives precise
+  // placement. A radius change snaps so a slider drag cannot queue
+  // overlapping setFitView animations.
+  const fitted = lastFitted
+  if (fitted && fitted.radius === props.fence.radius) return
+  lastFitted = {
+    lng: props.fence.lng,
+    lat: props.fence.lat,
+    radius: props.fence.radius,
+  }
+  map.value.setFitView([fenceCircleForFit], fitted != null, EDITOR_FIT_AVOID)
 }
 
 onMounted(async () => {

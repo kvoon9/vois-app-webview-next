@@ -290,7 +290,7 @@ function onCropFailed(): void {
 
           <!-- Card 3: position; the share switch leads, the rest navigate. -->
           <div class="mt-3 overflow-hidden panel">
-            <div class="panel-row min-h-14">
+            <div v-if="device.locationSupport" class="panel-row min-h-14">
               <span class="text-body">{{ t('device.locationShare') }}</span>
               <ToggleSwitch
                 :checked="device.shareLocation"
@@ -320,6 +320,7 @@ function onCropFailed(): void {
               <span class="row-chevron" aria-hidden="true" />
             </RouterLink>
             <RouterLink
+              v-if="device.reminderSupport"
               :to="`/devices/${deviceId}/reminders`"
               class="min-h-14 w-full panel-row text-body"
             >

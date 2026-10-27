@@ -20,6 +20,10 @@ export interface Device {
   activatedAt: string
   online: boolean
   shareLocation: boolean
+  /** The device can share its location; an absent wire flag reads as true. */
+  locationSupport: boolean
+  /** The device can ring reminders; an absent wire flag reads as true. */
+  reminderSupport: boolean
   simCard: SimCard | null
 }
 
@@ -214,6 +218,8 @@ interface DeviceDto {
   active_at?: string
   online: boolean
   location_share?: boolean
+  location_support?: boolean
+  reminder_support?: boolean
   sim_card?: SimCardDto
 }
 
@@ -839,6 +845,8 @@ function toDevice(device: DeviceDto): Device {
     activatedAt: device.active_at ?? '',
     online: device.online,
     shareLocation: device.location_share ?? false,
+    locationSupport: device.location_support ?? true,
+    reminderSupport: device.reminder_support ?? true,
     simCard: toSimCard(device.sim_card),
   }
 }

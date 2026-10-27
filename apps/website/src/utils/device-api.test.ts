@@ -63,6 +63,8 @@ const deviceDto = {
   active_at: '2026-08-28',
   online: true,
   location_share: true,
+  location_support: true,
+  reminder_support: false,
   sim_card: { iccid: '8986', expiry_date: '2027-11-30', recharge: true },
 }
 
@@ -77,6 +79,8 @@ const device = {
   activatedAt: '2026-08-28',
   online: true,
   shareLocation: true,
+  locationSupport: true,
+  reminderSupport: false,
   simCard: { iccid: '8986', expiryDate: '2027-11-30', recharge: true },
 }
 
@@ -130,6 +134,8 @@ describe('device API', () => {
           activatedAt: '',
           online: false,
           shareLocation: false,
+          locationSupport: true,
+          reminderSupport: true,
           simCard: null,
         },
       ])
@@ -142,6 +148,44 @@ describe('device API', () => {
       await expect(getDeviceDetail(1848581)).resolves.toEqual(device)
       expect(weilaFetch).toHaveBeenCalledWith('/v2/subuser/device-get-detail', {
         body: { user_id: 1848581 },
+      })
+    })
+
+    it('keeps features visible when the response omits the capability flags', async () => {
+      weilaFetch.mockResolvedValue(
+        ok({
+          device: {
+            user_id: 1848581,
+            user_num: '3001',
+            nick: 'watch',
+            avatar: 'http://cdn/a.png',
+            product: 'CF03',
+            imei: '866',
+            version: 'v1.110',
+            active_at: '2026-08-28',
+            online: true,
+            location_share: true,
+            sim_card: { iccid: '8986', expiry_date: '2027-11-30', recharge: true },
+          },
+        }),
+      )
+
+      await expect(getDeviceDetail(1848581)).resolves.toEqual({
+        ...device,
+        locationSupport: true,
+        reminderSupport: true,
+      })
+    })
+
+    it('maps an explicit false capability to false', async () => {
+      weilaFetch.mockResolvedValue(
+        ok({ device: { ...deviceDto, location_support: false, reminder_support: false } }),
+      )
+
+      await expect(getDeviceDetail(1848581)).resolves.toEqual({
+        ...device,
+        locationSupport: false,
+        reminderSupport: false,
       })
     })
 

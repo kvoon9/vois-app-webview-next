@@ -16,6 +16,7 @@ import {
   type GetPermissionsRes,
   type StartLocationRes,
 } from '~/utils/bridge/location-bridge'
+import { wgs84ToGcj02 } from '~/utils/coords'
 
 /** Lifecycle of the polling loop. */
 export type RealtimeLocationStatus =
@@ -28,7 +29,7 @@ export type RealtimeLocationStatus =
    * the next round.
    */
   | 'denied'
-  /** No native bridge and no debug simulation available. */
+  /** No bridge, no debug simulation, and no browser geolocation. */
   | 'unsupported'
   | 'error'
 
@@ -45,6 +46,12 @@ export interface RealtimeLocationSource {
   permissions(): Promise<{ granted: boolean } | null>
   start(intervalMs: number, timeMs: number): Promise<StartLocationRes>
   get(): Promise<GetLocationRes>
+  /**
+   * Optional: release transport resources when the loop stops calling. The
+   * bridge has no stop message (its session self-expires); the browser source
+   * clears its watch here so no GPS subscription outlives the page's interest.
+   */
+  stop?(): void
 }
 
 /** How long a `get-permissions` probe may take before it counts as unknown. */
@@ -167,6 +174,113 @@ export interface UseRealtimeLocationOptions {
   immediate?: boolean
 }
 
+/** Browser GeolocationPositionError.PERMISSION_DENIED. */
+const GEO_ERR_PERMISSION_DENIED = 1
+
+/**
+ * Browser-geolocation transport for plain H5: `start` registers a
+ * `watchPosition` and holds its answer until the first event (the browser
+ * permission prompt plays the role native's dialog plays for the bridge), and
+ * `get` serves the last cached fix as a bridge-shaped answer, converted to
+ * GCJ-02 here, the boundary where WGS-84 is born. Returns null when the
+ * browser exposes no geolocation (insecure origin, old engine), so the page
+ * falls through to `unsupported`.
+ */
+export function browserLocationSource(): RealtimeLocationSource | null {
+  if (!('geolocation' in navigator)) return null
+
+  let watchId: number | null = null
+  let last: BridgeLocation | null = null
+  let denied = false
+  let settleStart: ((res: StartLocationRes) => void) | null = null
+
+  function settle(res: StartLocationRes): void {
+    settleStart?.(res)
+    settleStart = null
+  }
+
+  /** One browser fix in the loop's wire shape; engines report NaN headings too. */
+  function toFix(position: GeolocationPosition): BridgeLocation {
+    const converted = wgs84ToGcj02(position.coords.longitude, position.coords.latitude)
+    const heading = position.coords.heading
+    return {
+      latitude: converted.lat,
+      longitude: converted.lng,
+      altitude: position.coords.altitude ?? null,
+      accuracy: position.coords.accuracy,
+      speed: position.coords.speed ?? null,
+      bearing: heading == null || Number.isNaN(heading) ? null : heading,
+      time: position.timestamp,
+      name: null,
+      address: null,
+    }
+  }
+
+  return {
+    async permissions() {
+      try {
+        const status = await navigator.permissions.query({ name: 'geolocation' })
+        if (status.state === 'granted') return { granted: true }
+        if (status.state === 'denied') return { granted: false }
+        // 'prompt': not asked yet, so unknown rather than denied.
+        return null
+      } catch {
+        // Safari and older engines lack the query; unknown, not denied.
+        return null
+      }
+    },
+    async start(intervalMs, timeMs) {
+      const echo: StartLocationRes = {
+        errcode: 0,
+        errmsg: 'browser',
+        data: { interval: intervalMs, time: timeMs },
+      }
+      // The watch is the session, so a renewal is a no-op that echoes bounds.
+      if (watchId != null) return echo
+      last = null
+      denied = false
+      return new Promise<StartLocationRes>((resolve) => {
+        settleStart = resolve
+        watchId = navigator.geolocation.watchPosition(
+          (position) => {
+            last = toFix(position)
+            settle(echo)
+          },
+          (error) => {
+            if (error.code !== GEO_ERR_PERMISSION_DENIED) {
+              // Unavailable or timed out: the session still opens and later
+              // fixes may still arrive.
+              settle(echo)
+              return
+            }
+            denied = true
+            if (watchId != null) {
+              navigator.geolocation.clearWatch(watchId)
+              watchId = null
+            }
+            settle({ errcode: LOCATION_ERR_PERMISSION_DENIED, errmsg: error.message })
+          },
+          { enableHighAccuracy: true, maximumAge: intervalMs },
+        )
+      })
+    },
+    async get() {
+      if (denied) return { errcode: LOCATION_ERR_PERMISSION_DENIED, errmsg: 'permission denied' }
+      if (watchId == null) return { errcode: LOCATION_ERR_INVALID, errmsg: 'location not running' }
+      return { errcode: 0, errmsg: 'browser', data: { coordType: 'gcj02', location: last } }
+    },
+    stop() {
+      if (watchId != null) {
+        navigator.geolocation.clearWatch(watchId)
+        watchId = null
+      }
+      // Unblocks a held start; the loop's generation guard drops the answer.
+      settle({ errcode: LOCATION_ERR_INVALID, errmsg: 'stopped' })
+      // `last` is kept: the loop serves the stale fix after a stop, like the bridge.
+    },
+  }
+}
+
 export interface UseRealtimeLocation {
   status: Ref<RealtimeLocationStatus>
   /** Latest accepted fix; kept (stale) after the loop stops. */
@@ -221,6 +335,12 @@ export function useRealtimeLocation(options: UseRealtimeLocationOptions = {}): U
     renewTimer = undefined
   }
 
+  /** Halting means the loop stops calling the source too; release its resources. */
+  function release(): void {
+    clearTimers()
+    source?.stop?.()
+  }
+
   function scheduleRenewal(): void {
     // Re-issue start-location one poll before expiry; native restarts the
     // session timer in place, so fixes keep flowing without a gap.
@@ -250,6 +370,7 @@ export function useRealtimeLocation(options: UseRealtimeLocationOptions = {}): U
       // The contract stops start and get after an explicit denial.
       status.value = 'denied'
       running = false
+      release()
       return
     } else if (response.errcode === 0) {
       const fix = response.data?.location ?? null
@@ -283,12 +404,14 @@ export function useRealtimeLocation(options: UseRealtimeLocationOptions = {}): U
       // jump). Give up this round; a retry tap or the next refocus starts anew.
       status.value = 'error'
       running = false
+      release()
       return
     }
     if (response.errcode === LOCATION_ERR_PERMISSION_DENIED) {
       // Explicit denial: the contract stops start and get for this run.
       status.value = 'denied'
       running = false
+      release()
       return
     }
     if (response.errcode !== 0) {
@@ -307,6 +430,7 @@ export function useRealtimeLocation(options: UseRealtimeLocationOptions = {}): U
       }
       status.value = 'error'
       running = false
+      release()
       return
     }
     startRetries = 0
@@ -334,7 +458,7 @@ export function useRealtimeLocation(options: UseRealtimeLocationOptions = {}): U
     if (!running) return
     running = false
     generation += 1
-    clearTimers()
+    release()
     status.value = 'idle'
     // No stop message exists; the native session self-expires within `time`.
   }

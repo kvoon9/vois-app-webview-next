@@ -226,7 +226,7 @@ function onCropFailed(): void {
                 {{ t('device.copy') }}
               </button>
             </div>
-            <div class="px-4 py-1.5 text-body">
+            <div class="break-all px-4 py-1.5 text-body">
               {{ t('device.version') }}: {{ device.version || t('device.notAvailable') }}
             </div>
             <div class="px-4 py-1.5 text-body">

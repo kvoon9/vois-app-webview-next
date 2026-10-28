@@ -22,7 +22,7 @@ function openDevice(device: Device): void {
 
 <template>
   <div class="page">
-    <PageHeader :title="t('device.title')" :back="false" />
+    <PageHeader :title="t('device.title')" />
 
     <main class="p-4">
       <h2 class="mb-3 text-2nd-body font-semibold text-text-secondary">

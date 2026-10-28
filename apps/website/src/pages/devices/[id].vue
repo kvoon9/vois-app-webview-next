@@ -176,11 +176,15 @@ function onCropFailed(): void {
               >
                 <Avatar :name="device.nick" :src="device.avatar" size="lg" />
               </button>
+              <!-- The disc is its own translucent layer so the pencil stays
+                   opaque: an `/60` opacity modifier on a var()-based theme
+                   colour is dropped by UnoCSS and renders fully opaque. -->
               <span
-                class="pointer-events-none absolute right-0 bottom-0 flex h-6 w-6 items-center justify-center rounded-full bg-surface-elevated text-small text-text-secondary"
+                class="pointer-events-none absolute right-0 bottom-0 flex h-6 w-6 items-center justify-center rounded-full text-small text-text-secondary"
                 aria-hidden="true"
               >
-                <span class="i-ph-pencil-simple" />
+                <span class="absolute inset-0 rounded-full bg-surface-elevated opacity-60" />
+                <span class="relative i-ph-pencil-simple" />
               </span>
             </div>
             <input

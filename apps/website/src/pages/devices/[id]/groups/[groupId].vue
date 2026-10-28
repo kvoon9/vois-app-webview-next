@@ -208,12 +208,16 @@ async function exitGroup(): Promise<void> {
               >
                 <Avatar :name="group.name" :src="group.avatar" size="xl" />
               </button>
+              <!-- Same translucent-disc layering as the device avatar badge:
+                   the opacity modifier on var() theme colours is a no-op, so
+                   the disc carries `opacity-60` itself. -->
               <span
                 v-if="isOwner"
-                class="pointer-events-none absolute bottom-0 right-0 z-10 h-7 w-7 flex items-center justify-center rounded-full bg-primary text-primary-text text-small"
+                class="pointer-events-none absolute bottom-0 right-0 z-10 h-7 w-7 flex items-center justify-center rounded-full text-primary-text text-small"
                 aria-hidden="true"
               >
-                <span class="i-ph-pencil-simple" />
+                <span class="absolute inset-0 rounded-full bg-primary opacity-60" />
+                <span class="relative i-ph-pencil-simple" />
               </span>
             </div>
             <!-- Read-only facts sit on the background as centred `key：value` lines. -->

@@ -42,13 +42,17 @@ and is out of reach. The `api` tool takes any path and signs it like the page.
 - Device management: `/v2/subuser/*` (devices, fence, track, friends, groups,
   emergency contacts, SIM cards)
 - Reminders: `/v2/ext/rmdr/*` (get-all, add, change, delete)
-- User and account: `/v2/user/get-my-user-info`, `/v2/account/*` (translation)
+- User and account: `/v2/user/get-my-user-info`, `/v2/account/*` (translation,
+  smart devices, Bluetooth UUID)
 - QR codes: `/v2/qrcode/*`
 - Uploads: `/v2/common/upload-file` wants a multipart body, which the tool cannot
   send, so uploads have to go through the page.
 
-Field-level contracts live in `api-reference/`, which still documents the
-superseded `/v2/subuser/reminder-*` endpoints; the app calls `/v2/ext/rmdr/*`.
+Field-level contracts for `/v2/subuser/*` live in `api-reference/`, regenerated
+from the team's ApiPost share. That share still documents the superseded
+`/v2/subuser/reminder-*` endpoints (the app calls `/v2/ext/rmdr/*`) and has no
+pages for the account, QR-code, user or upload groups above; those contracts
+live in the app's `utils/*-api.ts` modules.
 
 ## Finding the server
 

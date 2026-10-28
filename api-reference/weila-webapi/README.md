@@ -5,7 +5,7 @@ description: ApiPost 分享文档的 Markdown 快照
 
 # 微喇WEB接口
 
-> 来源：`https://docs.apipost.net/docs/detail/6d697c60e879000`  ·  拉取于 2026-10-15
+> 来源：`https://docs.apipost.net/docs/detail/6d697c60e879000`  ·  拉取于 2026-10-28
 
 共 44 个接口，由 `vp run docs:apipost` 生成，请勿手改。
 

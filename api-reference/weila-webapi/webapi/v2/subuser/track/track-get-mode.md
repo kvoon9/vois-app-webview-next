@@ -28,7 +28,7 @@ description: WEBAPI / v2 / subuser管理 / 轨迹 · POST http://localhost/v2/su
 
 ```json
 {
-    "user_id": 1254040
+    "user_id": 1254036
 }
 ```
 

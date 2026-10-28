@@ -1,6 +1,6 @@
 {
   "source": "https://docs.apipost.net/docs/detail/6d697c60e879000",
-  "generated_at": "2026-10-15T03:09:42.764Z",
+  "generated_at": "2026-10-28T10:02:17.521Z",
   "issue_id": "6d697c60e879000",
   "tree": {
     "issue_id": "6d697c60e879000",
@@ -212,13 +212,13 @@
         "target_type": "api",
         "parent_id": "127f2ec37d642",
         "name": "获取设备信息",
-        "version": 3760,
+        "version": 3889,
         "method": "POST",
         "url": "http://localhost/v2/subuser/device-get-detail?appid=102036&sign=212b568c&et=1788836545&token=37e400a4e311be56a5d4c98eb073f54c",
         "mark_id": "1",
         "sort": 1000,
         "is_exampled": -1,
-        "updated_at": "2026-10-14T13:43:18+08:00"
+        "updated_at": "2026-10-28T10:15:39+08:00"
       },
       {
         "target_id": "156ebf2237d04b",
@@ -264,13 +264,13 @@
         "target_type": "api",
         "parent_id": "158b1d35b7d089",
         "name": "获取管理员所有设备信息",
-        "version": 3355,
+        "version": 3882,
         "method": "POST",
         "url": "http://localhost/v2/subuser/manager-get-all-device?appid=102036&sign=212b568c&et=1788836545&token=010aedd30618453e052912186352c0d6",
         "mark_id": "1",
         "sort": 1000,
         "is_exampled": -1,
-        "updated_at": "2026-09-10T10:34:40+08:00"
+        "updated_at": "2026-10-27T10:43:31+08:00"
       },
       {
         "target_id": "1333e3c37d66b",
@@ -446,13 +446,13 @@
         "target_type": "api",
         "parent_id": "25ffcc137dd93",
         "name": "获取轨迹上报模式",
-        "version": 3768,
+        "version": 3811,
         "method": "POST",
-        "url": "http://localhost/v2/subuser/track-get-mode?appid=102036&sign=212b568c&et=1788836545&token=37e400a4e311be56a5d4c98eb073f54c",
+        "url": "http://localhost/v2/subuser/track-get-mode?appid=102036&sign=212b568c&et=1788836545&token=6293f041dd7e8e231b0e0f08183a30f2",
         "mark_id": "1",
         "sort": 2000,
         "is_exampled": -1,
-        "updated_at": "2026-10-14T14:34:40+08:00"
+        "updated_at": "2026-10-16T15:38:35+08:00"
       },
       {
         "target_id": "12860feb7d654",
@@ -563,13 +563,13 @@
         "target_type": "api",
         "parent_id": "25ffcc137dd93",
         "name": "设置轨迹上报模式",
-        "version": 3769,
+        "version": 3812,
         "method": "POST",
-        "url": "http://localhost/v2/subuser/track-set-mode?appid=102036&sign=212b568c&et=1788836545&token=37e400a4e311be56a5d4c98eb073f54c",
+        "url": "http://localhost/v2/subuser/track-set-mode?appid=102036&sign=212b568c&et=1788836545&token=6293f041dd7e8e231b0e0f08183a30f2",
         "mark_id": "1",
         "sort": 3000,
         "is_exampled": -1,
-        "updated_at": "2026-10-14T14:34:48+08:00"
+        "updated_at": "2026-10-16T15:38:36+08:00"
       },
       {
         "target_id": "146a7e0f7da63",
@@ -1241,7 +1241,7 @@
         "parent_id": "158b1d35b7d089",
         "target_type": "api",
         "name": "获取管理员所有设备信息",
-        "version": 3355,
+        "version": 3882,
         "sort": 1000,
         "method": "POST",
         "url": "http://localhost/v2/subuser/manager-get-all-device?appid=102036&sign=212b568c&et=1788836545&token=010aedd30618453e052912186352c0d6",
@@ -1428,10 +1428,10 @@
           "example": [
             {
               "example_id": "1",
-              "raw": "{\r\n\t\"errcode\": 0,\r\n\t\"errmsg\": \"请求成功\",\r\n\t\"data\": {\r\n\t\t\"devices\": [\r\n\t\t\t{\r\n\t\t\t\t\"product\": \"CF03\",\r\n\t\t\t\t\"imei\": \"866507071045311\",\r\n\t\t\t\t\"user_id\": 1254040,\r\n\t\t\t\t\"user_num\": \"300000010569\",\r\n\t\t\t\t\"sdk_version\": \"v1.8.2\",\r\n\t\t\t\t\"version\": \"v1.110\",\r\n\t\t\t\t\"active_at\": \"2026-08-28\",\r\n\t\t\t\t\"nick\": \"wl300000010569\",\r\n\t\t\t\t\"avatar\": \"https://cdn.voischat.cn/weila/avatar/default/user.png\",\r\n\t\t\t\t\"location_share\": true,\r\n\t\t\t\t\"online\": false,\r\n\t\t\t\t\"sim_card\": {\r\n\t\t\t\t\t\"iccid\": \"8986112224604921600\",\r\n\t\t\t\t\t\"expiry_date\": \"2027-11-30\",\r\n\t\t\t\t\t\"recharge\": false\r\n\t\t\t\t}\r\n\t\t\t}\r\n\t\t]\r\n\t}\r\n}",
+              "raw": "{\r\n\t\"errcode\": 0,\r\n\t\"errmsg\": \"请求成功\",\r\n\t\"data\": {\r\n\t\t\"devices\": [\r\n\t\t\t{\r\n\t\t\t\t\"product\": \"CF03\",\r\n\t\t\t\t\"imei\": \"866507071045311\",\r\n\t\t\t\t\"user_id\": 1254040,\r\n\t\t\t\t\"user_num\": \"300000010569\",\r\n\t\t\t\t\"sdk_version\": \"v1.8.2\",\r\n\t\t\t\t\"version\": \"v1.110\",\r\n\t\t\t\t\"active_at\": \"2026-08-28\",\r\n\t\t\t\t\"nick\": \"wl300000010569\",\r\n\t\t\t\t\"avatar\": \"https://cdn.voischat.cn/weila/avatar/default/user.png\",\r\n\t\t\t\t\"location_share\": true,\r\n\t\t\t\t\"location_support\": true, //是否支持位置分享\r\n\t\t\t\t\"reminder_support\": true, //是否支持提醒功能\r\n\t\t\t\t\"online\": false,\r\n\t\t\t\t\"battery\": 0, // 电量 0~100 0 电量数据过期 \r\n\t\t\t\t\"sim_card\": {\r\n\t\t\t\t\t\"iccid\": \"8986112224604921600\",\r\n\t\t\t\t\t\"expiry_date\": \"2027-11-30\",\r\n\t\t\t\t\t\"recharge\": false\r\n\t\t\t\t}\r\n\t\t\t}\r\n\t\t]\r\n\t}\r\n}",
               "raw_parameter": [
                 {
-                  "param_id": "16722c1d37d081",
+                  "param_id": "12f7191a37d173",
                   "description": "错误码",
                   "field_type": "number",
                   "is_checked": 1,
@@ -1443,7 +1443,7 @@
                   }
                 },
                 {
-                  "param_id": "16722c1d37d082",
+                  "param_id": "12f7191a37d174",
                   "description": "返回文字描述",
                   "field_type": "string",
                   "is_checked": 1,
@@ -1455,7 +1455,7 @@
                   }
                 },
                 {
-                  "param_id": "16722c1d37d083",
+                  "param_id": "12f7191a37d175",
                   "description": "返回数据",
                   "field_type": "object",
                   "is_checked": 1,
@@ -1467,7 +1467,7 @@
                   }
                 },
                 {
-                  "param_id": "16722c1d37d084",
+                  "param_id": "12f7191a37d176",
                   "description": "",
                   "field_type": "array",
                   "is_checked": 1,
@@ -1479,8 +1479,8 @@
                   }
                 },
                 {
-                  "param_id": "16722c1d37d085",
-                  "description": "设备型号",
+                  "param_id": "12f7191a37d177",
+                  "description": "产品名称",
                   "field_type": "string",
                   "is_checked": 1,
                   "key": "data.devices.product",
@@ -1491,7 +1491,7 @@
                   }
                 },
                 {
-                  "param_id": "16722c1d77d086",
+                  "param_id": "12f7191a37d178",
                   "description": "设备IMEI",
                   "field_type": "string",
                   "is_checked": 1,
@@ -1503,8 +1503,8 @@
                   }
                 },
                 {
-                  "param_id": "16722c1d77d087",
-                  "description": "用户ID",
+                  "param_id": "12f7191a37d179",
+                  "description": "设备用户ID",
                   "field_type": "number",
                   "is_checked": 1,
                   "key": "data.devices.user_id",
@@ -1515,7 +1515,7 @@
                   }
                 },
                 {
-                  "param_id": "16722c1d77d088",
+                  "param_id": "12f7191a77d17a",
                   "description": "微喇",
                   "field_type": "string",
                   "is_checked": 1,
@@ -1527,8 +1527,8 @@
                   }
                 },
                 {
-                  "param_id": "16722c1d77d089",
-                  "description": "SDK版本",
+                  "param_id": "12f7191a77d17b",
+                  "description": "升级版本号",
                   "field_type": "string",
                   "is_checked": 1,
                   "key": "data.devices.sdk_version",
@@ -1539,8 +1539,8 @@
                   }
                 },
                 {
-                  "param_id": "16722c1d77d08a",
-                  "description": "设备版本",
+                  "param_id": "12f7191a77d17c",
+                  "description": "升级版本号",
                   "field_type": "string",
                   "is_checked": 1,
                   "key": "data.devices.version",
@@ -1551,7 +1551,7 @@
                   }
                 },
                 {
-                  "param_id": "16722c1d77d08b",
+                  "param_id": "12f7191a77d17d",
                   "description": "激活时间",
                   "field_type": "string",
                   "is_checked": 1,
@@ -1563,7 +1563,7 @@
                   }
                 },
                 {
-                  "param_id": "16722c1d77d08c",
+                  "param_id": "12f7191a77d17e",
                   "description": "昵称",
                   "field_type": "string",
                   "is_checked": 1,
@@ -1575,7 +1575,7 @@
                   }
                 },
                 {
-                  "param_id": "16722c1d77d08d",
+                  "param_id": "12f7191a77d17f",
                   "description": "头像URL",
                   "field_type": "string",
                   "is_checked": 1,
@@ -1587,7 +1587,7 @@
                   }
                 },
                 {
-                  "param_id": "16722c1d77d08e",
+                  "param_id": "12f7191a77d180",
                   "description": "位置共享开关",
                   "field_type": "boolean",
                   "is_checked": 1,
@@ -1599,7 +1599,31 @@
                   }
                 },
                 {
-                  "param_id": "16722c1d77d08f",
+                  "param_id": "12f7191a77d181",
+                  "description": "是否支持位置分享",
+                  "field_type": "boolean",
+                  "is_checked": 1,
+                  "key": "data.devices.location_support",
+                  "not_null": 1,
+                  "value": "true",
+                  "schema": {
+                    "type": "boolean"
+                  }
+                },
+                {
+                  "param_id": "12f7191a77d182",
+                  "description": "是否支持提醒功能",
+                  "field_type": "boolean",
+                  "is_checked": 1,
+                  "key": "data.devices.reminder_support",
+                  "not_null": 1,
+                  "value": "true",
+                  "schema": {
+                    "type": "boolean"
+                  }
+                },
+                {
+                  "param_id": "12f7191a77d183",
                   "description": "在线状态",
                   "field_type": "boolean",
                   "is_checked": 1,
@@ -1611,7 +1635,19 @@
                   }
                 },
                 {
-                  "param_id": "16722c1d77d090",
+                  "param_id": "12f7191a77d184",
+                  "description": "电量 0~100 0 电量数据过期",
+                  "field_type": "number",
+                  "is_checked": 1,
+                  "key": "data.devices.battery",
+                  "not_null": 1,
+                  "value": "0",
+                  "schema": {
+                    "type": "number"
+                  }
+                },
+                {
+                  "param_id": "12f7191a77d185",
                   "description": "流量卡",
                   "field_type": "object",
                   "is_checked": 1,
@@ -1623,7 +1659,7 @@
                   }
                 },
                 {
-                  "param_id": "16722c1d77d091",
+                  "param_id": "12f7191a77d186",
                   "description": "流量卡ICCID",
                   "field_type": "string",
                   "is_checked": 1,
@@ -1635,7 +1671,7 @@
                   }
                 },
                 {
-                  "param_id": "16722c1d77d092",
+                  "param_id": "12f7191ab7d187",
                   "description": "日期时间",
                   "field_type": "string",
                   "is_checked": 1,
@@ -1647,7 +1683,7 @@
                   }
                 },
                 {
-                  "param_id": "16722c1d77d093",
+                  "param_id": "12f7191ab7d188",
                   "description": "是否需要充值",
                   "field_type": "boolean",
                   "is_checked": 1,
@@ -1734,7 +1770,7 @@
           "alias_name": null,
           "portrait": "https://img.cdn.apipost.cn/user/default_profile_photo/Vector-3.png"
         },
-        "updated_at": "2026-09-10T10:34:40+08:00",
+        "updated_at": "2026-10-27T10:43:31+08:00",
         "updated_user": {
           "uid": "4015b",
           "nick_name": "大宝",
@@ -1891,7 +1927,7 @@
         "parent_id": "127f2ec37d642",
         "target_type": "api",
         "name": "获取设备信息",
-        "version": 3760,
+        "version": 3889,
         "sort": 1000,
         "method": "POST",
         "url": "http://localhost/v2/subuser/device-get-detail?appid=102036&sign=212b568c&et=1788836545&token=37e400a4e311be56a5d4c98eb073f54c",
@@ -2091,10 +2127,10 @@
           "example": [
             {
               "example_id": "1",
-              "raw": "{\r\n\t\"errcode\": 0,\r\n\t\"errmsg\": \"请求成功\",\r\n\t\"data\": {\r\n\t\t\"device\": {\r\n\t\t\t\"product\": \"CF02S\",\r\n\t\t\t\"imei\": \"866507071045308\",\r\n\t\t\t\"user_id\": 1254036,\r\n\t\t\t\"user_num\": \"300000010531\",\r\n\t\t\t\"sdk_version\": \"v1.7.1\",\r\n\t\t\t\"version\": \"v1.110\",\r\n\t\t\t\"active_at\": \"2026-08-19\",\r\n\t\t\t\"nick\": \"wl1254036\",\r\n\t\t\t\"avatar\": \"https://cdn.voischat.cn/weila/avatar/default/user.png\",\r\n\t\t\t\"location_share\": false,\r\n\t\t\t\"online\": false,\r\n\t\t\t\"sim_card\": {\r\n\t\t\t\t\"iccid\": \"8986112124008462514\",\r\n\t\t\t\t\"expiry_date\": \"2026-10-31\",\r\n\t\t\t\t\"recharge\": true\r\n\t\t\t}\r\n\t\t}\r\n\t}\r\n}",
+              "raw": "{\r\n\t\"errcode\": 0,\r\n\t\"errmsg\": \"请求成功\",\r\n\t\"data\": {\r\n\t\t\"device\": {\r\n\t\t\t\"product\": \"CF02S\",\r\n\t\t\t\"imei\": \"866507071045308\",\r\n\t\t\t\"user_id\": 1254036,\r\n\t\t\t\"user_num\": \"300000010531\",\r\n\t\t\t\"sdk_version\": \"v1.7.1\",\r\n\t\t\t\"version\": \"v1.110\",\r\n\t\t\t\"active_at\": \"2026-08-19\",\r\n\t\t\t\"nick\": \"wl1254036\",\r\n\t\t\t\"avatar\": \"https://cdn.voischat.cn/weila/avatar/default/user.png\",\r\n\t\t\t\"location_share\": false,\r\n\t\t\t\"location_support\": true, //是否支持位置分享\r\n\t\t\t\"reminder_support\": true,//是否支持提醒功能\r\n\t\t\t\"online\": false,\r\n\t\t\t\"battery\": 0, // 电量 0~100 0 电量数据过期 \r\n\t\t\t\"sim_card\": {\r\n\t\t\t\t\"iccid\": \"8986112124008462514\",\r\n\t\t\t\t\"expiry_date\": \"2026-10-31\",\r\n\t\t\t\t\"recharge\": true\r\n\t\t\t}\r\n\t\t}\r\n\t}\r\n}",
               "raw_parameter": [
                 {
-                  "param_id": "1451e16b7d07b",
+                  "param_id": "12f72ab9b7d189",
                   "description": "错误码",
                   "field_type": "number",
                   "is_checked": 1,
@@ -2106,7 +2142,7 @@
                   }
                 },
                 {
-                  "param_id": "1451e16b7d07c",
+                  "param_id": "12f72ab9b7d18a",
                   "description": "返回文字描述",
                   "field_type": "string",
                   "is_checked": 1,
@@ -2118,7 +2154,7 @@
                   }
                 },
                 {
-                  "param_id": "1451e16b7d07d",
+                  "param_id": "12f72ab9b7d18b",
                   "description": "返回数据",
                   "field_type": "object",
                   "is_checked": 1,
@@ -2130,7 +2166,7 @@
                   }
                 },
                 {
-                  "param_id": "1451e16b7d07e",
+                  "param_id": "12f72ab9b7d18c",
                   "description": "",
                   "field_type": "object",
                   "is_checked": 1,
@@ -2142,7 +2178,7 @@
                   }
                 },
                 {
-                  "param_id": "1451e16b7d07f",
+                  "param_id": "12f72ab9b7d18d",
                   "description": "产品名称",
                   "field_type": "string",
                   "is_checked": 1,
@@ -2154,7 +2190,7 @@
                   }
                 },
                 {
-                  "param_id": "1451e16b7d080",
+                  "param_id": "12f72ab9b7d18e",
                   "description": "IMEI",
                   "field_type": "string",
                   "is_checked": 1,
@@ -2166,7 +2202,7 @@
                   }
                 },
                 {
-                  "param_id": "1451e16b7d081",
+                  "param_id": "12f72ab9b7d18f",
                   "description": "设备用户ID",
                   "field_type": "number",
                   "is_checked": 1,
@@ -2178,7 +2214,7 @@
                   }
                 },
                 {
-                  "param_id": "1451e16b7d082",
+                  "param_id": "12f72ab9b7d190",
                   "description": "设备微喇",
                   "field_type": "string",
                   "is_checked": 1,
@@ -2190,7 +2226,7 @@
                   }
                 },
                 {
-                  "param_id": "1451e16b7d083",
+                  "param_id": "12f72ab9b7d191",
                   "description": "设备SDK版本",
                   "field_type": "string",
                   "is_checked": 1,
@@ -2202,7 +2238,7 @@
                   }
                 },
                 {
-                  "param_id": "1451e16b7d084",
+                  "param_id": "12f72ab9b7d192",
                   "description": "设备版本",
                   "field_type": "string",
                   "is_checked": 1,
@@ -2214,7 +2250,7 @@
                   }
                 },
                 {
-                  "param_id": "1451e16b7d085",
+                  "param_id": "12f72ab9b7d193",
                   "description": "设备激活时间",
                   "field_type": "string",
                   "is_checked": 1,
@@ -2226,7 +2262,7 @@
                   }
                 },
                 {
-                  "param_id": "1451e16b7d086",
+                  "param_id": "12f72ab9b7d194",
                   "description": "昵称",
                   "field_type": "string",
                   "is_checked": 1,
@@ -2238,7 +2274,7 @@
                   }
                 },
                 {
-                  "param_id": "1451e16b7d087",
+                  "param_id": "12f72ab9b7d195",
                   "description": "头像",
                   "field_type": "string",
                   "is_checked": 1,
@@ -2250,7 +2286,7 @@
                   }
                 },
                 {
-                  "param_id": "1451e16b7d088",
+                  "param_id": "12f72ab9b7d196",
                   "description": "位置共享",
                   "field_type": "boolean",
                   "is_checked": 1,
@@ -2262,7 +2298,31 @@
                   }
                 },
                 {
-                  "param_id": "1451e16b7d089",
+                  "param_id": "12f72ab9b7d197",
+                  "description": "是否支持位置分享",
+                  "field_type": "boolean",
+                  "is_checked": 1,
+                  "key": "data.device.location_support",
+                  "not_null": 1,
+                  "value": "true",
+                  "schema": {
+                    "type": "boolean"
+                  }
+                },
+                {
+                  "param_id": "12f72ab9b7d198",
+                  "description": "是否支持提醒功能",
+                  "field_type": "boolean",
+                  "is_checked": 1,
+                  "key": "data.device.reminder_support",
+                  "not_null": 1,
+                  "value": "true",
+                  "schema": {
+                    "type": "boolean"
+                  }
+                },
+                {
+                  "param_id": "12f72ab9b7d199",
                   "description": "在线状态",
                   "field_type": "boolean",
                   "is_checked": 1,
@@ -2274,7 +2334,19 @@
                   }
                 },
                 {
-                  "param_id": "1451e16b7d08a",
+                  "param_id": "12f72ab9f7d19a",
+                  "description": "电量 0~100 0 电量数据过期",
+                  "field_type": "number",
+                  "is_checked": 1,
+                  "key": "data.device.battery",
+                  "not_null": 1,
+                  "value": "0",
+                  "schema": {
+                    "type": "number"
+                  }
+                },
+                {
+                  "param_id": "12f72ab9f7d19b",
                   "description": "流量卡信息",
                   "field_type": "object",
                   "is_checked": 1,
@@ -2286,7 +2358,7 @@
                   }
                 },
                 {
-                  "param_id": "1451e16b7d08b",
+                  "param_id": "12f72ab9f7d19c",
                   "description": "ICCID",
                   "field_type": "string",
                   "is_checked": 1,
@@ -2298,7 +2370,7 @@
                   }
                 },
                 {
-                  "param_id": "1451e16b7d08c",
+                  "param_id": "12f72ab9f7d19d",
                   "description": "流量卡过期",
                   "field_type": "string",
                   "is_checked": 1,
@@ -2310,7 +2382,7 @@
                   }
                 },
                 {
-                  "param_id": "1451e16f7d08d",
+                  "param_id": "12f72ab9f7d19e",
                   "description": "是否可以续费",
                   "field_type": "boolean",
                   "is_checked": 1,
@@ -2397,7 +2469,7 @@
           "alias_name": null,
           "portrait": "https://img.cdn.apipost.cn/user/default_profile_photo/Vector-3.png"
         },
-        "updated_at": "2026-10-14T13:43:18+08:00",
+        "updated_at": "2026-10-28T10:15:39+08:00",
         "updated_user": {
           "uid": "4015b",
           "nick_name": "大宝",
@@ -9903,10 +9975,10 @@
         "parent_id": "25ffcc137dd93",
         "target_type": "api",
         "name": "获取轨迹上报模式",
-        "version": 3768,
+        "version": 3811,
         "sort": 2000,
         "method": "POST",
-        "url": "http://localhost/v2/subuser/track-get-mode?appid=102036&sign=212b568c&et=1788836545&token=37e400a4e311be56a5d4c98eb073f54c",
+        "url": "http://localhost/v2/subuser/track-get-mode?appid=102036&sign=212b568c&et=1788836545&token=6293f041dd7e8e231b0e0f08183a30f2",
         "protocol": "http/1.1",
         "mark_id": "1",
         "description": "",
@@ -10013,7 +10085,7 @@
           "body": {
             "mode": "json",
             "parameter": [],
-            "raw": "{\r\n    \"user_id\": 1254040\r\n}",
+            "raw": "{\r\n    \"user_id\": 1254036\r\n}",
             "raw_parameter": [],
             "raw_schema": {
               "type": "object"
@@ -10071,7 +10143,7 @@
                 "is_checked": 1,
                 "key": "token",
                 "not_null": 1,
-                "value": "37e400a4e311be56a5d4c98eb073f54c",
+                "value": "6293f041dd7e8e231b0e0f08183a30f2",
                 "schema": {
                   "type": "string"
                 }
@@ -10216,7 +10288,7 @@
           "alias_name": null,
           "portrait": "https://img.cdn.apipost.cn/user/default_profile_photo/Vector-3.png"
         },
-        "updated_at": "2026-10-14T14:34:40+08:00",
+        "updated_at": "2026-10-16T15:38:35+08:00",
         "updated_user": {
           "uid": "4015b",
           "nick_name": "大宝",
@@ -10232,10 +10304,10 @@
         "parent_id": "25ffcc137dd93",
         "target_type": "api",
         "name": "设置轨迹上报模式",
-        "version": 3769,
+        "version": 3812,
         "sort": 3000,
         "method": "POST",
-        "url": "http://localhost/v2/subuser/track-set-mode?appid=102036&sign=212b568c&et=1788836545&token=37e400a4e311be56a5d4c98eb073f54c",
+        "url": "http://localhost/v2/subuser/track-set-mode?appid=102036&sign=212b568c&et=1788836545&token=6293f041dd7e8e231b0e0f08183a30f2",
         "protocol": "http/1.1",
         "mark_id": "1",
         "description": "",
@@ -10425,7 +10497,7 @@
                 "is_checked": 1,
                 "key": "token",
                 "not_null": 1,
-                "value": "37e400a4e311be56a5d4c98eb073f54c",
+                "value": "6293f041dd7e8e231b0e0f08183a30f2",
                 "schema": {
                   "type": "string"
                 }
@@ -10546,7 +10618,7 @@
           "alias_name": null,
           "portrait": "https://img.cdn.apipost.cn/user/default_profile_photo/Vector-3.png"
         },
-        "updated_at": "2026-10-14T14:34:48+08:00",
+        "updated_at": "2026-10-16T15:38:36+08:00",
         "updated_user": {
           "uid": "4015b",
           "nick_name": "大宝",
@@ -19043,6 +19115,132 @@
     "models": [],
     "folders": [
       {
+        "target_id": "14e544e4b41860",
+        "project_id": "49402",
+        "parent_id": "348e058",
+        "target_type": "folder",
+        "name": "v2",
+        "version": 98,
+        "sort": 23000,
+        "server_id": "0",
+        "description": "",
+        "request": {
+          "auth": {
+            "type": "inherit",
+            "kv": {
+              "key": "",
+              "value": "",
+              "in": "header"
+            },
+            "bearer": {
+              "key": ""
+            },
+            "basic": {
+              "username": "",
+              "password": ""
+            },
+            "digest": {
+              "username": "",
+              "password": "",
+              "realm": "",
+              "nonce": "",
+              "algorithm": "",
+              "qop": "",
+              "nc": "",
+              "cnonce": "",
+              "opaque": ""
+            },
+            "hawk": {
+              "authId": "",
+              "authKey": "",
+              "algorithm": "",
+              "user": "",
+              "nonce": "",
+              "extraData": "",
+              "default": "",
+              "delegation": "",
+              "timestamp": "",
+              "includePayloadHash": false
+            },
+            "awsv4": {
+              "accessKey": "",
+              "secretKey": "",
+              "region": "",
+              "service": "",
+              "sessionToken": "",
+              "addAuthDataToQuery": false
+            },
+            "ntlm": {
+              "username": "",
+              "password": "",
+              "entity": "",
+              "workstation": "",
+              "disableRetryRequest": false
+            },
+            "edgegrid": {
+              "accessToken": "",
+              "clientToken": "",
+              "clientSecret": "",
+              "nonce": "",
+              "timestamp": "",
+              "baseURi": "",
+              "headersToSign": ""
+            },
+            "oauth1": {
+              "consumerKey": "",
+              "consumerSecret": "",
+              "signatureMethod": "HMAC-SHA1",
+              "addEmptyParamsToSign": true,
+              "includeBodyHash": true,
+              "addParamsToHeader": false,
+              "disableHeaderEncoding": false,
+              "realm": "",
+              "version": "1.0",
+              "nonce": "",
+              "timestamp": "",
+              "verifier": "",
+              "callback": "",
+              "tokenSecret": "",
+              "token": ""
+            },
+            "jwt": {
+              "addTokenTo": "header",
+              "algorithm": "HS256",
+              "secret": "",
+              "isSecretBase64Encoded": false,
+              "payload": "",
+              "headerPrefix": "Bearer",
+              "queryParamKey": "token",
+              "header": ""
+            },
+            "asap": {
+              "alg": "HS256",
+              "iss": "",
+              "aud": "",
+              "kid": "",
+              "privateKey": "",
+              "sub": "",
+              "claims": "",
+              "exp": ""
+            }
+          },
+          "pre_tasks": [],
+          "post_tasks": [],
+          "body": {
+            "parameter": []
+          },
+          "header": {
+            "parameter": []
+          },
+          "query": {
+            "parameter": []
+          },
+          "cookie": {
+            "parameter": []
+          }
+        }
+      },
+      {
         "target_id": "158b1d35b7d089",
         "project_id": "49402",
         "parent_id": "68302537d05c",
@@ -19050,6 +19248,510 @@
         "name": "管理员",
         "version": 3289,
         "sort": 4500,
+        "server_id": "0",
+        "description": "",
+        "request": {
+          "auth": {
+            "type": "inherit",
+            "kv": {
+              "key": "",
+              "value": "",
+              "in": "header"
+            },
+            "bearer": {
+              "key": ""
+            },
+            "basic": {
+              "username": "",
+              "password": ""
+            },
+            "digest": {
+              "username": "",
+              "password": "",
+              "realm": "",
+              "nonce": "",
+              "algorithm": "",
+              "qop": "",
+              "nc": "",
+              "cnonce": "",
+              "opaque": ""
+            },
+            "hawk": {
+              "authId": "",
+              "authKey": "",
+              "algorithm": "",
+              "user": "",
+              "nonce": "",
+              "extraData": "",
+              "default": "",
+              "delegation": "",
+              "timestamp": "",
+              "includePayloadHash": false
+            },
+            "awsv4": {
+              "accessKey": "",
+              "secretKey": "",
+              "region": "",
+              "service": "",
+              "sessionToken": "",
+              "addAuthDataToQuery": false
+            },
+            "ntlm": {
+              "username": "",
+              "password": "",
+              "entity": "",
+              "workstation": "",
+              "disableRetryRequest": false
+            },
+            "edgegrid": {
+              "accessToken": "",
+              "clientToken": "",
+              "clientSecret": "",
+              "nonce": "",
+              "timestamp": "",
+              "baseURi": "",
+              "headersToSign": ""
+            },
+            "oauth1": {
+              "consumerKey": "",
+              "consumerSecret": "",
+              "signatureMethod": "HMAC-SHA1",
+              "addEmptyParamsToSign": true,
+              "includeBodyHash": true,
+              "addParamsToHeader": false,
+              "disableHeaderEncoding": false,
+              "realm": "",
+              "version": "1.0",
+              "nonce": "",
+              "timestamp": "",
+              "verifier": "",
+              "callback": "",
+              "tokenSecret": "",
+              "token": ""
+            },
+            "jwt": {
+              "addTokenTo": "header",
+              "algorithm": "HS256",
+              "secret": "",
+              "isSecretBase64Encoded": false,
+              "payload": "",
+              "headerPrefix": "Bearer",
+              "queryParamKey": "token",
+              "header": ""
+            },
+            "asap": {
+              "alg": "HS256",
+              "iss": "",
+              "aud": "",
+              "kid": "",
+              "privateKey": "",
+              "sub": "",
+              "claims": "",
+              "exp": ""
+            }
+          },
+          "pre_tasks": [],
+          "post_tasks": [],
+          "body": {
+            "parameter": []
+          },
+          "header": {
+            "parameter": []
+          },
+          "query": {
+            "parameter": []
+          },
+          "cookie": {
+            "parameter": []
+          }
+        }
+      },
+      {
+        "target_id": "348e058",
+        "project_id": "49402",
+        "parent_id": "0",
+        "target_type": "folder",
+        "name": "WEBAPI",
+        "version": 98,
+        "sort": 1000,
+        "server_id": "0",
+        "description": "",
+        "request": {
+          "auth": {
+            "type": "inherit",
+            "kv": {
+              "key": "",
+              "value": "",
+              "in": "header"
+            },
+            "bearer": {
+              "key": ""
+            },
+            "basic": {
+              "username": "",
+              "password": ""
+            },
+            "digest": {
+              "username": "",
+              "password": "",
+              "realm": "",
+              "nonce": "",
+              "algorithm": "",
+              "qop": "",
+              "nc": "",
+              "cnonce": "",
+              "opaque": ""
+            },
+            "hawk": {
+              "authId": "",
+              "authKey": "",
+              "algorithm": "",
+              "user": "",
+              "nonce": "",
+              "extraData": "",
+              "default": "",
+              "delegation": "",
+              "timestamp": "",
+              "includePayloadHash": false
+            },
+            "awsv4": {
+              "accessKey": "",
+              "secretKey": "",
+              "region": "",
+              "service": "",
+              "sessionToken": "",
+              "addAuthDataToQuery": false
+            },
+            "ntlm": {
+              "username": "",
+              "password": "",
+              "entity": "",
+              "workstation": "",
+              "disableRetryRequest": false
+            },
+            "edgegrid": {
+              "accessToken": "",
+              "clientToken": "",
+              "clientSecret": "",
+              "nonce": "",
+              "timestamp": "",
+              "baseURi": "",
+              "headersToSign": ""
+            },
+            "oauth1": {
+              "consumerKey": "",
+              "consumerSecret": "",
+              "signatureMethod": "HMAC-SHA1",
+              "addEmptyParamsToSign": true,
+              "includeBodyHash": true,
+              "addParamsToHeader": false,
+              "disableHeaderEncoding": false,
+              "realm": "",
+              "version": "1.0",
+              "nonce": "",
+              "timestamp": "",
+              "verifier": "",
+              "callback": "",
+              "tokenSecret": "",
+              "token": ""
+            },
+            "jwt": {
+              "addTokenTo": "header",
+              "algorithm": "HS256",
+              "secret": "",
+              "isSecretBase64Encoded": false,
+              "payload": "",
+              "headerPrefix": "Bearer",
+              "queryParamKey": "token",
+              "header": ""
+            },
+            "asap": {
+              "alg": "HS256",
+              "iss": "",
+              "aud": "",
+              "kid": "",
+              "privateKey": "",
+              "sub": "",
+              "claims": "",
+              "exp": ""
+            }
+          },
+          "pre_tasks": [],
+          "post_tasks": [],
+          "body": {
+            "parameter": []
+          },
+          "header": {
+            "parameter": []
+          },
+          "query": {
+            "parameter": []
+          },
+          "cookie": {
+            "parameter": []
+          }
+        }
+      },
+      {
+        "target_id": "127f2ec37d642",
+        "project_id": "49402",
+        "parent_id": "68302537d05c",
+        "target_type": "folder",
+        "name": "设备",
+        "version": 3578,
+        "sort": 9000,
+        "server_id": "0",
+        "description": "",
+        "request": {
+          "auth": {
+            "type": "inherit",
+            "kv": {
+              "key": "",
+              "value": "",
+              "in": "header"
+            },
+            "bearer": {
+              "key": ""
+            },
+            "basic": {
+              "username": "",
+              "password": ""
+            },
+            "digest": {
+              "username": "",
+              "password": "",
+              "realm": "",
+              "nonce": "",
+              "algorithm": "",
+              "qop": "",
+              "nc": "",
+              "cnonce": "",
+              "opaque": ""
+            },
+            "hawk": {
+              "authId": "",
+              "authKey": "",
+              "algorithm": "",
+              "user": "",
+              "nonce": "",
+              "extraData": "",
+              "default": "",
+              "delegation": "",
+              "timestamp": "",
+              "includePayloadHash": false
+            },
+            "awsv4": {
+              "accessKey": "",
+              "secretKey": "",
+              "region": "",
+              "service": "",
+              "sessionToken": "",
+              "addAuthDataToQuery": false
+            },
+            "ntlm": {
+              "username": "",
+              "password": "",
+              "entity": "",
+              "workstation": "",
+              "disableRetryRequest": false
+            },
+            "edgegrid": {
+              "accessToken": "",
+              "clientToken": "",
+              "clientSecret": "",
+              "nonce": "",
+              "timestamp": "",
+              "baseURi": "",
+              "headersToSign": ""
+            },
+            "oauth1": {
+              "consumerKey": "",
+              "consumerSecret": "",
+              "signatureMethod": "HMAC-SHA1",
+              "addEmptyParamsToSign": true,
+              "includeBodyHash": true,
+              "addParamsToHeader": false,
+              "disableHeaderEncoding": false,
+              "realm": "",
+              "version": "1.0",
+              "nonce": "",
+              "timestamp": "",
+              "verifier": "",
+              "callback": "",
+              "tokenSecret": "",
+              "token": ""
+            },
+            "jwt": {
+              "addTokenTo": "header",
+              "algorithm": "HS256",
+              "secret": "",
+              "isSecretBase64Encoded": false,
+              "payload": "",
+              "headerPrefix": "Bearer",
+              "queryParamKey": "token",
+              "header": ""
+            },
+            "asap": {
+              "alg": "HS256",
+              "iss": "",
+              "aud": "",
+              "kid": "",
+              "privateKey": "",
+              "sub": "",
+              "claims": "",
+              "exp": ""
+            }
+          },
+          "pre_tasks": [],
+          "post_tasks": [],
+          "body": {
+            "parameter": []
+          },
+          "header": {
+            "parameter": []
+          },
+          "query": {
+            "parameter": []
+          },
+          "cookie": {
+            "parameter": []
+          }
+        }
+      },
+      {
+        "target_id": "12860fe77d651",
+        "project_id": "49402",
+        "parent_id": "68302537d05c",
+        "target_type": "folder",
+        "name": "提醒",
+        "version": 3576,
+        "sort": 11000,
+        "server_id": "0",
+        "description": "",
+        "request": {
+          "auth": {
+            "type": "inherit",
+            "kv": {
+              "key": "",
+              "value": "",
+              "in": "header"
+            },
+            "bearer": {
+              "key": ""
+            },
+            "basic": {
+              "username": "",
+              "password": ""
+            },
+            "digest": {
+              "username": "",
+              "password": "",
+              "realm": "",
+              "nonce": "",
+              "algorithm": "",
+              "qop": "",
+              "nc": "",
+              "cnonce": "",
+              "opaque": ""
+            },
+            "hawk": {
+              "authId": "",
+              "authKey": "",
+              "algorithm": "",
+              "user": "",
+              "nonce": "",
+              "extraData": "",
+              "default": "",
+              "delegation": "",
+              "timestamp": "",
+              "includePayloadHash": false
+            },
+            "awsv4": {
+              "accessKey": "",
+              "secretKey": "",
+              "region": "",
+              "service": "",
+              "sessionToken": "",
+              "addAuthDataToQuery": false
+            },
+            "ntlm": {
+              "username": "",
+              "password": "",
+              "entity": "",
+              "workstation": "",
+              "disableRetryRequest": false
+            },
+            "edgegrid": {
+              "accessToken": "",
+              "clientToken": "",
+              "clientSecret": "",
+              "nonce": "",
+              "timestamp": "",
+              "baseURi": "",
+              "headersToSign": ""
+            },
+            "oauth1": {
+              "consumerKey": "",
+              "consumerSecret": "",
+              "signatureMethod": "HMAC-SHA1",
+              "addEmptyParamsToSign": true,
+              "includeBodyHash": true,
+              "addParamsToHeader": false,
+              "disableHeaderEncoding": false,
+              "realm": "",
+              "version": "1.0",
+              "nonce": "",
+              "timestamp": "",
+              "verifier": "",
+              "callback": "",
+              "tokenSecret": "",
+              "token": ""
+            },
+            "jwt": {
+              "addTokenTo": "header",
+              "algorithm": "HS256",
+              "secret": "",
+              "isSecretBase64Encoded": false,
+              "payload": "",
+              "headerPrefix": "Bearer",
+              "queryParamKey": "token",
+              "header": ""
+            },
+            "asap": {
+              "alg": "HS256",
+              "iss": "",
+              "aud": "",
+              "kid": "",
+              "privateKey": "",
+              "sub": "",
+              "claims": "",
+              "exp": ""
+            }
+          },
+          "pre_tasks": [],
+          "post_tasks": [],
+          "body": {
+            "parameter": []
+          },
+          "header": {
+            "parameter": []
+          },
+          "query": {
+            "parameter": []
+          },
+          "cookie": {
+            "parameter": []
+          }
+        }
+      },
+      {
+        "target_id": "156eb1a7b7d049",
+        "project_id": "49402",
+        "parent_id": "68302537d05c",
+        "target_type": "folder",
+        "name": "群组",
+        "version": 3272,
+        "sort": 4750,
         "server_id": "0",
         "description": "",
         "request": {
@@ -19295,13 +19997,13 @@
         }
       },
       {
-        "target_id": "12860fe77d651",
+        "target_id": "68302537d05c",
         "project_id": "49402",
-        "parent_id": "68302537d05c",
+        "parent_id": "14e544e4b41860",
         "target_type": "folder",
-        "name": "提醒",
-        "version": 3576,
-        "sort": 11000,
+        "name": "subuser管理",
+        "version": 2479,
+        "sort": 14000,
         "server_id": "0",
         "description": "",
         "request": {
@@ -19799,384 +20501,6 @@
         }
       },
       {
-        "target_id": "348e058",
-        "project_id": "49402",
-        "parent_id": "0",
-        "target_type": "folder",
-        "name": "WEBAPI",
-        "version": 98,
-        "sort": 1000,
-        "server_id": "0",
-        "description": "",
-        "request": {
-          "auth": {
-            "type": "inherit",
-            "kv": {
-              "key": "",
-              "value": "",
-              "in": "header"
-            },
-            "bearer": {
-              "key": ""
-            },
-            "basic": {
-              "username": "",
-              "password": ""
-            },
-            "digest": {
-              "username": "",
-              "password": "",
-              "realm": "",
-              "nonce": "",
-              "algorithm": "",
-              "qop": "",
-              "nc": "",
-              "cnonce": "",
-              "opaque": ""
-            },
-            "hawk": {
-              "authId": "",
-              "authKey": "",
-              "algorithm": "",
-              "user": "",
-              "nonce": "",
-              "extraData": "",
-              "default": "",
-              "delegation": "",
-              "timestamp": "",
-              "includePayloadHash": false
-            },
-            "awsv4": {
-              "accessKey": "",
-              "secretKey": "",
-              "region": "",
-              "service": "",
-              "sessionToken": "",
-              "addAuthDataToQuery": false
-            },
-            "ntlm": {
-              "username": "",
-              "password": "",
-              "entity": "",
-              "workstation": "",
-              "disableRetryRequest": false
-            },
-            "edgegrid": {
-              "accessToken": "",
-              "clientToken": "",
-              "clientSecret": "",
-              "nonce": "",
-              "timestamp": "",
-              "baseURi": "",
-              "headersToSign": ""
-            },
-            "oauth1": {
-              "consumerKey": "",
-              "consumerSecret": "",
-              "signatureMethod": "HMAC-SHA1",
-              "addEmptyParamsToSign": true,
-              "includeBodyHash": true,
-              "addParamsToHeader": false,
-              "disableHeaderEncoding": false,
-              "realm": "",
-              "version": "1.0",
-              "nonce": "",
-              "timestamp": "",
-              "verifier": "",
-              "callback": "",
-              "tokenSecret": "",
-              "token": ""
-            },
-            "jwt": {
-              "addTokenTo": "header",
-              "algorithm": "HS256",
-              "secret": "",
-              "isSecretBase64Encoded": false,
-              "payload": "",
-              "headerPrefix": "Bearer",
-              "queryParamKey": "token",
-              "header": ""
-            },
-            "asap": {
-              "alg": "HS256",
-              "iss": "",
-              "aud": "",
-              "kid": "",
-              "privateKey": "",
-              "sub": "",
-              "claims": "",
-              "exp": ""
-            }
-          },
-          "pre_tasks": [],
-          "post_tasks": [],
-          "body": {
-            "parameter": []
-          },
-          "header": {
-            "parameter": []
-          },
-          "query": {
-            "parameter": []
-          },
-          "cookie": {
-            "parameter": []
-          }
-        }
-      },
-      {
-        "target_id": "68302537d05c",
-        "project_id": "49402",
-        "parent_id": "14e544e4b41860",
-        "target_type": "folder",
-        "name": "subuser管理",
-        "version": 2479,
-        "sort": 14000,
-        "server_id": "0",
-        "description": "",
-        "request": {
-          "auth": {
-            "type": "inherit",
-            "kv": {
-              "key": "",
-              "value": "",
-              "in": "header"
-            },
-            "bearer": {
-              "key": ""
-            },
-            "basic": {
-              "username": "",
-              "password": ""
-            },
-            "digest": {
-              "username": "",
-              "password": "",
-              "realm": "",
-              "nonce": "",
-              "algorithm": "",
-              "qop": "",
-              "nc": "",
-              "cnonce": "",
-              "opaque": ""
-            },
-            "hawk": {
-              "authId": "",
-              "authKey": "",
-              "algorithm": "",
-              "user": "",
-              "nonce": "",
-              "extraData": "",
-              "default": "",
-              "delegation": "",
-              "timestamp": "",
-              "includePayloadHash": false
-            },
-            "awsv4": {
-              "accessKey": "",
-              "secretKey": "",
-              "region": "",
-              "service": "",
-              "sessionToken": "",
-              "addAuthDataToQuery": false
-            },
-            "ntlm": {
-              "username": "",
-              "password": "",
-              "entity": "",
-              "workstation": "",
-              "disableRetryRequest": false
-            },
-            "edgegrid": {
-              "accessToken": "",
-              "clientToken": "",
-              "clientSecret": "",
-              "nonce": "",
-              "timestamp": "",
-              "baseURi": "",
-              "headersToSign": ""
-            },
-            "oauth1": {
-              "consumerKey": "",
-              "consumerSecret": "",
-              "signatureMethod": "HMAC-SHA1",
-              "addEmptyParamsToSign": true,
-              "includeBodyHash": true,
-              "addParamsToHeader": false,
-              "disableHeaderEncoding": false,
-              "realm": "",
-              "version": "1.0",
-              "nonce": "",
-              "timestamp": "",
-              "verifier": "",
-              "callback": "",
-              "tokenSecret": "",
-              "token": ""
-            },
-            "jwt": {
-              "addTokenTo": "header",
-              "algorithm": "HS256",
-              "secret": "",
-              "isSecretBase64Encoded": false,
-              "payload": "",
-              "headerPrefix": "Bearer",
-              "queryParamKey": "token",
-              "header": ""
-            },
-            "asap": {
-              "alg": "HS256",
-              "iss": "",
-              "aud": "",
-              "kid": "",
-              "privateKey": "",
-              "sub": "",
-              "claims": "",
-              "exp": ""
-            }
-          },
-          "pre_tasks": [],
-          "post_tasks": [],
-          "body": {
-            "parameter": []
-          },
-          "header": {
-            "parameter": []
-          },
-          "query": {
-            "parameter": []
-          },
-          "cookie": {
-            "parameter": []
-          }
-        }
-      },
-      {
-        "target_id": "127f2ec37d642",
-        "project_id": "49402",
-        "parent_id": "68302537d05c",
-        "target_type": "folder",
-        "name": "设备",
-        "version": 3578,
-        "sort": 9000,
-        "server_id": "0",
-        "description": "",
-        "request": {
-          "auth": {
-            "type": "inherit",
-            "kv": {
-              "key": "",
-              "value": "",
-              "in": "header"
-            },
-            "bearer": {
-              "key": ""
-            },
-            "basic": {
-              "username": "",
-              "password": ""
-            },
-            "digest": {
-              "username": "",
-              "password": "",
-              "realm": "",
-              "nonce": "",
-              "algorithm": "",
-              "qop": "",
-              "nc": "",
-              "cnonce": "",
-              "opaque": ""
-            },
-            "hawk": {
-              "authId": "",
-              "authKey": "",
-              "algorithm": "",
-              "user": "",
-              "nonce": "",
-              "extraData": "",
-              "default": "",
-              "delegation": "",
-              "timestamp": "",
-              "includePayloadHash": false
-            },
-            "awsv4": {
-              "accessKey": "",
-              "secretKey": "",
-              "region": "",
-              "service": "",
-              "sessionToken": "",
-              "addAuthDataToQuery": false
-            },
-            "ntlm": {
-              "username": "",
-              "password": "",
-              "entity": "",
-              "workstation": "",
-              "disableRetryRequest": false
-            },
-            "edgegrid": {
-              "accessToken": "",
-              "clientToken": "",
-              "clientSecret": "",
-              "nonce": "",
-              "timestamp": "",
-              "baseURi": "",
-              "headersToSign": ""
-            },
-            "oauth1": {
-              "consumerKey": "",
-              "consumerSecret": "",
-              "signatureMethod": "HMAC-SHA1",
-              "addEmptyParamsToSign": true,
-              "includeBodyHash": true,
-              "addParamsToHeader": false,
-              "disableHeaderEncoding": false,
-              "realm": "",
-              "version": "1.0",
-              "nonce": "",
-              "timestamp": "",
-              "verifier": "",
-              "callback": "",
-              "tokenSecret": "",
-              "token": ""
-            },
-            "jwt": {
-              "addTokenTo": "header",
-              "algorithm": "HS256",
-              "secret": "",
-              "isSecretBase64Encoded": false,
-              "payload": "",
-              "headerPrefix": "Bearer",
-              "queryParamKey": "token",
-              "header": ""
-            },
-            "asap": {
-              "alg": "HS256",
-              "iss": "",
-              "aud": "",
-              "kid": "",
-              "privateKey": "",
-              "sub": "",
-              "claims": "",
-              "exp": ""
-            }
-          },
-          "pre_tasks": [],
-          "post_tasks": [],
-          "body": {
-            "parameter": []
-          },
-          "header": {
-            "parameter": []
-          },
-          "query": {
-            "parameter": []
-          },
-          "cookie": {
-            "parameter": []
-          }
-        }
-      },
-      {
         "target_id": "262fcb0b7ddd7",
         "project_id": "49402",
         "parent_id": "68302537d05c",
@@ -20184,258 +20508,6 @@
         "name": "围栏",
         "version": 3754,
         "sort": 15000,
-        "server_id": "0",
-        "description": "",
-        "request": {
-          "auth": {
-            "type": "inherit",
-            "kv": {
-              "key": "",
-              "value": "",
-              "in": "header"
-            },
-            "bearer": {
-              "key": ""
-            },
-            "basic": {
-              "username": "",
-              "password": ""
-            },
-            "digest": {
-              "username": "",
-              "password": "",
-              "realm": "",
-              "nonce": "",
-              "algorithm": "",
-              "qop": "",
-              "nc": "",
-              "cnonce": "",
-              "opaque": ""
-            },
-            "hawk": {
-              "authId": "",
-              "authKey": "",
-              "algorithm": "",
-              "user": "",
-              "nonce": "",
-              "extraData": "",
-              "default": "",
-              "delegation": "",
-              "timestamp": "",
-              "includePayloadHash": false
-            },
-            "awsv4": {
-              "accessKey": "",
-              "secretKey": "",
-              "region": "",
-              "service": "",
-              "sessionToken": "",
-              "addAuthDataToQuery": false
-            },
-            "ntlm": {
-              "username": "",
-              "password": "",
-              "entity": "",
-              "workstation": "",
-              "disableRetryRequest": false
-            },
-            "edgegrid": {
-              "accessToken": "",
-              "clientToken": "",
-              "clientSecret": "",
-              "nonce": "",
-              "timestamp": "",
-              "baseURi": "",
-              "headersToSign": ""
-            },
-            "oauth1": {
-              "consumerKey": "",
-              "consumerSecret": "",
-              "signatureMethod": "HMAC-SHA1",
-              "addEmptyParamsToSign": true,
-              "includeBodyHash": true,
-              "addParamsToHeader": false,
-              "disableHeaderEncoding": false,
-              "realm": "",
-              "version": "1.0",
-              "nonce": "",
-              "timestamp": "",
-              "verifier": "",
-              "callback": "",
-              "tokenSecret": "",
-              "token": ""
-            },
-            "jwt": {
-              "addTokenTo": "header",
-              "algorithm": "HS256",
-              "secret": "",
-              "isSecretBase64Encoded": false,
-              "payload": "",
-              "headerPrefix": "Bearer",
-              "queryParamKey": "token",
-              "header": ""
-            },
-            "asap": {
-              "alg": "HS256",
-              "iss": "",
-              "aud": "",
-              "kid": "",
-              "privateKey": "",
-              "sub": "",
-              "claims": "",
-              "exp": ""
-            }
-          },
-          "pre_tasks": [],
-          "post_tasks": [],
-          "body": {
-            "parameter": []
-          },
-          "header": {
-            "parameter": []
-          },
-          "query": {
-            "parameter": []
-          },
-          "cookie": {
-            "parameter": []
-          }
-        }
-      },
-      {
-        "target_id": "14e544e4b41860",
-        "project_id": "49402",
-        "parent_id": "348e058",
-        "target_type": "folder",
-        "name": "v2",
-        "version": 98,
-        "sort": 23000,
-        "server_id": "0",
-        "description": "",
-        "request": {
-          "auth": {
-            "type": "inherit",
-            "kv": {
-              "key": "",
-              "value": "",
-              "in": "header"
-            },
-            "bearer": {
-              "key": ""
-            },
-            "basic": {
-              "username": "",
-              "password": ""
-            },
-            "digest": {
-              "username": "",
-              "password": "",
-              "realm": "",
-              "nonce": "",
-              "algorithm": "",
-              "qop": "",
-              "nc": "",
-              "cnonce": "",
-              "opaque": ""
-            },
-            "hawk": {
-              "authId": "",
-              "authKey": "",
-              "algorithm": "",
-              "user": "",
-              "nonce": "",
-              "extraData": "",
-              "default": "",
-              "delegation": "",
-              "timestamp": "",
-              "includePayloadHash": false
-            },
-            "awsv4": {
-              "accessKey": "",
-              "secretKey": "",
-              "region": "",
-              "service": "",
-              "sessionToken": "",
-              "addAuthDataToQuery": false
-            },
-            "ntlm": {
-              "username": "",
-              "password": "",
-              "entity": "",
-              "workstation": "",
-              "disableRetryRequest": false
-            },
-            "edgegrid": {
-              "accessToken": "",
-              "clientToken": "",
-              "clientSecret": "",
-              "nonce": "",
-              "timestamp": "",
-              "baseURi": "",
-              "headersToSign": ""
-            },
-            "oauth1": {
-              "consumerKey": "",
-              "consumerSecret": "",
-              "signatureMethod": "HMAC-SHA1",
-              "addEmptyParamsToSign": true,
-              "includeBodyHash": true,
-              "addParamsToHeader": false,
-              "disableHeaderEncoding": false,
-              "realm": "",
-              "version": "1.0",
-              "nonce": "",
-              "timestamp": "",
-              "verifier": "",
-              "callback": "",
-              "tokenSecret": "",
-              "token": ""
-            },
-            "jwt": {
-              "addTokenTo": "header",
-              "algorithm": "HS256",
-              "secret": "",
-              "isSecretBase64Encoded": false,
-              "payload": "",
-              "headerPrefix": "Bearer",
-              "queryParamKey": "token",
-              "header": ""
-            },
-            "asap": {
-              "alg": "HS256",
-              "iss": "",
-              "aud": "",
-              "kid": "",
-              "privateKey": "",
-              "sub": "",
-              "claims": "",
-              "exp": ""
-            }
-          },
-          "pre_tasks": [],
-          "post_tasks": [],
-          "body": {
-            "parameter": []
-          },
-          "header": {
-            "parameter": []
-          },
-          "query": {
-            "parameter": []
-          },
-          "cookie": {
-            "parameter": []
-          }
-        }
-      },
-      {
-        "target_id": "156eb1a7b7d049",
-        "project_id": "49402",
-        "parent_id": "68302537d05c",
-        "target_type": "folder",
-        "name": "群组",
-        "version": 3272,
-        "sort": 4750,
         "server_id": "0",
         "description": "",
         "request": {

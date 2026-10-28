@@ -180,14 +180,15 @@ function startFence(): void {
           </button>
         </div>
 
-        <div class="bottom-36 left-4 right-4 z-2 absolute flex flex-col items-start space-y-2">
-          <!-- The live location runs in the background, so it reports as one
-               compact line instead of native-free card furniture. -->
+        <!-- The live location runs in the background, so it reports as one
+             compact line, top-centred on the canvas like native. The capped
+             width keeps long guidance clear of the fence button at top-right. -->
+        <div class="left-4 right-4 top-4 z-2 pointer-events-none absolute flex justify-center">
           <button
             v-if="myStatus"
             type="button"
-            class="min-h-9 flex items-center rounded-full bg-surface-elevated px-3 text-small text-text-secondary shadow-lg"
-            :class="canRetryRealtime ? '' : 'pointer-events-none'"
+            class="max-w-[calc(100%-8rem)] min-h-9 flex items-center rounded-full bg-surface-elevated px-3 text-small text-text-secondary shadow-lg"
+            :class="canRetryRealtime ? 'pointer-events-auto' : 'pointer-events-none'"
             :aria-label="myStatus"
             @click="retryRealtime"
           >
@@ -199,7 +200,9 @@ function startFence(): void {
             <span>{{ myStatus }}</span>
             <span v-if="myTime" class="ml-2">{{ myTime }}</span>
           </button>
+        </div>
 
+        <div class="bottom-36 left-4 right-4 z-2 absolute">
           <RouterLink
             v-if="fenceWarning && deviceId != null"
             :to="`/devices/${deviceId}/track-setting`"

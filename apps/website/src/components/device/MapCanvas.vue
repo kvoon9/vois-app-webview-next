@@ -44,10 +44,13 @@ const error = shallowRef<string | null>(null)
 /** The fence id the camera already framed; refits only when a new one loads. */
 const fittedFenceId = shallowRef<number | null>(null)
 let fenceCircleForFit: AMapOverlay | null = null
-/** Fit padding in AMap's avoid order [top, bottom, left, right], which is not
+/**
+ * Fit padding in AMap's avoid order [top, bottom, left, right], which is not
  * CSS's [top, right, bottom, left]; setFitView silently misreads CSS order,
  * and that is what landed the editor's fence under the bottom sheet. Viewer
- * values clear the location page's bottom status pill. */
+ * values clear the status pill at the top and the fence warning / locate-me
+ * controls at the bottom.
+ */
 const VIEWER_FIT_AVOID = [80, 120, 80, 80]
 /** Editor fit padding [top, bottom, left, right]; clears the fence editor's
  * radius strip and the bottom sheet at its tallest, delete button included. */

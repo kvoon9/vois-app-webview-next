@@ -44,12 +44,14 @@ const error = shallowRef<string | null>(null)
 /** The fence id the camera already framed; refits only when a new one loads. */
 const fittedFenceId = shallowRef<number | null>(null)
 let fenceCircleForFit: AMapOverlay | null = null
-/** Viewer fit padding [top, right, bottom, left]; clears the location page's
- * bottom status pill. */
-const VIEWER_FIT_AVOID = [80, 80, 120, 80]
-/** Editor fit padding [top, right, bottom, left]; clears the fence editor's
+/** Fit padding in AMap's avoid order [top, bottom, left, right], which is not
+ * CSS's [top, right, bottom, left]; setFitView silently misreads CSS order,
+ * and that is what landed the editor's fence under the bottom sheet. Viewer
+ * values clear the location page's bottom status pill. */
+const VIEWER_FIT_AVOID = [80, 120, 80, 80]
+/** Editor fit padding [top, bottom, left, right]; clears the fence editor's
  * radius strip and the bottom sheet at its tallest, delete button included. */
-const EDITOR_FIT_AVOID = [80, 40, 328, 40]
+const EDITOR_FIT_AVOID = [80, 328, 40, 40]
 /** The fence geometry the editor camera last framed; plain state like
  * fenceCircleForFit. Save and delete leave via goBack and unmount the page,
  * so it dies with the component. A refactor that keeps the map mounted
@@ -85,10 +87,19 @@ function removeOverlays(): void {
   overlays.value = []
 }
 
+/** The centre the camera was last pointed at. A later draw whose centre has
+ * not changed must not re-setCenter: the jump cancels an in-flight entry
+ * fit's avoid shift and drops the fence back under the bottom sheet. */
+let centeredPoint: AMapPoint | null = null
+
 function drawOverlays(): void {
   if (!map.value || !amap.value) return
   removeOverlays()
-  map.value.setCenter(pointValue(props.center))
+  const center = props.center
+  if (!centeredPoint || centeredPoint.lng !== center.lng || centeredPoint.lat !== center.lat) {
+    centeredPoint = { lng: center.lng, lat: center.lat }
+    map.value.setCenter(pointValue(center))
+  }
   fenceCircleForFit = null
 
   const nextOverlays: AMapOverlay[] = []

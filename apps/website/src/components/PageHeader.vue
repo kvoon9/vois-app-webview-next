@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { computed, defineAsyncComponent, shallowRef } from 'vue'
 import { useI18n } from 'vue-i18n'
-import LanguageSwitcher from '~/components/LanguageSwitcher.vue'
 import { isWebviewDebug } from '~/composables/useWebviewDebug'
 import { usePageBack } from '~/composables/usePageBack'
 import { copyToClipboard } from '~/utils/bridge/clipboard-bridge'
@@ -84,9 +83,7 @@ async function copyCurrentUrl(): Promise<void> {
       {{ title }}
     </button>
     <h1 v-else class="page-title">{{ title }}</h1>
-    <slot name="action">
-      <LanguageSwitcher class="absolute right-2 top-1/2 -translate-y-1/2" />
-    </slot>
+    <slot name="action" />
 
     <BaseModal
       v-if="portDialogOpen"

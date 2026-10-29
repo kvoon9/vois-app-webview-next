@@ -51,7 +51,7 @@ console.log(await page.snapshot());
 EOF
 ```
 
-Selectors: `loc=role:<role>[name*="…"]` first (screens carry ARIA labels: `返回`, `语言`, `导航`), `loc=css:…` second, snapshot refs last. Text is Simplified Chinese — match it as rendered.
+Selectors: `loc=role:<role>[name*="…"]` first (screens carry ARIA labels: `返回`, `选择日期`, `导航`), `loc=css:…` second, snapshot refs last. Text is Simplified Chinese — match it as rendered.
 
 **Headless and API — the `vois-debug` MCP server** (`.pi/mcp.json`, reachable when Pi runs in this repo). From a codemode script, `searchTools("vois-debug")` then `tools['mcp__vois-debug__status'|'__events'|'__login'|'__token'|'__api']({})`. `events` is the redacted reader: use it instead of `cat`ting the capture.
 

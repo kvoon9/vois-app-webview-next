@@ -45,7 +45,7 @@ Preconditions:
 - 暂无群组。 is data-dependent: assert it only when the captured response returns zero groups, and assert rows when it does not.
 - Multi-translation is the one page native launches with parameters, so the params are part of the contract: missing `friend-skill` and any skill other than `0` or `3` both render 暂不支持该翻译模式. Test at least the supported and the unsupported case.
 - `friend-skill=3` is the multilingual skill; skills 1 and 2 (the Chinese-English editors) have their own page, so passing them here is a caller bug, not a page bug.
-- Language names come from i18n and follow the header language switcher; the default is 简体中文.
+- Language names come from i18n and follow the app locale. The debug bridge returns `lang: zh-CN`, so the screens render Simplified Chinese.
 - The 全部语言 list is long and rendered from `get-countries-lang`; assert the current pair, not the list length.
 - A desktop run cannot show the phone keyboard, so the search field's proof is focus: after Enter, `document.activeElement` is `body` rather than the field. The group-members modal's 搜索语言 field has the same behavior, but it needs an account that owns a group, which the debug account does not have.
 - The device-page filters (添加群组 filter, 群成员 search) narrow their lists live but still keep the keyboard up on Enter.

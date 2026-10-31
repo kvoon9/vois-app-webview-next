@@ -7,6 +7,7 @@ import ResultModal from '~/components/ResultModal.vue'
 import { useFormValidation } from '~/composables/useFormValidation'
 import { useWebviewBridge } from '~/composables/useWebviewBridge'
 import { weilaFetch } from '~/utils/api'
+import { toChipOptions } from '~/utils/chip-options'
 import { descriptionSchema, MAX_DESCRIPTION_LENGTH } from '~/utils/field-schema'
 
 /**
@@ -17,8 +18,7 @@ const props = defineProps<{
   endpoint: string
   /**
    * Locale namespace whose `<namespace>.title`, `<namespace>.<sectionLabel>`, and
-   * `<namespace>.<listKey>` strings drive the form. The list is expected to be a
-   * flat string array (so it is rendered as chip choices).
+   * `<namespace>.<listKey>` strings drive the form; the list renders as chip choices.
    */
   i18nNamespace: 'feedback' | 'report'
   listKey: 'categories' | 'types'
@@ -31,14 +31,44 @@ const props = defineProps<{
 
 const { t, tm } = useI18n({ useScope: 'global' })
 
-const items = computed(() => {
-  // SAFETY: each `<namespace>.<listKey>` locale entry is a flat string array
-  return Object.values(tm(`${props.i18nNamespace}.${props.listKey}`)) as string[]
-})
+/** One locale chip's decoration: either an emoji, an icon class, or nothing. */
+interface ChipDecoration {
+  emoji?: string
+  icon?: string
+}
+
+const options = computed(() => toChipOptions(tm(`${props.i18nNamespace}.${props.listKey}`)))
+
+/**
+ * Decorations per list position, merged onto the locale strings. They live here
+ * instead of the locale JSON because `locales.test.ts` keys off locale leaves,
+ * which object entries break, and because 设备/账户 also appear in `report.types`:
+ * a text-keyed map would decorate the wrong form's chips.
+ */
+const CATEGORY_DECORATIONS = {
+  feedback: {
+    categories: [
+      { emoji: '💬' },
+      { emoji: '🗨️' },
+      { emoji: '📱' },
+      { emoji: '🎨' },
+      {},
+      { icon: 'i-ph-user-circle' },
+    ],
+  },
+  report: { types: [] },
+} satisfies Record<string, Record<string, readonly ChipDecoration[]>>
+
+const decorated = computed(() =>
+  options.value.map((option, index) => {
+    const decoration = CATEGORY_DECORATIONS[props.i18nNamespace]?.[props.listKey]?.[index] ?? {}
+    return { ...option, ...decoration }
+  }),
+)
 
 const schema = computed(() =>
   object({
-    index: pipe(number(), minValue(0), maxValue(items.value.length - 1)),
+    index: pipe(number(), minValue(0), maxValue(options.value.length - 1)),
     // The backend accepts an empty text, so there is no nonEmpty rule.
     content: descriptionSchema({
       tooLong: t('validation.descriptionTooLong', { max: MAX_DESCRIPTION_LENGTH }),
@@ -64,7 +94,8 @@ async function handleSubmit(): Promise<void> {
   try {
     const response = await weilaFetch<void>(props.endpoint, {
       body: {
-        type: items.value[data.value.index],
+        // Only the display text goes to the backend; emoji/icon stay presentation.
+        type: options.value[data.value.index]?.text,
         content: data.value.content.trim(),
       },
     })
@@ -98,19 +129,26 @@ function closeModal(): void {
         <section>
           <h2 class="section-title mb-4">{{ t(`${i18nNamespace}.${sectionLabelKey}`) }}</h2>
           <div class="space-y-3">
-            <div v-for="i in Math.ceil(items.length / 2)" :key="i" class="flex">
+            <div v-for="i in Math.ceil(decorated.length / 2)" :key="i" class="flex">
               <button
-                v-for="(item, offset) in items.slice((i - 1) * 2, i * 2)"
-                :key="item"
+                v-for="(option, offset) in decorated.slice((i - 1) * 2, i * 2)"
+                :key="option.text"
                 type="button"
                 class="chip flex-1"
                 :class="[
                   (i - 1) * 2 + offset === data.index ? 'chip-selected' : 'chip-unselected',
-                  items.length % 2 === 0 || i * 2 <= items.length ? 'mr-3' : '',
+                  decorated.length % 2 === 0 || i * 2 <= decorated.length ? 'mr-3' : '',
                 ]"
                 @click="data.index = (i - 1) * 2 + offset"
               >
-                {{ item }}
+                <span v-if="option.emoji" class="mr-1" aria-hidden="true">{{ option.emoji }}</span>
+                <span
+                  v-else-if="option.icon"
+                  class="mr-1 text-header"
+                  :class="option.icon"
+                  aria-hidden="true"
+                />
+                {{ option.text }}
               </button>
             </div>
           </div>

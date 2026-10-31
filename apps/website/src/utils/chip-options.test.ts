@@ -18,9 +18,8 @@ describe('toChipOption', () => {
   })
 
   it('degrades wrong-typed fields to text-only', () => {
-    // The boundary contract is `string | ChipOption`, but `tm()` answers come
-    // from locale data a maintainer may mistype, so malformed entries are cast
-    // in on purpose: the schema must degrade them, not throw.
+    // SAFETY: the test feeds malformed values on purpose; the cast only restores
+    // the declared parameter type, the schema handles the rest.
     const malformed: unknown[] = [
       { text: '通用', emoji: 42 },
       { text: '通用', icon: true },
@@ -47,7 +46,7 @@ describe('toChipOptions', () => {
     ])
   })
 
-  it('yields no chips for undefined or an index-keyed object form', () => {
+  it('yields no chips for undefined and decodes an index-keyed object form', () => {
     expect(toChipOptions(undefined)).toEqual([])
     expect(toChipOptions({ 0: '通用', 1: { text: '聊天', emoji: '🗨️' } })).toEqual([
       { text: '通用' },

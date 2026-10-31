@@ -33,7 +33,6 @@ const props = defineProps<{
 
 const { t, tm } = useI18n({ useScope: 'global' })
 
-/** One locale chip's decoration: either an emoji, an icon class, or nothing. */
 interface ChipDecoration {
   emoji?: string
   icon?: string
@@ -58,7 +57,6 @@ const CATEGORY_DECORATIONS = {
       { icon: 'i-ph-user-circle' },
     ],
   },
-  report: { types: [] },
 } satisfies Record<string, Record<string, readonly ChipDecoration[]>>
 
 const decorated = computed(() =>
@@ -86,8 +84,6 @@ const { data, errors, resetErrors, validate, validateField } = useFormValidation
 const isSubmitting = shallowRef(false)
 const modal = shallowRef<{ type: 'success' | 'error'; message: string } | null>(null)
 
-// The picker is a dev/debug showcase for the emoji it inserts; production keeps
-// a plain textarea.
 const debugMode = isWebviewDebug()
 const emojiPickerOpen = shallowRef(false)
 

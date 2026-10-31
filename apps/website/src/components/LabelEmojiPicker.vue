@@ -11,7 +11,6 @@ const props = defineProps<{ open: boolean }>()
 
 const emit = defineEmits<{ select: [emoji: string]; close: [] }>()
 
-/** Planes per folded edge; more planes give a smoother curl. */
 const PLANES = 20
 /** Extra height per plane so adjacent copies share a sliver of sheet, hiding crease seams. */
 const OVERLAP = 0.8
@@ -361,11 +360,6 @@ const cssDriven =
   CSS.supports('animation-timeline: scroll()') &&
   !window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
-/**
- * Reads --flap from CSS, measures the flat strip, then sizes the spacer and
- * every plane: height step+OVERLAP, per-side top offset, and the per-plane
- * --y0 that keeps all content copies aligned across creases.
- */
 function layout(): void {
   const root = rootRef.value
   const mid = midRef.value
@@ -385,7 +379,8 @@ function layout(): void {
   root.style.setProperty('--range', `${range}px`)
   scrollRange.value = range
 
-  // SAFETY: the template renders exactly one .spacer as the scroller's first child.
+  // SAFETY: the template renders exactly one .spacer and it is the scroller's
+  // first child; nothing else can sit ahead of it.
   const spacer = scroller.firstElementChild as HTMLElement | null
   if (spacer) spacer.style.height = `${scroller.clientHeight + range}px`
 
@@ -403,12 +398,6 @@ function layout(): void {
   if (!cssDriven) frame()
 }
 
-/**
- * Maps the scroller's position onto the shared custom properties. At the top of
- * the content the top edge is fully rolled away and the bottom edge lies flat;
- * scrolling swaps the two. Every copy translates by var(--y0) - var(--scroll),
- * so one inherited property moves all copies without per-node writes.
- */
 function frame(): void {
   const root = rootRef.value
   const scroller = scrollerRef.value
@@ -466,7 +455,6 @@ function setHover(index: number): void {
     .forEach((el) => el.classList.add('hover'))
 }
 
-/** Desktop-only affordance: highlight the hovered cell in every copy. */
 function onHover(event: PointerEvent): void {
   if (event.pointerType !== 'mouse') {
     clearHover()
@@ -561,7 +549,6 @@ onBeforeUnmount(() => {
   --curl-distance: 40px;
   --fade: 72px;
   --perspective: 2400px;
-  --planes: 20;
   --per-plane: 0.05;
   --center: 300px;
   --flap: 260px;

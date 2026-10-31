@@ -39,6 +39,9 @@ export default defineConfig({
     }),
   ],
   blocklist: BLOCKED_UTILITIES,
+  // Chip icon classes reach the DOM through a dynamic `:class` binding, so
+  // extraction cannot tie the literal to a rendered class; safelist each one.
+  safelist: ['i-ph-user-circle', 'i-ph-smiley'],
   preflights: [
     {
       getCSS: () => `

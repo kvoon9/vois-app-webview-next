@@ -86,6 +86,7 @@
     "emptyDevices": "暫無已連線裝置",
     "connectedDevices": "已連接裝置",
     "online": "線上",
+    "battery": "電量",
     "updated": "裝置已更新。",
     "copied": "已複製。",
     "copyFailed": "裝置號複製失敗。",

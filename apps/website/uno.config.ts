@@ -39,6 +39,16 @@ export default defineConfig({
     }),
   ],
   blocklist: BLOCKED_UTILITIES,
+  // The battery level picks one of these in `src/utils/battery.ts`; that file is
+  // outside the scanner's include pattern (templates and JSX only), so the
+  // classes need naming here to reach the generated CSS.
+  safelist: [
+    'i-ph-battery-full-fill',
+    'i-ph-battery-high-fill',
+    'i-ph-battery-medium-fill',
+    'i-ph-battery-low-fill',
+    'i-ph-battery-warning-fill',
+  ],
   preflights: [
     {
       getCSS: () => `

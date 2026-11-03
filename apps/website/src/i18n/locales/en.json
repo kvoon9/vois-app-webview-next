@@ -86,6 +86,7 @@
     "emptyDevices": "No connected devices.",
     "connectedDevices": "Connected devices",
     "online": "Online",
+    "battery": "Battery",
     "updated": "Device updated.",
     "copied": "Copied.",
     "copyFailed": "Failed to copy the device number.",

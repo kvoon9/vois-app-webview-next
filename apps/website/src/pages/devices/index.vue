@@ -42,6 +42,7 @@ function openDevice(device: Device): void {
             :name="device.nick"
             :avatar="device.avatar"
             :product="device.product"
+            :battery="device.battery"
             @click="openDevice(device)"
           />
         </ul>

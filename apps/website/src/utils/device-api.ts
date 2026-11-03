@@ -19,6 +19,8 @@ export interface Device {
   version: string
   activatedAt: string
   online: boolean
+  /** Battery percentage 0-100; `0` means the last reading expired, not empty. */
+  battery: number
   shareLocation: boolean
   /** The device can share its location; an absent wire flag reads as true. */
   locationSupport: boolean
@@ -217,6 +219,7 @@ interface DeviceDto {
   sdk_version?: string
   active_at?: string
   online: boolean
+  battery?: number
   location_share?: boolean
   location_support?: boolean
   reminder_support?: boolean
@@ -844,6 +847,7 @@ function toDevice(device: DeviceDto): Device {
     version: device.version,
     activatedAt: device.active_at ?? '',
     online: device.online,
+    battery: device.battery ?? 0,
     shareLocation: device.location_share ?? false,
     locationSupport: device.location_support ?? true,
     reminderSupport: device.reminder_support ?? true,

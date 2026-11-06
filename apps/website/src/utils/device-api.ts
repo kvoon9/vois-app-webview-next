@@ -85,7 +85,6 @@ const TRACK_MODES = { off: 0, low: 1, mid: 2, high: 3 } as const satisfies Recor
 
 export interface DeviceFence {
   id: number
-  enable: boolean
   name: string
   lng: number
   lat: number
@@ -263,8 +262,6 @@ type DeviceFenceWire = DeviceFenceDto | null | []
 
 interface DeviceFenceDto {
   id: number
-  /** The real backend omits `enable` on fences it created as enabled. */
-  enable?: number
   name: string
   latitude: number
   longitude: number
@@ -902,9 +899,10 @@ function toFriend(friend: SubuserFriendDto): Friend {
 }
 
 function toDeviceFence(fence: DeviceFenceDto): DeviceFence {
+  // The wire `enable` flag is intentionally dropped here and never surfaces
+  // in the UI model; the fence renders and saves the same regardless.
   return {
     id: fence.id,
-    enable: fence.enable !== 0,
     name: fence.name,
     lng: fence.longitude,
     lat: fence.latitude,

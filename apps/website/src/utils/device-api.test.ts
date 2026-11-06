@@ -358,7 +358,7 @@ describe('device API', () => {
       }
     })
 
-    it('maps latitude/longitude onto lat/lng and enable onto a boolean', async () => {
+    it('maps latitude/longitude onto lat/lng and strips the wire enable flag', async () => {
       weilaFetch
         .mockResolvedValueOnce(
           ok({
@@ -396,30 +396,16 @@ describe('device API', () => {
           }),
         )
 
-      await expect(getDeviceFence(9)).resolves.toEqual({
+      const expected = {
         id: 3,
-        enable: true,
         name: '家',
         lng: 121.4,
         lat: 31.2,
         radius: 500,
-      })
-      await expect(getDeviceFence(9)).resolves.toEqual({
-        id: 3,
-        enable: false,
-        name: '家',
-        lng: 121.4,
-        lat: 31.2,
-        radius: 500,
-      })
-      await expect(getDeviceFence(9)).resolves.toEqual({
-        id: 3,
-        enable: true,
-        name: '家',
-        lng: 121.4,
-        lat: 31.2,
-        radius: 500,
-      })
+      }
+      await expect(getDeviceFence(9)).resolves.toEqual(expected)
+      await expect(getDeviceFence(9)).resolves.toEqual(expected)
+      await expect(getDeviceFence(9)).resolves.toEqual(expected)
       expect(weilaFetch).toHaveBeenCalledWith('/v2/subuser/geofence-get', { body: { user_id: 9 } })
     })
 

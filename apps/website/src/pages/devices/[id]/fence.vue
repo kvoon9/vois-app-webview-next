@@ -89,12 +89,11 @@ onMounted(() => {
 
 const mapCenter = computed(() => center.value ?? recentPoint.value ?? DEFAULT_CENTER)
 
-/** The circle the map previews; a stored fence keeps its id and enabled state. */
+/** The circle the map previews; a stored fence keeps its id. */
 const preview = computed<DeviceFence | null>(() =>
   center.value
     ? {
         id: fence.value?.id ?? 0,
-        enable: true,
         name: name.value,
         lng: center.value.lng,
         lat: center.value.lat,

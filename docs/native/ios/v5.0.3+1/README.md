@@ -18,7 +18,9 @@ description: 'iOS 5.0.3+1 reconnaissance pass: container, entry points, payment 
 
 **Status: reconnaissance.** The container, entry points and payment approach are
 identified; the bridge payload keys are not yet read out of the code (see
-[Open items](#open-items)). Nothing here is runtime-verified.
+[Open items](#open-items)). Nothing here is runtime-verified. The
+[2026-11-09 runtime findings](/native/ios/runtime-2026-11-09) come from
+VoisChat 5.0.6, not this 5.0.3 artifact.
 
 ## What is verified
 

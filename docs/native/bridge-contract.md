@@ -121,6 +121,11 @@ H5 目前只对定位的 `permission request in progress` 做字符串匹配，�
 | `wechat-app-prepay` | request | Android 5.0.4 | 暂无（H5 类型已声明） |
 | `ios-app-prepay` | request | iOS 待验证 | 暂无（H5 类型已声明） |
 
+> iOS 运行时（2026-11-09，VoisChat 5.0.6）：`get-page-params` ✅、`close-page` ✅；
+> `get-permissions` / `get-location` / `write-clipboard` ❌ 返回
+> `{"success":false,"message":"Unknown action"}`。证据见
+> [iOS runtime findings](/native/ios/runtime-2026-11-09)。
+
 ## 3. 协议定义
 
 ### 3.1 `close-page`

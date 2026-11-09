@@ -12,6 +12,13 @@ Native iOS (VoisChat) side of the H5 contract. Platform checklist mirrors
 | ------------------------------ | ----------------------------------------------------------------------------------- |
 | [`5.0.3+1`](/native/ios/v5.0.3+1/readme) | reconnaissance: container, entry points, payment approach; bridge keys not yet read |
 
+## Runtime findings
+
+[Runtime findings (2026-11-09)](/native/ios/runtime-2026-11-09) records a
+physical-device run against VoisChat 5.0.6: `get-page-params` and `close-page`
+answer, while `get-permissions`, `get-location`, and `write-clipboard` return
+`Unknown action`. That page is runtime observation, not static analysis.
+
 ## Tools
 
 - `dSYMs/<target>.app.dSYM` from the archive: symbols are stripped from the app

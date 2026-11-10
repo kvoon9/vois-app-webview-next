@@ -84,6 +84,10 @@ A proof is three things, not one:
 2. **The resulting state** — an ARIA snapshot or screenshot of the screen after it, showing the screen still identifies itself (header title, tab, account).
 3. **The side effect** — the `network` or `bridge` event the action produced, with its status and the field(s) that changed. A DOM-only change is not proof of persistence.
 
+### Global error page
+
+When a page throws, `App.vue` replaces the route with 出了点问题. In a dev build or on the debug server it also shows the error name/message, stack, URL, UA, and time, with a 复制错误信息 action; the same error is logged as `[App.onErrorCaptured]` in the capture. Production shows only the generic page. Reproduce on the debug server and copy the details before retrying. The first old-WebView gap found this way was `Object.hasOwn` on Chrome 92 (App 5.0.8), which broke reka-ui dialogs; `polyfills.ts` defines it at boot.
+
 Proof standards for this app:
 
 - **UI ↔ capture agreement.** The rendered count and values must match the `responseBody` of the call that fed them. Disagreement means the screen is showing something else (cache, stale render, another account) — investigate before writing anything down.

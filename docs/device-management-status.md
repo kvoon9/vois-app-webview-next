@@ -1,13 +1,13 @@
 # 设备管理：现状与缺口（唯一现状文档）
 
-> 2026-11-02。本文只描述**当前 main** 上的实际状态；历史计划、逐屏清单与验证细节见文末索引。
-> 状态：设备管理的 H5 复刻与 native UI/UX 对齐**已并入 main 并推送**（`714668c`）；头像角标、头部 action slot、实时位置 pill 三条 lane 同日 cherry-pick 落地。
+> 2026-11-10。本文只描述**当前 main** 上的实际状态；历史计划、逐屏清单与验证细节见文末索引。
+> 状态：设备管理的 H5 复刻与 native UI/UX 对齐**已并入 main 并推送**（`714668c`）；充值续费 lane（按设备微信支付、待续费设备入口）已并入 main。
 
 ## 已完成（按屏，数值为实测）
 
 ### 设备列表
 
-- 根 tab 页**无返回键**；「已连接设备」分组标题下逐行列设备，行 = 头像 + 昵称 + 型号，整行可点。
+- 根 tab 页**无返回键**；「已连接设备」分组标题下逐行列设备，行 = 头像 + 昵称 + 型号，整行可点。Header 右上角「待续费设备」进入待续费列表，始终显示。
 
 ### 设备详情
 
@@ -56,11 +56,13 @@
 
 ### 充值续费
 
-- 详情页：`sim_card` 存在时渲染卡 ICCID / 卡到期时间 / 「流量卡充值记录」入口；`recharge=true` 时加红字「需充值」与「待续费设备」入口。
-- 待续费设备：`simcard-get-all-need-renew` 列表（型号 / 设备号 / ICCID / 到期），选卡 + 全选，未选时「充值」禁用。
-- 建单：`simcard-create-renew-order` 一卡一单，金额按分转元展示。
+- 设备列表：header 右上角「待续费设备」进入待续费列表，无论当前是否有待续费设备都显示。
+- 详情页：`sim_card` 存在时渲染卡 ICCID / 卡到期时间 / 「流量卡充值记录」入口；`recharge=true` 时加红字「需充值」；不再有「待续费设备」入口。
+- 待续费设备：`simcard-get-all-need-renew` 列表（型号 / 设备号 / ICCID / 到期），每条有「续费」按钮；点击后单卡建单 → 确认 → 支付。没有多选、全选或批量建单。
+- 建单：`simcard-create-renew-order` 一卡一单，金额按分转元展示；每次「缴费充值」或「续费」都新建订单。
+- 支付：建单后走 `/v2/pay/create-wechat-app-order` → `wechat-app-prepay` → `pay-wechat-trade-success`；桥等待 120 秒；5.0.6 不支持时提示升级。Android 旧 WebView 缺 `Object.hasOwn`，由 `apps/website/src/polyfills.ts` 补齐。
 - 充值记录：`simcard-get-all-renew-order`，行 = 订单号 / 金额 / 状态 / 时间。
-- **未闭环**：网页内没有支付调用（`wechat-app-prepay` 桥 Android 5.0.4 已有实现，H5 无调用方）；下单成功后弹窗标题写「充值成功。」，实际只提示「请在微喇 App 内完成支付。」，支付在 App 内才算完成。
+- **未闭环**：真实微信支付成功路径尚未验证；调试卡 `wl301010105341` 返回 42012，测试卡 `wl301010386256` 可建单。iOS 取消支付不回包，页面走 120 秒超时；支付中弹窗有关闭按钮。
 
 ### 全局
 
@@ -85,7 +87,7 @@
 | PTT 浮钮 | 设备 tab 无 PTT | App 级原生化，WebView 内不做 |
 | 底部 tab | WebView 内无底栏 | 同上 |
 | 添加智能/蓝牙设备入口 | 「添加智能设备」三段卡缺失 | 原生域，不做 |
-| 网页内拉起微信支付 | `wechat-app-prepay` 桥有 Android 实现，H5 无调用方；iOS `ios-app-prepay` 未验证 | H5 + 原生 |
+| iOS 5.0.6 网页内支付 | 5.0.6 的桥不注册 `wechat-app-prepay`，H5 显示升级提示；1.0.0 已支持 | 原生版本 |
 
 ### C 等产品决定
 
@@ -96,8 +98,8 @@
 ### D 数据限制
 
 - 真机账号只有 **CF02S**（无位置/提醒能力），H5 debug 账号只有 **1848581 / OP02**：菜单行数、共享开关、解绑行的两侧对比受账号限制，不能当样式差异。
-- `manager-get-all-device` 与 `device-get-detail` 都返回 `sim_card`，详情页 ICCID / 到期时间 / 充值记录入口正常渲染；当前测试卡 `recharge=false`，所以看不到「待续费设备」入口，不能据此判断功能缺失。
-- 充值只完成到「建单」：支付在 App 内完成，H5 无支付调用方，iOS Apple IAP 未验证；下单写操作尚未真跑过。
+- `manager-get-all-device` 与 `device-get-detail` 都返回 `sim_card`；详情页 ICCID / 到期时间 / 充值记录入口正常渲染。旧测试卡 `recharge=false`，新测试卡 `recharge=true`；「待续费设备」入口在设备列表 header，与单卡 recharge 无关。
+- 真实支付成功路径尚未验证：旧测试卡 `wl301010105341` 返回 42012；新测试卡 `wl301010386256` 可建单但未完成支付；iOS 取消不回包，走 120 秒超时。
 
 ## 自测（5 条以内，细节见 `docs/device-management-verification.md`）
 

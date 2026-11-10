@@ -122,9 +122,17 @@ H5 目前只对定位的 `permission request in progress` 做字符串匹配，�
 | `ios-app-prepay` | request | iOS 待验证 | 暂无（H5 类型已声明） |
 
 > iOS 运行时（2026-11-09，VoisChat 5.0.6）：`get-page-params` ✅、`close-page` ✅；
-> `get-permissions` / `get-location` / `write-clipboard` ❌ 返回
-> `{"success":false,"message":"Unknown action"}`。证据见
-> [iOS runtime findings](/native/ios/runtime-2026-11-09)。
+> `get-permissions` / `get-location` / `write-clipboard` / `wechat-app-prepay` ❌ 返回
+> `{"success":false,"message":"Unknown action"}`；`ios-app-prepay` 已注册，为 Apple IAP
+> （`data: {}` → `errcode: -1`，`errmsg: 未找到产品`）；页面参数不返回 `device-type` /
+> `pkg-name` / `wxpay-appid` / `pay-method`。VoisChat 1.0.0 重装后 `wechat-app-prepay`
+> 已注册：空 `data` 返回 `errcode: -1`、`errmsg: 微信支付发起失败，请检查微信设置或
+> Universal Link 配置`，伪 prepay 可拉起微信但回调可能不返回；页面参数仍缺上述四项。
+> 证据见 [iOS runtime findings](/native/ios/runtime-2026-11-09)。
+>
+> 2026-11-10：临时验证过一个原生取消回包，随后该改动被撤回。当前 1.0.0 不返回取消结果，
+> H5 也不处理取消；用户取消后页面停留在支付中，直到 120 秒超时显示支付失败。支付中弹窗
+> 有关闭按钮，关闭只隐藏弹窗。不要再按 `data.wxpaycode: -2` 设计取消流程。
 
 ## 3. 协议定义
 

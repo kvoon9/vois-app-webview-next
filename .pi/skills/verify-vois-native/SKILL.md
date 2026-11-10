@@ -7,10 +7,10 @@ description: 'Verify the VOIS iOS native WebView pipeline on a physical iPhone: 
 
 The physical-iPhone companion to `verify-vois-webview`.
 
-| Pipeline         | Skill                            | Answers                                                                                                                       |
-| ---------------- | -------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| Browser / H5     | `.pi/skills/verify-vois-webview` | routes, UI, `/v2` calls, debug bridge inside the DevServer                                                                    |
-| iOS native shell | this skill                       | what VoisChat's WKWebView actually exposes: `get-page-params`, `close-page`, permissions, location, clipboard, inspectability |
+| Pipeline         | Skill                            | Answers                                                                                                                                   |
+| ---------------- | -------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| Browser / H5     | `.pi/skills/verify-vois-webview` | routes, UI, `/v2` calls, debug bridge inside the DevServer                                                                                |
+| iOS native shell | this skill                       | what VoisChat's WKWebView actually exposes: `get-page-params`, `close-page`, permissions, location, clipboard, WeChat pay, inspectability |
 
 Use this skill when the answer depends on the native container. Use `verify-vois-webview` for everything that can be driven in a desktop browser. Neither replaces `vp check` / `vp test`; both prove behavior by agreement between the screen and the debug capture.
 
@@ -95,6 +95,7 @@ Limits that matter:
 - The physical AX tree does **not** include WKWebView content. An H5 page shows only native chrome, usually `返回`; read H5 content through the inspector.
 - There is no type, paste, swipe, gesture, or coordinate tap on physical iOS. The daemon exposes no element geometry. `type`, `paste`, `swipe`, `gesture` and `touch` target simulators/Android only.
 - Activate is fire-and-forget and unreliable on some native controls. Ask a human when it fails.
+- To read a native screen behind an open H5 page, send `close-page` through the inspector. On 5.0.6 the native 返回 Activate did not close the H5 page, while an inspector `close-page` did (observed 2026-11-09).
 - For H5 screenshots prefer `Page.snapshotRect`; `sim-use ios-device screenshot` captures the whole display but needs Xcode.
 
 ## The H5 inspector channel
@@ -118,6 +119,63 @@ node .../send-ios.mjs Runtime.evaluate '{"expression":"1 + 1","returnByValue":tr
 ```
 
 JS events are not real touch events. `el.click()` and `location.hash` exercise the app's handlers, but gesture recognition, the soft keyboard, scroll inertia, and hit-testing are not covered. Mark those as manually checked or skipped.
+
+`Runtime.evaluate` with `awaitPromise: true` did not resolve a Promise on this target (observed on 5.0.6). Use two evaluations. The first sends the bridge message and stores the native reply on a `window` global through the test callback. The second reads the global after a delay.
+
+## WeChat pay on iOS
+
+Two builds were probed on the same device on 2026-11-09.
+
+- **5.0.6: unsupported.** `wechat-app-prepay` is not registered, and the native device detail has no recharge entry. The one pay action that build registers is `ios-app-prepay`, which is Apple IAP.
+- **1.0.0 (reinstalled): registered.** With empty data it answered `{"errcode":-1,"data":{"prepayId":"","wxpaycode":-1},"type":"wechat-app-prepay","errmsg":"微信支付发起失败，请检查微信设置或 Universal Link 配置"}`. A dummy non-empty prepay opened WeChat, which showed 商户支付下单ID非法; the native callback never fired, so the H5 global stayed pending after returning to VoisChat. The callback is keyed by prepayId and a WeChat-side rejection before a `PayResp` does not match it. The H5 therefore needs its own long deadline; the website uses 120 seconds.
+- **Cancel is out of scope.** A native iOS cancel fix was tested and then reverted. The current build does not return a cancel result, and the website does not handle one. A cancelled WeChat payment leaves the H5 on 支付中 until the 120-second deadline, then shows the unknown-result failure; the paying modal has a manual 关闭 that only hides it. Do not expect `wxpaycode: -2`.
+
+The H5 entry and the iOS page-param fallback were driven on 1.0.0. 缴费充值 rendered, and clicking it sent `pkg_name: "com.voistech.wechat"`. With the new test device (card ending 000874, expiry 2026-11-30), order creation succeeded and the WeChat payment sheet opened. Three attempts were cancelled, so a successful payment is still unverified.
+
+Probe the bridge directly, with the two-evaluation pattern, because `awaitPromise` does not resolve Promises on this target:
+
+```sh
+# 1. Send the request. Native replies through the test callback into a global.
+node .pi/skills/verify-vois-native/scripts/eval-ios.mjs 'window.__payProbe = null; window.bridge_callback_pay_test = (raw) => { window.__payProbe = raw }; window.webkit.messageHandlers.uniBridgeCall.postMessage(JSON.stringify({ type: "wechat-app-prepay", data: {}, callbackName: "bridge_callback_pay_test" })); "sent"'
+
+# 2. Wait a few seconds, then read the reply.
+node .pi/skills/verify-vois-native/scripts/eval-ios.mjs 'window.__payProbe'
+```
+
+5.0.6 answered exactly:
+
+```json
+{ "success": false, "message": "Unknown action" }
+```
+
+That is the no-`errcode` shape this build sends for every unregistered action. Empty and plausible non-empty `data` answered identically. So did ten plausible alternative names: `wechat-app-pay`, `wechat-pay`, `wechat-prepay`, `wxpay`, `wxpay-app-prepay`, `pay`, `app-prepay`, `wx-buy`, `ios-wechat-pay`, `wechat-iap`. `ios-app-prepay` is registered, and with `data: {}` it answered `{"data":{},"type":"ios-app-prepay","errcode":-1,"errmsg":"未找到产品"}`. Exact exchanges: `docs/native/ios/runtime-2026-11-09.md`.
+
+1.0.0 answered with the protocol envelope instead:
+
+```json
+{
+  "errcode": -1,
+  "data": { "prepayId": "", "wxpaycode": -1 },
+  "type": "wechat-app-prepay",
+  "errmsg": "微信支付发起失败，请检查微信设置或 Universal Link 配置"
+}
+```
+
+That proves the handler exists and attempted to launch WeChat. A dummy non-empty prepay (`partnerid`, `prepayid`, `noncestr`, `timestamp`, `sign`) opened WeChat with 商户支付下单ID非法, and the H5 callback stayed pending after returning to VoisChat. Treat a pending callback after the WeChat app closes as unknown, not as success.
+
+The page params do not cover the gap either. Both builds return none of `device-type`, `pkg-name`, `wxpay-appid`, `pay-method`. The H5 falls back to `pay-method: "wechat"` and its own `pkg-name` / `wxpay-appid` defaults, so a missing page param is not evidence that pay is broken.
+
+### Verifying a WeChat-pay build (1.0.0)
+
+The 1.0.0 bridge is registered, but no real-money exchange has completed. Run this with a valid prepay and a card the backend will renew. It is a procedure, not a verified result.
+
+1. Confirm the empty-data probe returns the protocol envelope, not `Unknown action`.
+2. Drive the H5 recharge flow through the inspector with `eval-ios.mjs`. The native device tab and native detail are readable through `sim-use ios-device ui`. The H5 is not, and the inspector is the only channel into it.
+3. Trigger 支付 in the H5 and confirm the capture gains the `wechat-app-prepay` send.
+4. Read the foreground app with `sim-use ios-device ui`. WeChat must be frontmost with the payment sheet.
+5. Tap the pay or cancel control with `sim-use ios-device tap`, or ask a human when Activate fails.
+6. Back in VoisChat, read the callback global and the capture. Success is a reply with `errcode: 0` together with `data.wxpaycode: 0`, followed by the H5's `pay-wechat-trade-success` request. Any other combination is failure. A user cancel is not distinguishable and ends in the 120-second timeout. Record the exact reply.
+7. A timeout is not success. The website waits 120 seconds and then shows 支付结果未知，请稍后在充值记录中确认。 Confirm the order in `simcard-get-all-renew-order` before retrying.
 
 ## Evidence
 
@@ -144,17 +202,22 @@ Proof standards:
 - Never print tokens, passwords, or auth URLs. Bridge logs redact `access-token` as `[redacted]`, but network event URLs can still contain `token=`, `sign=`, and `appid=`; strip them before printing.
 - Read-only by default. Any write hits the real backend and possibly real hardware; observe the request and the UI state instead of mutating production data.
 
-## Known iOS 5.0.6 findings
+## Known iOS findings
 
-| Protocol          | Result                                                 |
-| ----------------- | ------------------------------------------------------ |
-| `get-page-params` | ✅ returns `theme`, `lang`, `login-id`, `access-token` |
-| `close-page`      | ✅ native page closes after the send                   |
-| `get-permissions` | ❌ `{"success":false,"message":"Unknown action"}`      |
-| `get-location`    | ❌ same                                                |
-| `write-clipboard` | ❌ same                                                |
+Rows marked 1.0.0 come from the reinstall; the rest are from 5.0.6.
 
-The page params are missing `device-type`, `pkg-name`, `wxpay-appid`, and `pay-method`. Full evidence and timestamps: `docs/native/ios/runtime-2026-11-09.md`.
+| Protocol                    | Result                                                                                                                                                                     |
+| --------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `get-page-params`           | ✅ returns `theme`, `lang`, `login-id`, `access-token`                                                                                                                     |
+| `close-page`                | ✅ native page closes after the send                                                                                                                                       |
+| `get-permissions`           | ❌ `{"success":false,"message":"Unknown action"}`                                                                                                                          |
+| `get-location`              | ❌ same                                                                                                                                                                    |
+| `write-clipboard`           | ❌ same                                                                                                                                                                    |
+| `wechat-app-prepay`         | ❌ `{"success":false,"message":"Unknown action"}`                                                                                                                          |
+| `ios-app-prepay`            | ✅ registered, Apple IAP: `data: {}` → `errcode: -1`, `errmsg: 未找到产品`                                                                                                 |
+| `wechat-app-prepay` (1.0.0) | ✅ registered; empty data → `errcode: -1`, `errmsg: 微信支付发起失败，请检查微信设置或 Universal Link 配置`; a dummy prepay opens WeChat and the callback can stay pending |
+
+Both builds miss `device-type`, `pkg-name`, `wxpay-appid`, and `pay-method`. 5.0.6 cannot run WeChat app pay; 1.0.0 registers the bridge and needs the H5 fallbacks. See `## WeChat pay on iOS`. Full evidence: `docs/native/ios/runtime-2026-11-09.md`.
 
 ## Troubleshooting
 

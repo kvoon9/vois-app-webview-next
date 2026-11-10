@@ -7,11 +7,13 @@ The device list shows every device the signed-in manager account owns under the 
 - `list-load` renders one row per device the manager API returns, under the 已连接设备 heading.
 - `list-row` shows the avatar, the nick, and the 型号 (`product`) as the row's only subtitle. When the API's `battery` is greater than `0`, it adds a battery icon and `<n>%` before the chevron, in red below 20%. There is no presence dot and no 微喇号/IMEI line.
 - `list-open` opens the device detail page for the row the user chose.
+- `list-recharge-devices` is the 待续费设备 action at the header's top right; it opens `#/devices/recharge` whether or not any device is due.
 - `list-empty` keeps the 已连接设备 heading and shows 暂无已连接设备 when the account owns no devices.
 
 ## How to get to it (user POV)
 
 - Choose 设备管理 on the home screen (`#/`).
+- Header → 待续费设备 (top-right action).
 - Open `#/devices` directly; native opens this page by URL.
 - Use the header 返回 to leave the page.
 
@@ -23,6 +25,7 @@ Preconditions:
 - The signed-in account owns at least one device. With none, report `list-empty` as unreached, record why in `Gotchas`, and skip the rest.
 
 - **Open the list.** Run `await page.goto("http://localhost:3021/#/devices")`, then wait for the capture to gain its call (not for a fixed delay). The capture gains `POST /v2/subuser/manager-get-all-device` with status 200, and `main` shows the 已连接设备 heading followed by the rows.
+- **Open renewal devices.** Click the header action 待续费设备. The URL becomes `#/devices/recharge`; the header reads 待续费设备 and the capture gains `POST /v2/subuser/simcard-get-all-need-renew`.
 - **Read one row.** Inspect the rows with `page.evaluate()` over `main ul li`: each row's text contains that device's `nick` and, when `product` is not empty, its `product` as the single subtitle. When the captured `battery` is greater than `0`, the row also ends with `<battery>%`; when it is `0`, no percentage renders. The row has no presence dot and no 微喇号/IMEI text.
 - **Agree with the capture.** Read the last `manager-get-all-device` event from `.tmp/vois-webview-debug/events.jsonl` and count `responseBody.data.devices`. The number of `main ul li` rows equals that count; a mismatch means the screen is not rendering this call's data.
 - **Open a device.** Choose the row. Run `await page.click('loc=role:button[name*="<nick>"]', { label: "open device detail" })`. The URL becomes `#/devices/<user_id>` and the header title is 设备详情.
@@ -34,5 +37,6 @@ Preconditions:
 - The row no longer prints 微喇号 or IMEI; 设备号 and 微喇号 live on the detail page, behind the row.
 - `battery` is `0` to `100`, and `0` means the last reading expired rather than an empty battery. The row hides the indicator for `0`, so a device with no percentage is unknown, not broken. The debug account's device is currently offline with `battery: 0`; a percentage needs an online device, or a clearly labelled in-page response fixture for layout only.
 - The fleet belongs to the debug account: row count, names, and ids change between accounts and over time. Assert agreement with the capture, never a fixed device name.
+- The 待续费设备 action is always rendered; an account with no due cards gets the 待续费设备 page's empty state, not a hidden entry.
 - A row is a `button`, not a link — `a[href*="/devices/"]` finds nothing.
 - With zero devices the 已连接设备 heading stays and 暂无已连接设备 replaces the rows; there is no seeded fixture to create one, so the journey reports the failure and stops.

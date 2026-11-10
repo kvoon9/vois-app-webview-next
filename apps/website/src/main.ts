@@ -1,3 +1,4 @@
+import './polyfills'
 import { enableDebugBridge } from '@vois/webview-bridge/debug'
 import { PiniaColada } from '@pinia/colada'
 import { createPinia } from 'pinia'

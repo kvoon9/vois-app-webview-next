@@ -11,8 +11,10 @@ import PageHeader from '~/components/PageHeader.vue'
 import QueryState from '~/components/settings/QueryState.vue'
 import ToggleSwitch from '~/components/ToggleSwitch.vue'
 import { usePageBack } from '~/composables/usePageBack'
+import { usePageParams } from '~/composables/usePageParams'
 import { parseRouteParamId } from '~/composables/useRouteParamId'
 import { useToast } from '~/composables/useToast'
+import { renewPayParams, useWechatRenewPayment } from '~/composables/useWechatRenewPayment'
 import { weilaUpload } from '~/utils/api'
 import { copyToClipboard } from '~/utils/bridge/clipboard-bridge'
 import {
@@ -44,6 +46,48 @@ const { state, refetch: reload } = useQuery({
 })
 
 const device = computed<Device | null>(() => state.value.data ?? null)
+
+const { params } = usePageParams(['pay-method', 'pkg-name', 'wxpay-appid'])
+const payParams = computed(() => renewPayParams(params.value))
+const payment = useWechatRenewPayment({
+  payMethod: 'wechat',
+  pkgName: () => payParams.value.pkgName,
+  wxpayAppId: () => payParams.value.wxpayAppId,
+  onPaid: () => reload(),
+})
+
+const payState = payment.state
+/** Closing the paying dialog only hides it; the bridge result still lands. */
+const payingHidden = shallowRef(false)
+const creatingPayment = computed(() => payState.value.kind === 'creating')
+const confirmingOrder = computed(() =>
+  payState.value.kind === 'confirming' ? payState.value.order : null,
+)
+const payingOrder = computed(() => (payState.value.kind === 'paying' ? payState.value.order : null))
+const successPayment = computed(() => (payState.value.kind === 'success' ? payState.value : null))
+const failedPayment = computed(() => (payState.value.kind === 'failed' ? payState.value : null))
+const failedTitle = computed(() =>
+  failedPayment.value?.order === null ? t('device.orderFailed') : t('device.payStatusFailed'),
+)
+
+/** The wire carries fen; the payment dialog shows yuan. */
+function formatAmount(amount: number): string {
+  return `¥${(amount / 100).toFixed(2)}`
+}
+
+async function startRecharge(): Promise<void> {
+  const iccid = device.value?.simCard?.iccid
+  if (!iccid) return
+  payingHidden.value = false
+  await payment.start(iccid)
+}
+
+async function confirmPay(): Promise<void> {
+  const order = confirmingOrder.value
+  if (!order) return
+  payingHidden.value = false
+  await payment.payOrder(order)
+}
 
 const { mutateAsync: saveNick, isLoading: savingName } = useMutation({
   mutation: (value: { deviceId: number; nick: string }) =>
@@ -213,8 +257,19 @@ function onCropFailed(): void {
           <!-- Card 1: identity. Rows read "label: value" on one line, as the app does;
                py-1.5 keeps the 36px pitch that 16px text + 24px line leaves. -->
           <section class="mt-2 overflow-hidden panel">
-            <div class="px-4 py-1.5 text-body">
-              {{ t('device.model') }}: {{ device.product || t('device.notAvailable') }}
+            <div class="flex items-center px-4 py-1.5 text-body">
+              <span class="min-w-0 flex-1 truncate">
+                {{ t('device.model') }}: {{ device.product || t('device.notAvailable') }}
+              </span>
+              <button
+                v-if="device.simCard?.iccid"
+                type="button"
+                class="ml-3 -my-1.5 inline-flex min-h-9 flex-none items-center text-small text-primary focus-visible:ring-2 focus-visible:ring-primary/40 disabled:opacity-50"
+                :disabled="creatingPayment"
+                @click="startRecharge"
+              >
+                {{ t('device.rechargeNow') }}
+              </button>
             </div>
             <div class="flex items-center px-4 py-1.5 text-body">
               <span class="min-w-0 truncate">
@@ -255,14 +310,6 @@ function onCropFailed(): void {
               class="min-h-14 w-full panel-row text-body"
             >
               <span>{{ t('device.rechargeRecords') }}</span>
-              <span class="row-chevron" aria-hidden="true" />
-            </RouterLink>
-            <RouterLink
-              v-if="device.simCard?.recharge"
-              to="/devices/recharge"
-              class="min-h-14 w-full panel-row text-body"
-            >
-              <span>{{ t('device.rechargeDevices') }}</span>
               <span class="row-chevron" aria-hidden="true" />
             </RouterLink>
           </section>
@@ -370,6 +417,92 @@ function onCropFailed(): void {
       @confirm="confirmUnbind"
     >
       <p>{{ t('device.unbindConfirmMessage', { name: device?.nick ?? '' }) }}</p>
+    </BaseModal>
+
+    <BaseModal
+      v-if="confirmingOrder"
+      :title="t('device.confirmPay')"
+      :cancel-text="t('modal.cancel')"
+      :confirm-text="t('device.payNow')"
+      @cancel="payment.reset()"
+      @confirm="confirmPay"
+    >
+      <div class="text-center">
+        <p class="text-body font-medium">{{ confirmingOrder.productName }}</p>
+        <p class="mt-1 text-small text-text-secondary">{{ confirmingOrder.productDesc }}</p>
+        <p class="mt-4 text-small text-text-secondary">{{ t('device.payAmount') }}</p>
+        <p class="mt-1 text-title font-semibold text-primary">
+          {{ formatAmount(confirmingOrder.amount) }}
+        </p>
+      </div>
+    </BaseModal>
+
+    <BaseModal
+      v-if="payingOrder && !payingHidden"
+      :title="t('device.payStatusPaying')"
+      @cancel="payingHidden = true"
+    >
+      <div class="text-center">
+        <p class="text-body font-medium">{{ payingOrder.productName }}</p>
+        <p class="mt-1 text-title font-semibold">{{ formatAmount(payingOrder.amount) }}</p>
+      </div>
+      <template #footer>
+        <div class="space-y-3">
+          <p class="text-center text-small text-text-secondary">{{ t('device.payingHint') }}</p>
+          <button
+            type="button"
+            class="modal-action w-full bg-surface-field text-text-primary focus-visible:ring-2 focus-visible:ring-primary/40"
+            @click="payingHidden = true"
+          >
+            {{ t('modal.close') }}
+          </button>
+        </div>
+      </template>
+    </BaseModal>
+
+    <BaseModal v-if="successPayment" :title="t('device.paySuccess')">
+      <div class="text-center">
+        <p class="text-body font-medium">{{ successPayment.order.productName }}</p>
+        <p class="mt-1 text-title font-semibold">
+          {{ formatAmount(successPayment.order.amount) }}
+        </p>
+        <p v-if="!successPayment.serverConfirmed" class="mt-3 text-small text-danger">
+          {{ t('device.payUnconfirmed') }}
+        </p>
+      </div>
+      <template #footer>
+        <div class="flex">
+          <button
+            type="button"
+            class="modal-action bg-primary text-primary-text focus-visible:ring-2 focus-visible:ring-primary/40"
+            @click="payment.reset()"
+          >
+            {{ t('modal.ok') }}
+          </button>
+        </div>
+      </template>
+    </BaseModal>
+
+    <BaseModal
+      v-if="failedPayment"
+      :title="failedTitle"
+      :cancel-text="t('modal.close')"
+      :confirm-text="failedPayment.canRetry ? t('device.payRetry') : t('modal.ok')"
+      @cancel="payment.reset()"
+      @confirm="failedPayment.canRetry ? payment.retry() : payment.reset()"
+    >
+      <p class="text-center text-body [text-wrap:balance]">{{ failedPayment.message }}</p>
+      <template v-if="!failedPayment.canRetry" #footer>
+        <div class="flex">
+          <button
+            type="button"
+            class="modal-action bg-primary text-primary-text focus-visible:ring-2 focus-visible:ring-primary/40"
+            @click="payment.reset()"
+          >
+            {{ t('modal.ok') }}
+          </button>
+        </div>
+      </template>
     </BaseModal>
 
     <ImageCropper

@@ -3,8 +3,10 @@ import {
   addEmergencyFriendContact,
   addEmergencyPhoneContact,
   addGroupMembers,
+  confirmWechatPayment,
   createDeviceReminder,
   createRenewOrder,
+  createWechatAppOrder,
   deleteDeviceFence,
   getConnectedDevices,
   getDeviceDetail,
@@ -695,6 +697,70 @@ describe('device API', () => {
         },
       ])
       expect(weilaFetch).toHaveBeenCalledWith('/v2/subuser/simcard-get-all-renew-order')
+    })
+  })
+
+  describe('wechat payment', () => {
+    const prepay = {
+      appid: 'wx4cc2b3ab0de3dd13',
+      partnerid: '1900000109',
+      prepayid: 'wx201410272009395522657a690389285100',
+      noncestr: '5K8264ILTKCH16CQ2502SI8ZNMTM67VS',
+      timestamp: 1414563803,
+      sign: 'C380BEC2BFD727A4B6845133519F3AD6',
+      package: 'Sign=WXPay',
+      sign_type: 'MD5',
+    }
+
+    it('creates a WeChat app order and passes the prepay bag through', async () => {
+      weilaFetch.mockResolvedValue(ok({ order_no: 'RN20260211', trade_no: 'WX20260211', prepay }))
+
+      await expect(
+        createWechatAppOrder({
+          appId: 'wx4cc2b3ab0de3dd13',
+          orderNo: 'RN20260211',
+          productId: 'pkg_year',
+        }),
+      ).resolves.toEqual({
+        orderNo: 'RN20260211',
+        tradeNo: 'WX20260211',
+        prepay,
+      })
+      expect(weilaFetch).toHaveBeenCalledWith('/v2/pay/create-wechat-app-order', {
+        body: {
+          app_id: 'wx4cc2b3ab0de3dd13',
+          order_no: 'RN20260211',
+          product_id: 'pkg_year',
+        },
+      })
+    })
+
+    it('rejects a prepay missing a field native reads', async () => {
+      weilaFetch.mockResolvedValue(
+        ok({
+          order_no: 'RN20260211',
+          trade_no: 'WX20260211',
+          prepay: { ...prepay, prepayid: undefined },
+        }),
+      )
+
+      await expect(
+        createWechatAppOrder({
+          appId: 'wx4cc2b3ab0de3dd13',
+          orderNo: 'RN20260211',
+          productId: 'pkg_year',
+        }),
+      ).rejects.toThrow('微信支付参数不完整')
+    })
+
+    it('confirms the trade with the exact order and trade numbers', async () => {
+      weilaFetch.mockResolvedValue(ok({}))
+
+      await confirmWechatPayment({ orderNo: 'RN20260211', tradeNo: 'WX20260211' })
+
+      expect(weilaFetch).toHaveBeenCalledWith('/v2/pay/pay-wechat-trade-success', {
+        body: { order_no: 'RN20260211', trade_no: 'WX20260211' },
+      })
     })
   })
 

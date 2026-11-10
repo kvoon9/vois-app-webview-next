@@ -1,3 +1,4 @@
+import type { WechatPrepay } from '@vois/webview-bridge/vois'
 import { weilaFetch } from '~/utils/api'
 
 /** The SIM card a device runs on; only present for devices that have one. */
@@ -156,6 +157,24 @@ export interface RenewOrderResult {
   productId: string
   productName: string
   productDesc: string
+}
+
+export interface WechatAppOrder {
+  orderNo: string
+  tradeNo: string
+  prepay: WechatPrepay
+}
+
+export interface WechatAppOrderInput {
+  /** Native ignores it on Android; the App passes its own build-configured id to WeChat. */
+  appId: string
+  orderNo: string
+  productId: string
+}
+
+export interface WechatPaymentConfirmation {
+  orderNo: string
+  tradeNo: string
 }
 
 /** One historical renewal order (`simcard-get-all-renew-order`). */
@@ -319,6 +338,28 @@ interface RenewOrderRecordDto {
   order_desc: string
   iccid: string
   created: string
+}
+
+/** The wire `prepay` bag; every field native reads is optional until parsed. */
+interface WechatPrepayDto {
+  appid?: string
+  partnerid?: string
+  /** Spelled without an underscore on this endpoint. */
+  prepayid?: string
+  noncestr?: string
+  /** WeChat expects seconds; native forwards the value as given. */
+  timestamp?: string | number
+  sign?: string
+  /** Native ignores these two; they stay in the object for parity with the wire. */
+  package?: string
+  sign_type?: string
+  extdata?: string
+}
+
+interface WechatAppOrderDto {
+  order_no: string
+  trade_no: string
+  prepay?: WechatPrepayDto | null
 }
 
 interface DeviceReminderDto {
@@ -607,13 +648,12 @@ export async function getRenewSimCards(): Promise<RenewSimCard[]> {
 
 export interface RenewOrderInput {
   iccid: string
-  /** `wechat` on Android, `apple_iap` on iOS; native sends it as a page param. */
-  payMethod: string
+  payMethod: 'wechat'
   /** Bundle id, e.g. `com.voistech.weila`; native sends it as a page param. */
   pkgName: string
 }
 
-/** Create one renewal order for one card. Payment itself completes in the app. */
+/** Create one renewal order for one card; paying it is a separate step. */
 export async function createRenewOrder(input: RenewOrderInput): Promise<RenewOrderResult> {
   const response = await weilaFetch<RenewOrderResultDto>('/v2/subuser/simcard-create-renew-order', {
     body: { iccid: input.iccid, pay_method: input.payMethod, pkg_name: input.pkgName },
@@ -627,6 +667,24 @@ export async function createRenewOrder(input: RenewOrderInput): Promise<RenewOrd
     productName: dto.product_name,
     productDesc: dto.product_desc,
   }
+}
+
+export async function createWechatAppOrder(input: WechatAppOrderInput): Promise<WechatAppOrder> {
+  const response = await weilaFetch<WechatAppOrderDto>('/v2/pay/create-wechat-app-order', {
+    body: { app_id: input.appId, order_no: input.orderNo, product_id: input.productId },
+  })
+  const dto = response.data
+  return {
+    orderNo: dto.order_no,
+    tradeNo: dto.trade_no,
+    prepay: toWechatPrepay(dto.prepay),
+  }
+}
+
+export async function confirmWechatPayment(input: WechatPaymentConfirmation): Promise<void> {
+  await weilaFetch<EmptyData>('/v2/pay/pay-wechat-trade-success', {
+    body: { order_no: input.orderNo, trade_no: input.tradeNo },
+  })
 }
 
 /** Every renewal order under the account, newest first. */
@@ -961,6 +1019,30 @@ function toRenewOrderRecord(record: RenewOrderRecordDto): RenewOrderRecord {
     iccid: record.iccid,
     createdAt: record.created,
   }
+}
+
+function isPresent(value: string | number | null | undefined): value is string | number {
+  return value != null && value !== ''
+}
+
+/**
+ * Only the five fields native reads are checked, so a malformed answer fails
+ * here instead of reaching the bridge as an object it cannot pay.
+ */
+function toWechatPrepay(prepay: WechatPrepayDto | null | undefined): WechatPrepay {
+  if (!prepay) throw new Error('微信支付参数缺失，请稍后重试。')
+  const { partnerid, prepayid, noncestr, timestamp, sign } = prepay
+  if (
+    !isPresent(partnerid) ||
+    !isPresent(prepayid) ||
+    !isPresent(noncestr) ||
+    !isPresent(timestamp) ||
+    !isPresent(sign)
+  ) {
+    throw new Error('微信支付参数不完整，请稍后重试。')
+  }
+  // The rest of the wire object rides along; native ignores `package` and `sign_type`.
+  return { ...prepay, partnerid, prepayid, noncestr, timestamp, sign }
 }
 
 function toReminder(reminder: DeviceReminderDto): DeviceReminder {

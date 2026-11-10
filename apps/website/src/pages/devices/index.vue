@@ -18,11 +18,25 @@ const { state, refetch: reload } = useQuery({
 function openDevice(device: Device): void {
   router.push(`/devices/${device.userId}`)
 }
+
+function openRechargeDevices(): void {
+  router.push('/devices/recharge')
+}
 </script>
 
 <template>
   <div class="page">
-    <PageHeader :title="t('device.title')" />
+    <PageHeader :title="t('device.title')">
+      <template #action>
+        <button
+          type="button"
+          class="absolute right-4 top-1/2 h-11 -translate-y-1/2 flex items-center text-body font-medium text-primary focus-visible:ring-2 focus-visible:ring-primary/40"
+          @click="openRechargeDevices"
+        >
+          {{ t('device.rechargeDevices') }}
+        </button>
+      </template>
+    </PageHeader>
 
     <main class="p-4">
       <h2 class="mb-3 text-2nd-body font-semibold text-text-secondary">

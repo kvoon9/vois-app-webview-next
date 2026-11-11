@@ -110,5 +110,6 @@ Proof standards for this app:
 | --------------------------- | ------------------------------------------------------------------------------- |
 | Instance doctor (read-only) | `node .pi/skills/verify-vois-webview/scripts/doctor.mjs [--port 3021] [--json]` |
 | Feature map                 | `.pi/skills/verify-vois-webview/features/README.md`                             |
+| Known backend issues        | `.pi/skills/verify-vois-webview/references/backend-issues.md`                   |
 
 Anchors to keep honest as the app changes: `.pi/skills/maintain-verification-skill` walks this map against source and live behavior.

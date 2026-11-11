@@ -50,3 +50,4 @@ Preconditions:
 - The contacts add and search pages look alike; read the URL or the header (从通讯录添加 vs 按条件查找添加) to tell them apart. The emergency friend picker is entered from 添加微喇联系人 and shares the 搜索联系人 field.
 - 消息免打扰, 共享我的位置, 文字和语音播报, and 清空聊天记录 do not exist on the contact detail. Do not look for them; there is no endpoint behind them.
 - Judge by `errcode`, not HTTP status. An empty list is a valid `errcode: 0` with an empty `friends` array.
+- **Empty friend remark is a backend bug.** `friend-change-remark` answers `20 参数错误` for `remark: ""` while `group-member-change-remark` accepts the same value and clears. Do not add client validation; clearing the remark is a legitimate action. The verbatim requests and the comparison are in `../references/backend-issues.md`.

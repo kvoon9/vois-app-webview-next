@@ -158,6 +158,7 @@ async function removeContact(): Promise<void> {
       :title="t('device.editRemark')"
       :model-value="remark"
       kind="name"
+      required
       :placeholder="t('device.remarkPlaceholder')"
       :loading="remarkMutation.isLoading.value"
       @cancel="editingRemark = false"

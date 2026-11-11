@@ -569,7 +569,10 @@ export async function removeDeviceFriend(deviceId: number, friendId: number): Pr
   })
 }
 
-/** Change the device's remark for a friend. */
+/**
+ * Change the device's remark for a friend. The endpoint rejects an empty remark
+ * (`20 参数错误`), so the editor requires a value; this API cannot clear one.
+ */
 export async function updateFriendRemark(
   deviceId: number,
   friendId: number,

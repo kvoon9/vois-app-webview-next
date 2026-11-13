@@ -32,7 +32,10 @@ const { state, refetch: reload } = useQuery({
     if (deviceId.value == null) throw new Error(t('device.invalidDevice'))
     return Promise.all([
       getDeviceFence(deviceId.value),
-      getDeviceTrackMode(deviceId.value),
+      // A device without track mode answers errcode 20 here while its fence
+      // and points still load (native hides the report entries for it). Mode
+      // only feeds the warning, so its failure must not blank the map.
+      getDeviceTrackMode(deviceId.value).catch(() => null),
       getRecentTrackPoint(deviceId.value),
     ])
   },
@@ -49,7 +52,7 @@ const { state: deviceState } = useQuery({
 const device = computed(() => deviceState.value.data ?? null)
 
 const fence = computed<DeviceFence | null>(() => state.value.data?.[0] ?? null)
-const reportFrequency = computed<TrackFrequency>(() => state.value.data?.[1] ?? 'off')
+const reportFrequency = computed<TrackFrequency | null>(() => state.value.data?.[1] ?? null)
 const recentPoint = computed<TrackPoint | null>(() => state.value.data?.[2] ?? null)
 
 /** Native warns on both `off` and `low`: the fence cannot fire either way. */

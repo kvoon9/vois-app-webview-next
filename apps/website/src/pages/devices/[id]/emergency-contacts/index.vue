@@ -33,6 +33,11 @@ const { state, refetch: reload } = useQuery({
 
 const contacts = computed(() => state.value.data?.contacts ?? [])
 const quota = computed(() => state.value.data?.quota)
+// Both quotas at zero is the wire's "no SOS capability" answer (a ZX05
+// returns 0/0 with null contacts); the response has no boolean flag.
+const unsupported = computed(
+  () => quota.value != null && quota.value.friendMax === 0 && quota.value.phoneMax === 0,
+)
 const friendCount = computed(() => contacts.value.filter((c) => c.type === 'friend').length)
 const phoneCount = computed(() => contacts.value.filter((c) => c.type === 'phone').length)
 const friendsFull = computed(
@@ -93,78 +98,83 @@ async function removeContact(): Promise<void> {
     <main class="p-4">
       <QueryState :status="state.status" :error="state.error" @retry="reload()">
         <template v-if="state.data">
-          <section class="card">
-            <h2 class="text-header font-semibold">{{ t('device.emergencyTips') }}</h2>
-            <ul class="mt-3 space-y-2 text-small text-text-secondary">
-              <li>
-                <i18n-t keypath="device.emergencyTipQuota" scope="global">
-                  <template #friendMax>
-                    <span class="text-danger">{{ state.data.quota.friendMax }}</span>
-                  </template>
-                  <template #phoneMax>
-                    <span class="text-danger">{{ state.data.quota.phoneMax }}</span>
-                  </template>
-                </i18n-t>
-              </li>
-              <li>{{ t('device.emergencyTipNotify') }}</li>
-              <li>
-                <i18n-t keypath="device.emergencyTipSos" scope="global">
-                  <template #sos>
-                    <span class="text-danger">{{ state.data.quota.sosRemaining }}</span>
-                  </template>
-                </i18n-t>
-              </li>
-            </ul>
-          </section>
+          <p v-if="unsupported" class="py-12 text-center text-body text-text-secondary">
+            {{ t('device.emergencyUnsupported') }}
+          </p>
+          <template v-else>
+            <section class="card">
+              <h2 class="text-header font-semibold">{{ t('device.emergencyTips') }}</h2>
+              <ul class="mt-3 space-y-2 text-small text-text-secondary">
+                <li>
+                  <i18n-t keypath="device.emergencyTipQuota" scope="global">
+                    <template #friendMax>
+                      <span class="text-danger">{{ state.data.quota.friendMax }}</span>
+                    </template>
+                    <template #phoneMax>
+                      <span class="text-danger">{{ state.data.quota.phoneMax }}</span>
+                    </template>
+                  </i18n-t>
+                </li>
+                <li>{{ t('device.emergencyTipNotify') }}</li>
+                <li>
+                  <i18n-t keypath="device.emergencyTipSos" scope="global">
+                    <template #sos>
+                      <span class="text-danger">{{ state.data.quota.sosRemaining }}</span>
+                    </template>
+                  </i18n-t>
+                </li>
+              </ul>
+            </section>
 
-          <nav class="mt-4 panel" :aria-label="t('device.emergencyContactAdd')">
-            <button
-              type="button"
-              class="min-h-12 w-full flex items-center justify-between px-4 text-left text-body"
-              @click="openAddFriend"
-            >
-              <span>{{ t('device.emergencyAddFriend') }}</span>
-              <span class="row-chevron" aria-hidden="true" />
-            </button>
-            <button
-              type="button"
-              class="min-h-12 w-full flex items-center justify-between px-4 text-left text-body"
-              @click="openAddPhone"
-            >
-              <span>{{ t('device.emergencyAddPhone') }}</span>
-              <span class="row-chevron" aria-hidden="true" />
-            </button>
-          </nav>
-
-          <section class="mt-4 min-h-32 card">
-            <h2 class="text-2nd-body font-semibold text-text-secondary">
-              {{ t('device.addedContacts') }}
-            </h2>
-            <ul v-if="contacts.length > 0" class="mt-3 space-y-3">
-              <li
-                v-for="contact in contacts"
-                :key="`${contact.type}-${contact.number}`"
-                class="min-h-12 flex items-center"
+            <nav class="mt-4 panel" :aria-label="t('device.emergencyContactAdd')">
+              <button
+                type="button"
+                class="min-h-12 w-full flex items-center justify-between px-4 text-left text-body"
+                @click="openAddFriend"
               >
-                <Avatar :name="contact.name" :src="contact.avatar" />
-                <span class="ml-3 min-w-0 flex-1">
-                  <span class="block truncate text-body font-medium">{{ contact.name }}</span>
-                  <span class="mt-0.5 block truncate text-small text-text-secondary">
-                    {{ contact.number }}
-                  </span>
-                </span>
-                <button
-                  type="button"
-                  class="icon-button ml-3 h-9 w-9 text-danger"
-                  :aria-label="t('device.emergencyContactRemove')"
-                  :disabled="removeMutation.isLoading.value"
-                  @click="removing = contact"
+                <span>{{ t('device.emergencyAddFriend') }}</span>
+                <span class="row-chevron" aria-hidden="true" />
+              </button>
+              <button
+                type="button"
+                class="min-h-12 w-full flex items-center justify-between px-4 text-left text-body"
+                @click="openAddPhone"
+              >
+                <span>{{ t('device.emergencyAddPhone') }}</span>
+                <span class="row-chevron" aria-hidden="true" />
+              </button>
+            </nav>
+
+            <section class="mt-4 min-h-32 card">
+              <h2 class="text-2nd-body font-semibold text-text-secondary">
+                {{ t('device.addedContacts') }}
+              </h2>
+              <ul v-if="contacts.length > 0" class="mt-3 space-y-3">
+                <li
+                  v-for="contact in contacts"
+                  :key="`${contact.type}-${contact.number}`"
+                  class="min-h-12 flex items-center"
                 >
-                  <span class="i-ph-minus text-lg" aria-hidden="true" />
-                </button>
-              </li>
-            </ul>
-          </section>
+                  <Avatar :name="contact.name" :src="contact.avatar" />
+                  <span class="ml-3 min-w-0 flex-1">
+                    <span class="block truncate text-body font-medium">{{ contact.name }}</span>
+                    <span class="mt-0.5 block truncate text-small text-text-secondary">
+                      {{ contact.number }}
+                    </span>
+                  </span>
+                  <button
+                    type="button"
+                    class="icon-button ml-3 h-9 w-9 text-danger"
+                    :aria-label="t('device.emergencyContactRemove')"
+                    :disabled="removeMutation.isLoading.value"
+                    @click="removing = contact"
+                  >
+                    <span class="i-ph-minus text-lg" aria-hidden="true" />
+                  </button>
+                </li>
+              </ul>
+            </section>
+          </template>
         </template>
       </QueryState>
     </main>

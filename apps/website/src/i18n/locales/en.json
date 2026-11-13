@@ -260,6 +260,7 @@
     "emergencyContactRemoveConfirm": "Remove {name} from emergency contacts?",
     "emergencyContactRemoved": "Emergency contact removed.",
     "emergencyContactAdded": "Emergency contact added.",
+    "emergencyUnsupported": "This device does not support emergency contacts.",
     "emergencyAddFriend": "Add Weila contact",
     "emergencyAddPhone": "Add Phone Contact",
     "emergencyAddPhoneTitle": "Add Phone Contact",

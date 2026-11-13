@@ -8,7 +8,7 @@ A device's contact page offers the two add entries in one card and lists the fri
 - `contacts-add` (从通讯录添加) lists the account's friends in pinyin order behind a 搜索联系人 field, marks the ones already added 已添加, and invites the selected ones.
 - `contacts-search` (按条件查找添加) searches 微喇号 / phone before inviting.
 - `contacts-detail` shows one contact with 注册时间, 备注, 举报, and 删除联系人. `friend-get-all` has no `signature`, so there is no 签名 row.
-- `emergency-list` reads top to bottom: 温馨提示 (the two quotas and the remaining SOS call count, numbers in red), the 添加微喇联系人 / 添加电话联系人 card, then the 已加入 card with the current contacts.
+- `emergency-list` reads top to bottom: 温馨提示 (the two quotas and the remaining SOS call count, numbers in red), the 添加微喇联系人 / 添加电话联系人 card, then the 已加入 card with the current contacts. A device answering both quotas `0` (no SOS capability, e.g. the ZX05) shows only the 该设备不支持紧急联系人功能 line instead.
 - `emergency-add-friend` adds one of the device's contacts to the SOS list, pinyin-ordered behind a 搜索联系人 field; the account's address book is wrong here because the API accepts only a device friend (a non-friend answers `errcode 300 不是好友`).
 - `emergency-add-phone` adds a raw phone entry from a square illustration, two rounded inputs, a grey hint, and a full-width 保存.
 
@@ -50,3 +50,4 @@ Preconditions:
 - The contacts add and search pages look alike; read the URL or the header (从通讯录添加 vs 按条件查找添加) to tell them apart. The emergency friend picker is entered from 添加微喇联系人 and shares the 搜索联系人 field.
 - 消息免打扰, 共享我的位置, 文字和语音播报, and 清空聊天记录 do not exist on the contact detail. Do not look for them; there is no endpoint behind them.
 - Judge by `errcode`, not HTTP status. An empty list is a valid `errcode: 0` with an empty `friends` array.
+- `sos_friend_limit: 0` plus `sos_phone_limit: 0` in `emergency-contact-get` is the wire's no-SOS-capability answer; the response carries no boolean flag (verified 2026-11-13 on a user-account ZX05). The add entries and quota tips hide; the device-detail 紧急联系人设置 row still renders because the detail response has no SOS field.

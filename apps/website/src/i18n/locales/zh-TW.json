@@ -260,6 +260,7 @@
     "emergencyContactRemoveConfirm": "確定要刪除緊急聯絡人{name}嗎？",
     "emergencyContactRemoved": "緊急聯絡人已刪除。",
     "emergencyContactAdded": "緊急聯絡人已添加。",
+    "emergencyUnsupported": "該設備不支援緊急聯絡人功能",
     "emergencyAddFriend": "添加微喇聯絡人",
     "emergencyAddPhone": "添加電話聯絡人",
     "emergencyAddPhoneTitle": "添加電話聯絡人",

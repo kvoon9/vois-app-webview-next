@@ -153,7 +153,8 @@ function swapLanguages(): void {
             </span>
           </div>
 
-          <!-- Temporarily hidden: non-translation sections; restore by uncommenting -->
+          <!-- Temporarily hidden: non-translation sections; restore by uncommenting
+               and re-adding the profile.* keys the locale gate pruned -->
           <!-- ponytail: media/location/notifications/remarks rows are UI-only placeholders per design; native owns these features
         <div class="mt-2 panel">
           <div

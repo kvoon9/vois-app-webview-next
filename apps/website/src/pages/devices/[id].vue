@@ -328,7 +328,7 @@ function onCropFailed(): void {
               <span class="row-chevron" aria-hidden="true" />
             </RouterLink>
             <RouterLink
-              v-if="!device.emergencyForbid"
+              v-if="device.emergencySupport"
               :to="`/devices/${deviceId}/emergency-contacts`"
               class="min-h-14 w-full panel-row text-body"
             >

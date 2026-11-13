@@ -7,7 +7,7 @@ One device's page is titled 设备详情 and leads with the device's avatar, its
 - `detail-open` opens from the device list and renders that device's fields.
 - `detail-header` shows the avatar with a pencil badge on its corner, the nick with its 重命名设备 pencil, and 激活时间: `<date>` (暂无 when the API has none) as the line under the name.
 - `detail-identity` (card 1) lists 型号, 设备号 with a 复制 action, 版本号, 微喇号 from `POST /v2/subuser/device-get-detail`; when the response carries a `sim_card` it appends 卡 ICCID, 卡到期时间, 卡片状态 需充值 (only when `recharge`), and the 流量卡充值记录 link. The same `sim_card` gates the 缴费充值 entry at the right of the 型号 row; it opens the recharge confirm modal (product name, description, amount in yuan) whose 支付 runs the pay flow owned by `device-recharge.md`.
-- `detail-manage` (card 2) offers 群组管理, 联系人管理, 紧急联系人设置 (hidden only when `device-get-detail` carries `emergency_forbid: true`; an absent flag keeps it, matching native's default).
+- `detail-manage` (card 2) offers 群组管理, 联系人管理, 紧急联系人设置 (hidden only when `device-get-detail` carries `emergency_support: false`; an absent flag keeps it).
 - `detail-position` (card 3) exists only when at least one of `location_support` / `reminder_support` is true. Inside it, the 共享位置 switch, 位置和围栏, 轨迹记录, and 轨迹上报设置 all gate on `location_support`; 提醒 gates on `reminder_support`. A device without location capability (a ZX05 answers both `false`) renders no card at all, matching the native app.
 - `detail-unbind` (card 4) is one red 解除绑定 row that asks 提示 / 是否解除绑定设备？ with 取消 and 确定.
 - `detail-back-pop` pops back to the list when the app has an earlier entry.

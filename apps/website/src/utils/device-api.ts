@@ -28,11 +28,10 @@ export interface Device {
   /** The device can ring reminders; an absent wire flag reads as true. */
   reminderSupport: boolean
   /**
-   * The backend forbids SOS contacts for this device. Native hides the entry
-   * from its socket config; the wire flag is not served yet (feasibility item
-   * A2), so an absent flag keeps the feature on.
+   * The device can carry SOS contacts. Native also hides the entry on devices
+   * whose socket config forbids it; an absent wire flag keeps the feature on.
    */
-  emergencyForbid: boolean
+  emergencySupport: boolean
   simCard: SimCard | null
 }
 
@@ -247,7 +246,7 @@ interface DeviceDto {
   location_share?: boolean
   location_support?: boolean
   reminder_support?: boolean
-  emergency_forbid?: boolean
+  emergency_support?: boolean
   sim_card?: SimCardDto
 }
 
@@ -913,7 +912,7 @@ function toDevice(device: DeviceDto): Device {
     shareLocation: device.location_share ?? false,
     locationSupport: device.location_support ?? true,
     reminderSupport: device.reminder_support ?? true,
-    emergencyForbid: device.emergency_forbid ?? false,
+    emergencySupport: device.emergency_support ?? true,
     simCard: toSimCard(device.sim_card),
   }
 }

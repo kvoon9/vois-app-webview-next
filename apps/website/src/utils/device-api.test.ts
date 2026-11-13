@@ -85,7 +85,7 @@ const device = {
   shareLocation: true,
   locationSupport: true,
   reminderSupport: false,
-  emergencyForbid: false,
+  emergencySupport: true,
   simCard: { iccid: '8986', expiryDate: '2027-11-30', recharge: true },
 }
 
@@ -142,7 +142,7 @@ describe('device API', () => {
           shareLocation: false,
           locationSupport: true,
           reminderSupport: true,
-          emergencyForbid: false,
+          emergencySupport: true,
           simCard: null,
         },
       ])
@@ -185,12 +185,12 @@ describe('device API', () => {
       })
     })
 
-    it('maps an explicit emergency_forbid and keeps it off when absent', async () => {
-      weilaFetch.mockResolvedValue(ok({ device: { ...deviceDto, emergency_forbid: true } }))
-      await expect(getDeviceDetail(1848581)).resolves.toMatchObject({ emergencyForbid: true })
+    it('maps emergency_support and keeps it on when absent', async () => {
+      weilaFetch.mockResolvedValue(ok({ device: { ...deviceDto, emergency_support: false } }))
+      await expect(getDeviceDetail(1848581)).resolves.toMatchObject({ emergencySupport: false })
 
       weilaFetch.mockResolvedValue(ok({ device: deviceDto }))
-      await expect(getDeviceDetail(1848581)).resolves.toMatchObject({ emergencyForbid: false })
+      await expect(getDeviceDetail(1848581)).resolves.toMatchObject({ emergencySupport: true })
     })
 
     it('maps an explicit false capability to false', async () => {

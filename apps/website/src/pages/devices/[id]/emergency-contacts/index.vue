@@ -44,13 +44,13 @@ const device = computed(() => deviceState.value.data ?? null)
 
 const contacts = computed(() => state.value.data?.contacts ?? [])
 const quota = computed(() => state.value.data?.quota)
-// `emergency_forbid` is native's own gate, once the backend serves it (an
-// absent flag keeps the feature on). Until then, both quotas at zero is the
-// only wire signal a device without SOS capability gives (a ZX05 answers
-// 0/0 with null contacts).
+// `emergency_support` is the declared gate; an absent flag keeps the feature
+// on, and `false` hides it. The wire still answers `true` for devices that
+// cannot carry SOS contacts (a ZX05 answers true yet 0/0 quotas with null
+// contacts), so both quotas at zero remains the fallback.
 const unsupported = computed(
   () =>
-    device.value?.emergencyForbid === true ||
+    device.value?.emergencySupport === false ||
     (quota.value != null && quota.value.friendMax === 0 && quota.value.phoneMax === 0),
 )
 const friendCount = computed(() => contacts.value.filter((c) => c.type === 'friend').length)

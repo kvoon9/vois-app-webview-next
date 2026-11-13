@@ -32,7 +32,6 @@ const { state, refetch: reload } = useQuery({
   },
 })
 
-/** Same key as the device-detail page, so arriving from there reuses its data. */
 const { state: deviceState } = useQuery({
   key: () => ['device-management', 'device', deviceId.value],
   query: () => {
@@ -44,10 +43,9 @@ const device = computed(() => deviceState.value.data ?? null)
 
 const contacts = computed(() => state.value.data?.contacts ?? [])
 const quota = computed(() => state.value.data?.quota)
-// `emergency_support` is the declared gate; an absent flag keeps the feature
-// on, and `false` hides it. The wire still answers `true` for devices that
-// cannot carry SOS contacts (a ZX05 answers true yet 0/0 quotas with null
-// contacts), so both quotas at zero remains the fallback.
+// The wire answers `emergency_support: true` for devices that cannot carry
+// SOS contacts (a ZX05 answers true yet 0/0 quotas with null contacts), so
+// both quotas at zero remains the fallback.
 const unsupported = computed(
   () =>
     device.value?.emergencySupport === false ||

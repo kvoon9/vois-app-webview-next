@@ -27,10 +27,6 @@ export interface Device {
   locationSupport: boolean
   /** The device can ring reminders; an absent wire flag reads as true. */
   reminderSupport: boolean
-  /**
-   * The device can carry SOS contacts. Native also hides the entry on devices
-   * whose socket config forbids it; an absent wire flag keeps the feature on.
-   */
   emergencySupport: boolean
   simCard: SimCard | null
 }

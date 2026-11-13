@@ -10,6 +10,7 @@ import QueryState from '~/components/settings/QueryState.vue'
 import { parseRouteParamId } from '~/composables/useRouteParamId'
 import { useToast } from '~/composables/useToast'
 import {
+  getDeviceDetail,
   getEmergencyContacts,
   removeEmergencyContact,
   type EmergencyContact,
@@ -31,12 +32,26 @@ const { state, refetch: reload } = useQuery({
   },
 })
 
+/** Same key as the device-detail page, so arriving from there reuses its data. */
+const { state: deviceState } = useQuery({
+  key: () => ['device-management', 'device', deviceId.value],
+  query: () => {
+    if (deviceId.value == null) throw new Error(t('device.invalidDevice'))
+    return getDeviceDetail(deviceId.value)
+  },
+})
+const device = computed(() => deviceState.value.data ?? null)
+
 const contacts = computed(() => state.value.data?.contacts ?? [])
 const quota = computed(() => state.value.data?.quota)
-// Both quotas at zero is the wire's "no SOS capability" answer (a ZX05
-// returns 0/0 with null contacts); the response has no boolean flag.
+// `emergency_forbid` is native's own gate, once the backend serves it (an
+// absent flag keeps the feature on). Until then, both quotas at zero is the
+// only wire signal a device without SOS capability gives (a ZX05 answers
+// 0/0 with null contacts).
 const unsupported = computed(
-  () => quota.value != null && quota.value.friendMax === 0 && quota.value.phoneMax === 0,
+  () =>
+    device.value?.emergencyForbid === true ||
+    (quota.value != null && quota.value.friendMax === 0 && quota.value.phoneMax === 0),
 )
 const friendCount = computed(() => contacts.value.filter((c) => c.type === 'friend').length)
 const phoneCount = computed(() => contacts.value.filter((c) => c.type === 'phone').length)

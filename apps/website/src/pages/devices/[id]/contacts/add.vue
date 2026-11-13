@@ -136,7 +136,7 @@ async function submit(): Promise<void> {
         <template v-if="state.data">
           <button
             type="button"
-            class="mt-2 min-h-12 w-full flex items-center justify-between py-3 text-left"
+            class="mt-2 min-h-12 w-full flex items-center justify-between px-4 py-3 text-left"
             :aria-pressed="allSelected"
             :disabled="selectableFriends.length === 0"
             @click="toggleAll"

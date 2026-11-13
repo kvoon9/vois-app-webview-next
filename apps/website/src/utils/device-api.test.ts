@@ -142,6 +142,7 @@ describe('device API', () => {
           shareLocation: false,
           locationSupport: true,
           reminderSupport: true,
+          emergencyForbid: false,
           simCard: null,
         },
       ])

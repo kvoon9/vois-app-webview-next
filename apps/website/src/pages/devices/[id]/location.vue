@@ -32,9 +32,8 @@ const { state, refetch: reload } = useQuery({
     if (deviceId.value == null) throw new Error(t('device.invalidDevice'))
     return Promise.all([
       getDeviceFence(deviceId.value),
-      // A device without track mode answers errcode 20 here while its fence
-      // and points still load (native hides the report entries for it). Mode
-      // only feeds the warning, so its failure must not blank the map.
+      // Mode only feeds the fence warning; its failure must never blank the
+      // map, fence and points that already loaded.
       getDeviceTrackMode(deviceId.value).catch(() => null),
       getRecentTrackPoint(deviceId.value),
     ])

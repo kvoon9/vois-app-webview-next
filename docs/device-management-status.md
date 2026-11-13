@@ -33,6 +33,12 @@
 - 添加微喇联系人只列**设备联系人**（`friend-get-all`）：接口对非设备好友返回 `300 不是好友`；设备没有联系人时显示「暂无可添加的好友。」并提示先去联系人管理邀请。
 - 加电话页 = 方形插图占位 + 两个圆角输入 + 灰字提示 + 全宽保存。
 
+### 能力显隐（原生对照，2026-11-13）
+
+- 原生决定菜单显隐靠的是 socket 设备配置（`location_support`、`reminder_support`、`emergency_forbid` 等），不是 `/v2` 接口；可行性文档 A2 记录了把这些字段加进 `device-get-detail` 的需求，后端未交付前 H5 只能按现有 HTTP 字段猜。
+- 实测两台设备（同一 App 与同一 H5 账号对照）：ZX05 的 `device-get-detail` 给出 `location_support: false`、`reminder_support: false`，原生详情页隐藏位置与紧急联系人入口；CF03（疯狂星期五 账号）的 HTTP 字段是 `location_support: true`，但原生详情页同样隐藏三个位置入口，且 `track-get-mode` 返回 `errcode 20 参数错误`——说明 HTTP 的 `location_support` 与原生判断并不一致。
+- 因此 H5 侧的处理是**让页面容错**而不是猜入口：`track-get-mode` 失败不影响位置页的地图、围栏与当天轨迹，仅不出底部警告；紧急联系人按双零配额显示不支持。
+
 ### 位置 / 围栏
 
 - 位置页右侧**圆形按钮**（添加围栏 / 修改围栏），实时位置 pill **顶部居中**（`max-w: calc(100% - 8rem)`，与围栏按钮留 62px 间隙 @375 / 34px @320），低频警告在底部；设备位置 = 当天轨迹最后一点。

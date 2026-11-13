@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { isSupportBridge } from '@vois/webview-bridge'
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { RouterLink } from 'vue-router'
@@ -11,7 +12,7 @@ import { nativeLang } from '~/constants'
 const { t } = useI18n({ useScope: 'global' })
 const loginEnabled = import.meta.env.DEV || isWebviewDebug()
 // The App owns its language; only a standalone web page needs the picker.
-const showLanguageSwitcher = computed(() => nativeLang.value === null)
+const showLanguageSwitcher = computed(() => nativeLang.value === null && !isSupportBridge())
 // Test tools ride the same gate: they talk to bridge protocols that only make
 // sense with the real App or the debug pipeline attached.
 const testToolsEnabled = loginEnabled

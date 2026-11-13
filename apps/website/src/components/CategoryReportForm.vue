@@ -15,25 +15,35 @@ import { descriptionSchema, MAX_DESCRIPTION_LENGTH } from '~/utils/field-schema'
  */
 const props = defineProps<{
   endpoint: string
-  /**
-   * Locale namespace whose `<namespace>.title`, `<namespace>.<sectionLabel>`, and
-   * `<namespace>.<listKey>` strings drive the form. The list is expected to be a
-   * flat string array (so it is rendered as chip choices).
-   */
-  i18nNamespace: 'feedback' | 'report'
-  listKey: 'categories' | 'types'
-  sectionLabelKey: 'category' | 'problemType'
-  textareaLabelKey: 'yourFeedback' | 'whatHappened'
-  placeholderKey: 'placeholder'
-  submitKey: 'submit' | 'report'
-  successFallbackKey?: 'successTitle'
+  /** Which copy drives the form; the list is a flat string array rendered as chips. */
+  namespace: 'feedback' | 'report'
 }>()
 
+const MESSAGES = {
+  feedback: {
+    title: 'feedback.title',
+    list: 'feedback.categories',
+    section: 'feedback.category',
+    textarea: 'feedback.yourFeedback',
+    placeholder: 'feedback.placeholder',
+    submit: 'feedback.submit',
+  },
+  report: {
+    title: 'report.title',
+    list: 'report.types',
+    section: 'report.problemType',
+    textarea: 'report.whatHappened',
+    placeholder: 'report.placeholder',
+    submit: 'report.report',
+  },
+} as const
+
 const { t, tm } = useI18n({ useScope: 'global' })
+const messages = computed(() => MESSAGES[props.namespace])
 
 const items = computed(() => {
-  // SAFETY: each `<namespace>.<listKey>` locale entry is a flat string array
-  return Object.values(tm(`${props.i18nNamespace}.${props.listKey}`)) as string[]
+  // SAFETY: each namespace list is a flat string array
+  return Object.values(tm(messages.value.list)) as string[]
 })
 
 const schema = computed(() =>
@@ -71,8 +81,7 @@ async function handleSubmit(): Promise<void> {
 
     data.value.content = ''
     resetErrors()
-    const fallback = props.successFallbackKey ? t(`modal.${props.successFallbackKey}`) : ''
-    modal.value = { type: 'success', message: response.errmsg || fallback }
+    modal.value = { type: 'success', message: response.errmsg || t('modal.successTitle') }
   } catch (error) {
     modal.value = {
       type: 'error',
@@ -92,11 +101,11 @@ function closeModal(): void {
 
 <template>
   <div class="page">
-    <PageHeader :title="t(`${i18nNamespace}.title`)" />
+    <PageHeader :title="t(messages.title)" />
     <main class="p-4 pb-28">
       <form novalidate @submit.prevent="handleSubmit">
         <section>
-          <h2 class="section-title mb-4">{{ t(`${i18nNamespace}.${sectionLabelKey}`) }}</h2>
+          <h2 class="section-title mb-4">{{ t(messages.section) }}</h2>
           <div class="space-y-3">
             <div v-for="i in Math.ceil(items.length / 2)" :key="i" class="flex">
               <button
@@ -120,13 +129,13 @@ function closeModal(): void {
         </section>
 
         <section>
-          <h2 class="section-title mt-6 mb-4">{{ t(`${i18nNamespace}.${textareaLabelKey}`) }}</h2>
+          <h2 class="section-title mt-6 mb-4">{{ t(messages.textarea) }}</h2>
           <textarea
             v-model="data.content"
             :maxlength="MAX_DESCRIPTION_LENGTH"
             rows="6"
             class="input-field"
-            :placeholder="t(`${i18nNamespace}.${placeholderKey}`)"
+            :placeholder="t(messages.placeholder)"
             @blur="validateField('content')"
           />
           <p class="text-right text-small text-text-secondary mt-2">
@@ -141,7 +150,7 @@ function closeModal(): void {
           class="fixed inset-x-0 bottom-0 bg-surface-elevated px-4 pb-[calc(env(safe-area-inset-bottom,0px)+1rem)] pt-3"
         >
           <button type="submit" class="btn-primary" :disabled="isSubmitting">
-            {{ t(`${i18nNamespace}.${submitKey}`) }}
+            {{ t(messages.submit) }}
           </button>
         </footer>
       </form>

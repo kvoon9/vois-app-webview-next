@@ -21,7 +21,12 @@ const { t, tm } = useI18n({ useScope: 'global' })
 // SAFETY: locale JSON defines reportTarget.reasons as a flat string map
 const reasons = computed(() => Object.values(tm('reportTarget.reasons')) as string[])
 
-const title = computed(() => t(`reportTarget.${props.target}.title`))
+const TARGET_MESSAGES = {
+  user: { title: 'reportTarget.user.title', placeholder: 'reportTarget.user.placeholder' },
+  group: { title: 'reportTarget.group.title', placeholder: 'reportTarget.group.placeholder' },
+} as const satisfies Record<'user' | 'group', { title: string; placeholder: string }>
+
+const title = computed(() => t(TARGET_MESSAGES[props.target].title))
 const targetId = computed(() => {
   const rawId = route.query.id
   return parseAccountId(Array.isArray(rawId) ? rawId[0] : rawId)
@@ -134,7 +139,7 @@ function closeModal(): void {
           :maxlength="MAX_DESCRIPTION_LENGTH"
           rows="5"
           class="input-field min-h-29 text-2nd-body"
-          :placeholder="t(`reportTarget.${target}.placeholder`)"
+          :placeholder="t(TARGET_MESSAGES[target].placeholder)"
           @blur="validateField('content')"
         />
         <p v-if="errors.content" class="mt-2 text-small text-danger">

@@ -34,7 +34,12 @@ const deviceName = computed(() => {
   const name = route.query.name
   return (Array.isArray(name) ? name[0] : name) || ''
 })
-const pageTitle = computed(() => deviceName.value || t(`settings.${props.kind}`))
+const KIND_TITLES = {
+  friends: 'settings.friends',
+  groups: 'settings.groups',
+} as const satisfies Record<TranslationTargetKind, string>
+
+const pageTitle = computed(() => deviceName.value || t(KIND_TITLES[props.kind]))
 const emptyText = computed(() =>
   t(props.kind === 'friends' ? 'translation.emptyFriends' : 'translation.emptyGroups'),
 )

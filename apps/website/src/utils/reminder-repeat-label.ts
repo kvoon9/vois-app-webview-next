@@ -4,13 +4,13 @@ import type { ReminderRepeat } from '~/utils/device-api'
 type Translate = (key: string, named?: Record<string, string | number>) => string
 
 const DAY_KEYS = [
-  'reminderDayMon',
-  'reminderDayTue',
-  'reminderDayWed',
-  'reminderDayThu',
-  'reminderDayFri',
-  'reminderDaySat',
-  'reminderDaySun',
+  'device.reminderDayMon',
+  'device.reminderDayTue',
+  'device.reminderDayWed',
+  'device.reminderDayThu',
+  'device.reminderDayFri',
+  'device.reminderDaySat',
+  'device.reminderDaySun',
 ] as const
 
 /**
@@ -23,9 +23,7 @@ export function reminderRepeatLabel(t: Translate, repeat: ReminderRepeat, days: 
   if (repeat === 'weekdays') return t('device.reminderWeekdays')
   if (repeat === 'monthly') return t('device.reminderMonthly', { days: days.join('、') })
   if (repeat === 'custom') {
-    const labels = days
-      .filter((day) => day >= 1 && day <= 7)
-      .map((day) => t(`device.${DAY_KEYS[day - 1]!}`))
+    const labels = days.filter((day) => day >= 1 && day <= 7).map((day) => t(DAY_KEYS[day - 1]!))
     return labels.length > 0 ? labels.join('、') : t('device.reminderCustom')
   }
   return t('device.reminderOnce')

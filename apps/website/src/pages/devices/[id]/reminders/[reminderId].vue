@@ -25,13 +25,13 @@ const REPEAT_INTERVALS = [1, 2, 3, 5, 10]
 /** Native's picker: three presets plus a per-day custom rule. */
 const REPEATS: ReminderRepeat[] = ['once', 'daily', 'weekdays', 'custom']
 const DAY_KEYS = [
-  'reminderDayMon',
-  'reminderDayTue',
-  'reminderDayWed',
-  'reminderDayThu',
-  'reminderDayFri',
-  'reminderDaySat',
-  'reminderDaySun',
+  'device.reminderDayMon',
+  'device.reminderDayTue',
+  'device.reminderDayWed',
+  'device.reminderDayThu',
+  'device.reminderDayFri',
+  'device.reminderDaySat',
+  'device.reminderDaySun',
 ] as const
 
 const { t } = useI18n({ useScope: 'global' })
@@ -432,7 +432,7 @@ const headerTitle = computed(() =>
           :aria-pressed="customDraft.includes(index + 1)"
           @click="toggleDraftDay(index + 1)"
         >
-          {{ t(`device.${key}`) }}
+          {{ t(key) }}
         </button>
       </div>
     </BaseModal>

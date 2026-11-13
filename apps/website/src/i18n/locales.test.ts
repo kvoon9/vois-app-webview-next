@@ -55,28 +55,18 @@ function messageAt(messages: LocaleMessages, key: string): string | string[] | u
 
 /** A dynamic key and the exact keys its call site can produce. */
 const DYNAMIC_KEYS = {
-  'components/CategoryReportForm.vue|${props.i18nNamespace}.${props.listKey}': [
-    'feedback.categories',
-    'report.types',
-  ],
-  'components/CategoryReportForm.vue|modal.${props.successFallbackKey}': ['modal.successTitle'],
-  'components/CategoryReportForm.vue|${i18nNamespace}.title': ['feedback.title', 'report.title'],
-  'components/CategoryReportForm.vue|${i18nNamespace}.${sectionLabelKey}': [
-    'feedback.category',
-    'report.problemType',
-  ],
-  'components/CategoryReportForm.vue|${i18nNamespace}.${textareaLabelKey}': [
-    'feedback.yourFeedback',
-    'report.whatHappened',
-  ],
-  'components/CategoryReportForm.vue|${i18nNamespace}.${placeholderKey}': [
+  'components/CategoryReportForm.vue|messages.placeholder': [
     'feedback.placeholder',
     'report.placeholder',
   ],
-  'components/CategoryReportForm.vue|${i18nNamespace}.${submitKey}': [
-    'feedback.submit',
-    'report.report',
+  'components/CategoryReportForm.vue|messages.section': ['feedback.category', 'report.problemType'],
+  'components/CategoryReportForm.vue|messages.submit': ['feedback.submit', 'report.report'],
+  'components/CategoryReportForm.vue|messages.textarea': [
+    'feedback.yourFeedback',
+    'report.whatHappened',
   ],
+  'components/CategoryReportForm.vue|messages.title': ['feedback.title', 'report.title'],
+  'components/CategoryReportForm.vue|messages.value.list': ['feedback.categories', 'report.types'],
   'components/LanguageSwitcher.vue|OPTION_KEYS[option]': [
     'language.en',
     'language.zh-CN',
@@ -86,34 +76,33 @@ const DYNAMIC_KEYS = {
     'nav.linkCopyFailed',
     'nav.linkCopied',
   ],
-  'components/ReportTargetForm.vue|reportTarget.${props.target}.title': [
+  'components/ReportTargetForm.vue|TARGET_MESSAGES[props.target].title': [
     'reportTarget.user.title',
     'reportTarget.group.title',
   ],
-  'components/ReportTargetForm.vue|reportTarget.${target}.placeholder': [
+  'components/ReportTargetForm.vue|TARGET_MESSAGES[target].placeholder': [
     'reportTarget.user.placeholder',
     'reportTarget.group.placeholder',
   ],
   "components/settings/TranslationMultiPage.vue|step.value === 'source' ? 'translation.target' : 'translation.source'":
     ['translation.target', 'translation.source'],
-  'components/settings/TranslationMultiPage.vue|translation.${side.key}': [
+  'components/settings/TranslationMultiPage.vue|side.label': [
     'translation.source',
     'translation.target',
   ],
-  'components/settings/TranslationSettingsPage.vue|settings.${props.kind}': [
+  'components/settings/TranslationSettingsPage.vue|KIND_TITLES[props.kind]': [
     'settings.friends',
     'settings.groups',
-    'settings.devices',
   ],
   "components/settings/TranslationSettingsPage.vue|props.kind === 'friends' ? 'translation.emptyFriends' : 'translation.emptyGroups'":
     ['translation.emptyFriends', 'translation.emptyGroups'],
   "components/settings/TranslationTargetList.vue|item.skill === 2 ? 'translation.skills.premiumZhEn' : 'translation.skills.premiumMulti'":
     ['translation.skills.premiumZhEn', 'translation.skills.premiumMulti'],
-  'pages/devices/[id]/groups/[groupId]/members/index.vue|device.roles.${section}': [
+  'pages/devices/[id]/groups/[groupId]/members/index.vue|ROLE_LABELS[section]': [
     'device.roles.admin',
     'device.roles.member',
   ],
-  'pages/devices/[id]/reminders/[reminderId].vue|device.${key}': [
+  'pages/devices/[id]/reminders/[reminderId].vue|key': [
     'device.reminderDayMon',
     'device.reminderDayTue',
     'device.reminderDayWed',
@@ -128,14 +117,10 @@ const DYNAMIC_KEYS = {
     'device.frequencyMid',
     'device.frequencyHigh',
   ],
-  'pages/settings.vue|settings.${item}': [
-    'settings.friends',
-    'settings.groups',
-    'settings.devices',
-  ],
+  'pages/settings.vue|section.label': ['settings.friends', 'settings.groups', 'settings.devices'],
   "pages/shared/qrcode/bluetooth-ai-translate-active.vue|activated ? 'bluetoothAiTranslateActive.activated' : 'bluetoothAiTranslateActive.unactivated'":
     ['bluetoothAiTranslateActive.activated', 'bluetoothAiTranslateActive.unactivated'],
-  'utils/reminder-repeat-label.ts|device.${DAY_KEYS[day - 1]!}': [
+  'utils/reminder-repeat-label.ts|DAY_KEYS[day - 1]!': [
     'device.reminderDayMon',
     'device.reminderDayTue',
     'device.reminderDayWed',
@@ -170,6 +155,7 @@ const LOCALE_MESSAGES = {
 
 const KEYS = messagePaths(LOCALE_MESSAGES.en)
 const KEY_SET = new Set(KEYS)
+const NAMESPACES = new Set(Object.keys(LOCALE_MESSAGES.en))
 
 const runtimeI18n = createI18n({
   legacy: false,
@@ -271,6 +257,19 @@ function keyUses(file: SourceFile): KeyUse[] {
   return uses
 }
 
+/**
+ * Full keys also live in arrays and records that a dynamic `t()` reads later.
+ * Anything shaped like a key from a known namespace must name a real message.
+ */
+function keyLiterals(text: string): string[] {
+  return [...text.matchAll(/(['"`])([^'"`\n]+)\1/g)]
+    .map((match) => match[2])
+    .filter((value) => {
+      const separator = value.indexOf('.')
+      return separator > 0 && !value.includes('${') && NAMESPACES.has(value.slice(0, separator))
+    })
+}
+
 function hardcodedTemplateText(node: TemplateNode, file: string, found: string[]): void {
   if (node.type === TEXT_NODE) {
     const text = node.content.replace(/\s+/g, ' ').trim()
@@ -300,10 +299,15 @@ const DYNAMIC_USES: DynamicUse[] = USES.flatMap((use) =>
   use.dynamic ? [{ file: use.file, dynamic: use.dynamic }] : [],
 )
 const MAPPED_KEYS = new Set(Object.values(DYNAMIC_KEYS).flat())
+const LITERAL_KEYS = new Set(SOURCES.flatMap((file) => keyLiterals(file.script)))
 
 describe('locales', () => {
   it('defines every key the source uses', () => {
     expect([...STATIC_KEYS].filter((key) => !KEY_SET.has(key)).sort()).toEqual([])
+  })
+
+  it('defines every key-shaped literal in the source', () => {
+    expect([...LITERAL_KEYS].filter((key) => !KEY_SET.has(key)).sort()).toEqual([])
   })
 
   it('maps every dynamic key call site', () => {
@@ -327,7 +331,7 @@ describe('locales', () => {
   })
 
   it('has no unused keys', () => {
-    const used = new Set([...STATIC_KEYS, ...MAPPED_KEYS])
+    const used = new Set([...STATIC_KEYS, ...LITERAL_KEYS, ...MAPPED_KEYS])
     expect(KEYS.filter((key) => !used.has(key)).sort()).toEqual([])
   })
 
@@ -367,8 +371,18 @@ describe('locales', () => {
       if (SAME_ACROSS_LOCALES.has(key)) continue
       const reference = messageAt(LOCALE_MESSAGES.en, key)
       for (const locale of SUPPORTED_LOCALES.slice(1)) {
-        if (messageAt(LOCALE_MESSAGES[locale], key) === reference)
-          untranslated.push(`${locale}: ${key}`)
+        const value = messageAt(LOCALE_MESSAGES[locale], key)
+        if (Array.isArray(reference) || Array.isArray(value)) {
+          if (
+            Array.isArray(reference) &&
+            Array.isArray(value) &&
+            value.some((item, index) => item === reference[index])
+          ) {
+            untranslated.push(`${locale}: ${key}`)
+          }
+          continue
+        }
+        if (value === reference) untranslated.push(`${locale}: ${key}`)
       }
     }
     expect(untranslated.sort()).toEqual([])

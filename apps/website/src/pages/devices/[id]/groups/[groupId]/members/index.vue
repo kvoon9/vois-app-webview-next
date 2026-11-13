@@ -11,6 +11,12 @@ import { getGroupMembers, type GroupMember } from '~/utils/device-api'
 
 type MemberSection = 'admin' | 'member'
 
+const ROLE_SECTIONS = ['admin', 'member'] as const
+const ROLE_LABELS = {
+  admin: 'device.roles.admin',
+  member: 'device.roles.member',
+} as const satisfies Record<MemberSection, string>
+
 const route = useRoute()
 const router = useRouter()
 const { t } = useI18n({ useScope: 'global' })
@@ -102,10 +108,10 @@ function openMember(member: GroupMember): void {
           {{ t('device.noMatchingMembers') }}
         </div>
         <div v-else class="mt-5 space-y-5">
-          <section v-for="section in ['admin', 'member'] as const" :key="section">
+          <section v-for="section in ROLE_SECTIONS" :key="section">
             <template v-if="groupedMembers[section].length">
               <h2 class="mb-2 px-1 text-small font-medium text-text-secondary">
-                {{ t(`device.roles.${section}`) }}
+                {{ t(ROLE_LABELS[section]) }}
               </h2>
               <div class="overflow-hidden panel">
                 <button

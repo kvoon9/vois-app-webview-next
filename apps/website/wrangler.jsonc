@@ -1,6 +1,6 @@
 // Cloudflare Workers static assets for the standalone web build.
 // `pnpm --filter website deploy` runs the app build, then uploads `dist`.
-// The account is the KVOON9 Cloudflare account; it is the only one this token sees.
+// The account is the one behind the kvoon workers.dev subdomain; see docs/engineering/i18n.md.
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "vois-app-webview",

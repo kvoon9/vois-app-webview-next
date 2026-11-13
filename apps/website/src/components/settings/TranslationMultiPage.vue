@@ -153,8 +153,8 @@ const options = computed(() =>
 const visibleOptions = computed(() => filterTranslationLanguageOptions(options.value, search.value))
 // The pair doubles as the tab list, so render both sides from one shape.
 const sides = computed(() => [
-  { key: 'source' as const, code: draft.value.source },
-  { key: 'target' as const, code: draft.value.target },
+  { key: 'source' as const, label: 'translation.source' as const, code: draft.value.source },
+  { key: 'target' as const, label: 'translation.target' as const, code: draft.value.target },
 ])
 const selectedCode = computed(() =>
   step.value === 'source' ? draft.value.source : draft.value.target,
@@ -272,7 +272,7 @@ async function done(): Promise<void> {
                     class="block text-small"
                     :class="step === side.key ? 'opacity-80' : 'text-text-secondary'"
                   >
-                    {{ t(`translation.${side.key}`) }}
+                    {{ t(side.label) }}
                   </span>
                   <span class="flex items-center">
                     <span class="language-flag w-5 flex-none text-header" aria-hidden="true">

@@ -11,7 +11,7 @@ interface Env {
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url)
-    if (!url.pathname.startsWith('/v2/')) return env.ASSETS.fetch(request)
+    if (url.pathname !== '/v2' && !url.pathname.startsWith('/v2/')) return env.ASSETS.fetch(request)
 
     const target = new URL(`${url.pathname}${url.search}`, API_ORIGIN)
     return fetch(target, {

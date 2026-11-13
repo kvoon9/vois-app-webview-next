@@ -242,7 +242,7 @@ function onCropFailed(): void {
                 :aria-label="t('device.editName')"
                 @click="startEditing"
               >
-                <IconEdit class="h-6 w-6" />
+                <IconEdit class="h-6 w-6 text-text-primary" />
               </button>
             </div>
             <p class="mt-1 text-small text-text-secondary">

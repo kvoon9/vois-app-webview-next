@@ -7,8 +7,9 @@
 // The pin must match the browser extension: MCP 0.11.0 pairs with extension
 // 0.23.x. Upgrade both together.
 import { spawn, spawnSync } from 'node:child_process'
+import { connect } from 'node:net'
 import { mkdirSync, readFileSync } from 'node:fs'
-import { homedir } from 'node:os'
+import { homedir, tmpdir } from 'node:os'
 import path from 'node:path'
 
 const VERSION = '0.11.0'
@@ -39,6 +40,33 @@ if (installedVersion() !== VERSION) {
         `(${res.error ?? `exit ${res.status}`}). Check pnpm availability/network, then restart the session.\n`,
     )
     process.exit(1)
+  }
+}
+
+// The CLI starts its own hub, but a cold start takes about 20 seconds, which
+// outlives an MCP client's initialize timeout and looks like "extension not
+// connected". Warm the hub first so the first tool call is immediate.
+const hubEntry = path.join(pkgDir, 'dist', 'hub.mjs')
+const socketPath = path.join(tmpdir(), 'tempad-dev', 'run', 'mcp.sock')
+
+function socketAnswers() {
+  return new Promise((resolve) => {
+    const socket = connect(socketPath)
+    const done = (answer) => {
+      socket.destroy()
+      resolve(answer)
+    }
+    socket.once('connect', () => done(true))
+    socket.once('error', () => done(false))
+    setTimeout(() => done(false), 500)
+  })
+}
+
+if (!(await socketAnswers())) {
+  spawn(process.execPath, [hubEntry], { detached: true, stdio: 'ignore' }).unref()
+  const deadline = Date.now() + 30000
+  while (Date.now() < deadline && !(await socketAnswers())) {
+    await new Promise((resolve) => setTimeout(resolve, 250))
   }
 }
 

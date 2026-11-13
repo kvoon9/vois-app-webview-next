@@ -1,6 +1,7 @@
 // @env browser
 
 import { createGlobalState, StorageSerializers, useSessionStorage } from '@vueuse/core'
+import { i18n } from '~/i18n'
 import { CREDENTIAL_SESSION_KEY } from './constants'
 import type { CredentialSession } from './types'
 
@@ -13,7 +14,7 @@ export const useCredentialSession = createGlobalState(() => {
   })
 
   function selectSession(login: CredentialSession): void {
-    if (!login.token.trim()) throw new Error('登录信息不可用，请重试。')
+    if (!login.token.trim()) throw new Error(i18n.global.t('auth.invalidSession'))
     session.value = {
       token: login.token,
       userId: login.userId,

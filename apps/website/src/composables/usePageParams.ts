@@ -14,6 +14,7 @@ import { computed, effectScope, shallowRef, watch, type ComputedRef, type Shallo
 import { useRoute, useRouter, type Router } from 'vue-router'
 import { whenWebviewBridge } from '~/composables/useWebviewBridge'
 import { nativeLang, nativeTheme } from '~/constants'
+import { i18n } from '~/i18n'
 import { useCredentialSession } from '~/utils/auth'
 import { ACCESS_TOKEN_TIMEOUT_MS } from '~/utils/bridge/constants'
 
@@ -63,8 +64,6 @@ const pageParamsSchema = object({
  */
 const scalarSchema = union([string(), number(), boolean()])
 
-const INVALID_MESSAGE = 'App 返回的页面参数格式不正确。'
-
 /** Where the params come from; injectable so a read is testable without a WebView. */
 export interface PageParamsBridgeSource {
   /** Whether this environment ever gets a native bridge; desktop never does. */
@@ -91,15 +90,20 @@ export async function fetchPageParams(
     answer = await withTimeout(askNative(source, page, params), timeoutMs)
   } catch (failure) {
     if (failure instanceof PageParamsError) throw failure
-    throw new PageParamsError('invalid', INVALID_MESSAGE)
+    throw new PageParamsError('invalid', i18n.global.t('pageParams.invalid'))
   }
 
-  if (answer === undefined) throw new PageParamsError('timeout', '获取页面参数超时，请重试。')
+  if (answer === undefined)
+    throw new PageParamsError('timeout', i18n.global.t('pageParams.timeout'))
 
   const decoded = safeParse(pageParamsSchema, answer)
-  if (!decoded.success) throw new PageParamsError('invalid', INVALID_MESSAGE)
+  if (!decoded.success) throw new PageParamsError('invalid', i18n.global.t('pageParams.invalid'))
   if (decoded.output.errcode !== 0) {
-    throw new PageParamsError('native', 'App 无法提供页面参数，请重试。', decoded.output.errcode)
+    throw new PageParamsError(
+      'native',
+      i18n.global.t('pageParams.nativeError'),
+      decoded.output.errcode,
+    )
   }
 
   const values: PageParams = {}
@@ -118,7 +122,7 @@ export async function fetchPageParams(
  */
 async function askNative(source: PageParamsBridgeSource, page: string, params: readonly string[]) {
   const bridge = await source.whenReady()
-  if (!bridge) throw new PageParamsError('unavailable', '请在 App 中打开本页面。')
+  if (!bridge) throw new PageParamsError('unavailable', i18n.global.t('app.openInApp'))
   return bridge.request('get-page-params', {
     page,
     params: [...params],
@@ -234,7 +238,7 @@ export function createPageParamsStore(source: PageParamsBridgeSource): PageParam
       error.value =
         failure instanceof PageParamsError
           ? failure
-          : new PageParamsError('invalid', INVALID_MESSAGE)
+          : new PageParamsError('invalid', i18n.global.t('pageParams.invalid'))
       status.value = 'error'
     } finally {
       if (readGeneration === fetchGeneration) {

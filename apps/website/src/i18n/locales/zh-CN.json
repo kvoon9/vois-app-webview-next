@@ -88,7 +88,6 @@
     "detailTitle": "设备详情",
     "emptyDevices": "暂无已连接设备",
     "connectedDevices": "已连接设备",
-    "online": "在线",
     "battery": "电量",
     "updated": "设备已更新。",
     "copied": "已复制。",
@@ -103,7 +102,6 @@
     "userNumber": "微喇号",
     "groups": "群组管理",
     "saving": "保存中…",
-    "name": "设备名称",
     "invalidId": "设备信息无效。",
     "notFound": "未找到该设备。",
     "addGroup": "添加群组",
@@ -143,7 +141,6 @@
     "removeMember": "移出群聊",
     "memberRemoved": "成员已移除。",
     "removeMemberConfirm": "将{name}移出群聊？",
-    "friends": "好友",
     "selectAll": "全选",
     "alreadyMember": "已在群中",
     "noCandidates": "暂无可添加的好友。",
@@ -154,7 +151,6 @@
     "noSearchResults": "未找到相关群组。",
     "noUsersFound": "未找到相关用户。",
     "enterGroupNumber": "请输入群号进行搜索。",
-    "shareLocation": "共享我的位置",
     "dissolveGroup": "解散群组",
     "dissolveGroupConfirm": "退出后{name}将自动解散，所有成员被移出且无法恢复。确定解散吗？",
     "groupDissolved": "群组已解散。",
@@ -192,13 +188,11 @@
     "emptyRechargeDevices": "暂无可续费的设备。",
     "iccid": "卡 ICCID",
     "expireAt": "卡到期时间",
-    "simCard": "流量卡",
     "simCardState": "卡片状态",
     "simCardNeedRecharge": "需充值",
     "rechargeNow": "缴费充值",
     "renewNow": "续费",
     "orderFailed": "下单失败",
-    "product": "产品",
     "confirmPay": "确认支付",
     "payNow": "支付",
     "payAmount": "支付金额",
@@ -340,7 +334,10 @@
     "realtimePendingPermission": "定位权限未开启，请在弹窗中允许，或前往系统设置开启",
     "realtimeDenied": "定位权限未开启，请在系统设置中开启定位权限后，点此重试。",
     "myLocationError": "定位未启动，可能是定位权限弹窗未处理，点击重试",
-    "fenceButton": "围栏"
+    "fenceButton": "围栏",
+    "imei": "IMEI",
+    "fenceRadiusDecrease": "围栏半径减少 50 米",
+    "fenceRadiusIncrease": "围栏半径增加 50 米"
   },
   "permissionTest": {
     "title": "权限测试",
@@ -450,18 +447,40 @@
     "zh-TW": "繁体中文"
   },
   "profile": {
-    "media": "媒体、链接和文档",
-    "location": "位置",
-    "muteNotifications": "消息免打扰",
-    "readReceipts": "已读回执",
-    "stickOnTop": "置顶聊天",
-    "editRemarks": "编辑备注",
-    "clearHistory": "清空聊天记录",
     "report": "举报",
-    "block": "拉黑",
-    "exitGroup": "退出群组",
     "members": "成员",
     "userNumber": "微喇号：{id}",
     "notFound": "未找到该会话。"
+  },
+  "app": {
+    "title": "VoisChat",
+    "openInApp": "请在 App 中打开本页面。"
+  },
+  "bridge": {
+    "nativeError": "App 无法提供登录信息，请重试。",
+    "tokenTimeout": "获取登录信息超时，请重试。",
+    "invalidTokenResponse": "App 返回的登录信息格式不正确。",
+    "tokenUnavailable": "登录信息不可用，请重试。",
+    "tokenUnavailableSignIn": "登录信息不可用，请在 App 中登录后重试。",
+    "tokenUnavailableAgain": "登录信息不可用，请重新登录。"
+  },
+  "pageParams": {
+    "invalid": "App 返回的页面参数格式不正确。",
+    "timeout": "获取页面参数超时，请重试。",
+    "nativeError": "App 无法提供页面参数，请重试。"
+  },
+  "auth": {
+    "invalidSession": "登录信息不可用，请重试。",
+    "sessionExpired": "登录信息已失效，请重新添加帐号。"
+  },
+  "account": {
+    "profileMismatch": "帐号资料与当前登录会话不一致，请重试。"
+  },
+  "payment": {
+    "paramsMissing": "微信支付参数缺失，请稍后重试。",
+    "paramsIncomplete": "微信支付参数不完整，请稍后重试。"
+  },
+  "qrcodeScan": {
+    "title": "二维码扫描"
   }
 }

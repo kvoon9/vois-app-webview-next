@@ -1,5 +1,6 @@
 import { BridgeProtocolError } from '@vois/webview-bridge'
 import { number, object, optional, safeParse, string } from 'valibot'
+import { i18n } from '~/i18n'
 import { ACCESS_TOKEN_TIMEOUT_MS } from './constants'
 import { AppBridgeError } from './errors'
 import type { AppBridge, BridgeSource } from './types'
@@ -19,20 +20,20 @@ export function createAppBridge(
 
   async function readNativeAccessToken(): Promise<string> {
     if (!source.supported()) {
-      throw new AppBridgeError('BRIDGE_UNAVAILABLE', '请在 App 中打开本页面。')
+      throw new AppBridgeError('BRIDGE_UNAVAILABLE', i18n.global.t('app.openInApp'))
     }
 
     const page = source.getPage()
     let active = true
     let timer: ReturnType<typeof setTimeout> | undefined
-    const timeoutError = new AppBridgeError('BRIDGE_TIMEOUT', '获取登录信息超时，请重试。')
+    const timeoutError = new AppBridgeError('BRIDGE_TIMEOUT', i18n.global.t('bridge.tokenTimeout'))
 
     try {
       const response = await Promise.race([
         source.whenReady().then((native) => {
           if (!active) throw timeoutError
           if (!native) {
-            throw new AppBridgeError('BRIDGE_UNAVAILABLE', '请在 App 中打开本页面。')
+            throw new AppBridgeError('BRIDGE_UNAVAILABLE', i18n.global.t('app.openInApp'))
           }
           return native.request('get-page-params', { page, params: ['access-token'] })
         }),
@@ -42,19 +43,25 @@ export function createAppBridge(
       ])
       const decoded = safeParse(tokenResponseSchema, response)
       if (!decoded.success) {
-        throw new AppBridgeError('BRIDGE_INVALID_RESPONSE', 'App 返回的登录信息格式不正确。')
+        throw new AppBridgeError(
+          'BRIDGE_INVALID_RESPONSE',
+          i18n.global.t('bridge.invalidTokenResponse'),
+        )
       }
       const { errcode, data } = decoded.output
       if (errcode !== 0) {
-        throw new AppBridgeError('NATIVE_ERROR', 'App 无法提供登录信息，请重试。', errcode)
+        throw new AppBridgeError('NATIVE_ERROR', i18n.global.t('bridge.nativeError'), errcode)
       }
       if (!data?.['access-token']?.trim()) {
-        throw new AppBridgeError('AUTH_REQUIRED', '登录信息不可用，请在 App 中登录后重试。')
+        throw new AppBridgeError('AUTH_REQUIRED', i18n.global.t('bridge.tokenUnavailableSignIn'))
       }
       return data['access-token']
     } catch (error) {
       if (error instanceof BridgeProtocolError) {
-        throw new AppBridgeError('BRIDGE_INVALID_RESPONSE', 'App 返回的登录信息格式不正确。')
+        throw new AppBridgeError(
+          'BRIDGE_INVALID_RESPONSE',
+          i18n.global.t('bridge.invalidTokenResponse'),
+        )
       }
       throw error
     } finally {
@@ -75,7 +82,7 @@ export function createAppBridge(
       const selectedToken = readCredentialToken()
       if (selectedToken !== undefined) return selectedToken
       if (!token.trim()) {
-        throw new AppBridgeError('AUTH_REQUIRED', '登录信息不可用，请重试。')
+        throw new AppBridgeError('AUTH_REQUIRED', i18n.global.t('bridge.tokenUnavailable'))
       }
       return token
     }
@@ -84,7 +91,7 @@ export function createAppBridge(
   function readCredentialToken(): string | undefined {
     const token = source.credentialToken?.()
     if (token !== undefined && !token.trim()) {
-      throw new AppBridgeError('AUTH_REQUIRED', '登录信息不可用，请重新登录。')
+      throw new AppBridgeError('AUTH_REQUIRED', i18n.global.t('bridge.tokenUnavailableAgain'))
     }
     return token
   }

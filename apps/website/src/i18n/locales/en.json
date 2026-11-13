@@ -88,7 +88,6 @@
     "detailTitle": "Device details",
     "emptyDevices": "No connected devices.",
     "connectedDevices": "Connected devices",
-    "online": "Online",
     "battery": "Battery",
     "updated": "Device updated.",
     "copied": "Copied.",
@@ -103,7 +102,6 @@
     "userNumber": "Weila number",
     "groups": "Group management",
     "saving": "Saving…",
-    "name": "Device name",
     "invalidId": "The device is invalid.",
     "notFound": "The device could not be found.",
     "addGroup": "Add group",
@@ -143,7 +141,6 @@
     "removeMember": "Remove from group",
     "memberRemoved": "Member removed.",
     "removeMemberConfirm": "Remove {name} from the group?",
-    "friends": "Friends",
     "selectAll": "Select all",
     "alreadyMember": "Already in group",
     "noCandidates": "No friends available.",
@@ -154,7 +151,6 @@
     "noSearchResults": "No related groups found.",
     "noUsersFound": "No users found.",
     "enterGroupNumber": "Enter a group number to search.",
-    "shareLocation": "Share my location",
     "dissolveGroup": "Dissolve group",
     "dissolveGroupConfirm": "Leaving will dissolve {name}: all members are removed and this cannot be undone. Dissolve it?",
     "groupDissolved": "Group dissolved.",
@@ -192,13 +188,11 @@
     "emptyRechargeDevices": "No devices available for recharge.",
     "iccid": "Card ICCID",
     "expireAt": "Card expiration",
-    "simCard": "SIM card",
     "simCardState": "Card status",
     "simCardNeedRecharge": "Needs a top-up",
     "rechargeNow": "Top up",
     "renewNow": "Renew",
     "orderFailed": "Failed to place the order",
-    "product": "Product",
     "confirmPay": "Confirm payment",
     "payNow": "Pay",
     "payAmount": "Amount",
@@ -340,19 +334,13 @@
     "realtimePendingPermission": "Location permission is off. Allow it in the dialog, or enable it in system settings",
     "realtimeDenied": "Location permission is off. Enable it in system settings, then tap here to retry.",
     "myLocationError": "Location did not start; a permission dialog may be pending. Tap to retry",
-    "fenceButton": "Fence"
+    "fenceButton": "Fence",
+    "imei": "IMEI",
+    "fenceRadiusDecrease": "Decrease fence radius by 50 m",
+    "fenceRadiusIncrease": "Increase fence radius by 50 m"
   },
   "profile": {
-    "media": "Media, links, docs",
-    "location": "Location",
-    "muteNotifications": "Mute notifications",
-    "readReceipts": "Read receipts",
-    "stickOnTop": "Stick on top",
-    "editRemarks": "Edit remarks",
-    "clearHistory": "Clear chat history",
     "report": "Report",
-    "block": "Block",
-    "exitGroup": "Exit group",
     "members": "Members",
     "userNumber": "Weila number: {id}",
     "notFound": "This conversation could not be found."
@@ -463,5 +451,36 @@
     "en": "English",
     "zh-CN": "简体中文",
     "zh-TW": "繁体中文"
+  },
+  "app": {
+    "title": "VoisChat",
+    "openInApp": "Open this page in the App."
+  },
+  "bridge": {
+    "nativeError": "The App could not provide sign-in information. Try again.",
+    "tokenTimeout": "Getting sign-in information timed out. Try again.",
+    "invalidTokenResponse": "The App returned sign-in information in an unexpected format.",
+    "tokenUnavailable": "Sign-in information is unavailable. Try again.",
+    "tokenUnavailableSignIn": "Sign-in information is unavailable. Sign in in the App and try again.",
+    "tokenUnavailableAgain": "Sign-in information is unavailable. Sign in again."
+  },
+  "pageParams": {
+    "invalid": "The App returned page parameters in an unexpected format.",
+    "timeout": "Getting page parameters timed out. Try again.",
+    "nativeError": "The App could not provide page parameters. Try again."
+  },
+  "auth": {
+    "invalidSession": "Sign-in information is unavailable. Try again.",
+    "sessionExpired": "This sign-in has expired. Add the account again."
+  },
+  "account": {
+    "profileMismatch": "The account profile does not match the current session. Try again."
+  },
+  "payment": {
+    "paramsMissing": "WeChat payment parameters are missing. Try again later.",
+    "paramsIncomplete": "WeChat payment parameters are incomplete. Try again later."
+  },
+  "qrcodeScan": {
+    "title": "QR code scan"
   }
 }

@@ -1,6 +1,7 @@
 import { watch } from 'vue'
 import { useQuery } from '@pinia/colada'
 import { useAccountRegistry } from '~/composables/useAccountRegistry'
+import { i18n } from '~/i18n'
 import { getAccountProfile } from '~/utils/account-api'
 import { useCredentialSession } from '~/utils/auth'
 import { bridge } from '~/utils/bridge'
@@ -16,7 +17,7 @@ export function useAccountProfile(): void {
       const token = await bridge.getAccessToken()
       const profile = await getAccountProfile()
       if (selected?.userId !== undefined && selected.userId !== profile.userId) {
-        throw new Error('帐号资料与当前登录会话不一致，请重试。')
+        throw new Error(i18n.global.t('account.profileMismatch'))
       }
       return { selected, token, profile }
     },

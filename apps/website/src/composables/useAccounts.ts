@@ -1,5 +1,6 @@
 import { useQueryCache } from '@pinia/colada'
 import { loginWithCredentials } from '@vois/webview-bridge/debug'
+import { i18n } from '~/i18n'
 import { useCredentialSession } from '~/utils/auth'
 import { useAccountRegistry } from '~/composables/useAccountRegistry'
 import { ACCOUNT_COUNTRY_CODE, PHONE_COUNTRY_CODE } from '~/utils/auth/constants'
@@ -50,7 +51,7 @@ export function useAccounts() {
       return
     }
     const cached = sessions.value[account.key]
-    if (!cached) throw new Error('登录信息已失效，请重新添加帐号。')
+    if (!cached) throw new Error(i18n.global.t('auth.sessionExpired'))
     selectSession(cached)
     clearQueries()
   }

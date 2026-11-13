@@ -221,7 +221,7 @@ async function removeFence(): Promise<void> {
             <button
               type="button"
               class="h-9 w-9 flex-none flex items-center justify-center rounded-full bg-surface-muted text-header text-text-primary"
-              aria-label="-50"
+              :aria-label="t('device.fenceRadiusDecrease')"
               @click="stepRadius(-RADIUS_STEP)"
             >
               −
@@ -244,7 +244,7 @@ async function removeFence(): Promise<void> {
             <button
               type="button"
               class="h-9 w-9 flex-none flex items-center justify-center rounded-full bg-surface-muted text-header text-text-primary"
-              aria-label="+50"
+              :aria-label="t('device.fenceRadiusIncrease')"
               @click="stepRadius(RADIUS_STEP)"
             >
               +

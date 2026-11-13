@@ -1,6 +1,7 @@
 import { setGlobalConfig } from 'valibot'
 import { createI18n } from 'vue-i18n'
 import { watch } from 'vue'
+import { DEFAULT_LOCALE, isSupportedLocale } from './config'
 import en from './locales/en.json'
 import zhCN from './locales/zh-CN.json'
 import zhTW from './locales/zh-TW.json'
@@ -10,19 +11,13 @@ import zhTW from './locales/zh-TW.json'
 import '@valibot/i18n/zh-CN'
 import '@valibot/i18n/zh-TW'
 
-export const DEFAULT_LOCALE = 'en' as const
-export const SUPPORTED_LOCALES = ['en', 'zh-CN', 'zh-TW'] as const
-
-export type SupportedLocale = (typeof SUPPORTED_LOCALES)[number]
+export { DEFAULT_LOCALE, isSupportedLocale, SUPPORTED_LOCALES } from './config'
+export type { SupportedLocale } from './config'
 
 export const messages = {
   en,
   'zh-CN': zhCN,
   'zh-TW': zhTW,
-}
-
-export function isSupportedLocale(locale: string | null | undefined): locale is SupportedLocale {
-  return SUPPORTED_LOCALES.some((supported) => supported === locale)
 }
 
 function syncValibotLocale(locale: string): void {

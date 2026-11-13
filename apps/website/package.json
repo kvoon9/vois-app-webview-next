@@ -8,6 +8,7 @@
     "build": "tsc && vp build",
     "preview": "vp preview --host --port 5173 --debug",
     "debug:logs": "vois-webview-debug",
+    "deploy": "vp run build && wrangler deploy",
     "test": "vp test",
     "check": "vp check"
   },
@@ -45,6 +46,7 @@
     "unocss": "catalog:build",
     "vite": "catalog:build",
     "vite-plugin-vue-devtools": "catalog:build",
-    "vite-plus": "catalog:tooling"
+    "vite-plus": "catalog:tooling",
+    "wrangler": "catalog:"
   }
 }

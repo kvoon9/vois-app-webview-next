@@ -1,4 +1,5 @@
 import type { WechatPrepay } from '@vois/webview-bridge/vois'
+import { i18n } from '~/i18n'
 import { weilaFetch } from '~/utils/api'
 
 /** The SIM card a device runs on; only present for devices that have one. */
@@ -1033,7 +1034,7 @@ function isPresent(value: string | number | null | undefined): value is string |
  * here instead of reaching the bridge as an object it cannot pay.
  */
 function toWechatPrepay(prepay: WechatPrepayDto | null | undefined): WechatPrepay {
-  if (!prepay) throw new Error('微信支付参数缺失，请稍后重试。')
+  if (!prepay) throw new Error(i18n.global.t('payment.paramsMissing'))
   const { partnerid, prepayid, noncestr, timestamp, sign } = prepay
   if (
     !isPresent(partnerid) ||
@@ -1042,7 +1043,7 @@ function toWechatPrepay(prepay: WechatPrepayDto | null | undefined): WechatPrepa
     !isPresent(timestamp) ||
     !isPresent(sign)
   ) {
-    throw new Error('微信支付参数不完整，请稍后重试。')
+    throw new Error(i18n.global.t('payment.paramsIncomplete'))
   }
   // The rest of the wire object rides along; native ignores `package` and `sign_type`.
   return { ...prepay, partnerid, prepayid, noncestr, timestamp, sign }

@@ -88,7 +88,6 @@
     "detailTitle": "裝置詳情",
     "emptyDevices": "暫無已連線裝置",
     "connectedDevices": "已連接裝置",
-    "online": "線上",
     "battery": "電量",
     "updated": "裝置已更新。",
     "copied": "已複製。",
@@ -103,7 +102,6 @@
     "userNumber": "微喇號",
     "groups": "群組管理",
     "saving": "儲存中…",
-    "name": "裝置名稱",
     "invalidId": "裝置資訊無效。",
     "notFound": "找不到該裝置。",
     "addGroup": "新增群組",
@@ -143,7 +141,6 @@
     "removeMember": "移出群組",
     "memberRemoved": "成員已移除。",
     "removeMemberConfirm": "要將{name}移出群組嗎？",
-    "friends": "好友",
     "selectAll": "全選",
     "alreadyMember": "已在群組中",
     "noCandidates": "暫無可新增的好友。",
@@ -154,7 +151,6 @@
     "noSearchResults": "找不到相關群組。",
     "noUsersFound": "未找到相關使用者。",
     "enterGroupNumber": "請輸入群組號碼進行搜尋。",
-    "shareLocation": "分享我的位置",
     "dissolveGroup": "解散群組",
     "dissolveGroupConfirm": "退出後{name}將自動解散，所有成員被移出且無法恢復。確定解散嗎？",
     "groupDissolved": "群組已解散。",
@@ -192,13 +188,11 @@
     "emptyRechargeDevices": "暫無可續費的裝置。",
     "iccid": "卡片 ICCID",
     "expireAt": "卡片到期時間",
-    "simCard": "流量卡",
     "simCardState": "卡片狀態",
     "simCardNeedRecharge": "需儲值",
     "rechargeNow": "繳費儲值",
     "renewNow": "續費",
     "orderFailed": "下單失敗",
-    "product": "產品",
     "confirmPay": "確認支付",
     "payNow": "支付",
     "payAmount": "支付金額",
@@ -340,7 +334,10 @@
     "realtimePendingPermission": "定位權限未開啟，請在彈窗中允許，或前往系統設定開啟",
     "realtimeDenied": "定位權限未開啟，請在系統設定中開啟定位權限後，點此重試。",
     "myLocationError": "定位未啟動，可能是定位權限彈窗未處理，點擊重試",
-    "fenceButton": "圍欄"
+    "fenceButton": "圍欄",
+    "imei": "IMEI",
+    "fenceRadiusDecrease": "圍欄半徑減少 50 公尺",
+    "fenceRadiusIncrease": "圍欄半徑增加 50 公尺"
   },
   "permissionTest": {
     "title": "權限測試",
@@ -446,22 +443,44 @@
   "language": {
     "title": "語言",
     "en": "English",
-    "zh-CN": "简体中文",
-    "zh-TW": "繁体中文"
+    "zh-CN": "簡體中文",
+    "zh-TW": "繁體中文"
   },
   "profile": {
-    "media": "媒體、連結和文件",
-    "location": "位置",
-    "muteNotifications": "訊息勿擾",
-    "readReceipts": "已讀回執",
-    "stickOnTop": "置頂聊天",
-    "editRemarks": "編輯備註",
-    "clearHistory": "清空聊天記錄",
     "report": "檢舉",
-    "block": "封鎖",
-    "exitGroup": "退出群組",
     "members": "成員",
     "userNumber": "微喇號：{id}",
     "notFound": "找不到該對話。"
+  },
+  "app": {
+    "title": "VoisChat",
+    "openInApp": "請在 App 中開啟本頁面。"
+  },
+  "bridge": {
+    "nativeError": "App 無法提供登入資訊，請再試一次。",
+    "tokenTimeout": "取得登入資訊逾時，請再試一次。",
+    "invalidTokenResponse": "App 傳回的登入資訊格式不正確。",
+    "tokenUnavailable": "登入資訊無法使用，請再試一次。",
+    "tokenUnavailableSignIn": "登入資訊無法使用，請在 App 中登入後再試一次。",
+    "tokenUnavailableAgain": "登入資訊無法使用，請重新登入。"
+  },
+  "pageParams": {
+    "invalid": "App 傳回的頁面參數格式不正確。",
+    "timeout": "取得頁面參數逾時，請再試一次。",
+    "nativeError": "App 無法提供頁面參數，請再試一次。"
+  },
+  "auth": {
+    "invalidSession": "登入資訊無法使用，請再試一次。",
+    "sessionExpired": "登入資訊已失效，請重新新增帳號。"
+  },
+  "account": {
+    "profileMismatch": "帳號資料與目前登入工作階段不一致，請再試一次。"
+  },
+  "payment": {
+    "paramsMissing": "微信支付參數缺少，請稍後再試。",
+    "paramsIncomplete": "微信支付參數不完整，請稍後再試。"
+  },
+  "qrcodeScan": {
+    "title": "QR 碼掃描"
   }
 }

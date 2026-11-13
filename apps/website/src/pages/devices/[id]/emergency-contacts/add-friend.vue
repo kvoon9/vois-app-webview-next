@@ -15,6 +15,7 @@ import {
   getEmergencyContacts,
   type Friend,
 } from '~/utils/device-api'
+import { WeilaApiError } from '~/utils/api'
 
 const { t } = useI18n({ useScope: 'global' })
 const route = useRoute()
@@ -89,11 +90,12 @@ async function addFriend(friendId: number): Promise<void> {
     showToast(t('device.emergencyContactAdded'))
     goBack()
   } catch (error) {
-    const message = error instanceof Error ? error.message : String(error)
-    // The backend answers 300 "不是好友" for anyone who is not a device contact yet.
-    showToast(message === '不是好友' ? t('device.emergencyAddNotFriend') : message, {
-      type: 'error',
-    })
+    // The backend answers 300 for anyone who is not a device contact yet.
+    if (error instanceof WeilaApiError && error.errcode === 300) {
+      showToast(t('device.emergencyAddNotFriend'), { type: 'error' })
+      return
+    }
+    showToast(error instanceof Error ? error.message : String(error), { type: 'error' })
   }
 }
 </script>

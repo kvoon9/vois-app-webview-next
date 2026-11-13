@@ -1,6 +1,9 @@
 <script setup lang="ts">
+import { useI18n } from 'vue-i18n'
 import PageHeader from '~/components/PageHeader.vue'
 import QrCodeCard from '~/components/QrCodeCard.vue'
+
+const { t } = useI18n()
 
 /**
  * Directory the SPA is served from, taken from the current URL so a deployed sheet
@@ -39,7 +42,7 @@ function scanUrl(uuid: string): string {
 
 <template>
   <div class="page">
-    <PageHeader title="QR code scan" />
+    <PageHeader :title="t('qrcodeScan.title')" />
 
     <main class="p-4">
       <div class="flex flex-wrap -m-2">

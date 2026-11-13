@@ -1,0 +1,15 @@
+// Cloudflare Workers static assets for the standalone web build.
+// `pnpm --filter website deploy` runs the app build, then uploads `dist`.
+// The account is the KVOON9 Cloudflare account; it is the only one this token sees.
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "vois-app-webview",
+  "account_id": "28a23c2ec9aeeb01a95276f1d9ca42df",
+  "compatibility_date": "2026-11-13",
+  "main": "worker/index.ts",
+  "assets": {
+    "directory": "dist",
+    "binding": "ASSETS",
+    "not_found_handling": "single-page-application",
+  },
+}

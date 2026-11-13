@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vite-plus/test'
+import { i18n } from '~/i18n'
 import {
   addEmergencyFriendContact,
   addEmergencyPhoneContact,
@@ -760,7 +761,7 @@ describe('device API', () => {
           orderNo: 'RN20260211',
           productId: 'pkg_year',
         }),
-      ).rejects.toThrow('微信支付参数不完整')
+      ).rejects.toThrow(i18n.global.t('payment.paramsIncomplete'))
     })
 
     it('confirms the trade with the exact order and trade numbers', async () => {

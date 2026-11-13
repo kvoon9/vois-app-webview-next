@@ -142,8 +142,6 @@ async function submit(): Promise<void> {
             @click="toggleAll"
           >
             <span class="text-body">{{ t('device.selectAll') }}</span>
-            <!-- The round selection dot is the design-system control (a 20px
-                 primary circle, no check glyph), as the Figma pickers draw. -->
             <span
               class="radio"
               :class="allSelected ? 'radio-on' : 'radio-off'"

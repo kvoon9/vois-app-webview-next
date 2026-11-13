@@ -220,9 +220,7 @@ function onCropFailed(): void {
               >
                 <Avatar :name="device.nick" :src="device.avatar" size="lg" />
               </button>
-              <!-- Native draws a solid white disc with a dark pencil at the
-                   avatar's corner. The previous 60%-translucent disc with a
-                   grey pencil vanished over light avatar photos. -->
+              <!-- A translucent disc vanishes over light avatar photos. -->
               <span
                 class="pointer-events-none absolute right-0 bottom-0 flex h-6 w-6 items-center justify-center rounded-full bg-surface-elevated text-small text-text-primary"
                 aria-hidden="true"
@@ -338,46 +336,42 @@ function onCropFailed(): void {
             </RouterLink>
           </div>
 
-          <!-- Card 3: position; the share switch leads, the rest navigate.
-               A device without location capability (location_support false,
-               e.g. ZX05) hides every row of this card, as the native app
-               does; 提醒 follows reminder_support. -->
+          <!-- Card 3: position; the share switch leads, the rest navigate. -->
           <div
             v-if="device.locationSupport || device.reminderSupport"
             class="mt-3 overflow-hidden panel"
           >
-            <div v-if="device.locationSupport" class="panel-row min-h-14">
-              <span class="text-body">{{ t('device.locationShare') }}</span>
-              <ToggleSwitch
-                :checked="device.shareLocation"
-                :aria-label="t('device.locationShare')"
-                @change="onShareLocationChange"
-              />
-            </div>
-            <RouterLink
-              v-if="device.locationSupport"
-              :to="`/devices/${deviceId}/location`"
-              class="min-h-14 w-full panel-row text-body"
-            >
-              <span>{{ t('device.locationAndFence') }}</span>
-              <span class="row-chevron" aria-hidden="true" />
-            </RouterLink>
-            <RouterLink
-              v-if="device.locationSupport"
-              :to="`/devices/${deviceId}/track`"
-              class="min-h-14 w-full panel-row text-body"
-            >
-              <span>{{ t('device.trackRecords') }}</span>
-              <span class="row-chevron" aria-hidden="true" />
-            </RouterLink>
-            <RouterLink
-              v-if="device.locationSupport"
-              :to="`/devices/${deviceId}/track-setting`"
-              class="min-h-14 w-full panel-row text-body"
-            >
-              <span>{{ t('device.trackSetting') }}</span>
-              <span class="row-chevron" aria-hidden="true" />
-            </RouterLink>
+            <template v-if="device.locationSupport">
+              <div class="panel-row min-h-14">
+                <span class="text-body">{{ t('device.locationShare') }}</span>
+                <ToggleSwitch
+                  :checked="device.shareLocation"
+                  :aria-label="t('device.locationShare')"
+                  @change="onShareLocationChange"
+                />
+              </div>
+              <RouterLink
+                :to="`/devices/${deviceId}/location`"
+                class="min-h-14 w-full panel-row text-body"
+              >
+                <span>{{ t('device.locationAndFence') }}</span>
+                <span class="row-chevron" aria-hidden="true" />
+              </RouterLink>
+              <RouterLink
+                :to="`/devices/${deviceId}/track`"
+                class="min-h-14 w-full panel-row text-body"
+              >
+                <span>{{ t('device.trackRecords') }}</span>
+                <span class="row-chevron" aria-hidden="true" />
+              </RouterLink>
+              <RouterLink
+                :to="`/devices/${deviceId}/track-setting`"
+                class="min-h-14 w-full panel-row text-body"
+              >
+                <span>{{ t('device.trackSetting') }}</span>
+                <span class="row-chevron" aria-hidden="true" />
+              </RouterLink>
+            </template>
             <RouterLink
               v-if="device.reminderSupport"
               :to="`/devices/${deviceId}/reminders`"

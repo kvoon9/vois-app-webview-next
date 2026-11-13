@@ -131,6 +131,10 @@ input[type='search']::-webkit-search-cancel-button {
     // collides with UnoCSS's built-in `link` variant and emits `.link-item:link`.
     'nav-item': 'panel-row rounded-standard bg-surface-elevated text-body',
     card: 'bg-surface-elevated rounded-standard p-4',
+    // Full-page map canvas pinned under the 3.5rem header. WebViews older
+    // than Chrome 108 drop the `svh` unit at parse time, so a height calc
+    // collapses the map onto its 320px minimum.
+    'map-viewport': 'fixed left-0 right-0 top-14 bottom-0',
     // Round selection dot, the design system's picker control (Figma draws a
     // 20px primary circle, no check glyph). `-on` fills primary; `-off` uses
     // the fill colour so it stays visible on both light and dark surfaces.

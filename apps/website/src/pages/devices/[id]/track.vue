@@ -175,9 +175,7 @@ function confirmDate(date: string): void {
         </button>
       </template>
     </PageHeader>
-    <!-- Fixed like the location page: no viewport units, which old WebViews
-         drop and collapse the map to its 320px minimum. -->
-    <main class="fixed left-0 right-0 top-14 bottom-0">
+    <main class="map-viewport">
       <span
         v-if="dateConfirmed"
         class="absolute right-4 top-3 z-20 h-8 flex items-center rounded-full bg-surface-elevated px-3 text-2nd-body shadow-lg"

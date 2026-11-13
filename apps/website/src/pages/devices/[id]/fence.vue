@@ -208,9 +208,7 @@ async function removeFence(): Promise<void> {
   <div class="page">
     <PageHeader :title="t('device.fenceTitle')" />
 
-    <!-- Fixed like the location page: no viewport units, which old WebViews
-         drop and collapse the map to its 320px minimum. -->
-    <main class="fixed left-0 right-0 top-14 bottom-0">
+    <main class="map-viewport">
       <QueryState :status="state.status" :error="state.error" @retry="reload()">
         <MapCanvas picker :center="mapCenter" :fence="preview" @pick="pickCenter" />
 

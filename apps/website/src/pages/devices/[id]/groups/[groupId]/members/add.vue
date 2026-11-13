@@ -130,12 +130,10 @@ async function submit(): Promise<void> {
               </span>
               <span
                 v-else
-                class="checkbox ml-3"
-                :class="selectedIds.includes(candidate.userId) ? 'checkbox-on' : 'checkbox-off'"
+                class="radio ml-3"
+                :class="selectedIds.includes(candidate.userId) ? 'radio-on' : 'radio-off'"
                 aria-hidden="true"
-              >
-                <span v-if="selectedIds.includes(candidate.userId)" class="i-ph-check" />
-              </span>
+              />
             </button>
           </div>
         </template>
@@ -152,13 +150,7 @@ async function submit(): Promise<void> {
         :disabled="selectableIds.length === 0"
         @click="toggleAll"
       >
-        <span
-          class="checkbox"
-          :class="allSelected ? 'checkbox-on' : 'checkbox-off'"
-          aria-hidden="true"
-        >
-          <span v-if="allSelected" class="i-ph-check" />
-        </span>
+        <span class="radio" :class="allSelected ? 'radio-on' : 'radio-off'" aria-hidden="true" />
         <span class="ml-2 text-body">{{ t('device.selectAll') }}</span>
       </button>
 

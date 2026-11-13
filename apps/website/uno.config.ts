@@ -131,12 +131,9 @@ input[type='search']::-webkit-search-cancel-button {
     // collides with UnoCSS's built-in `link` variant and emits `.link-item:link`.
     'nav-item': 'panel-row rounded-standard bg-surface-elevated text-body',
     card: 'bg-surface-elevated rounded-standard p-4',
-    // Square check control. `-on` fills primary; `-off` uses the fill colour so
-    // it stays visible on both light and dark surfaces.
-    checkbox: 'h-5 w-5 flex-none flex items-center justify-center rounded-small',
-    'checkbox-on': 'bg-primary text-primary-text',
-    'checkbox-off': 'bg-fill',
-    // Round radio control, same on/off contract as checkbox
+    // Round selection dot, the design system's picker control (Figma draws a
+    // 20px primary circle, no check glyph). `-on` fills primary; `-off` uses
+    // the fill colour so it stays visible on both light and dark surfaces.
     radio: 'h-5 w-5 flex-none rounded-full',
     'radio-on': 'bg-primary',
     'radio-off': 'bg-fill',

@@ -142,13 +142,13 @@ async function submit(): Promise<void> {
             @click="toggleAll"
           >
             <span class="text-body">{{ t('device.selectAll') }}</span>
+            <!-- The round selection dot is the design-system control (a 20px
+                 primary circle, no check glyph), as the Figma pickers draw. -->
             <span
-              class="checkbox"
-              :class="allSelected ? 'checkbox-on' : 'checkbox-off'"
+              class="radio"
+              :class="allSelected ? 'radio-on' : 'radio-off'"
               aria-hidden="true"
-            >
-              <span v-if="allSelected" class="i-ph-check" />
-            </span>
+            />
           </button>
 
           <p
@@ -177,12 +177,10 @@ async function submit(): Promise<void> {
               </span>
               <span
                 v-else
-                class="checkbox ml-3"
-                :class="selectedIds.includes(friend.userId) ? 'checkbox-on' : 'checkbox-off'"
+                class="radio ml-3"
+                :class="selectedIds.includes(friend.userId) ? 'radio-on' : 'radio-off'"
                 aria-hidden="true"
-              >
-                <span v-if="selectedIds.includes(friend.userId)" class="i-ph-check" />
-              </span>
+              />
             </button>
           </div>
 

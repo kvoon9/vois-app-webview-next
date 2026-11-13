@@ -220,15 +220,14 @@ function onCropFailed(): void {
               >
                 <Avatar :name="device.nick" :src="device.avatar" size="lg" />
               </button>
-              <!-- The disc is its own translucent layer so the pencil stays
-                   opaque: an `/60` opacity modifier on a var()-based theme
-                   colour is dropped by UnoCSS and renders fully opaque. -->
+              <!-- Native draws a solid white disc with a dark pencil at the
+                   avatar's corner. The previous 60%-translucent disc with a
+                   grey pencil vanished over light avatar photos. -->
               <span
-                class="pointer-events-none absolute right-0 bottom-0 flex h-6 w-6 items-center justify-center rounded-full text-small text-text-secondary"
+                class="pointer-events-none absolute right-0 bottom-0 flex h-6 w-6 items-center justify-center rounded-full bg-surface-elevated text-small text-text-primary"
                 aria-hidden="true"
               >
-                <span class="absolute inset-0 rounded-full bg-surface-elevated opacity-60" />
-                <span class="relative i-ph-pencil-simple" />
+                <span class="i-ph-pencil-simple" />
               </span>
             </div>
             <input
@@ -246,7 +245,7 @@ function onCropFailed(): void {
                 :aria-label="t('device.editName')"
                 @click="startEditing"
               >
-                <span class="i-ph-pencil-simple" aria-hidden="true" />
+                <span class="i-ph-pencil-simple text-text-primary" aria-hidden="true" />
               </button>
             </div>
             <p class="mt-1 text-small text-text-secondary">
@@ -339,8 +338,14 @@ function onCropFailed(): void {
             </RouterLink>
           </div>
 
-          <!-- Card 3: position; the share switch leads, the rest navigate. -->
-          <div class="mt-3 overflow-hidden panel">
+          <!-- Card 3: position; the share switch leads, the rest navigate.
+               A device without location capability (location_support false,
+               e.g. ZX05) hides every row of this card, as the native app
+               does; 提醒 follows reminder_support. -->
+          <div
+            v-if="device.locationSupport || device.reminderSupport"
+            class="mt-3 overflow-hidden panel"
+          >
             <div v-if="device.locationSupport" class="panel-row min-h-14">
               <span class="text-body">{{ t('device.locationShare') }}</span>
               <ToggleSwitch
@@ -350,6 +355,7 @@ function onCropFailed(): void {
               />
             </div>
             <RouterLink
+              v-if="device.locationSupport"
               :to="`/devices/${deviceId}/location`"
               class="min-h-14 w-full panel-row text-body"
             >
@@ -357,6 +363,7 @@ function onCropFailed(): void {
               <span class="row-chevron" aria-hidden="true" />
             </RouterLink>
             <RouterLink
+              v-if="device.locationSupport"
               :to="`/devices/${deviceId}/track`"
               class="min-h-14 w-full panel-row text-body"
             >
@@ -364,6 +371,7 @@ function onCropFailed(): void {
               <span class="row-chevron" aria-hidden="true" />
             </RouterLink>
             <RouterLink
+              v-if="device.locationSupport"
               :to="`/devices/${deviceId}/track-setting`"
               class="min-h-14 w-full panel-row text-body"
             >

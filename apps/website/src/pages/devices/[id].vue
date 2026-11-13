@@ -6,6 +6,7 @@ import { RouterLink, RouterView, useRoute } from 'vue-router'
 import Avatar from '~/components/Avatar.vue'
 import BaseModal from '~/components/BaseModal.vue'
 import FieldEditModal from '~/components/FieldEditModal.vue'
+import IconEdit from '~/components/IconEdit.vue'
 import ImageCropper from '~/components/ImageCropper.vue'
 import PageHeader from '~/components/PageHeader.vue'
 import QueryState from '~/components/settings/QueryState.vue'
@@ -220,13 +221,10 @@ function onCropFailed(): void {
               >
                 <Avatar :name="device.nick" :src="device.avatar" size="lg" />
               </button>
-              <!-- A translucent disc vanishes over light avatar photos. -->
-              <span
-                class="pointer-events-none absolute right-0 bottom-0 flex h-6 w-6 items-center justify-center rounded-full bg-surface-elevated text-small text-text-primary"
-                aria-hidden="true"
-              >
-                <span class="i-ph-pencil-simple" />
-              </span>
+              <!-- Native draws the bare 16dp glyph at the corner, no disc. -->
+              <IconEdit
+                class="pointer-events-none absolute right-0 bottom-0 h-4 w-4 text-text-primary"
+              />
             </div>
             <input
               ref="avatarInput"
@@ -237,13 +235,14 @@ function onCropFailed(): void {
             />
             <div class="mt-3 flex items-center">
               <h2 class="text-header font-semibold">{{ device.nick }}</h2>
+              <!-- Native's 48dp box around a 24dp glyph. -->
               <button
                 type="button"
-                class="icon-button ml-2 p-2 focus-visible:ring-2 focus-visible:ring-primary/40"
+                class="icon-button h-12 w-12 p-3 focus-visible:ring-2 focus-visible:ring-primary/40"
                 :aria-label="t('device.editName')"
                 @click="startEditing"
               >
-                <span class="i-ph-pencil-simple text-text-primary" aria-hidden="true" />
+                <IconEdit class="h-6 w-6" />
               </button>
             </div>
             <p class="mt-1 text-small text-text-secondary">

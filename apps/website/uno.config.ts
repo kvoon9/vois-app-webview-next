@@ -87,6 +87,7 @@ input[type='search']::-webkit-search-cancel-button {
       'danger-text': 'var(--color-danger-text)',
       'danger-soft': 'var(--color-danger-soft)',
       'danger-soft-text': 'var(--color-danger-soft-text)',
+      promo: 'var(--color-promo)',
       surface: 'var(--color-surface)',
       'surface-elevated': 'var(--color-surface-elevated)',
       'surface-dialog': 'var(--color-surface-dialog)',

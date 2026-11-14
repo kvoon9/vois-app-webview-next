@@ -263,11 +263,17 @@ function onCropFailed(): void {
               <button
                 v-if="device.simCard?.iccid"
                 type="button"
-                class="ml-3 -my-1.5 inline-flex min-h-9 flex-none items-center text-small text-primary focus-visible:ring-2 focus-visible:ring-primary/40 disabled:opacity-50"
+                class="ml-3 -my-1.5 inline-flex min-h-9 flex-none items-center text-title-compact font-medium text-promo focus-visible:ring-2 focus-visible:ring-primary/40 disabled:opacity-50"
                 :disabled="creatingPayment"
                 @click="startRecharge"
               >
                 {{ t('device.rechargeNow') }}
+                <span
+                  class="flex h-7 w-9 flex-none items-center justify-center rounded-small bg-promo text-primary-text"
+                  aria-hidden="true"
+                >
+                  <span class="i-ph-credit-card-fill text-xl" />
+                </span>
               </button>
             </div>
             <div class="flex items-center px-4 py-1.5 text-body">
@@ -281,6 +287,7 @@ function onCropFailed(): void {
                 :aria-label="t('device.copyDeviceNumber')"
                 @click="copyDeviceNumber"
               >
+                <span class="mr-1 text-fill" aria-hidden="true">|</span>
                 {{ t('device.copy') }}
               </button>
             </div>
@@ -294,11 +301,14 @@ function onCropFailed(): void {
               <div class="px-4 py-1.5 text-body">
                 {{ t('device.iccid') }}: {{ device.simCard.iccid || t('device.notAvailable') }}
               </div>
-              <div class="px-4 py-1.5 text-body">
+              <div class="px-4 py-2 text-2nd-body text-text-secondary">
                 {{ t('device.expireAt') }}:
                 {{ device.simCard.expiryDate || t('device.notAvailable') }}
               </div>
-              <div v-if="device.simCard.recharge" class="px-4 py-1.5 text-body">
+              <div
+                v-if="device.simCard.recharge"
+                class="px-4 py-2 text-2nd-body text-text-secondary"
+              >
                 {{ t('device.simCardState') }}:
                 <span class="text-danger">{{ t('device.simCardNeedRecharge') }}</span>
               </div>

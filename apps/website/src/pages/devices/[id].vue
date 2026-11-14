@@ -331,7 +331,7 @@ function onCropFailed(): void {
               :to="`/devices/${deviceId}/emergency-contacts`"
               class="min-h-14 w-full panel-row text-body"
             >
-              <span>{{ t('device.emergencyContactSettings') }}</span>
+              <span class="text-text-secondary">{{ t('device.emergencyContactSettings') }}</span>
               <span class="row-chevron" aria-hidden="true" />
             </RouterLink>
           </div>

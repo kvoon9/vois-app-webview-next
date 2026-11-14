@@ -107,7 +107,7 @@ async function confirmJoin(detail: string): Promise<void> {
           inputmode="numeric"
           class="input-field min-w-0 flex-1"
           :placeholder="t('device.groupNumberPlaceholder')"
-          :aria-label="t('device.groupNumber')"
+          :aria-label="t('device.groupNumberPlaceholder')"
         />
         <button type="submit" class="ml-3 h-12 rounded-button bg-primary px-4 text-primary-text">
           {{ t('device.search') }}

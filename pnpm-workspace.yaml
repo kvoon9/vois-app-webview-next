@@ -83,4 +83,6 @@ catalog:
   '@iconify-json/ph': ^1.2.2
   '@internationalized/date': ^3.12.4
   '@vois/webview-bridge': ^0.6.0
+  '@x18n/cli': ^0.1.14
+  '@x18n/core': ^0.1.14
   wrangler: ^4.149.0

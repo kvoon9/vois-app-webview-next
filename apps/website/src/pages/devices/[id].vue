@@ -233,7 +233,7 @@ function onCropFailed(): void {
               class="hidden"
               @change="onAvatarChange"
             />
-            <div class="mt-3 w-full flex justify-center">
+            <div class="mt-3 h-12 w-full flex items-center justify-center">
               <!-- The name owns the page axis; the pencil hangs to its right. -->
               <div class="relative inline-flex items-center">
                 <h2 class="text-title-compact font-semibold">{{ device.nick }}</h2>

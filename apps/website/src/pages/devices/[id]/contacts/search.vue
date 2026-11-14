@@ -98,20 +98,23 @@ async function confirmApply(): Promise<void> {
 
 <template>
   <div class="page">
-    <PageHeader :title="t('device.searchContacts')" />
+    <PageHeader :title="t('device.searchContacts')" size="compact" />
 
     <main class="p-4">
-      <form class="flex items-center" @submit.prevent="search">
-        <input
-          v-model="keyword"
-          type="search"
-          class="input-field min-w-0 flex-1"
-          :placeholder="t('device.contactNumberPlaceholder')"
-          :aria-label="t('device.contactNumberPlaceholder')"
-        />
-        <button type="submit" class="ml-3 h-12 rounded-button bg-primary px-4 text-primary-text">
-          {{ t('device.search') }}
-        </button>
+      <form @submit.prevent="search">
+        <div class="relative">
+          <span
+            class="i-ph-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-lg text-text-secondary"
+            aria-hidden="true"
+          />
+          <input
+            v-model="keyword"
+            type="search"
+            class="w-full h-[38px] rounded-standard bg-surface-field py-0 pl-11 pr-4 text-body text-text-primary outline-none placeholder:text-text-secondary"
+            :placeholder="t('device.contactNumberPlaceholder')"
+            :aria-label="t('device.contactNumberPlaceholder')"
+          />
+        </div>
       </form>
 
       <QueryState

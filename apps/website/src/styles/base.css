@@ -14,6 +14,8 @@
   /* Text entry is pure white on the light theme; controls keep the field fill. */
   --color-surface-input: #ffffff;
   --color-surface-selected: #e4f8e7;
+  /* Row fill for a connected device in the App. */
+  --color-surface-online: #ebfef5;
   --color-fill: #d9d9d9;
   --color-text-primary: #000000;
   --color-text-secondary: #6b6b6c;
@@ -29,6 +31,7 @@
   --color-surface-field: #2c2c2c;
   --color-surface-input: #2c2c2c;
   --color-surface-selected: #173e32;
+  --color-surface-online: #17352c;
   --color-fill: #3a3b3c;
   --color-text-primary: #f8fff7;
   --color-text-secondary: #999a9b;

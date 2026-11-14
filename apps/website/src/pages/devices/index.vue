@@ -49,7 +49,7 @@ function openRechargeDevices(): void {
         :empty-text="t('device.emptyDevices')"
         @retry="reload()"
       >
-        <ul class="space-y-3">
+        <ul class="space-y-3 px-4">
           <DeviceListItem
             v-for="device in state.data"
             :key="device.userId"

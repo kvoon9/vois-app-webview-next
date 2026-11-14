@@ -37,7 +37,7 @@ function openContact(contact: Friend): void {
 
 <template>
   <div class="page">
-    <PageHeader :title="t('device.contacts')" />
+    <PageHeader :title="t('device.contacts')" size="compact" />
 
     <main class="p-4 flex flex-col min-h-[calc(100svh-3.5rem)]">
       <nav class="panel" :aria-label="t('device.addContact')">

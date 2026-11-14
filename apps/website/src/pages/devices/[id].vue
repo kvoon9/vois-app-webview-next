@@ -20,6 +20,7 @@ import { weilaUpload } from '~/utils/api'
 import { copyToClipboard } from '~/utils/bridge/clipboard-bridge'
 import {
   getDeviceDetail,
+  getEmergencyContacts,
   unbindDevice,
   updateDeviceAvatar,
   updateDeviceNick,
@@ -47,6 +48,23 @@ const { state, refetch: reload } = useQuery({
 })
 
 const device = computed<Device | null>(() => state.value.data ?? null)
+
+const { state: emergencyState } = useQuery({
+  key: () => ['device-management', 'emergency-contacts', deviceId.value],
+  query: () => {
+    if (deviceId.value == null) throw new Error(t('device.invalidId'))
+    return getEmergencyContacts(deviceId.value)
+  },
+})
+
+/** A ZX05 answers emergency_support: true yet carries 0/0 quotas. */
+const emergencyUnsupported = computed(() => {
+  const quota = emergencyState.value.data?.quota
+  return (
+    !device.value?.emergencySupport ||
+    (quota != null && quota.friendMax === 0 && quota.phoneMax === 0)
+  )
+})
 
 const { params } = usePageParams(['pay-method', 'pkg-name', 'wxpay-appid'])
 const payParams = computed(() => renewPayParams(params.value))
@@ -334,7 +352,7 @@ function onCropFailed(): void {
               <span class="row-chevron" aria-hidden="true" />
             </RouterLink>
             <RouterLink
-              v-if="device.emergencySupport"
+              v-if="!emergencyUnsupported"
               :to="`/devices/${deviceId}/emergency-contacts`"
               class="min-h-14 w-full panel-row text-body"
             >

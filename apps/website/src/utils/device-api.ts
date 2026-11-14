@@ -18,6 +18,8 @@ export interface Device {
   product: string
   imei: string
   version: string
+  /** Short SDK version (`sdk_version`, e.g. v1.6.0); falls back to `version`. */
+  sdkVersion: string
   activatedAt: string
   online: boolean
   /** Battery percentage 0-100; `0` means the last reading expired, not empty. */
@@ -902,6 +904,7 @@ function toDevice(device: DeviceDto): Device {
     product: device.product,
     imei: device.imei,
     version: device.version,
+    sdkVersion: device.sdk_version ?? device.version,
     activatedAt: device.active_at ?? '',
     online: device.online,
     battery: device.battery ?? 0,

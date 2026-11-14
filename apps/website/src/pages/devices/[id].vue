@@ -201,7 +201,7 @@ function onCropFailed(): void {
 <template>
   <RouterView v-if="route.name !== '/devices/[id]'" />
   <div v-else class="page">
-    <PageHeader :title="t('device.detailTitle')" />
+    <PageHeader :title="t('device.detailTitle')" size="compact" />
     <main class="p-4">
       <QueryState
         :status="state.status"
@@ -211,7 +211,7 @@ function onCropFailed(): void {
         @retry="reload()"
       >
         <template v-if="device">
-          <section class="flex flex-col items-center pt-2 pb-4 text-center">
+          <section class="flex flex-col items-center pb-4 text-center">
             <div class="relative">
               <button
                 type="button"
@@ -219,7 +219,7 @@ function onCropFailed(): void {
                 :aria-label="t('device.changeDeviceAvatar')"
                 @click="pickAvatar"
               >
-                <Avatar :name="device.nick" :src="device.avatar" size="lg" />
+                <Avatar :name="device.nick" :src="device.avatar" size="profile" />
               </button>
               <!-- Native draws the bare 16dp glyph at the corner, no disc. -->
               <IconEdit
@@ -234,7 +234,7 @@ function onCropFailed(): void {
               @change="onAvatarChange"
             />
             <div class="mt-3 flex items-center">
-              <h2 class="text-header font-semibold">{{ device.nick }}</h2>
+              <h2 class="text-title-compact font-semibold">{{ device.nick }}</h2>
               <!-- Native's 48dp box around a 24dp glyph. -->
               <button
                 type="button"
@@ -282,7 +282,7 @@ function onCropFailed(): void {
               </button>
             </div>
             <div class="break-all px-4 py-1.5 text-body">
-              {{ t('device.version') }}: {{ device.version || t('device.notAvailable') }}
+              {{ t('device.version') }}: {{ device.sdkVersion || t('device.notAvailable') }}
             </div>
             <div class="px-4 py-1.5 text-body">
               {{ t('device.userNumber') }}: {{ device.userNum || t('device.notAvailable') }}

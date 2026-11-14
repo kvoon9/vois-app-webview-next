@@ -79,6 +79,7 @@ const device = {
   product: 'CF03',
   imei: '866',
   version: 'v1.110',
+  sdkVersion: 'v1.110',
   activatedAt: '2026-08-28',
   online: true,
   battery: 64,
@@ -136,6 +137,7 @@ describe('device API', () => {
           product: 'OP02',
           imei: '861',
           version: 'v2',
+          sdkVersion: 'v2',
           activatedAt: '',
           online: false,
           battery: 0,
@@ -147,6 +149,15 @@ describe('device API', () => {
         },
       ])
       expect(weilaFetch).toHaveBeenCalledWith('/v2/subuser/manager-get-all-device')
+    })
+
+    it('prefers the short sdk_version over the firmware string', async () => {
+      weilaFetch.mockResolvedValue(ok({ device: { ...deviceDto, sdk_version: 'v1.6.0' } }))
+
+      await expect(getDeviceDetail(1848581)).resolves.toMatchObject({
+        sdkVersion: 'v1.6.0',
+        version: 'v1.110',
+      })
     })
 
     it('loads one device by posting its user_id', async () => {

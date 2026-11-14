@@ -68,7 +68,7 @@ left in any app dir, main window back.
 
 ## Decision
 
-The QQ notification keeps using the Accessibility driver (`scripts/qq/qqctl`),
+The QQ notification keeps using the Accessibility driver (`~/.agents/skills/qq-release/scripts/qq/qqctl`),
 which needs **no modification to QQ at all**. The hook stays in the tree as a
 diagnostic tool for future reverse engineering, clearly marked as unusable for
 message sending on this build.

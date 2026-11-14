@@ -4,8 +4,7 @@
  *
  * Why not changelogen: its markdown does not survive as a QQ message: headings,
  * emoji, links, contributor list and English section names all read badly in a
- * chat bubble, and QQ drops whitespace-only lines entirely. The message shape is
- * fixed in ../references/message-format.md; change that file first.
+ * chat bubble. The current notification shape lives in the global qq-release skill.
  *
  * CLI:
  *   node changelog.mjs --print            # draft body for the newest tag
@@ -21,10 +20,10 @@ import { execFileSync } from 'node:child_process'
  */
 export const SECTIONS = [
   { key: 'breaking', title: '不兼容变更', types: [] },
-  { key: 'feat', title: '新增', types: ['feat', 'feature'] },
   { key: 'fix', title: '修复', types: ['fix', 'bugfix', 'hotfix'] },
   { key: 'perf', title: '优化', types: ['perf', 'performance'] },
   { key: 'refactor', title: '重构', types: ['refactor'] },
+  { key: 'feat', title: '新增', types: ['feat', 'feature'] },
   { key: 'docs', title: '文档', types: ['docs', 'doc'] },
   { key: 'build', title: '构建', types: ['build', 'ci'] },
   { key: 'other', title: '其他', types: ['chore', 'test', 'style', 'revert', 'other'] },
@@ -107,15 +106,12 @@ export function groupCommits(commits, { maxItems = 6 } = {}) {
 const trim = (text, width = 26) => (text.length > width ? `${text.slice(0, width - 1)}…` : text)
 
 /**
- * Draft body in the fixed format: `本次更新 N 项（from → to）` then one line per
- * section. Commit subjects stay as authored here; an agent rewrites them into
- * Chinese before sending (see references/message-format.md).
+ * Draft body: one line per section, a blank line between sections. Commit
+ * subjects stay as authored here; an agent rewrites them into Chinese before
+ * sending (see the global qq-release skill's message format).
  */
-export function draftBody({ tag, from, commits, groups, maxSections = 5 }) {
-  const head = from
-    ? `本次更新 ${commits.length} 项（${from} → ${tag}）`
-    : `本次更新 ${commits.length} 项`
-  if (!commits.length) return `${head}\n本次没有面向用户的变化`
+export function draftBody({ commits, groups, maxSections = 5 }) {
+  if (!commits.length) return '本次没有面向用户的变化'
   const lines = groups.slice(0, maxSections).map((group) => {
     const parts = group.items.map((commit) =>
       commit.scope ? `${commit.scope}：${trim(commit.text)}` : trim(commit.text),
@@ -123,20 +119,12 @@ export function draftBody({ tag, from, commits, groups, maxSections = 5 }) {
     if (group.overflow) parts.push(`等 ${group.overflow} 项`)
     return `${group.title}：${parts.join('；')}`
   })
-  return [head, ...lines].join('\n')
+  return lines.join('\n\n')
 }
 
-/** Last line of every notification, fixed in references/message-format.md. */
-export const CALL_TO_ACTION = '有空可更新一下 @大宝'
-
-/** Title line + body + call to action. No blank lines: QQ drops whitespace-only lines. */
-export function buildMessage({
-  url,
-  body,
-  title = 'vois-app-webview-next 已更新',
-  callToAction = CALL_TO_ACTION,
-}) {
-  return [`${title}：${url}`, (body || '').trim(), callToAction].filter(Boolean).join('\n')
+/** Title line + body. No summary line and no closing line. */
+export function buildMessage({ url, body, title = 'vois-app-webview-next 已更新' }) {
+  return [`${title}：${url}`, (body || '').trim()].filter(Boolean).join('\n\n')
 }
 
 export function releaseNotes({ tag, cwd = process.cwd(), maxItems = 6 } = {}) {

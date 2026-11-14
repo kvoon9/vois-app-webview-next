@@ -2,15 +2,18 @@
 /**
  * Send the release notification for one tag to QQ.
  *
- * Message shape (fixed in ../references/message-format.md):
+ * Message shape: title line, one line per section, a blank line between sections.
+ * The shape is fixed by the global qq-release skill.
  *   vois-app-webview-next 已更新：<release url>
  *   本次更新 N 项（<prev> → <tag>）
  *   新增：…
  *   修复：…
  *
  * The body is either the commit-derived draft or, preferably, the Chinese
- * rewrite an agent passes with --notes-file. Delivery uses the local macOS QQ
- * driver in scripts/qq (Accessibility API; see ../references/qqctl.md).
+ * rewrite an agent passes with --notes-file. The message shape is defined by the
+ * global qq-release skill; this script still emits the legacy summary and
+ * closing line. Delivery uses that skill's macOS QQ driver (Accessibility API;
+ * see ~/.agents/skills/qq-release/references/qqctl.md).
  *
  * Usage:
  *   node notify-release.mjs --tag v0.11.0 [--notes-file /tmp/notes.txt] [--to 'ai 全自动发版本消息测试']
@@ -18,13 +21,16 @@
  */
 import { execFileSync, spawnSync } from 'node:child_process'
 import fs from 'node:fs'
+import os from 'node:os'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { parseArgs } from 'node:util'
 import { buildMessage, latestTag, releaseNotes } from './changelog.mjs'
 
 const here = path.dirname(fileURLToPath(import.meta.url))
-const QQCTL = path.join(here, 'qq', 'qqctl')
+const QQ_RELEASE_HOME =
+  process.env.QQ_RELEASE_HOME || path.join(os.homedir(), '.agents', 'skills', 'qq-release')
+const QQCTL = path.join(QQ_RELEASE_HOME, 'scripts', 'qq', 'qqctl')
 
 function sh(cmd, args, { cwd = process.cwd(), allowFail = false } = {}) {
   try {

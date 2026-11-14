@@ -1,0 +1,7 @@
+# yaml-language-server: $schema=https://x18n.dev/schema/reviews.json
+x18n: 1
+sources:
+  device.unbind:
+    en: 1c50cf06f6f81e
+  permissionTest.getLocation:
+    en: c5d1fec09131b

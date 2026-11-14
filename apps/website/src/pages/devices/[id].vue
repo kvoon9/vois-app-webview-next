@@ -15,6 +15,7 @@ import { usePageBack } from '~/composables/usePageBack'
 import { usePageParams } from '~/composables/usePageParams'
 import { parseRouteParamId } from '~/composables/useRouteParamId'
 import { useToast } from '~/composables/useToast'
+import rechargeIcon from '~/assets/icon_recharge.png'
 import { renewPayParams, useWechatRenewPayment } from '~/composables/useWechatRenewPayment'
 import { weilaUpload } from '~/utils/api'
 import { copyToClipboard } from '~/utils/bridge/clipboard-bridge'
@@ -286,6 +287,7 @@ function onCropFailed(): void {
                 @click="startRecharge"
               >
                 {{ t('device.rechargeNow') }}
+                <img :src="rechargeIcon" alt="" class="h-7 w-9 flex-none object-contain" />
               </button>
             </div>
             <div class="flex items-center px-4 py-1.5 text-body">

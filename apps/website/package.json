@@ -25,6 +25,7 @@
     "@vueuse/router": "catalog:vue",
     "md5": "^2.3.0",
     "pinia": "catalog:vue",
+    "pinyin-pro": "catalog:",
     "qrcode": "^1.5.4",
     "reka-ui": "catalog:vue",
     "valibot": "^1.5.0",

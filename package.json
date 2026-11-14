@@ -12,7 +12,8 @@
     "preview:production": "vp run website#build && cd apps/website && vp preview --base /vois-app-webview-next/ --host --port 8080 --debug",
     "ready": "vp check && vp run -r test && vp run -r build",
     "release": "bumpp --recursive",
-    "up": "vpx taze -Ir major"
+    "up": "vpx taze -Ir major",
+    "i18n:check": "x18n check"
   },
   "dependencies": {
     "vite-plugin-vois-webview-debug": "^0.1.0"
@@ -20,6 +21,8 @@
   "devDependencies": {
     "@commitlint/config-conventional": "catalog:tooling",
     "@oxlint/plugins": "catalog:tooling",
+    "@x18n/cli": "catalog:",
+    "@x18n/core": "catalog:",
     "bumpp": "^12.3.0",
     "commitlint": "catalog:tooling",
     "eslint-plugin-slop": "catalog:tooling",

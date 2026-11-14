@@ -268,12 +268,6 @@ function onCropFailed(): void {
                 @click="startRecharge"
               >
                 {{ t('device.rechargeNow') }}
-                <span
-                  class="flex h-7 w-9 flex-none items-center justify-center rounded-small bg-promo text-primary-text"
-                  aria-hidden="true"
-                >
-                  <span class="i-ph-credit-card-fill text-xl" />
-                </span>
               </button>
             </div>
             <div class="flex items-center px-4 py-1.5 text-body">

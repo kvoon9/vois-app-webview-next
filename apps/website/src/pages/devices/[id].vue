@@ -233,17 +233,20 @@ function onCropFailed(): void {
               class="hidden"
               @change="onAvatarChange"
             />
-            <div class="mt-3 flex items-center">
-              <h2 class="text-title-compact font-semibold">{{ device.nick }}</h2>
-              <!-- Native's 48dp box around a 24dp glyph. -->
-              <button
-                type="button"
-                class="icon-button h-12 w-12 p-3 focus-visible:ring-2 focus-visible:ring-primary/40"
-                :aria-label="t('device.editName')"
-                @click="startEditing"
-              >
-                <IconEdit class="h-6 w-6 text-text-primary" />
-              </button>
+            <div class="mt-3 w-full flex justify-center">
+              <!-- The name owns the page axis; the pencil hangs to its right. -->
+              <div class="relative inline-flex items-center">
+                <h2 class="text-title-compact font-semibold">{{ device.nick }}</h2>
+                <!-- Native's 48dp box around a 24dp glyph. -->
+                <button
+                  type="button"
+                  class="icon-button absolute left-full top-1/2 ml-2 h-12 w-12 -translate-y-1/2 p-3 focus-visible:ring-2 focus-visible:ring-primary/40"
+                  :aria-label="t('device.editName')"
+                  @click="startEditing"
+                >
+                  <IconEdit class="h-6 w-6 text-text-primary" />
+                </button>
+              </div>
             </div>
             <p class="mt-1 text-small text-text-secondary">
               {{ t('device.activatedAt') }}: {{ device.activatedAt || t('device.notAvailable') }}

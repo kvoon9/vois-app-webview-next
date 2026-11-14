@@ -5,7 +5,7 @@ const title = 'WebView Bridge Playground'
 </script>
 
 <template>
-  <div class="h-svh flex flex-col bg-surface text-text-primary">
+  <div class="h-screen flex flex-col bg-surface text-text-primary">
     <PageHeader :title="title" />
     <iframe
       src="https://vois-webview-bridge-playground.pages.dev"

@@ -69,7 +69,23 @@ describe('banned utilities', () => {
 
     expect(
       offenses,
-      'Use flex and space-*/margin instead; grid and gap are unsupported on the Chrome 83 target.',
+      'Use flex and space-*/margin instead of grid/gap. Use vh/screen instead of svh/dvh/lvh viewport units. The legacy target is Chrome 83.',
     ).toEqual([])
+  })
+
+  it('blocks modern viewport units, even inside arbitrary values', async () => {
+    const uno = await createGenerator(unoConfig)
+    const blocked = [
+      'h-[calc(100svh-3.5rem)]',
+      'min-h-[calc(100svh-3.5rem)]',
+      'h-svh',
+      'h-dvh',
+      'min-h-svh',
+      'w-dvw',
+    ]
+    const allowed = ['h-screen', 'min-h-screen', 'h-[calc(100vh-3.5rem)]']
+
+    for (const token of blocked) expect(uno.isBlocked(token), token).toBe(true)
+    for (const token of allowed) expect(uno.isBlocked(token), token).toBe(false)
   })
 })

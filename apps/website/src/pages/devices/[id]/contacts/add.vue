@@ -59,13 +59,14 @@ const visibleFriends = computed(() => {
       item.nick.toLowerCase().includes(query) || item.userNum.toLowerCase().includes(query),
   )
 })
+/** Below four rows the fixed rail would be taller than the list. */
+const RAIL_MIN_ROWS = 4
 const selectableFriends = computed(() =>
   visibleFriends.value
     .filter(({ item }) => !existingIds.value.has(item.userId))
     .map(({ item }) => item),
 )
 
-/** Scrolls the first contact filed under the letter into view. */
 function jumpTo(letter: string): void {
   document
     .querySelector<HTMLElement>(`[data-contact-initial="${letter}"]`)
@@ -143,63 +144,62 @@ async function submit(): Promise<void> {
 
       <QueryState :status="state.status" :error="state.error" @retry="reload()">
         <template v-if="state.data">
-          <div class="relative">
+          <button
+            type="button"
+            class="mt-2 min-h-12 w-full flex items-center justify-between px-4 py-3 text-left"
+            :aria-pressed="allSelected"
+            :disabled="selectableFriends.length === 0"
+            @click="toggleAll"
+          >
+            <span class="text-body">{{ t('device.selectAll') }}</span>
+            <span
+              class="radio"
+              :class="allSelected ? 'radio-on' : 'radio-off'"
+              aria-hidden="true"
+            />
+          </button>
+
+          <p
+            v-if="visibleFriends.length === 0"
+            class="py-12 text-center text-body text-text-secondary"
+          >
+            {{ keyword.trim() ? t('device.noUsersFound') : t('device.noCandidates') }}
+          </p>
+          <div v-else class="mt-2 panel">
             <button
+              v-for="entry in visibleFriends"
+              :key="entry.item.userId"
               type="button"
-              class="mt-2 min-h-12 w-full flex items-center justify-between px-4 py-3 text-left"
-              :aria-pressed="allSelected"
-              :disabled="selectableFriends.length === 0"
-              @click="toggleAll"
+              :aria-pressed="selectedIds.includes(entry.item.userId)"
+              :data-contact-initial="entry.initial"
+              class="min-h-16 w-full scroll-mt-16 flex items-center px-4 text-left disabled:opacity-50"
+              :disabled="existingIds.has(entry.item.userId)"
+              @click="toggleFriend(entry.item)"
             >
-              <span class="text-body">{{ t('device.selectAll') }}</span>
+              <Avatar :name="entry.item.nick" :src="entry.item.avatar" />
+              <span class="ml-3 min-w-0 flex-1 truncate text-body">{{ entry.item.nick }}</span>
               <span
-                class="radio"
-                :class="allSelected ? 'radio-on' : 'radio-off'"
+                v-if="existingIds.has(entry.item.userId)"
+                class="ml-2 text-small text-text-secondary"
+              >
+                {{ t('device.alreadyContact') }}
+              </span>
+              <span
+                v-else
+                class="radio ml-3"
+                :class="selectedIds.includes(entry.item.userId) ? 'radio-on' : 'radio-off'"
                 aria-hidden="true"
               />
             </button>
-
-            <p
-              v-if="visibleFriends.length === 0"
-              class="py-12 text-center text-body text-text-secondary"
-            >
-              {{ keyword.trim() ? t('device.noUsersFound') : t('device.noCandidates') }}
-            </p>
-            <div v-else class="mt-2 panel">
-              <button
-                v-for="entry in visibleFriends"
-                :key="entry.item.userId"
-                type="button"
-                :aria-pressed="selectedIds.includes(entry.item.userId)"
-                :data-contact-initial="entry.initial"
-                class="min-h-16 w-full scroll-mt-16 flex items-center px-4 text-left disabled:opacity-50"
-                :disabled="existingIds.has(entry.item.userId)"
-                @click="toggleFriend(entry.item)"
-              >
-                <Avatar :name="entry.item.nick" :src="entry.item.avatar" />
-                <span class="ml-3 min-w-0 flex-1 truncate text-body">{{ entry.item.nick }}</span>
-                <span
-                  v-if="existingIds.has(entry.item.userId)"
-                  class="ml-2 text-small text-text-secondary"
-                >
-                  {{ t('device.alreadyContact') }}
-                </span>
-                <span
-                  v-else
-                  class="radio ml-3"
-                  :class="selectedIds.includes(entry.item.userId) ? 'radio-on' : 'radio-off'"
-                  aria-hidden="true"
-                />
-              </button>
-            </div>
-            <AzIndexRail
-              v-if="visibleFriends.length >= 4"
-              class="fixed right-4 top-[118px] z-10 h-[376px]"
-              :letters="INITIALS"
-              :label="t('device.azIndex')"
-              @select="jumpTo"
-            />
           </div>
+          <!-- Fixed between the search field (ends 110) and the CTA (starts 518). -->
+          <AzIndexRail
+            v-if="visibleFriends.length >= RAIL_MIN_ROWS"
+            class="fixed right-4 top-[118px] z-10 h-[376px]"
+            :letters="INITIALS"
+            :label="t('device.azIndex')"
+            @select="jumpTo"
+          />
 
           <button
             type="button"

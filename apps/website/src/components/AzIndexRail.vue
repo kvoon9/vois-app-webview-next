@@ -2,7 +2,6 @@
 import { shallowRef, useTemplateRef } from 'vue'
 
 const props = defineProps<{
-  /** Letters shown top to bottom. */
   letters: readonly string[]
   label: string
 }>()
@@ -14,7 +13,6 @@ const activeLetter = shallowRef<string | null>(null)
 const pointer = shallowRef<{ x: number; y: number } | null>(null)
 const dragging = shallowRef(false)
 
-/** The letter under a screen Y, clamped to the rail's ends. */
 function letterAt(clientY: number): string | null {
   const element = rail.value
   if (!element) return null
@@ -40,10 +38,7 @@ function onPointerMove(event: PointerEvent): void {
   if (dragging.value) track(event)
 }
 
-/**
- * Jump once on release, not while dragging: the rail scrolls with the list, so
- * moving the page mid-drag would slide the letters under the finger.
- */
+/** Jump once on release: each jump scrolls the list under the finger mid-drag. */
 function onPointerEnd(event: PointerEvent): void {
   if (!dragging.value) return
   dragging.value = false

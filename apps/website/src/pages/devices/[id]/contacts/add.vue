@@ -61,6 +61,7 @@ const visibleFriends = computed(() => {
 })
 /** Below four rows the fixed rail would be taller than the list. */
 const RAIL_MIN_ROWS = 4
+const presentInitials = computed(() => new Set(visibleFriends.value.map((entry) => entry.initial)))
 const selectableFriends = computed(() =>
   visibleFriends.value
     .filter(({ item }) => !existingIds.value.has(item.userId))
@@ -70,7 +71,7 @@ const selectableFriends = computed(() =>
 function jumpTo(letter: string): void {
   document
     .querySelector<HTMLElement>(`[data-contact-initial="${letter}"]`)
-    ?.scrollIntoView({ block: 'start' })
+    ?.scrollIntoView({ behavior: 'smooth', block: 'start' })
 }
 const selectedCount = computed(() => selectedIds.value.length)
 const allSelected = computed(
@@ -197,6 +198,7 @@ async function submit(): Promise<void> {
             v-if="visibleFriends.length >= RAIL_MIN_ROWS"
             class="fixed right-4 top-[118px] z-10 h-[376px]"
             :letters="INITIALS"
+            :available="presentInitials"
             :label="t('device.azIndex')"
             @select="jumpTo"
           />

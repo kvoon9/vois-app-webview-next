@@ -21,7 +21,7 @@ const helpUrl = computed(() => {
 </script>
 
 <template>
-  <div class="h-svh flex flex-col bg-surface text-text-primary">
+  <div class="h-screen flex flex-col bg-surface text-text-primary">
     <PageHeader :title="t('help.backgroundHelp')" />
     <iframe :src="helpUrl" :title="t('help.backgroundHelp')" class="flex-1 w-full border-none" />
   </div>

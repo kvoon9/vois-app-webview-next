@@ -39,7 +39,7 @@ function openContact(contact: Friend): void {
   <div class="page">
     <PageHeader :title="t('device.contacts')" />
 
-    <main class="p-4 flex flex-col min-h-[calc(100svh-3.5rem)]">
+    <main class="p-4 flex flex-col min-h-[calc(100vh-3.5rem)]">
       <nav class="panel" :aria-label="t('device.addContact')">
         <router-link
           :to="`/devices/${deviceId}/contacts/add`"

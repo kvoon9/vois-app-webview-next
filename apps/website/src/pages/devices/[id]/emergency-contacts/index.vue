@@ -106,7 +106,7 @@ async function removeContact(): Promise<void> {
 
 <template>
   <div class="page">
-    <PageHeader :title="t('device.emergencyContactSettings')" />
+    <PageHeader :title="t('device.emergencyContactSettings')" size="compact" />
 
     <main class="p-4">
       <QueryState :status="state.status" :error="state.error" @retry="reload()">
@@ -115,9 +115,8 @@ async function removeContact(): Promise<void> {
             {{ t('device.emergencyUnsupported') }}
           </p>
           <template v-else>
-            <section class="card">
-              <h2 class="text-header font-semibold">{{ t('device.emergencyTips') }}</h2>
-              <ul class="mt-3 space-y-2 text-small text-text-secondary">
+            <section>
+              <ul class="space-y-2 text-small text-text-secondary">
                 <li>
                   <i18n-t keypath="device.emergencyTipQuota" scope="global">
                     <template #friendMax>
@@ -142,7 +141,7 @@ async function removeContact(): Promise<void> {
             <nav class="mt-4 panel" :aria-label="t('device.emergencyContactAdd')">
               <button
                 type="button"
-                class="min-h-12 w-full flex items-center justify-between px-4 text-left text-body"
+                class="min-h-14 w-full flex items-center justify-between px-4 text-left text-body"
                 @click="openAddFriend"
               >
                 <span>{{ t('device.emergencyAddFriend') }}</span>
@@ -150,7 +149,7 @@ async function removeContact(): Promise<void> {
               </button>
               <button
                 type="button"
-                class="min-h-12 w-full flex items-center justify-between px-4 text-left text-body"
+                class="min-h-14 w-full flex items-center justify-between px-4 text-left text-body"
                 @click="openAddPhone"
               >
                 <span>{{ t('device.emergencyAddPhone') }}</span>
@@ -159,9 +158,7 @@ async function removeContact(): Promise<void> {
             </nav>
 
             <section class="mt-4 min-h-32 card">
-              <h2 class="text-2nd-body font-semibold text-text-secondary">
-                {{ t('device.addedContacts') }}
-              </h2>
+              <h2 class="sr-only">{{ t('device.addedContacts') }}</h2>
               <ul v-if="contacts.length > 0" class="mt-3 space-y-3">
                 <li
                   v-for="contact in contacts"

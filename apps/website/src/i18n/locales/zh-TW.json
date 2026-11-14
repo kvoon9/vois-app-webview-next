@@ -253,7 +253,6 @@
     "trackSettingUpdated": "軌跡上報頻率已更新。",
     "reminders": "提醒",
     "emergencyContactSettings": "緊急聯絡人設定",
-    "emergencyTips": "溫馨提示",
     "emergencyTipQuota": "·添加微喇好友的最大數量為{friendMax}，手機號數最大數量為{phoneMax}",
     "emergencyTipNotify": "·添加或修改緊急聯絡人後請及時告知對方",
     "emergencyTipSos": "·剩餘SOS緊急電話通知次數為 {sos}",

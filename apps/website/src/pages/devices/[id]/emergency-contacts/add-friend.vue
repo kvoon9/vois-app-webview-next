@@ -100,7 +100,7 @@ async function addFriend(friendId: number): Promise<void> {
 
 <template>
   <div class="page">
-    <PageHeader :title="t('device.emergencyPickFriend')" />
+    <PageHeader :title="t('device.emergencyPickFriend')" size="compact" />
 
     <main class="p-4">
       <div class="relative">
@@ -111,7 +111,7 @@ async function addFriend(friendId: number): Promise<void> {
         <input
           v-model="keyword"
           type="search"
-          class="w-full rounded-standard bg-surface-field py-3 pl-11 pr-4 text-body text-text-primary outline-none placeholder:text-text-secondary"
+          class="w-full h-[38px] rounded-standard bg-surface-field py-0 pl-11 pr-4 text-body text-text-primary outline-none placeholder:text-text-secondary"
           :placeholder="t('device.contactSearchPlaceholder')"
           :aria-label="t('device.contactSearchPlaceholder')"
         />

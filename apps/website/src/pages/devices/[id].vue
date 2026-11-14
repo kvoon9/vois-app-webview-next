@@ -201,7 +201,7 @@ function onCropFailed(): void {
 <template>
   <RouterView v-if="route.name !== '/devices/[id]'" />
   <div v-else class="page">
-    <PageHeader :title="t('device.detailTitle')" />
+    <PageHeader :title="t('device.detailTitle')" size="compact" />
     <main class="p-4">
       <QueryState
         :status="state.status"
@@ -211,7 +211,7 @@ function onCropFailed(): void {
         @retry="reload()"
       >
         <template v-if="device">
-          <section class="flex flex-col items-center pt-2 pb-4 text-center">
+          <section class="flex flex-col items-center pb-4 text-center">
             <div class="relative">
               <button
                 type="button"
@@ -219,7 +219,7 @@ function onCropFailed(): void {
                 :aria-label="t('device.changeDeviceAvatar')"
                 @click="pickAvatar"
               >
-                <Avatar :name="device.nick" :src="device.avatar" size="lg" />
+                <Avatar :name="device.nick" :src="device.avatar" size="profile" />
               </button>
               <!-- Native draws the bare 16dp glyph at the corner, no disc. -->
               <IconEdit
@@ -233,17 +233,20 @@ function onCropFailed(): void {
               class="hidden"
               @change="onAvatarChange"
             />
-            <div class="mt-3 flex items-center">
-              <h2 class="text-header font-semibold">{{ device.nick }}</h2>
-              <!-- Native's 48dp box around a 24dp glyph. -->
-              <button
-                type="button"
-                class="icon-button h-12 w-12 p-3 focus-visible:ring-2 focus-visible:ring-primary/40"
-                :aria-label="t('device.editName')"
-                @click="startEditing"
-              >
-                <IconEdit class="h-6 w-6 text-text-primary" />
-              </button>
+            <div class="mt-3 h-12 w-full flex items-center justify-center">
+              <!-- The name owns the page axis; the pencil hangs to its right. -->
+              <div class="relative inline-flex items-center">
+                <h2 class="text-title-compact font-semibold">{{ device.nick }}</h2>
+                <!-- Native's 48dp box around a 24dp glyph. -->
+                <button
+                  type="button"
+                  class="icon-button absolute left-full top-1/2 ml-2 h-12 w-12 -translate-y-1/2 p-3 focus-visible:ring-2 focus-visible:ring-primary/40"
+                  :aria-label="t('device.editName')"
+                  @click="startEditing"
+                >
+                  <IconEdit class="h-6 w-6 text-text-primary" />
+                </button>
+              </div>
             </div>
             <p class="mt-1 text-small text-text-secondary">
               {{ t('device.activatedAt') }}: {{ device.activatedAt || t('device.notAvailable') }}
@@ -260,7 +263,7 @@ function onCropFailed(): void {
               <button
                 v-if="device.simCard?.iccid"
                 type="button"
-                class="ml-3 -my-1.5 inline-flex min-h-9 flex-none items-center text-small text-primary focus-visible:ring-2 focus-visible:ring-primary/40 disabled:opacity-50"
+                class="ml-3 -my-1.5 inline-flex min-h-9 flex-none items-center text-title-compact font-medium text-promo focus-visible:ring-2 focus-visible:ring-primary/40 disabled:opacity-50"
                 :disabled="creatingPayment"
                 @click="startRecharge"
               >
@@ -278,11 +281,12 @@ function onCropFailed(): void {
                 :aria-label="t('device.copyDeviceNumber')"
                 @click="copyDeviceNumber"
               >
+                <span class="mr-1 text-fill" aria-hidden="true">|</span>
                 {{ t('device.copy') }}
               </button>
             </div>
             <div class="break-all px-4 py-1.5 text-body">
-              {{ t('device.version') }}: {{ device.version || t('device.notAvailable') }}
+              {{ t('device.version') }}: {{ device.sdkVersion || t('device.notAvailable') }}
             </div>
             <div class="px-4 py-1.5 text-body">
               {{ t('device.userNumber') }}: {{ device.userNum || t('device.notAvailable') }}
@@ -291,11 +295,14 @@ function onCropFailed(): void {
               <div class="px-4 py-1.5 text-body">
                 {{ t('device.iccid') }}: {{ device.simCard.iccid || t('device.notAvailable') }}
               </div>
-              <div class="px-4 py-1.5 text-body">
+              <div class="px-4 py-2 text-2nd-body text-text-secondary">
                 {{ t('device.expireAt') }}:
                 {{ device.simCard.expiryDate || t('device.notAvailable') }}
               </div>
-              <div v-if="device.simCard.recharge" class="px-4 py-1.5 text-body">
+              <div
+                v-if="device.simCard.recharge"
+                class="px-4 py-2 text-2nd-body text-text-secondary"
+              >
                 {{ t('device.simCardState') }}:
                 <span class="text-danger">{{ t('device.simCardNeedRecharge') }}</span>
               </div>
@@ -331,7 +338,7 @@ function onCropFailed(): void {
               :to="`/devices/${deviceId}/emergency-contacts`"
               class="min-h-14 w-full panel-row text-body"
             >
-              <span>{{ t('device.emergencyContactSettings') }}</span>
+              <span class="text-text-secondary">{{ t('device.emergencyContactSettings') }}</span>
               <span class="row-chevron" aria-hidden="true" />
             </RouterLink>
           </div>

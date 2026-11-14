@@ -31,24 +31,27 @@ const icon = computed(() => batteryIcon(props.battery))
 <template>
   <li>
     <!-- The button owns the card fill so the whole row is the tap target. -->
-    <button type="button" class="w-full card flex items-center text-left" @click="$emit('click')">
+    <button
+      type="button"
+      class="w-full rounded-standard bg-surface-online px-3 py-3 flex items-center text-left"
+      @click="$emit('click')"
+    >
       <Avatar :name="name" :src="avatar" />
       <span class="ml-3 min-w-0 flex-1">
-        <span class="block truncate text-body font-medium">{{ name }}</span>
-        <span v-if="product" class="mt-0.5 block truncate text-small text-text-secondary">
-          {{ product }}
+        <span class="block truncate text-2nd-body font-medium">{{ name }}</span>
+        <span class="mt-0.5 flex items-center text-small text-text-secondary">
+          <span v-if="product" class="truncate">{{ product }}</span>
+          <span
+            v-if="icon"
+            class="ml-2 flex flex-none items-center space-x-1"
+            :class="battery < 20 ? 'text-danger' : undefined"
+          >
+            <span :class="icon" aria-hidden="true" />
+            <span class="sr-only">{{ t('device.battery') }}</span>
+            <span>{{ battery }}%</span>
+          </span>
         </span>
       </span>
-      <span
-        v-if="icon"
-        class="ml-2 flex flex-none items-center space-x-1 text-small"
-        :class="battery < 20 ? 'text-danger' : 'text-text-secondary'"
-      >
-        <span :class="icon" aria-hidden="true" />
-        <span class="sr-only">{{ t('device.battery') }}</span>
-        <span>{{ battery }}%</span>
-      </span>
-      <span class="row-chevron" aria-hidden="true" />
     </button>
   </li>
 </template>

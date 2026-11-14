@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, shallowRef, watch } from 'vue'
 
-type AvatarSize = 'sm' | 'md' | 'lg' | 'xl' | '2xl'
+type AvatarSize = 'sm' | 'md' | 'profile' | 'lg' | 'xl' | '2xl'
 
 const props = withDefaults(
   defineProps<{
@@ -26,6 +26,8 @@ const props = withDefaults(
 const SIZE_CLASS = {
   sm: 'h-8 w-8 text-2nd-body',
   md: 'h-11 w-11 text-header',
+  /** Native's device-detail avatar is 56dp, between `md` and `lg`. */
+  profile: 'h-14 w-14 text-subtitle',
   lg: 'h-16 w-16 text-title',
   xl: 'h-20 w-20 text-2xl',
   '2xl': 'h-24 w-24 text-3xl',

@@ -86,6 +86,7 @@ input[type='search']::-webkit-search-cancel-button {
       'danger-text': 'var(--color-danger-text)',
       'danger-soft': 'var(--color-danger-soft)',
       'danger-soft-text': 'var(--color-danger-soft-text)',
+      promo: 'var(--color-promo)',
       surface: 'var(--color-surface)',
       'surface-elevated': 'var(--color-surface-elevated)',
       'surface-dialog': 'var(--color-surface-dialog)',
@@ -93,6 +94,7 @@ input[type='search']::-webkit-search-cancel-button {
       'surface-field': 'var(--color-surface-field)',
       'surface-input': 'var(--color-surface-input)',
       'surface-selected': 'var(--color-surface-selected)',
+      'surface-online': 'var(--color-surface-online)',
       // Neutral fill for control tracks, checkboxes, radios and dots; a fill,
       // never a border.
       fill: 'var(--color-fill)',
@@ -104,6 +106,7 @@ input[type='search']::-webkit-search-cancel-button {
     },
     fontSize: {
       title: ['24px', '32px'],
+      'title-compact': ['18px', '24px'],
       subtitle: ['20px', '28px'],
       header: ['16px', '24px'],
       body: ['16px', '24px'],
@@ -165,7 +168,7 @@ input[type='search']::-webkit-search-cancel-button {
     // Square icon button used inside rows (copy, edit, clear).
     'icon-button':
       'flex-none flex items-center justify-center rounded-small text-text-secondary disabled:opacity-50',
-    'page-title': 'text-title font-semibold text-text-primary',
+    'page-title': 'font-semibold text-text-primary',
     'section-title': 'text-subtitle font-semibold text-text-primary',
     // Text entry reset: no native border, ring, or outline. Focus shows as
     // opacity alone (75% at rest, full when focused), so keep `outline-none`.

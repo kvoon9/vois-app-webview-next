@@ -37,7 +37,7 @@ function openContact(contact: Friend): void {
 
 <template>
   <div class="page">
-    <PageHeader :title="t('device.contacts')" />
+    <PageHeader :title="t('device.contacts')" size="compact" />
 
     <main class="p-4 flex flex-col min-h-[calc(100vh-3.5rem)]">
       <nav class="panel" :aria-label="t('device.addContact')">
@@ -77,7 +77,6 @@ function openContact(contact: Friend): void {
                 <span class="ml-3 min-w-0 flex-1 truncate text-body font-medium">
                   {{ contact.nick }}
                 </span>
-                <span class="row-chevron" aria-hidden="true" />
               </button>
             </li>
           </ul>

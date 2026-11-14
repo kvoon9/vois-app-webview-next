@@ -22,8 +22,13 @@ withDefaults(
      * merely forgets the prop would lose its arrow.
      */
     back?: boolean
+    /**
+     * Native draws sub-page titles at 18sp and keeps 24sp for the tab roots and
+     * group management. Pass `compact` on the sub-pages.
+     */
+    size?: 'default' | 'compact'
   }>(),
-  { back: true },
+  { back: true, size: 'default' },
 )
 
 const { goBack } = usePageBack()
@@ -77,12 +82,15 @@ async function copyCurrentUrl(): Promise<void> {
       v-if="portSwitchable"
       type="button"
       class="page-title"
+      :class="size === 'compact' ? 'text-title-compact' : 'text-title'"
       aria-haspopup="dialog"
       @click="openPortDialog"
     >
       {{ title }}
     </button>
-    <h1 v-else class="page-title">{{ title }}</h1>
+    <h1 v-else class="page-title" :class="size === 'compact' ? 'text-title-compact' : 'text-title'">
+      {{ title }}
+    </h1>
     <slot name="action" />
 
     <BaseModal

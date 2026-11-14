@@ -60,7 +60,7 @@ async function save(): Promise<void> {
 
 <template>
   <div class="page">
-    <PageHeader :title="t('device.emergencyAddPhoneTitle')" />
+    <PageHeader :title="t('device.emergencyAddPhoneTitle')" size="compact" />
 
     <main class="p-4">
       <section class="flex justify-center py-6">
@@ -75,7 +75,7 @@ async function save(): Promise<void> {
       <div class="space-y-3">
         <input
           v-model="phone"
-          class="input-field"
+          class="input-field h-12 py-0"
           type="tel"
           inputmode="tel"
           maxlength="16"
@@ -85,7 +85,7 @@ async function save(): Promise<void> {
         />
         <input
           v-model="name"
-          class="input-field"
+          class="input-field h-12 py-0"
           type="text"
           :maxlength="MAX_NAME_LENGTH"
           :placeholder="t('device.emergencyNamePlaceholder')"

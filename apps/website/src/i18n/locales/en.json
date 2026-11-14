@@ -253,7 +253,6 @@
     "trackSettingUpdated": "Track reporting frequency updated.",
     "reminders": "Reminders",
     "emergencyContactSettings": "Emergency Contact Settings",
-    "emergencyTips": "Tips",
     "emergencyTipQuota": "· Up to {friendMax} Weila friends and {phoneMax} phone contacts.",
     "emergencyTipNotify": "· Let the person know promptly after adding or changing an emergency contact.",
     "emergencyTipSos": "· Remaining SOS emergency call notifications: {sos}",

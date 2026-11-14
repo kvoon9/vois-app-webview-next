@@ -77,7 +77,6 @@ function openContact(contact: Friend): void {
                 <span class="ml-3 min-w-0 flex-1 truncate text-body font-medium">
                   {{ contact.nick }}
                 </span>
-                <span class="row-chevron" aria-hidden="true" />
               </button>
             </li>
           </ul>

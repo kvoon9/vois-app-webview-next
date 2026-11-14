@@ -194,6 +194,7 @@ async function submit(): Promise<void> {
             </div>
             <AzIndexRail
               v-if="visibleFriends.length >= 4"
+              class="fixed right-4 top-[118px] z-10 h-[376px]"
               :letters="INITIALS"
               :label="t('device.azIndex')"
               @select="jumpTo"

@@ -57,10 +57,9 @@ function onPointerEnd(event: PointerEvent): void {
 </script>
 
 <template>
-  <!-- Absolute so it spans the list block and never the search field or the CTA. -->
   <nav
     ref="rail"
-    class="absolute inset-y-0 right-0 flex touch-none flex-col items-center"
+    class="flex touch-none flex-col items-center"
     :aria-label="label"
     @pointerdown="onPointerDown"
     @pointermove="onPointerMove"
@@ -76,17 +75,17 @@ function onPointerEnd(event: PointerEvent): void {
     >
       {{ letter }}
     </button>
+    <div
+      v-if="activeLetter && pointer"
+      class="pointer-events-none fixed z-20 h-14 w-14 flex items-center justify-center rounded-full bg-surface-muted text-subtitle font-semibold text-text-primary"
+      :style="{
+        left: `${pointer.x - 12}px`,
+        top: `${pointer.y}px`,
+        transform: 'translate(-100%, -50%)',
+      }"
+      role="status"
+    >
+      {{ activeLetter }}
+    </div>
   </nav>
-  <div
-    v-if="activeLetter && pointer"
-    class="pointer-events-none fixed z-20 h-14 w-14 flex items-center justify-center rounded-full bg-surface-muted text-subtitle font-semibold text-text-primary"
-    :style="{
-      left: `${pointer.x - 12}px`,
-      top: `${pointer.y}px`,
-      transform: 'translate(-100%, -50%)',
-    }"
-    role="status"
-  >
-    {{ activeLetter }}
-  </div>
 </template>

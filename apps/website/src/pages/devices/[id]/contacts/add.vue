@@ -5,6 +5,7 @@ import { useI18n } from 'vue-i18n'
 import { useRoute } from 'vue-router'
 import BaseModal from '~/components/BaseModal.vue'
 import Avatar from '~/components/Avatar.vue'
+import AzIndexRail from '~/components/AzIndexRail.vue'
 import PageHeader from '~/components/PageHeader.vue'
 import QueryState from '~/components/settings/QueryState.vue'
 import { parseRouteParamId } from '~/composables/useRouteParamId'
@@ -12,6 +13,7 @@ import { usePageBack } from '~/composables/usePageBack'
 import { useToast } from '~/composables/useToast'
 import { MAX_DESCRIPTION_LENGTH } from '~/utils/field-schema'
 import { getDeviceFriends, getFriends, inviteDeviceFriend, type Friend } from '~/utils/device-api'
+import { INITIALS, sortContactsByInitial } from '~/utils/pinyin'
 
 const { t } = useI18n({ useScope: 'global' })
 const route = useRoute()
@@ -45,23 +47,30 @@ const { state, refetch: reload } = useQuery({
 const existingIds = computed(
   () => new Set((state.value.data?.contacts ?? []).map((contact) => contact.userId)),
 )
-/** Native lists contacts by name in pinyin order, not by API order. */
-function byName(left: Friend, right: Friend): number {
-  return left.nick.localeCompare(right.nick, 'zh-Hans-CN')
-}
+const sortedFriends = computed(() =>
+  sortContactsByInitial(state.value.data?.friends ?? [], (friend) => friend.nick),
+)
 
 const visibleFriends = computed(() => {
   const query = keyword.value.trim().toLowerCase()
-  const friends = [...(state.value.data?.friends ?? [])].sort(byName)
-  if (!query) return friends
-  return friends.filter(
-    (friend) =>
-      friend.nick.toLowerCase().includes(query) || friend.userNum.toLowerCase().includes(query),
+  if (!query) return sortedFriends.value
+  return sortedFriends.value.filter(
+    ({ item }) =>
+      item.nick.toLowerCase().includes(query) || item.userNum.toLowerCase().includes(query),
   )
 })
 const selectableFriends = computed(() =>
-  visibleFriends.value.filter((friend) => !existingIds.value.has(friend.userId)),
+  visibleFriends.value
+    .filter(({ item }) => !existingIds.value.has(item.userId))
+    .map(({ item }) => item),
 )
+
+/** Scrolls the first contact filed under the letter into view. */
+function jumpTo(letter: string): void {
+  document
+    .querySelector<HTMLElement>(`[data-contact-initial="${letter}"]`)
+    ?.scrollIntoView({ block: 'start' })
+}
 const selectedCount = computed(() => selectedIds.value.length)
 const allSelected = computed(
   () =>
@@ -157,18 +166,19 @@ async function submit(): Promise<void> {
           </p>
           <div v-else class="mt-2 panel">
             <button
-              v-for="friend in visibleFriends"
-              :key="friend.userId"
+              v-for="entry in visibleFriends"
+              :key="entry.item.userId"
               type="button"
-              :aria-pressed="selectedIds.includes(friend.userId)"
-              class="min-h-16 w-full flex items-center px-4 text-left disabled:opacity-50"
-              :disabled="existingIds.has(friend.userId)"
-              @click="toggleFriend(friend)"
+              :aria-pressed="selectedIds.includes(entry.item.userId)"
+              :data-contact-initial="entry.initial"
+              class="min-h-16 w-full scroll-mt-16 flex items-center px-4 text-left disabled:opacity-50"
+              :disabled="existingIds.has(entry.item.userId)"
+              @click="toggleFriend(entry.item)"
             >
-              <Avatar :name="friend.nick" :src="friend.avatar" />
-              <span class="ml-3 min-w-0 flex-1 truncate text-body">{{ friend.nick }}</span>
+              <Avatar :name="entry.item.nick" :src="entry.item.avatar" />
+              <span class="ml-3 min-w-0 flex-1 truncate text-body">{{ entry.item.nick }}</span>
               <span
-                v-if="existingIds.has(friend.userId)"
+                v-if="existingIds.has(entry.item.userId)"
                 class="ml-2 text-small text-text-secondary"
               >
                 {{ t('device.alreadyContact') }}
@@ -176,7 +186,7 @@ async function submit(): Promise<void> {
               <span
                 v-else
                 class="radio ml-3"
-                :class="selectedIds.includes(friend.userId) ? 'radio-on' : 'radio-off'"
+                :class="selectedIds.includes(entry.item.userId) ? 'radio-on' : 'radio-off'"
                 aria-hidden="true"
               />
             </button>
@@ -192,6 +202,13 @@ async function submit(): Promise<void> {
           </button>
         </template>
       </QueryState>
+
+      <AzIndexRail
+        v-if="visibleFriends.length > 0"
+        :letters="INITIALS"
+        :label="t('device.azIndex')"
+        @select="jumpTo"
+      />
     </main>
 
     <BaseModal

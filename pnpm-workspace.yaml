@@ -85,4 +85,5 @@ catalog:
   '@vois/webview-bridge': ^0.6.0
   '@x18n/cli': ^0.1.14
   '@x18n/core': ^0.1.14
+  pinyin-pro: ^3.29.5
   wrangler: ^4.149.0

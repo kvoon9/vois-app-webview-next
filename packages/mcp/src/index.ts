@@ -8,13 +8,25 @@ export {
 } from './config.ts'
 export type { DebugSession, DebugServerStatus, FetchLike } from './debug-server.ts'
 export { loginDebugAccount, probeDebugServer, readDebugSession } from './debug-server.ts'
-export type { DebugEvent } from './events.ts'
+export type {
+  BridgeSummary,
+  BridgeSummaryGroup,
+  BridgeTimelineEntry,
+  DebugEvent,
+  UiCaptureAgreement,
+} from './events.ts'
 export {
+  agreeUiCapture,
+  bridgeTimeline,
   countByType,
   DEBUG_EVENT_TYPES,
+  formatAgreement,
+  formatBridgeSummary,
+  formatBridgeTimeline,
   formatDebugEvent,
   readEventsFile,
   selectEvents,
+  summarizeBridge,
 } from './events.ts'
 export { REDACTED, redactJson, redactText } from './redact.ts'
 export type { JsonObject, JsonValue } from './json.ts'

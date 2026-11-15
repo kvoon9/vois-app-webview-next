@@ -51,14 +51,17 @@ The script runs these steps and fails on the first unmet one.
 2. Read the built `dist/index.html` entry scripts and assert their chunks contain no `??` or `?.`. Vite+ leaves JS syntax alone, so the `vois-downlevel-chunks` plugin in `apps/website/vite.config.ts` is what makes this pass.
 3. Resolve desktop Chromium for the target. The cache is `~/.vois/tools/chrome-sweep/browsers/<major>` and is reused without network; set `CHROME_SWEEP_ROOT` to move it. A cold cache downloads a macOS x64 Chromium snapshot from `chromium-browser-snapshots` and unzips it under that path.
 4. Reuse a debug preview already answering on `http://127.0.0.1:8081`, or start `vp preview --host --port 8081 --debug` from `apps/website` and wait for `/__debug/status`. Production artifact, so `preview:production` behavior is what is tested.
-5. Drive `http://127.0.0.1:8081/#/devices` over CDP with `--lang=zh-CN`, a 375x812 viewport at DPR 2, and `WAIT_MS` (default 30000) as the deadline. The wait polls, so a fast render finishes early.
-6. Capture `results.json`, `run.json`, `<target>.png`, `<target>.chrome.log`, and `preview.log` under `apps/website/.tmp/verify/compat/legacy/<target>/`.
+5. Drive `http://127.0.0.1:8081/?capture=bridge#/devices` over CDP with `--lang=zh-CN`, a 375x812 viewport at DPR 2, and `WAIT_MS` (default 30000) as the deadline. The wait polls, so a fast render finishes early.
+6. Read the bridge capture after the page settles and record its count, protocol/direction summary, and timeline in `results.json`.
+7. Capture `results.json`, `run.json`, `<target>.png`, `<target>.chrome.log`, and `preview.log` under `apps/website/.tmp/verify/compat/legacy/<target>/`.
 
 The data-row predicate is `wl\d{6,}|CF03|电量|Battery` over the rendered body text. It is intentionally stricter than "the app mounted": it only matches when a device row or its battery reading exists.
 
-### The debug harness error on Chrome 70
+### Capture mode
 
-The injected `/__debug/client.js` uses optional chaining, which Chrome 70 cannot parse, so the harness throws its own syntax error on every sweep. The script filters exceptions and log entries whose URL or text is `/__debug/client.js` and records `debug client injected` instead. The debug server still proves itself through `/__debug/status` and the injected script tag, and the app's debug sign-in uses `/__vois-bridge/access-token`, not the harness. Treat a remaining harness error as expected only for that file; any other exception is an app failure.
+L2 selects the bridge capture with `?capture=bridge`. That client parses on Chrome 70 and records only `bridge` events plus one `lifecycle` load marker, and it still logs `🟢 WebView debug connected`. The query is read in the page, so the injected script tag stays exactly `/__debug/client.js`; a page without the query runs the plugin's full client unchanged, and that full capture remains the default for web and native proof.
+
+Console and network evidence for L2 comes from CDP, which the sweep already enables: `Runtime.exceptionThrown` / `Log.entryAdded` for errors and `Network.responseReceived` / `Network.loadingFailed` for requests. Lifecycle is the sweep's own navigation and poll. A `/__debug/client.js` exception is now an app failure instead of filtered harness noise. `checks.bridgeMode` proves the page took the bridge branch (`window.__voisDebugCapture`), and `checks.bridgeCaptured` proves the capture received at least one bridge event after navigation.
 
 ### Acceptance predicates
 
@@ -68,6 +71,8 @@ A row passes only when all of these are true, and the script records each one in
 - `appRoot` finds `#app`.
 - `noErrorPage` is true, meaning the body does not contain `出了点问题`.
 - `debugClient` finds the injected `/__debug/client.js` script tag.
+- `bridgeMode` is true, meaning the page selected the bridge capture.
+- `bridgeCaptured` is true, meaning at least one bridge event arrived after navigation.
 - `dataRow` matches the strong predicate above.
 - `noAppExceptions` and `noAppAssetFailures` are true. Asset 404s on the app origin are failures; `net::ERR_ABORTED` and favicon misses are not.
 - `headingVisible`, `listRows > 0`, and `buttons > 0`.
@@ -99,7 +104,7 @@ node .pi/skills/verify-vois-native/scripts/send-ios.mjs Page.snapshotRect \
   --out apps/website/.tmp/verify/compat/device/ios/device-list.png
 ```
 
-The debug entry is hardcoded to `http://192.168.1.87:5173/#/` and needs a debug server on `:5173`. Read H5 content through the inspector, not the accessibility tree. Judge bridge and network results by `errcode`.
+The debug entry is hardcoded to `http://192.168.1.87:5173/#/` and needs a debug server on `:5173`; append `?capture=bridge` for this layer. Read H5 content through the inspector, not the accessibility tree. In bridge mode the capture holds bridge events and one load marker, so enable the inspector's `Network` domain for request and response evidence. Judge bridge replies by `errcode`.
 
 ### Android
 
@@ -107,11 +112,11 @@ Use the existing AndroMeld MCP flow; there is no new Android suite. `docs/device
 
 1. `phone_connect` with the task name, then `phone_launch VoiChat`.
 2. Drive 设备 tab, then a device row, then detail with `phone_observe` and `phone_tap`. The element tree's frame divided by `1.9216` equals CSS px.
-3. Read `apps/website/.tmp/vois-webview-debug/events.jsonl` for bridge and network events. Judge by `errcode`, not HTTP status.
+3. Open the debug page with `?capture=bridge`. Read `apps/website/.tmp/vois-webview-debug/events.jsonl` for bridge events; network and console come from the inspector/CDP. Judge bridge replies by `errcode`, not HTTP status.
 4. Writes (unbind, fence, reminder) only on a sacrificial test device, and restore it afterwards.
 5. Native location, permission prompts, and payment need the real app. The DevServer has debug stubs only.
 
-L3 accepts the same UI predicates as L2. The proof additionally requires **UI and capture agreement**: the rendered device name or account must match the `responseBody` of the call that fed it. A screenshot alone is not proof.
+L3 accepts the same UI predicates as L2. The proof additionally requires **UI and capture agreement**: the rendered device name or account must match the `responseBody` of the call that fed it, or a bridge reply's `data` when the bridge supplied it. The MCP `agreement` tool checks a bridge reply or a captured network body and redacts credentials first; in bridge mode, where network lives in the inspector, compare the inspector's response with the screen. A screenshot alone is not proof.
 
 ## Evidence
 
@@ -119,7 +124,7 @@ Everything lands under `apps/website/.tmp/verify/compat/`, which is gitignored a
 
 ```text
 apps/website/.tmp/verify/compat/
-  legacy/70/results.json        # the row, checks, exceptions, network failures, notes
+  legacy/70/results.json        # the row, checks, exceptions, network failures, bridge timeline, notes
   legacy/70/run.json            # build target, preview identity, syntax check, browser
   legacy/70/70.png              # 375x812 screenshot
   legacy/70/70.chrome.log       # browser stderr
@@ -156,5 +161,7 @@ apps/website/.tmp/verify/compat/
 - **Browser download fails.** The first L2 run needs network access to `chromiumdash.appspot.com`, `chromium.googlesource.com`, and `storage.googleapis.com`. Later runs use the cache.
 - **`entry syntax: FAIL`.** The build plugin did not downlevel every entry chunk. Check which file and syntax remain, then fix `vois-downlevel-chunks` rather than lowering the target.
 - **`dataRow` is false while `appRoot` is true.** Auth or the API failed. Run `verify-vois-webview`'s doctor and inspect the capture; a 200 with `errcode: 1` is not a pass.
+- **`bridgeCaptured` is false.** The page did not select bridge mode or produced no bridge traffic. Check the `?capture=bridge` query and `window.__voisDebugCapture` in the page.
+- **A `/__debug/client.js` exception.** The served client no longer parses or runs on the target engine. Fix `apps/website/plugins/debug-client-bridge.js`; do not filter it.
 - **Chrome 64 needs the AbortController polyfill.** It is already in `apps/website/src/polyfills.ts`; do not remove it while 64 remains the measured floor.
 - **Chrome 63.** Do not run it. The `\p{Emoji}` regex in `polyfills-legacy` is a parse error on that engine.

@@ -22,13 +22,14 @@ from TypeScript on Node >= 22.18, so `pi mcp` can start it without a build:
 
 ## Tools
 
-| Tool     | What it does                                                                       |
-| -------- | ---------------------------------------------------------------------------------- |
-| `status` | Probe ports for a live debug server; report event counts and session uptime.       |
-| `events` | Read the JSONL capture, filter by type or text; every token is redacted.           |
-| `login`  | Re-sign the fixed debug account, or switch the session to account/password.        |
-| `token`  | Verify the mint pipeline; shows only the userId, token length, and SHA-256 prefix. |
-| `api`    | Signed `/v2` call with the session token, exactly as `weilaFetch` builds it.       |
+| Tool        | What it does                                                                                                               |
+| ----------- | -------------------------------------------------------------------------------------------------------------------------- |
+| `status`    | Probe ports for a live debug server; report event counts and session uptime.                                               |
+| `events`    | Read the JSONL capture, filter by type or text; every token is redacted. A bridge summary and timeline precede the events. |
+| `agreement` | Check that a rendered value (device name, account) appears in a bridge reply or network response body.                     |
+| `login`     | Re-sign the fixed debug account, or switch the session to account/password.                                                |
+| `token`     | Verify the mint pipeline; shows only the userId, token length, and SHA-256 prefix.                                         |
+| `api`       | Signed `/v2` call with the session token, exactly as `weilaFetch` builds it.                                               |
 
 Secrets never come back: `login` and `token` withhold the token, `events` and
 `api` redact credential keys (`token`, `access-token`, `access_token`, `password`,

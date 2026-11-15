@@ -8,6 +8,7 @@ import legacy from '@vitejs/plugin-legacy'
 import VueRouter from 'vue-router/vite'
 import vueDevtools from 'vite-plugin-vue-devtools'
 import { voisBridgeAuth } from '@vois/webview-bridge/vite'
+import { captureDebugClient } from './plugins/capture-debug-client.ts'
 import { vconsoleDev } from './plugins/vconsole-dev.ts'
 
 // The debug plugin is pnpm-linked from a sibling repo, so CI (and anyone who has
@@ -64,6 +65,11 @@ export default defineConfig(async ({ isPreview, command, mode }) => {
     }
   }
 
+  const debugPreview = process.argv.includes('--debug')
+  // The capture client reuses the debug plugin's route and record format, so it
+  // is only registered when that plugin resolved.
+  const webviewDebug = await webviewDebugPlugin(debugPreview)
+
   return {
     base: './',
     // Match the JS floor so Lightning CSS lowers unsupported properties too.
@@ -101,7 +107,8 @@ export default defineConfig(async ({ isPreview, command, mode }) => {
       // Mints the debug account's access token over the gateway its API hands out;
       // the bridge's own WebSocket login cannot, and its tokens answer `31 授权失效`.
       voisBridgeAuth(),
-      await webviewDebugPlugin(process.argv.includes('--debug')),
+      ...(webviewDebug ? [captureDebugClient({ preview: debugPreview })] : []),
+      webviewDebug,
       vueDevtools(),
       VueRouter({ dts: 'src/route-map.d.ts' }),
       vue(),

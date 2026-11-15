@@ -37,6 +37,13 @@ function tryJson(value) {
   }
 }
 
+/** Counts non-zero errcodes from a network body or a bridge reply. */
+function checkErrcode(body, errcodes) {
+  if (body && Number.isFinite(body.errcode) && body.errcode !== 0) {
+    errcodes[body.errcode] = (errcodes[body.errcode] ?? 0) + 1
+  }
+}
+
 function summarizeCapture() {
   if (!existsSync(EVENTS_PATH)) {
     return { present: false, path: 'apps/website/.tmp/vois-webview-debug/events.jsonl' }
@@ -75,12 +82,12 @@ function summarizeCapture() {
       if (protocol) bridgeProtocols.add(String(protocol))
       summary.direction = event.direction ?? null
       summary.protocol = protocol ?? null
+      checkErrcode(event.data, errcodes)
+      summary.errcode = event.data?.errcode ?? null
     }
     if (type === 'network') {
       const body = tryJson(event.responseBody)
-      if (body && Number.isFinite(body.errcode) && body.errcode !== 0) {
-        errcodes[body.errcode] = (errcodes[body.errcode] ?? 0) + 1
-      }
+      checkErrcode(body, errcodes)
       summary.method = event.method ?? null
       summary.status = event.status ?? null
       summary.errcode = body?.errcode ?? null
@@ -104,7 +111,7 @@ const acceptance = [
   'App root present; the page is not the 出了点问题 error screen.',
   'The debug pipeline is live: /__debug/status answers or the L3 native bridge connects.',
   'A device row matches wl\\d{6,}|CF03|电量|Battery, or the screen agrees with the captured response.',
-  'No app exceptions and no app-asset 404s (the Chrome 70 __debug/client.js parse error is harness-only and filtered).',
+  'No app exceptions and no app-asset 404s; in bridge capture mode console and network come from the inspector/CDP.',
   'UI at 375x812: header title, list, and buttons visible; no overlap and no horizontal overflow.',
   'Judge every reply by errcode, never by HTTP 200.',
 ]
@@ -113,7 +120,7 @@ const iosRunbook = [
   'Follow .pi/skills/verify-vois-native/SKILL.md; it owns the iOS procedure.',
   'Check the device: idevice_id -l; idevicedevmodectl list; sim-use ios-device devices --json.',
   'Start the inspect channel: ios_webkit_debug_proxy -u <UDID>, then curl -s http://127.0.0.1:9222/json/list.',
-  'Open the debug entry in the app (debug server on :5173, LAN IP 192.168.1.87).',
+  'Open the debug entry in the app (debug server on :5173, LAN IP 192.168.1.87) with ?capture=bridge; read console and network over the inspector.',
   'Drive JS: node .pi/skills/verify-vois-native/scripts/eval-ios.mjs \'location.hash = "#/devices"\'.',
   'Capture: node .pi/skills/verify-vois-native/scripts/send-ios.mjs Page.snapshotRect \'{"x":0,"y":0,"width":414,"height":812,"coordinateSystem":"Viewport"}\' --out apps/website/.tmp/verify/compat/device/ios/device-list.png',
   'Prove bridge behavior from events.jsonl; iOS 5.0.6 cannot do get-location, get-permissions, write-clipboard, or WeChat app pay.',
@@ -123,7 +130,7 @@ const androidRunbook = [
   'Use the existing AndroMeld MCP flow; no new Android suite. See docs/device-management-status.md:113 and docs/device-management-verification.md.',
   'phone_connect with the task name, then phone_launch VoiChat.',
   'Drive 设备 tab -> device row -> detail with phone_observe / phone_tap. The element-tree frame divided by 1.9216 equals CSS px.',
-  'Read apps/website/.tmp/vois-webview-debug/events.jsonl for bridge and network events; judge by errcode, not HTTP status.',
+  'Read apps/website/.tmp/vois-webview-debug/events.jsonl for bridge events (bridge mode keeps one load marker); network and console come from the inspector/CDP. Judge by errcode, not HTTP status.',
   'Writes (unbind, fence, reminder) only on a sacrificial test device, and restore it afterwards.',
   'Native location, permission prompts, and payment need the real app; the DevServer has only stubs.',
 ]

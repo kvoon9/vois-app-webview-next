@@ -1,6 +1,13 @@
 import * as v from 'valibot'
 import type { JsonValue } from './json.ts'
-import { JsonValueSchema, describeIssues, parseJson } from './json.ts'
+import {
+  JsonValueSchema,
+  asJsonObject,
+  describeIssues,
+  parseJson,
+  readNumber,
+  readString,
+} from './json.ts'
 import { redactText } from './redact.ts'
 
 /**
@@ -146,6 +153,198 @@ export function selectEvents(
   return { matched, selected: matched.slice(-filters.limit) }
 }
 
+/** One bridge message reduced to timeline fields; payloads stay out. */
+export interface BridgeTimelineEntry {
+  receivedAt?: number
+  direction?: string
+  protocol?: string
+  errcode?: number
+  errmsg?: string
+}
+
+/** One protocol and direction pair with its count, errcodes, and time span. */
+export interface BridgeSummaryGroup {
+  protocol: string
+  direction: string
+  count: number
+  errcodes: Record<string, number>
+  firstAt?: number
+  lastAt?: number
+}
+
+/** The bridge capture as a whole, for the events tool header. */
+export interface BridgeSummary {
+  total: number
+  groups: BridgeSummaryGroup[]
+  nonZeroErrcodes: Record<string, number>
+}
+
+/** What a piece of rendered UI text agreed with. */
+export interface UiCaptureAgreement {
+  text: string
+  agreed: boolean
+  source?: 'bridge' | 'network'
+  protocol?: string
+  direction?: string
+  receivedAt?: number
+}
+
+/** The reply code fields a bridge payload can carry. */
+interface BridgeReplyFields {
+  errcode?: number
+  errmsg?: string
+}
+
+/** Reads `errcode` and a redacted `errmsg` from a bridge reply's data. */
+function bridgeReplyFields(event: DebugEvent): BridgeReplyFields {
+  const data = asJsonObject(event.data)
+  if (data === undefined) return {}
+  const errmsg = readString(data, 'errmsg')
+  return {
+    errcode: readNumber(data, 'errcode'),
+    errmsg: errmsg === undefined ? undefined : truncate(redactText(errmsg)),
+  }
+}
+
+/** Lists the bridge events in arrival order with their reply codes. */
+export function bridgeTimeline(events: DebugEvent[]): BridgeTimelineEntry[] {
+  return events
+    .filter((event) => event.type === 'bridge')
+    .map((event) => ({
+      receivedAt: event.receivedAt,
+      direction: event.direction,
+      protocol: event.protocol,
+      ...bridgeReplyFields(event),
+    }))
+}
+
+/** Groups the bridge timeline by protocol and direction, newest count included. */
+export function summarizeBridge(events: DebugEvent[]): BridgeSummary {
+  const groups = new Map<string, BridgeSummaryGroup>()
+  const nonZeroErrcodes: Record<string, number> = {}
+  let total = 0
+  for (const entry of bridgeTimeline(events)) {
+    total += 1
+    const protocol = entry.protocol ?? '?'
+    const direction = entry.direction ?? '?'
+    const key = `${protocol}\u0000${direction}`
+    let group = groups.get(key)
+    if (group === undefined) {
+      group = {
+        protocol,
+        direction,
+        count: 0,
+        errcodes: {},
+        firstAt: entry.receivedAt,
+        lastAt: entry.receivedAt,
+      }
+      groups.set(key, group)
+    }
+    group.count += 1
+    if (group.firstAt === undefined) group.firstAt = entry.receivedAt
+    if (entry.receivedAt !== undefined) group.lastAt = entry.receivedAt
+    if (entry.errcode !== undefined) {
+      const code = String(entry.errcode)
+      group.errcodes[code] = (group.errcodes[code] ?? 0) + 1
+      if (entry.errcode !== 0) {
+        nonZeroErrcodes[code] = (nonZeroErrcodes[code] ?? 0) + 1
+      }
+    }
+  }
+  return { total, groups: [...groups.values()], nonZeroErrcodes }
+}
+
+/** Formats the bridge summary as a header line plus one line per group. */
+export function formatBridgeSummary(summary: BridgeSummary): string[] {
+  if (summary.total === 0) return []
+  const codes = Object.entries(summary.nonZeroErrcodes)
+  const errcodeText =
+    codes.length === 0
+      ? ''
+      : `, non-zero errcodes ${codes.map(([code, count]) => `${code}x${count}`).join(',')}`
+  return [
+    `bridge summary: ${summary.total} events${errcodeText}`,
+    ...summary.groups.map((group) => {
+      const errcodes = Object.entries(group.errcodes)
+      const codeText =
+        errcodes.length === 0
+          ? ''
+          : ` errcodes ${errcodes.map(([code, count]) => `${code}x${count}`).join(',')}`
+      const span =
+        group.firstAt === undefined
+          ? ''
+          : ` first ${new Date(group.firstAt).toISOString()} last ${new Date(group.lastAt ?? group.firstAt).toISOString()}`
+      return `  ${group.protocol} ${group.direction} x${group.count}${codeText}${span}`
+    }),
+  ]
+}
+
+/** Formats the newest `limit` timeline entries, noting any earlier ones. */
+export function formatBridgeTimeline(entries: BridgeTimelineEntry[], limit = 20): string[] {
+  if (entries.length === 0) return []
+  const shown = entries.slice(-limit)
+  const hidden = entries.length - shown.length
+  const lines = shown.map((entry) => {
+    const errcode = entry.errcode === undefined ? '' : ` errcode ${entry.errcode}`
+    const errmsg = entry.errmsg === undefined ? '' : ` ${entry.errmsg}`
+    return `  ${formatClockMs(entry.receivedAt)}${entry.direction ?? '?'} ${entry.protocol ?? '?'}${errcode}${errmsg}`
+  })
+  return hidden > 0 ? [`  (+${hidden} earlier)`, ...lines] : lines
+}
+
+/**
+ * Checks rendered UI text against the capture. A bridge reply is the closest
+ * evidence (it fed the screen); a network response body is the fallback. Both
+ * are redacted before matching, so a credential can never count as agreement.
+ */
+export function agreeUiCapture(text: string, events: DebugEvent[]): UiCaptureAgreement {
+  const needle = text.trim().toLowerCase()
+  if (needle === '') return { text, agreed: false }
+
+  const bridgeReplies = events.filter(
+    (event) => event.type === 'bridge' && event.direction === 'receive',
+  )
+  for (let index = bridgeReplies.length - 1; index >= 0; index -= 1) {
+    const event = bridgeReplies[index]
+    if (event?.data === undefined) continue
+    if (!redactText(event.data).toLowerCase().includes(needle)) continue
+    return {
+      text,
+      agreed: true,
+      source: 'bridge',
+      protocol: event.protocol,
+      direction: event.direction,
+      receivedAt: event.receivedAt,
+    }
+  }
+
+  const networkReplies = events.filter(
+    (event) => event.type === 'network' && event.responseBody !== undefined,
+  )
+  for (let index = networkReplies.length - 1; index >= 0; index -= 1) {
+    const event = networkReplies[index]
+    if (event?.responseBody === undefined) continue
+    if (!redactText(event.responseBody).toLowerCase().includes(needle)) continue
+    return { text, agreed: true, source: 'network', receivedAt: event.receivedAt }
+  }
+
+  return { text, agreed: false }
+}
+
+/** One line an agent can quote as the UI and capture agreement check. */
+export function formatAgreement(agreement: UiCaptureAgreement, eventCount: number): string {
+  if (!agreement.agreed) {
+    return `not agreed: ${JSON.stringify(agreement.text)} appears in no bridge reply or network response body (${eventCount} events)`
+  }
+  const where =
+    agreement.source === 'bridge'
+      ? `bridge ${agreement.direction ?? '?'} ${agreement.protocol ?? '?'}`
+      : 'a network response body'
+  const at =
+    agreement.receivedAt === undefined ? '' : ` at ${formatClockMs(agreement.receivedAt).trim()}`
+  return `agreed: ${JSON.stringify(agreement.text)} appears in ${where}${at}`
+}
+
 /** Longest rendered piece of a single value before it is cut off. */
 const VALUE_LIMIT = 240
 
@@ -171,12 +370,23 @@ function formatUrl(url: string | undefined): string {
   return url === undefined ? '' : redactText(url)
 }
 
-/** Renders a wall-clock `HH:MM:SS` prefix for the event's arrival time. */
-function formatClock(ms: number | undefined): string {
-  if (ms === undefined) return ''
+/** Renders the wall-clock `HH:MM:SS` part of a timestamp. */
+function formatTime(ms: number): string {
   const date = new Date(ms)
   const part = (value: number) => String(value).padStart(2, '0')
-  return `${part(date.getHours())}:${part(date.getMinutes())}:${part(date.getSeconds())} `
+  return `${part(date.getHours())}:${part(date.getMinutes())}:${part(date.getSeconds())}`
+}
+
+/** Renders a wall-clock `HH:MM:SS.fff` prefix for the event's arrival time. */
+function formatClockMs(ms: number | undefined): string {
+  if (ms === undefined) return ''
+  const millis = String(new Date(ms).getMilliseconds()).padStart(3, '0')
+  return `${formatTime(ms)}.${millis} `
+}
+
+/** Renders a wall-clock `HH:MM:SS` prefix for the event's arrival time. */
+function formatClock(ms: number | undefined): string {
+  return ms === undefined ? '' : `${formatTime(ms)} `
 }
 
 /** Formats one event as a single human-readable line, credentials withheld. */

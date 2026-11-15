@@ -11,6 +11,9 @@
     "preview:app": "vp run website#preview",
     "preview:production": "vp run website#build && cd apps/website && vp preview --base /vois-app-webview-next/ --host --port 8080 --debug",
     "ready": "vp check && vp run -r test && vp run -r build",
+    "verify:fast": "vp check && vp test",
+    "verify:legacy": "node .pi/skills/verify-vois-compat/scripts/legacy.mjs",
+    "verify:device": "node .pi/skills/verify-vois-compat/scripts/device.mjs",
     "release": "bumpp --recursive",
     "up": "vpx taze -Ir major",
     "i18n:check": "x18n check"

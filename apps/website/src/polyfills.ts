@@ -19,3 +19,66 @@ if (objectApi.hasOwn === undefined) {
     writable: true,
   })
 }
+
+// A string-keyed probe keeps TypeScript from assuming the modern DOM type while
+// still asking the runtime engine what it actually has.
+function hasBootApi(name: string): boolean {
+  return name in window
+}
+
+// Chrome 70 is the production floor and lacks globalThis and queueMicrotask.
+// Both must exist before any app module runs, so they live with the boot polyfills.
+if (!hasBootApi('globalThis')) {
+  Object.defineProperty(window, 'globalThis', {
+    value: window,
+    configurable: true,
+    writable: true,
+  })
+}
+if (!hasBootApi('queueMicrotask')) {
+  window.queueMicrotask = (callback) => {
+    void Promise.resolve().then(callback)
+  }
+}
+
+// Chrome 70 has AbortController natively; this keeps the measured Chrome 64
+// floor working. Colada's query and the app's fetch wrapper both construct one,
+// so the data queries never start without it.
+interface AbortSignalLike extends EventTarget {
+  aborted: boolean
+  reason: Error | undefined
+  throwIfAborted: () => void
+}
+
+class AbortSignalPolyfill extends EventTarget implements AbortSignalLike {
+  aborted = false
+  reason: Error | undefined
+
+  throwIfAborted(): void {
+    if (this.aborted) throw this.reason ?? new Error('Aborted')
+  }
+}
+
+class AbortControllerPolyfill {
+  readonly signal: AbortSignalLike = new AbortSignalPolyfill()
+
+  abort(reason?: Error): void {
+    if (this.signal.aborted) return
+    this.signal.aborted = true
+    this.signal.reason = reason
+    this.signal.dispatchEvent(new Event('abort'))
+  }
+}
+
+if (!hasBootApi('AbortController')) {
+  Object.defineProperty(window, 'AbortController', {
+    value: AbortControllerPolyfill,
+    configurable: true,
+    writable: true,
+  })
+  Object.defineProperty(window, 'AbortSignal', {
+    value: AbortSignalPolyfill,
+    configurable: true,
+    writable: true,
+  })
+}

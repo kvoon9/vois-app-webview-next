@@ -5,17 +5,16 @@ import { fileURLToPath } from 'node:url'
 import { ensureBrowserFor, SWEEP_ROOT } from './resolve.mjs'
 
 const REPO_ROOT = fileURLToPath(new URL('../../../../', import.meta.url)).replace(/\/$/, '')
-const DEFAULT_URL = 'http://127.0.0.1:8081/#/devices'
+// The bridge capture keeps events.jsonl Chrome 70-parsable; console and network
+// are read over CDP instead, which this sweep already enables.
+const DEFAULT_URL = 'http://127.0.0.1:8081/?capture=bridge#/devices'
+const EVENTS_PATH = join(REPO_ROOT, 'apps/website/.tmp/vois-webview-debug/events.jsonl')
 
 const SYNTAX_PATTERN =
   /SyntaxError|Unexpected token|Unexpected reserved word|Unexpected identifier|Invalid or unexpected token|Unexpected end of input|Unexpected number|Unexpected string/i
 // A rendered device row, not merely an app shell. Case-insensitive so the
 // English build satisfies the same predicate as the Chinese one.
 const TEXT_PATTERN = /wl\d{6,}|CF03|电量|Battery/i
-// The injected harness uses optional chaining, which Chrome 70 cannot parse.
-// That failure is the harness's, not the app's, so it is filtered and the debug
-// server is proven by its injected script tag and /__debug/status instead.
-const HARNESS_PATH = '/__debug/client.js'
 
 const sleep = (ms) => new Promise((done) => setTimeout(done, ms))
 
@@ -121,6 +120,68 @@ function truncated(values, limit = 20, chars = 600) {
     .map((value) => (value.length > chars ? `${value.slice(0, chars)}...` : value))
 }
 
+function bridgeErrcode(data) {
+  if (data === null || data === undefined || Array.isArray(data)) return null
+  return Number.isFinite(data.errcode) ? data.errcode : null
+}
+
+/** Bridge events the page sent after `since`, reduced to timeline fields. */
+function readBridgeEvents(eventsFile, since) {
+  const events = []
+  let malformed = 0
+  let present = true
+  let lines = []
+  try {
+    lines = readFileSync(eventsFile, 'utf8').split('\n')
+  } catch {
+    present = false
+  }
+  for (const line of lines) {
+    if (!line.trim()) continue
+    let event
+    try {
+      event = JSON.parse(line)
+    } catch {
+      malformed += 1
+      continue
+    }
+    if (event.type !== 'bridge' || (event.receivedAt ?? 0) < since) continue
+    events.push({
+      receivedAt: event.receivedAt ?? null,
+      direction: event.direction ?? null,
+      protocol: event.protocol ?? null,
+      errcode: bridgeErrcode(event.data),
+    })
+  }
+  return { present, malformed, events }
+}
+
+/** Protocol and direction groups with counts, errcodes, and their time span. */
+function summarizeBridge(events) {
+  const groups = new Map()
+  const errcodes = {}
+  for (const event of events) {
+    const protocol = event.protocol ?? '?'
+    const direction = event.direction ?? '?'
+    const key = `${protocol}\u0000${direction}`
+    const group = groups.get(key)
+    if (group) {
+      group.count += 1
+      group.lastAt = event.receivedAt
+    } else {
+      groups.set(key, {
+        protocol,
+        direction,
+        count: 1,
+        firstAt: event.receivedAt,
+        lastAt: event.receivedAt,
+      })
+    }
+    if (event.errcode !== null) errcodes[event.errcode] = (errcodes[event.errcode] ?? 0) + 1
+  }
+  return { count: events.length, groups: [...groups.values()], errcodes }
+}
+
 async function evaluateJson(send, expression) {
   const message = await send('Runtime.evaluate', { expression, returnByValue: true })
   if (message.error) throw new Error(message.error.message)
@@ -142,6 +203,7 @@ const STATE_EXPRESSION = `JSON.stringify({
   listRows: document.querySelectorAll('ul li').length,
   buttons: document.querySelectorAll('button').length,
   debugClient: Boolean(document.querySelector('script[src*="/__debug/client.js"]')),
+  captureMode: window.__voisDebugCapture || 'unknown',
   viewport: { width: window.innerWidth, height: window.innerHeight },
   scrollWidth: document.documentElement.scrollWidth,
   horizontalOverflow: document.documentElement.scrollWidth > window.innerWidth + 1,
@@ -181,6 +243,7 @@ export async function runSweep({
   outDir = join(REPO_ROOT, 'apps/website/.tmp/verify/compat/legacy', String(major)),
   waitMs = Number(process.env.WAIT_MS ?? 30000),
   profileRoot = join(SWEEP_ROOT, 'profiles', 'compat'),
+  eventsFile = EVENTS_PATH,
   browser,
 } = {}) {
   const resolved = browser ?? (await ensureBrowserFor(major))
@@ -203,6 +266,7 @@ export async function runSweep({
     exceptions: [],
     logEntries: [],
     networkFailures: [],
+    bridge: { present: false, count: 0, summary: {}, events: [] },
     screenshot: '',
     waitedMs: 0,
     notes: '',
@@ -320,9 +384,19 @@ export async function runSweep({
       deviceScaleFactor: 2,
       mobile: true,
     })
+    const runStartedAt = Date.now()
     await send('Page.navigate', { url: appUrl })
 
     const { state, waitedMs, lastError } = await waitForState(send, waitMs)
+    const bridge = readBridgeEvents(eventsFile, runStartedAt)
+    const bridgeSummary = summarizeBridge(bridge.events)
+    base.bridge = {
+      present: bridge.present,
+      count: bridge.events.length,
+      malformed: bridge.malformed,
+      summary: bridgeSummary,
+      events: bridge.events,
+    }
     base.waitedMs = waitedMs
     base.layout = {
       viewport: state.viewport ?? {},
@@ -339,20 +413,11 @@ export async function runSweep({
       base.screenshot = relative(REPO_ROOT, screenshotPath)
     }
 
-    const harnessErrors = exceptions.filter((text) => text.includes(HARNESS_PATH)).length
     const keptExceptions = truncated(
-      exceptions.filter(
-        (text) =>
-          !text.includes('import.meta.resolve not supported') && !text.includes(HARNESS_PATH),
-      ),
+      exceptions.filter((text) => !text.includes('import.meta.resolve not supported')),
     )
     const keptLogEntries = logEntries
-      .filter(
-        (entry) =>
-          !entry.text.includes('import.meta.resolve not supported') &&
-          !entry.url.includes(HARNESS_PATH) &&
-          !entry.text.includes(HARNESS_PATH),
-      )
+      .filter((entry) => !entry.text.includes('import.meta.resolve not supported'))
       .slice(0, 20)
       .map((entry) => ({
         level: entry.level,
@@ -370,6 +435,8 @@ export async function runSweep({
       appRoot: state.hasApp === true,
       noErrorPage: state.errorPage === false,
       debugClient: state.debugClient === true,
+      bridgeMode: state.captureMode === 'bridge',
+      bridgeCaptured: bridge.events.length > 0,
       dataRow: textMatches,
       noAppExceptions: keptExceptions.length === 0,
       noAppAssetFailures: keptNetworkFailures.length === 0,
@@ -380,8 +447,14 @@ export async function runSweep({
     }
     const pass = Object.values(checks).every(Boolean)
 
-    if (harnessErrors > 0) noteParts.push(`debug harness error filtered (${harnessErrors})`)
     if (state.debugClient) noteParts.push('debug client injected')
+    noteParts.push(
+      `capture mode ${state.captureMode ?? 'unknown'}`,
+      `bridge events ${bridge.events.length}`,
+    )
+    if (!bridge.present) noteParts.push('events file not found')
+    if (bridge.malformed > 0)
+      noteParts.push(`malformed capture lines skipped (${bridge.malformed})`)
     if (keptNetworkFailures.length > 0) {
       noteParts.push(`network failures: ${keptNetworkFailures.join('; ')}`)
     }
@@ -441,6 +514,7 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
     .filter((value) => Number.isInteger(value) && value > 0)
   const appUrl = option(argv, 'url', process.env.APP_URL ?? DEFAULT_URL)
   const waitMs = Number(option(argv, 'wait', process.env.WAIT_MS ?? '30000'))
+  const eventsFile = option(argv, 'events-file', process.env.VOIS_DEBUG_EVENTS_FILE ?? EVENTS_PATH)
   const outputRoot = resolve(
     option(argv, 'out-root', join(REPO_ROOT, 'apps/website/.tmp/verify/compat/legacy')),
   )
@@ -448,7 +522,7 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const rows = []
   for (const major of majors) {
     const outDir = join(outputRoot, String(major))
-    const row = await runSweep({ major, appUrl, waitMs, outDir })
+    const row = await runSweep({ major, appUrl, waitMs, outDir, eventsFile })
     rows.push(row)
     const resultsPath = writeResults(outDir, [row])
     console.log(

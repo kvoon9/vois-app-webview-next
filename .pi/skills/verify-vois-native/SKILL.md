@@ -181,6 +181,8 @@ The 1.0.0 bridge is registered, but no real-money exchange has completed. Run th
 
 The debug pipeline captures native bridge and network traffic at `apps/website/.tmp/vois-webview-debug/events.jsonl`, one JSON object per line. `bridge` events carry `direction` (`send` / `receive`), `protocol`, `data`, and `receivedAt` (epoch milliseconds).
 
+The default page runs the full client. With `?capture=bridge` (the compatibility suite's L3 mode) the capture holds only bridge events and one load marker, so enable the inspector's `Network` domain for request and response evidence and read console output from the inspector too.
+
 ```sh
 # All bridge events, credential keys removed
 jq -c 'select(.type=="bridge") | {receivedAt, direction, protocol, data: (.data | del(."access-token", .token, .sign, .appid))}' \
@@ -196,7 +198,7 @@ date -r $((1794205115887 / 1000)) '+%Y-%m-%d %H:%M:%S'
 
 Proof standards:
 
-- **UI ↔ capture agreement.** The rendered device name or account must match the `responseBody` of the call that fed it. A screenshot alone is not proof.
+- **UI ↔ capture agreement.** The rendered device name or account must match the `responseBody` of the call that fed it, or a bridge reply's `data` when the bridge supplied it. The MCP `agreement` tool checks a bridge reply or a captured network body; in bridge mode compare the inspector's network response with the screen. A screenshot alone is not proof.
 - **Judge a reply by `errcode`, not HTTP status.** A `200` can still carry `errcode: 1`. iOS 5.0.6 answers unknown bridge actions with `{"success":false,"message":"Unknown action"}`, which has no `errcode` at all; record that shape as observed rather than treating it as success.
 - Save artifacts under `apps/website/.tmp/verify/<feature-id>/` (gitignored). Name them with the run and entry point.
 - Never print tokens, passwords, or auth URLs. Bridge logs redact `access-token` as `[redacted]`, but network event URLs can still contain `token=`, `sign=`, and `appid=`; strip them before printing.

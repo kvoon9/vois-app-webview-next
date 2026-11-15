@@ -6,13 +6,20 @@ import type { DebugCredentials, ResolvedConfig } from './config.ts'
 import type { DebugServerStatus, FetchLike } from './debug-server.ts'
 import { loginDebugAccount, probeDebugServer, readDebugSession } from './debug-server.ts'
 import {
+  agreeUiCapture,
+  bridgeTimeline,
   countByType,
   DEBUG_EVENT_TYPES,
+  formatAgreement,
+  formatBridgeSummary,
+  formatBridgeTimeline,
   formatDebugEvent,
   readEventsFile,
   selectEvents,
+  summarizeBridge,
   truncateText,
 } from './events.ts'
+import type { DebugEvent } from './events.ts'
 import { redactJson, redactText } from './redact.ts'
 import { callVoisApi } from './api.ts'
 import type { McpTool } from './mcp.ts'
@@ -64,15 +71,31 @@ async function firstAliveStatus(
   return statuses.find((status) => status !== null) ?? null
 }
 
-/** Builds the five debug tools, all bound to one resolved configuration. */
+/** Builds the six debug tools, all bound to one resolved configuration. */
 export function createDebugTools(config: ResolvedConfig, fetchImpl: FetchLike = fetch): McpTool[] {
   return [
     statusTool(config, fetchImpl),
     eventsTool(config),
+    agreementTool(config),
     loginTool(config, fetchImpl),
     tokenTool(config, fetchImpl),
     apiTool(config, fetchImpl),
   ]
+}
+
+/** What reading the configured capture yields, or why it could not be read. */
+type CaptureRead = { events: DebugEvent[]; skipped: number } | { error: string }
+
+/** Reads the configured events file once, for the tools that summarize it. */
+function readCapture(config: ResolvedConfig): CaptureRead {
+  if (config.eventsFile === '') {
+    return { error: 'No events file configured. Pass --events-file or run inside the repository.' }
+  }
+  try {
+    return readEventsFile(readFileSync(config.eventsFile, 'utf8'))
+  } catch {
+    return { error: `events file not found: ${config.eventsFile}\n${START_HINT}` }
+  }
 }
 
 /** `status`: which debug servers are alive and how much they captured. */
@@ -151,20 +174,9 @@ function eventsTool(config: ResolvedConfig): McpTool {
       },
     },
     run: async (args) => {
-      if (config.eventsFile === '') {
-        return textResult(
-          'No events file configured. Pass --events-file or run inside the repository.',
-          true,
-        )
-      }
-      let content: string
-      try {
-        content = readFileSync(config.eventsFile, 'utf8')
-      } catch {
-        return textResult(`events file not found: ${config.eventsFile}\n${START_HINT}`, true)
-      }
-
-      const { events, skipped } = readEventsFile(content)
+      const capture = readCapture(config)
+      if ('error' in capture) return textResult(capture.error, true)
+      const { events, skipped } = capture
       const summary = [...countByType(events).entries()]
         .map(([type, count]) => `${type} ${count}`)
         .join(', ')
@@ -180,7 +192,46 @@ function eventsTool(config: ResolvedConfig): McpTool {
         skipped > 0 ? `${skipped} malformed lines skipped` : undefined,
         `showing last ${selected.length} of ${matched.length} matching`,
       ].filter((line) => line !== undefined)
-      return textResult([...header, ...selected.map(formatDebugEvent)].join('\n'))
+      const bridge = summarizeBridge(events)
+      const bridgeLines = [
+        ...formatBridgeSummary(bridge),
+        ...(bridge.total > 0
+          ? ['bridge timeline:', ...formatBridgeTimeline(bridgeTimeline(events))]
+          : []),
+      ]
+      return textResult([...header, ...bridgeLines, ...selected.map(formatDebugEvent)].join('\n'))
+    },
+  }
+}
+
+/** `agreement`: does a rendered value agree with the reply or response behind it? */
+function agreementTool(config: ResolvedConfig): McpTool {
+  return {
+    name: 'agreement',
+    description:
+      'Check that a value rendered on screen (a device name, an account) agrees with the capture. It agrees when the text appears in a bridge reply or a network response body; credentials are redacted before matching. Use it for the UI and capture agreement proof.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        text: {
+          type: 'string',
+          description: 'Text read from the screen, for example a device name or account number',
+        },
+      },
+      required: ['text'],
+    },
+    run: async (args) => {
+      const text = readString(args, 'text')
+      if (text === undefined || text.trim() === '') {
+        return textResult(
+          'text is required, for example a device name or account shown on screen',
+          true,
+        )
+      }
+      const capture = readCapture(config)
+      if ('error' in capture) return textResult(capture.error, true)
+      const agreement = agreeUiCapture(text, capture.events)
+      return textResult(formatAgreement(agreement, capture.events.length))
     },
   }
 }

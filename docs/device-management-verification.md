@@ -56,7 +56,7 @@ await p.screenshot({ path: "/abs/path/track.png" });
 | SOS 增删 | 紧急联系人设置 | 删除会真的取消该对象的 SOS 通知 |
 | 建充值单 | 待续费设备 | 本轮不验（后端无 `pay` 字段） |
 
-每次：先截 UI，再读 `.tmp/vois-webview-debug/events.jsonl` 里对应 `network` 事件的 `requestBody` 和 `errcode`，用 `errcode`（不是 HTTP 200）判定。
+每次：先截 UI，再读 `.tmp/vois-webview-debug/events.jsonl` 里对应 `network` 事件的 `requestBody` 和 `errcode`，用 `errcode`（不是 HTTP 200）判定。页面带 `?capture=bridge` 时 capture 只有 bridge 事件与一条 load，请求/响应体与 console 从 inspector/CDP 读；bridge 回包的 `errcode` 在 `data.errcode`。
 
 ### 4. 群权限与验证码（尚未对齐原生，需产品确认）
 

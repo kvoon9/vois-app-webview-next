@@ -41,12 +41,16 @@ function findTool(tools: McpTool[], name: string): McpTool {
   return found
 }
 
-/** Writes a raw JSONL capture and builds the events tool bound to it. */
-function toolsOverLines(lines: string[]): McpTool {
+/** Writes a raw JSONL capture and builds every tool bound to it. */
+function allToolsOverLines(lines: string[]): McpTool[] {
   const eventsFile = join(mkdtempSync(join(tmpdir(), 'vois-mcp-')), 'events.jsonl')
   writeFileSync(eventsFile, `${lines.join('\n')}\n`)
-  const config = { ...testConfig(), eventsFile }
-  return findTool(createDebugTools(config, fetchDead), 'events')
+  return createDebugTools({ ...testConfig(), eventsFile }, fetchDead)
+}
+
+/** Writes a raw JSONL capture and builds the events tool bound to it. */
+function toolsOverLines(lines: string[]): McpTool {
+  return findTool(allToolsOverLines(lines), 'events')
 }
 
 const capture = [
@@ -111,6 +115,56 @@ test('events filters by type and reports malformed lines', async () => {
   expect(text).toContain('showing last 2 of 3 matching')
   expect(text).toContain('/c')
   expect(text).not.toContain('/a')
+})
+
+test('events prints the bridge summary and timeline', async () => {
+  const events = toolsOverLines([
+    JSON.stringify({
+      type: 'bridge',
+      direction: 'send',
+      protocol: 'get-page-params',
+      data: {},
+      receivedAt: 1,
+    }),
+    JSON.stringify({
+      type: 'bridge',
+      direction: 'receive',
+      protocol: 'get-page-params',
+      data: { errcode: 0, data: {} },
+      receivedAt: 2,
+    }),
+    JSON.stringify({ type: 'lifecycle', event: 'load', url: '/', receivedAt: 3 }),
+  ])
+  const text = (await events.run({})).content[0]?.text ?? ''
+  expect(text).toContain('bridge summary: 2 events')
+  expect(text).toContain('get-page-params receive x1 errcodes 0x1')
+  expect(text).toContain('bridge timeline:')
+  expect(text).toContain('receive get-page-params errcode 0')
+})
+
+test('agreement matches a rendered value against the bridge capture', async () => {
+  const tools = allToolsOverLines([
+    JSON.stringify({
+      type: 'bridge',
+      direction: 'receive',
+      protocol: 'device-get-detail',
+      data: { errcode: 0, data: { name: 'wl301010386256' } },
+      receivedAt: 2,
+    }),
+  ])
+  const agreement = findTool(tools, 'agreement')
+
+  const agreed = await agreement.run({ text: 'wl301010386256' })
+  expect(agreed.isError).not.toBe(true)
+  expect(agreed.content[0]?.text).toContain(
+    'agreed: "wl301010386256" appears in bridge receive device-get-detail',
+  )
+
+  const missing = await agreement.run({ text: 'not-on-screen' })
+  expect(missing.content[0]?.text).toContain('not agreed')
+
+  const empty = await agreement.run({})
+  expect(empty.isError).toBe(true)
 })
 
 test('countryCodeForAccount separates mobile numbers from 微喇号 accounts', () => {

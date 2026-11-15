@@ -32,7 +32,7 @@ node .pi/skills/verify-vois-webview/scripts/doctor.mjs          # human summary
 node .pi/skills/verify-vois-webview/scripts/doctor.mjs --json   # full report
 ```
 
-Read-only, exits non-zero when the instance is not worth driving. It answers: is a debug server answering, did a page connect in _this_ session, is the served source older than the session, which worktree/revision is this, did the `/v2` calls succeed or is auth dead. Run it before the first drive, after every server restart, and after any failed drive. It never prints tokens.
+Read-only, exits non-zero when the instance is not worth driving. It answers: is a debug server answering, did a page connect in _this_ session, is the served source older than the session, which worktree/revision is this, did the `/v2` calls succeed or is auth dead. Run it before the first drive, after every server restart, and after any failed drive. It never prints tokens. Under `?capture=bridge` the capture has no network events, so read the mint and `/v2` calls from the inspector/CDP instead.
 
 What doctor cannot see: a wedged UI on a healthy process — a stale dialog, a screen stuck loading, a page that answered before its data arrived. When the process is healthy and the screen is not, reset (reload, or `goto('#/')` and re-navigate) and doctor again rather than inspecting further.
 
@@ -53,7 +53,7 @@ EOF
 
 Selectors: `loc=role:<role>[name*="…"]` first (screens carry ARIA labels: `返回`, `选择日期`, `导航`), `loc=css:…` second, snapshot refs last. Text is Simplified Chinese — match it as rendered.
 
-**Headless and API — the `vois-debug` MCP server** (`.pi/mcp.json`, reachable when Pi runs in this repo). From a codemode script, `searchTools("vois-debug")` then `tools['mcp__vois-debug__status'|'__events'|'__login'|'__token'|'__api']({})`. `events` is the redacted reader: use it instead of `cat`ting the capture.
+**Headless and API — the `vois-debug` MCP server** (`.pi/mcp.json`, reachable when Pi runs in this repo). From a codemode script, `searchTools("vois-debug")` then `tools['mcp__vois-debug__status'|'__events'|'__agreement'|'__login'|'__token'|'__api']({})`. `events` is the redacted reader: use it instead of `cat`ting the capture. `agreement` checks a rendered value against a bridge reply or network response body.
 
 **Raw pipeline** (when the MCP server is unavailable):
 
@@ -69,6 +69,8 @@ Selectors: `loc=role:<role>[name*="…"]` first (screens carry ARIA labels: `返
 | `bridge`    | native messages (`get-page-params`, `close-page`, …)      |
 
 `network` events carry `method`, `url`, `status`, `requestBody`, and `responseBody`; `bridge` events carry `direction` (`send` / `receive`) and `protocol`. That is where native handshakes are observable without a native app.
+
+**Bridge capture mode.** Append `?capture=bridge` to the page URL and the client records only `bridge` events plus one `lifecycle` load marker, while still logging `🟢 WebView debug connected`. The Chrome 70 compat sweep and its L3 runs use it. Console, network, and lifecycle evidence then comes from the browser's inspector/CDP, not `events.jsonl`. Pages without the query run the full client, which stays the default for every proof standard below.
 
 **Entry points.** Hash routes are legitimate user entry points — native opens the WebView by URL, so `#/devices/1848581` is how a real user lands there. What is not a user path: poking a composable, calling an internal setter, or replacing a click with a router push. Debug inputs ride the query (`?login-id=456`, `?hardware-id=441`; the hash query wins over the outer search and token fields are ignored).
 

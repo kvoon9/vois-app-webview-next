@@ -206,7 +206,7 @@ try {
 
   const row = await runSweep({
     major: target,
-    appUrl: `${PREVIEW_URL}/#/devices`,
+    appUrl: `${PREVIEW_URL}/?capture=bridge#/devices`,
     outDir,
     waitMs,
     browser,
@@ -220,7 +220,7 @@ try {
         layer: 'legacy',
         target,
         chromeTarget: `chrome ${target}`,
-        appUrl: `${PREVIEW_URL}/#/devices`,
+        appUrl: `${PREVIEW_URL}/?capture=bridge#/devices`,
         built: !skipBuild,
         preview: {
           url: PREVIEW_URL,
@@ -228,6 +228,12 @@ try {
           sessionStartedAt: previewStatus?.sessionStartedAt ?? null,
         },
         syntaxCheck,
+        capture: {
+          mode: 'bridge',
+          eventsPath: 'apps/website/.tmp/vois-webview-debug/events.jsonl',
+          bridgeCount: row.bridge?.count ?? 0,
+          bridgeSummary: row.bridge?.summary ?? {},
+        },
         browser: {
           version: browser.binaryVersion,
           cached: browser.cached,
@@ -240,6 +246,7 @@ try {
           classification: row.classification,
           checks: row.checks,
           waitedMs: row.waitedMs,
+          bridge: row.bridge?.summary ?? {},
           notes: row.notes,
         },
       },

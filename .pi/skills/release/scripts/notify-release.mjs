@@ -23,11 +23,9 @@ import { execFileSync, spawnSync } from 'node:child_process'
 import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
-import { fileURLToPath } from 'node:url'
 import { parseArgs } from 'node:util'
 import { buildMessage, latestTag, releaseNotes } from './changelog.mjs'
 
-const here = path.dirname(fileURLToPath(import.meta.url))
 const QQ_RELEASE_HOME =
   process.env.QQ_RELEASE_HOME || path.join(os.homedir(), '.agents', 'skills', 'qq-release')
 const QQCTL = path.join(QQ_RELEASE_HOME, 'scripts', 'qq', 'qqctl')

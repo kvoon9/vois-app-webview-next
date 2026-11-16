@@ -5,6 +5,7 @@ import { useI18n } from 'vue-i18n'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import BaseModal from '~/components/BaseModal.vue'
 import MapCanvas from '~/components/device/MapCanvas.vue'
+import MapRailButton from '~/components/device/MapRailButton.vue'
 import PageHeader from '~/components/PageHeader.vue'
 import QueryState from '~/components/settings/QueryState.vue'
 import { parseRouteParamId } from '~/composables/useRouteParamId'
@@ -168,18 +169,20 @@ function startFence(): void {
         <!-- Native chrome: a vertical stack of white rounded squares on the
              right, icon over label. Sharing has no bridge call behind it, so
              it stays out. -->
-        <div class="right-4 top-4 z-2 absolute flex flex-col space-y-3">
-          <button
-            type="button"
-            class="h-14 w-14 flex flex-col items-center justify-center rounded-xl bg-surface-elevated shadow-lg"
+        <div class="absolute right-4 top-4 z-20 flex flex-col space-y-3">
+          <MapRailButton
+            icon="i-ph-crosshair"
+            :label="t('device.fenceButton')"
             :aria-label="fence ? t('device.fenceEdit') : t('device.fenceAdd')"
             @click="openFence"
-          >
-            <span class="i-ph-crosshair text-2xl text-text-primary" aria-hidden="true" />
-            <span class="mt-0.5 text-xs leading-none text-text-primary">
-              {{ t('device.fenceButton') }}
-            </span>
-          </button>
+          />
+          <MapRailButton
+            v-if="deviceId != null"
+            icon="i-ph-sliders-horizontal"
+            :label="t('device.trackSettingShort')"
+            :aria-label="t('device.trackSetting')"
+            :to="`/devices/${deviceId}/track-setting`"
+          />
         </div>
 
         <!-- The live location runs in the background, so it reports as one

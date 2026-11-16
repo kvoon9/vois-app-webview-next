@@ -16,6 +16,11 @@ export interface AMapOverlay {
   setMap(map: AMapMap | null): void
 }
 
+export interface AMapMarker extends AMapOverlay {
+  on(event: 'click', handler: () => void): void
+  setContent(content: string): void
+}
+
 export interface AMapMapEvent {
   lnglat: { lng: number; lat: number }
 }
@@ -59,6 +64,7 @@ interface AMapMarkerOptions {
   content?: string
   /** Pixel offset for custom content, [x, y] from top-left. */
   offset?: [number, number]
+  zIndex?: number
 }
 
 interface AMapCircleOptions {
@@ -81,7 +87,7 @@ interface AMapLineOptions {
 
 export interface AMapApi {
   Map: new (container: HTMLElement, options: AMapConstructorOptions) => AMapMap
-  Marker: new (options: AMapMarkerOptions) => AMapOverlay
+  Marker: new (options: AMapMarkerOptions) => AMapMarker
   Circle: new (options: AMapCircleOptions) => AMapOverlay
   Polyline: new (options: AMapLineOptions) => AMapOverlay
   Scale: new () => AMapControl

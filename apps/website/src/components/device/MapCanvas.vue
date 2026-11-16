@@ -5,6 +5,7 @@ import {
   useAMap,
   type AMapApi,
   type AMapMap,
+  type AMapMarker,
   type AMapOverlay,
   type AMapPoint,
 } from '~/composables/useAMap'
@@ -14,6 +15,7 @@ import devicePinUrl from '~/assets/map/ic_location_marker.png'
 import compassUrl from '~/assets/map/ic_compass.png'
 import myLocationUrl from '~/assets/map/ic_my_location.png'
 import type { DeviceFence } from '~/utils/device-api'
+import type { TrackMapPoint } from '~/utils/track'
 
 const props = defineProps<{
   center: AMapPoint
@@ -25,13 +27,18 @@ const props = defineProps<{
   /** The viewer's own position (bridge GPS), drawn as the my-location dot. */
   me?: AMapPoint | null
   fence?: DeviceFence | null
-  track?: AMapPoint[]
+  track?: TrackMapPoint[]
+  /** The point whose detail card is open; only its marker switches to primary. */
+  selectedTrackIndex?: number | null
+  /** A camera target that re-applies whenever the nonce changes. */
+  focus?: { point: AMapPoint; nonce: number } | null
   /** Let the map report taps, for picking a fence centre. */
   picker?: boolean
 }>()
 
 const emit = defineEmits<{
   pick: [point: AMapPoint]
+  'select-track-point': [index: number]
 }>()
 
 const { t } = useI18n({ useScope: 'global' })
@@ -40,6 +47,9 @@ const container = useTemplateRef<HTMLDivElement>('container')
 const map = shallowRef<AMapMap | null>(null)
 const amap = shallowRef<AMapApi | null>(null)
 const overlays = shallowRef<AMapOverlay[]>([])
+/** Track markers in array order, so selection can recolour one by index. */
+let trackMarkerOverlays: AMapMarker[] = []
+let lastSelectedIndex: number | null = null
 const error = shallowRef<string | null>(null)
 /** The fence id the camera already framed; refits only when a new one loads. */
 const fittedFenceId = shallowRef<number | null>(null)
@@ -85,9 +95,22 @@ function deviceMarkerContent(): string {
   )
 }
 
+/** Inline styles only: AMap injects this DOM outside Vue's scoped-style scope. */
+function markerContent(index: number, selected: boolean): string {
+  const dot = selected
+    ? 'width:20px;height:20px;background:var(--color-primary);box-shadow:0 0 0 3px #fff'
+    : 'width:12px;height:12px;background:#fff;box-shadow:0 0 0 2px var(--color-text-secondary)'
+  return (
+    `<div data-track-index="${index}" style="width:36px;height:36px;display:flex;align-items:center;justify-content:center">` +
+    `<span style="display:block;border-radius:50%;${dot}"></span>` +
+    `</div>`
+  )
+}
+
 function removeOverlays(): void {
   if (map.value && overlays.value.length > 0) map.value.remove(overlays.value)
   overlays.value = []
+  trackMarkerOverlays = []
 }
 
 /** The centre the camera was last pointed at. A later draw whose centre has
@@ -172,6 +195,23 @@ function drawOverlays(): void {
       }),
     )
   }
+  if (props.track) {
+    const selected = props.selectedTrackIndex ?? null
+    props.track.forEach((point, index) => {
+      const isSelected = index === selected
+      const trackMarker = new amap.value!.Marker({
+        position: pointValue(point),
+        title: point.time,
+        content: markerContent(index, isSelected),
+        offset: [-18, -18],
+        zIndex: isSelected ? 120 : 110,
+      })
+      trackMarker.on('click', () => emit('select-track-point', index))
+      trackMarkerOverlays.push(trackMarker)
+      nextOverlays.push(trackMarker)
+    })
+    lastSelectedIndex = selected
+  }
 
   overlays.value = nextOverlays
   if (nextOverlays.length > 0) map.value.add(nextOverlays)
@@ -222,6 +262,7 @@ onMounted(async () => {
       )
     }
     drawOverlays()
+    if (props.focus) map.value?.setCenter(pointValue(props.focus.point))
   } catch (reason) {
     error.value = reason instanceof Error ? reason.message : String(reason)
   }
@@ -250,6 +291,23 @@ watch(
   ],
   () => drawOverlays(),
   { deep: true },
+)
+
+watch(
+  () => props.selectedTrackIndex,
+  (next) => {
+    const previous = lastSelectedIndex
+    lastSelectedIndex = next ?? null
+    if (previous != null) trackMarkerOverlays[previous]?.setContent(markerContent(previous, false))
+    if (next != null) trackMarkerOverlays[next]?.setContent(markerContent(next, true))
+  },
+)
+
+watch(
+  () => props.focus,
+  (focus) => {
+    if (focus && map.value) map.value.setCenter(pointValue(focus.point))
+  },
 )
 
 onUnmounted(() => {

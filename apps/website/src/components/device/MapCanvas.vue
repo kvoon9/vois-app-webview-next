@@ -63,13 +63,8 @@ let fenceCircleForFit: AMapOverlay | null = null
  */
 const VIEWER_FIT_AVOID = [80, 120, 80, 80]
 /** Editor fit padding [top, bottom, left, right]; clears the fence editor's
- * radius strip and the bottom sheet at its tallest, delete button included. */
-const EDITOR_FIT_AVOID: [number, number, number, number] = [80, 328, 40, 40]
-/** A picked centre must land in the visible band, not under the bottom sheet. */
-const EDITOR_CENTER_PAN = [
-  (EDITOR_FIT_AVOID[2] - EDITOR_FIT_AVOID[3]) / 2,
-  (EDITOR_FIT_AVOID[0] - EDITOR_FIT_AVOID[1]) / 2,
-] as const
+ * radius strip overlaying the map top. */
+const EDITOR_FIT_AVOID: [number, number, number, number] = [80, 40, 40, 40]
 /** The fence geometry the editor camera last framed; plain state like
  * fenceCircleForFit. Save and delete leave via goBack and unmount the page,
  * so it dies with the component. A refactor that keeps the map mounted
@@ -139,7 +134,7 @@ function removeOverlays(): void {
 
 /** The centre the camera was last pointed at. A later draw whose centre has
  * not changed must not re-setCenter: the jump cancels an in-flight entry
- * fit's avoid shift and drops the fence back under the bottom sheet. */
+ * fit's avoid shift and re-frames the fence. */
 let centeredPoint: AMapPoint | null = null
 
 function drawOverlays(): void {
@@ -149,11 +144,6 @@ function drawOverlays(): void {
   if (!centeredPoint || centeredPoint.lng !== center.lng || centeredPoint.lat !== center.lat) {
     centeredPoint = { lng: center.lng, lat: center.lat }
     map.value.setCenter(pointValue(center))
-    // The entry fit frames the fence in the visible band; a later pick would
-    // otherwise sit at the container centre, under the bottom sheet.
-    if (props.picker && lastFitted) {
-      map.value.panBy(EDITOR_CENTER_PAN[0], EDITOR_CENTER_PAN[1], 0)
-    }
   }
   fenceCircleForFit = null
 
@@ -357,8 +347,8 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="relative h-full min-h-80 w-full overflow-hidden bg-surface-muted">
-    <div ref="container" class="h-full min-h-80 w-full" />
+  <div class="relative h-full w-full overflow-hidden bg-surface-muted">
+    <div ref="container" class="h-full w-full" />
 
     <!-- Native map chrome: compass top-left, locate-me bottom-left above the
          scale, zoom bottom-right. The page's own buttons stack over these. -->

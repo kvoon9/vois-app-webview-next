@@ -45,7 +45,6 @@ export interface AMapMap {
   add(overlays: AMapOverlay | AMapOverlay[]): void
   remove(overlays: AMapOverlay | AMapOverlay[]): void
   setCenter(center: [number, number]): void
-  panBy(x: number, y: number, duration?: number): void
   setFitView(overlays?: AMapOverlay[], immediately?: boolean, padding?: number[]): void
   zoomIn(): void
   zoomOut(): void

@@ -12,7 +12,7 @@ export default defineConfig({
       'tools/oxlint/anti-slop/**',
       'apps/docs/**',
       'docs/**/*.md',
-      'api-reference/**',
+      'docs/api-reference/**',
     ],
   },
   lint: {

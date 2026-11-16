@@ -13,7 +13,7 @@ import { usePageBack } from '~/composables/usePageBack'
 import { useToast } from '~/composables/useToast'
 import { MAX_DESCRIPTION_LENGTH } from '~/utils/field-schema'
 import { getDeviceFriends, getFriends, inviteDeviceFriend, type Friend } from '~/utils/device-api'
-import { INITIALS, sortContactsByInitial } from '~/utils/pinyin'
+import { INITIALS, sortContactsByInitial, type ContactEntry, type Initial } from '~/utils/pinyin'
 
 const { t } = useI18n({ useScope: 'global' })
 const route = useRoute()
@@ -59,6 +59,17 @@ const visibleFriends = computed(() => {
       item.nick.toLowerCase().includes(query) || item.userNum.toLowerCase().includes(query),
   )
 })
+/** Consecutive rows share an initial; the sort already puts `#` first. */
+const friendGroups = computed(() => {
+  const groups: { initial: Initial; entries: ContactEntry<Friend>[] }[] = []
+  for (const entry of visibleFriends.value) {
+    const last = groups[groups.length - 1]
+    if (last?.initial === entry.initial) last.entries.push(entry)
+    else groups.push({ initial: entry.initial, entries: [entry] })
+  }
+  return groups
+})
+
 /** Below four rows the fixed rail would be taller than the list. */
 const RAIL_MIN_ROWS = 4
 const presentInitials = computed(() => new Set(visibleFriends.value.map((entry) => entry.initial)))
@@ -181,32 +192,39 @@ async function submit(): Promise<void> {
             {{ keyword.trim() ? t('device.noUsersFound') : t('device.noCandidates') }}
           </p>
           <div v-else class="mt-2 panel">
-            <button
-              v-for="entry in visibleFriends"
-              :key="entry.item.userId"
-              type="button"
-              :aria-pressed="selectedIds.includes(entry.item.userId)"
-              :data-contact-initial="entry.initial"
-              class="min-h-16 w-full scroll-mt-16 flex items-center px-4 text-left disabled:opacity-50"
-              :class="highlightedId === entry.item.userId ? 'bg-surface-selected' : ''"
-              :disabled="existingIds.has(entry.item.userId)"
-              @click="toggleFriend(entry.item)"
-            >
-              <Avatar :name="entry.item.nick" :src="entry.item.avatar" />
-              <span class="ml-3 min-w-0 flex-1 truncate text-body">{{ entry.item.nick }}</span>
-              <span
-                v-if="existingIds.has(entry.item.userId)"
-                class="ml-2 text-small text-text-secondary"
+            <template v-for="group in friendGroups" :key="group.initial">
+              <h2
+                :data-contact-initial="group.initial"
+                class="scroll-mt-16 px-4 pb-1 pt-4 text-small font-medium text-text-secondary"
               >
-                {{ t('device.alreadyContact') }}
-              </span>
-              <span
-                v-else
-                class="radio ml-3"
-                :class="selectedIds.includes(entry.item.userId) ? 'radio-on' : 'radio-off'"
-                aria-hidden="true"
-              />
-            </button>
+                {{ group.initial }}
+              </h2>
+              <button
+                v-for="entry in group.entries"
+                :key="entry.item.userId"
+                type="button"
+                :aria-pressed="selectedIds.includes(entry.item.userId)"
+                class="min-h-16 w-full flex items-center px-4 text-left disabled:opacity-50"
+                :class="highlightedId === entry.item.userId ? 'bg-surface-selected' : ''"
+                :disabled="existingIds.has(entry.item.userId)"
+                @click="toggleFriend(entry.item)"
+              >
+                <Avatar :name="entry.item.nick" :src="entry.item.avatar" />
+                <span class="ml-3 min-w-0 flex-1 truncate text-body">{{ entry.item.nick }}</span>
+                <span
+                  v-if="existingIds.has(entry.item.userId)"
+                  class="ml-2 text-small text-text-secondary"
+                >
+                  {{ t('device.alreadyContact') }}
+                </span>
+                <span
+                  v-else
+                  class="radio ml-3"
+                  :class="selectedIds.includes(entry.item.userId) ? 'radio-on' : 'radio-off'"
+                  aria-hidden="true"
+                />
+              </button>
+            </template>
           </div>
           <!-- Fixed between the search field (ends 110) and the CTA (starts 518). -->
           <AzIndexRail

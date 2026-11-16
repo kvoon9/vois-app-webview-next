@@ -44,7 +44,8 @@ test('lists the signed-in account and opens the add-account form without submitt
   evidence.json('account', JSON.stringify({ nick, num }))
 
   await page.getByRole('link', { name: '添加账号' }).click()
-  await expect(page).toHaveURL(/#\/login$/)
+  // A cold Vite server can spend most of the default budget transforming a lazy route.
+  await expect(page).toHaveURL(/#\/login$/, { timeout: 30_000 })
   await expect(page.getByRole('combobox', { name: '帐号／手机号' })).toBeVisible()
   await expect(page.getByRole('textbox', { name: '密码' })).toBeVisible()
   await expect(page.locator('main').getByRole('button', { name: '登录' })).toBeVisible()

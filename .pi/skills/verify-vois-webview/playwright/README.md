@@ -44,3 +44,4 @@ Start the DevServer first (`cd apps/website && vp dev --host --port 3021`) and c
 - `device-get-detail` is authoritative for capability flags; `manager-get-all-device` can disagree.
 - The list's `nick` is the account's `wl...` name; the detail heading renders it.
 - Traces are off by default. `VERIFY_TRACE=1` writes a local trace that can contain credentials; never cite it as evidence.
+- A DevServer that just re-optimized dependencies reloads the page (`optimized dependencies changed. reloading`). Let the first load settle before running the suite. Start the server normally; reserve `--force` for a stale dependency cache.

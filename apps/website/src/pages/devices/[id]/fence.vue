@@ -261,14 +261,14 @@ async function removeFence(): Promise<void> {
                 <div class="mt-2 flex space-x-2">
                   <button
                     type="button"
-                    class="h-8 flex-1 rounded-small bg-surface-muted text-small"
+                    class="h-11 flex-1 rounded-small bg-surface-muted text-small"
                     @click="cancelPick"
                   >
                     {{ t('modal.cancel') }}
                   </button>
                   <button
                     type="button"
-                    class="h-8 flex-1 rounded-small bg-primary text-primary-text text-small"
+                    class="h-11 flex-1 rounded-small bg-primary text-primary-text text-small"
                     @click="confirmPick"
                   >
                     {{ t('modal.confirm') }}

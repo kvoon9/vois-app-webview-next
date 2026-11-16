@@ -105,9 +105,9 @@ function updateAnchorPosition(): void {
   const height = element.clientHeight
   const fitsRight = x + 36 + 120 <= width
   // The wrapper is centred on `top` (`translateY(-50%)`), so both bounds are
-  // padded by half the 72px card: keep it below the 64px radius strip and
+  // padded by half the 84px card: keep it below the 64px radius strip and
   // inside the map.
-  const cardHalfHeight = 36
+  const cardHalfHeight = 42
   anchorPosition.value = {
     left: fitsRight ? x + 36 : x - 36,
     top: Math.min(Math.max(y - 28, 64 + 8 + cardHalfHeight), height - 8 - cardHalfHeight),

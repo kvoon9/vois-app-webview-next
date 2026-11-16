@@ -5,6 +5,14 @@ const { data: page } = await useAsyncData(`doc-${route.path}`, () =>
   queryCollection('docs').path(route.path).first(),
 )
 
+useSeoMeta({
+  title: () =>
+    page.value?.title ? `${page.value.title} · Vois WebView 文档` : 'Vois WebView 文档',
+  description: () =>
+    page.value?.description ??
+    'Vois WebView 的接口、Native 契约、工程研究与真机对照文档。',
+})
+
 if (!page.value) {
   throw createError({
     statusCode: 404,

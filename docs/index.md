@@ -7,6 +7,8 @@ description: Vois WebView 的接口、Native 契约、工程研究与真机对�
 
 本目录是仓库唯一的第一方文档源，`apps/docs` 用 Nuxt Content 直接渲染 `docs/` 下的 Markdown。
 
+> 使用顶部搜索（`⌘K` / `Ctrl+K`）可直接查找接口、字段和文档标题。
+
 ## 接口
 
 - [API 参考（ApiPost 快照）](/api-reference/weila-webapi/readme)：44 个 `/v2/subuser/*` 接口的字段级契约，由 `vp run docs:apipost` 生成。

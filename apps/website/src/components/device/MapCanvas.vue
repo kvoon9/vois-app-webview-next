@@ -79,20 +79,39 @@ function pointValue(point: AMapPoint): [number, number] {
  * bearing droplet (63dp) behind a white ring (40.5dp) and a 36dp round avatar,
  * all concentric at the anchor. The avatar sits on the ring; the droplet body
  * shows around it and the tail points up. */
-function deviceMarkerContent(): string {
-  const avatar = props.markerAvatar?.replace(/"/g, '%22')
-  const inner = avatar
-    ? `<img src="${avatar}" alt="" style="position:absolute;inset:0;width:36px;height:36px;border-radius:50%;object-fit:cover">`
-    : `<span style="width:36px;height:36px;display:flex;align-items:center;justify-content:center;font-size:16px;line-height:1;color:#6b7280;background:#fff">${
-        props.markerName?.trim().slice(0, 1) || '?'
-      }</span>`
-  return (
-    `<div style="position:relative;width:63px;height:63px">` +
+function deviceMarkerContent(): HTMLElement {
+  const root = document.createElement('div')
+  root.style.cssText = 'position:relative;width:63px;height:63px'
+  root.innerHTML =
     `<img src="${bearingUrl}" alt="" style="position:absolute;inset:0;width:63px;height:63px">` +
-    `<img src="${ringUrl}" alt="" style="position:absolute;left:11.25px;top:11.75px;width:40.5px;height:39.5px">` +
-    `<span style="position:absolute;left:13.5px;top:13.5px;width:36px;height:36px;border-radius:50%;overflow:hidden">${inner}</span>` +
-    `</div>`
-  )
+    `<img src="${ringUrl}" alt="" style="position:absolute;left:11.25px;top:11.75px;width:40.5px;height:39.5px">`
+  const well = document.createElement('span')
+  well.style.cssText =
+    'position:absolute;left:13.5px;top:13.5px;width:36px;height:36px;border-radius:50%;overflow:hidden'
+  const fallback = document.createElement('span')
+  fallback.style.cssText =
+    'position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:16px;line-height:1;color:#6b7280;background:#fff'
+  fallback.textContent = props.markerName?.trim().slice(0, 1) || '?'
+  well.append(fallback)
+
+  const avatar = props.markerAvatar
+  if (avatar) {
+    const image = document.createElement('img')
+    image.alt = ''
+    image.style.cssText =
+      'position:absolute;inset:0;width:36px;height:36px;border-radius:50%;object-fit:cover;opacity:0;transition:opacity 150ms'
+    image.addEventListener('load', () => {
+      image.style.opacity = '1'
+    })
+    image.addEventListener('error', () => {
+      image.remove()
+    })
+    image.src = avatar
+    well.append(image)
+  }
+
+  root.append(well)
+  return root
 }
 
 /** Inline styles only: AMap injects this DOM outside Vue's scoped-style scope. */

@@ -227,7 +227,7 @@
     "fenceLowFrequencyTip": "Track reporting frequency is low, so the electronic fence cannot take effect. Tap to change it.",
     "fenceTitle": "Electronic fence",
     "fencePickHint": "Press and hold the map to set the fence centre",
-    "fenceSetCenterConfirm": "Set centre here?",
+    "fenceSetCenterConfirm": "Set the fence here?",
     "fenceCenter": "Fence centre",
     "fenceAddConfirm": "This creates a new electronic fence for this device. On the next page, press and hold the map to set the fence centre, adjust the radius, then save to apply it.",
     "fenceSave": "Save",

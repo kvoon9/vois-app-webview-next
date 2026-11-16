@@ -227,7 +227,7 @@
     "fenceLowFrequencyTip": "目前軌跡上報頻率低，電子圍欄無法生效，可點擊修改軌跡上報頻率",
     "fenceTitle": "電子圍欄",
     "fencePickHint": "請長按地圖設定圍欄中心點",
-    "fenceSetCenterConfirm": "設為中心？",
+    "fenceSetCenterConfirm": "是否將圍欄設置在此處？",
     "fenceCenter": "圍欄中心",
     "fenceAddConfirm": "將為該設備建立一個新的電子圍欄。進入建立頁後，長按地圖設定圍欄中心，調整半徑後儲存即可生效。",
     "fenceSave": "儲存",

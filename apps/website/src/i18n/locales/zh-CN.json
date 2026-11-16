@@ -227,7 +227,7 @@
     "fenceLowFrequencyTip": "当前轨迹上报频率低电子围栏无法生效，可点击修改轨迹上报频率",
     "fenceTitle": "电子围栏",
     "fencePickHint": "请长按地图设置围栏中心点",
-    "fenceSetCenterConfirm": "设为中心？",
+    "fenceSetCenterConfirm": "是否将围栏设置在此处？",
     "fenceCenter": "围栏中心",
     "fenceAddConfirm": "将为该设备创建一个新的电子围栏。进入创建页后，长按地图设置围栏中心，调整半径后保存即可生效。",
     "fenceSave": "保存",

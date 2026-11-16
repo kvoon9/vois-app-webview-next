@@ -31,6 +31,8 @@ const props = defineProps<{
   fenceFrom?: AMapPoint | null
   /** The pending centre the anchor popup points at. */
   anchor?: AMapPoint | null
+  /** Bumped when a pick is confirmed; the editor animates a refit. */
+  fitNonce?: number
   track?: TrackMapPoint[]
   /** The point whose detail card is open; only its marker switches to primary. */
   selectedTrackIndex?: number | null
@@ -72,6 +74,8 @@ const EDITOR_FIT_AVOID: [number, number, number, number] = [80, 40, 40, 40]
 /** The radius strip covers the map top; a pick centres the point in the band
  * below it so the pin and its card stay clear of the strip. */
 const EDITOR_PICK_PAN = 32
+/** Picks, cancels, and the confirm refit slide instead of jumping. */
+const EDITOR_CAMERA_DURATION = 450
 /** The fence geometry the editor camera last framed; plain state like
  * fenceCircleForFit. Save and delete leave via goBack and unmount the page,
  * so it dies with the component. A refactor that keeps the map mounted
@@ -105,9 +109,9 @@ function updateAnchorPosition(): void {
   const height = element.clientHeight
   const fitsRight = x + 36 + 120 <= width
   // The wrapper is centred on `top` (`translateY(-50%)`), so both bounds are
-  // padded by half the 84px card: keep it below the 64px radius strip and
+  // padded by half the 100px card: keep it below the 64px radius strip and
   // inside the map.
-  const cardHalfHeight = 42
+  const cardHalfHeight = 50
   anchorPosition.value = {
     left: fitsRight ? x + 36 : x - 36,
     top: Math.min(Math.max(y - 28, 64 + 8 + cardHalfHeight), height - 8 - cardHalfHeight),
@@ -193,9 +197,16 @@ function drawOverlays(): void {
   const center = props.center
   if (!centeredPoint || centeredPoint.lng !== center.lng || centeredPoint.lat !== center.lat) {
     centeredPoint = { lng: center.lng, lat: center.lat }
-    map.value.setCenter(pointValue(center))
     if (props.picker && lastFitted) {
-      map.value.panBy(0, EDITOR_PICK_PAN, 0)
+      // Aim the camera so the point lands in the band below the radius strip,
+      // then let AMap animate the whole move in one pass.
+      const pixel = map.value.lngLatToContainer(pointValue(center))
+      const target = map.value.containerToLngLat(
+        new amap.value.Pixel(pixel.getX(), pixel.getY() - EDITOR_PICK_PAN),
+      )
+      map.value.setCenter([target.lng, target.lat], false, EDITOR_CAMERA_DURATION)
+    } else {
+      map.value.setCenter(pointValue(center))
     }
   }
   fenceCircleForFit = null
@@ -404,6 +415,14 @@ watch(
 watch(
   () => props.anchor,
   () => updateAnchorPosition(),
+)
+
+watch(
+  () => props.fitNonce,
+  () => {
+    if (!map.value || !props.picker || !fenceCircleForFit) return
+    map.value.setFitView([fenceCircleForFit], false, EDITOR_FIT_AVOID)
+  },
 )
 
 watch(

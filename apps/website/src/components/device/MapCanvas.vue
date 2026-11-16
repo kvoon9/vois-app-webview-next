@@ -69,6 +69,9 @@ const VIEWER_FIT_AVOID = [80, 120, 80, 80]
 /** Editor fit padding [top, bottom, left, right]; clears the fence editor's
  * radius strip overlaying the map top. */
 const EDITOR_FIT_AVOID: [number, number, number, number] = [80, 40, 40, 40]
+/** The radius strip covers the map top; a pick centres the point in the band
+ * below it so the pin and its card stay clear of the strip. */
+const EDITOR_PICK_PAN = 32
 /** The fence geometry the editor camera last framed; plain state like
  * fenceCircleForFit. Save and delete leave via goBack and unmount the page,
  * so it dies with the component. A refactor that keeps the map mounted
@@ -191,6 +194,9 @@ function drawOverlays(): void {
   if (!centeredPoint || centeredPoint.lng !== center.lng || centeredPoint.lat !== center.lat) {
     centeredPoint = { lng: center.lng, lat: center.lat }
     map.value.setCenter(pointValue(center))
+    if (props.picker && lastFitted) {
+      map.value.panBy(0, EDITOR_PICK_PAN, 0)
+    }
   }
   fenceCircleForFit = null
 

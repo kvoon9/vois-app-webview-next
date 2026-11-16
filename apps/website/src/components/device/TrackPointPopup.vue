@@ -48,7 +48,32 @@ const { t } = useI18n({ useScope: 'global' })
       {{ address || formatTrackPoint(point) }}
     </p>
 
-    <div class="mt-3 flex space-x-3">
+    <dl class="mt-2 space-y-1 text-small">
+      <div class="flex justify-between">
+        <dt class="text-text-secondary">{{ t('device.coordinates') }}</dt>
+        <dd class="text-right font-medium">
+          {{ point.rawLng.toFixed(6) }}, {{ point.rawLat.toFixed(6) }}
+        </dd>
+      </div>
+      <div class="flex justify-between">
+        <dt class="text-text-secondary">{{ t('device.accuracy') }}</dt>
+        <dd class="text-right font-medium">
+          {{
+            point.radius > 0
+              ? t('device.accuracyValue', { meters: Math.round(point.radius) })
+              : t('device.accuracyUnknown')
+          }}
+        </dd>
+      </div>
+      <div class="flex justify-between">
+        <dt class="text-text-secondary">{{ t('device.coordinateSystem') }}</dt>
+        <dd class="text-right font-medium">
+          {{ point.coordType === 0 ? 'GCJ-02' : 'WGS-84' }}
+        </dd>
+      </div>
+    </dl>
+
+    <div v-if="count > 1" class="mt-3 flex space-x-3">
       <button
         type="button"
         class="h-12 flex-1 flex items-center justify-center rounded-button bg-surface-muted text-2nd-body font-medium disabled:opacity-50"

@@ -3,15 +3,17 @@ import { getLocalTimeZone, parseDate, today } from '@internationalized/date'
 import { useQuery } from '@pinia/colada'
 import { computed, onUnmounted, shallowRef, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { RouterLink, useRoute } from 'vue-router'
+import { useRoute } from 'vue-router'
 import MapCanvas from '~/components/device/MapCanvas.vue'
+import MapRailButton from '~/components/device/MapRailButton.vue'
 import TrackCalendarModal from '~/components/device/TrackCalendarModal.vue'
 import TrackPointDrawer from '~/components/device/TrackPointDrawer.vue'
 import TrackPointPopup from '~/components/device/TrackPointPopup.vue'
 import PageHeader from '~/components/PageHeader.vue'
 import QueryState from '~/components/settings/QueryState.vue'
 import { parseRouteParamId } from '~/composables/useRouteParamId'
-import { useAMap, type AMapPoint } from '~/composables/useAMap'
+import type { AMapPoint } from '~/composables/useAMap'
+import { usePointAddress } from '~/composables/usePointAddress'
 import { getDeviceDetail, getDeviceTrack, getRecentTrackPoint } from '~/utils/device-api'
 import { buildDayTrack, toMapPoint } from '~/utils/track'
 
@@ -20,7 +22,6 @@ const DEFAULT_CENTER: AMapPoint = { lng: 114.0668, lat: 22.6305 }
 
 const route = useRoute()
 const { t } = useI18n({ useScope: 'global' })
-const { reverseGeocode } = useAMap()
 /** Native opens the date picker as the page appears, today preselected. */
 const calendarOpen = shallowRef(true)
 const selectedDate = shallowRef(today(getLocalTimeZone()).toString())
@@ -63,10 +64,13 @@ const trackPoints = computed(() => buildDayTrack(trackState.value.data ?? []))
 const selectedIndex = shallowRef<number | null>(null)
 const focus = shallowRef<AMapPoint | null>(null)
 const listOpen = shallowRef(false)
-const pointAddress = shallowRef('')
-const pointAddressPending = shallowRef(false)
-const addressCache = new Map<string, string>()
-let regeoRequest = 0
+const {
+  address: pointAddress,
+  pending: pointAddressPending,
+  load: loadPointAddress,
+  clear: clearPointAddress,
+  clearCache: clearPointAddressCache,
+} = usePointAddress()
 
 const selectedPoint = computed(() =>
   selectedIndex.value == null ? null : (trackPoints.value[selectedIndex.value] ?? null),
@@ -82,39 +86,12 @@ const center = computed(
   () => trackPoints.value[trackPoints.value.length - 1] ?? recent.value ?? DEFAULT_CENTER,
 )
 
-async function loadAddress(index: number, point: AMapPoint): Promise<void> {
-  const request = ++regeoRequest
-  const key = `${point.lng.toFixed(6)},${point.lat.toFixed(6)}`
-  const cached = addressCache.get(key)
-  if (cached !== undefined) {
-    pointAddress.value = cached
-    pointAddressPending.value = false
-    return
-  }
-  pointAddress.value = ''
-  pointAddressPending.value = true
-  try {
-    const text = await reverseGeocode(point)
-    // Cache even after the user moves on, so reopening the point is instant.
-    addressCache.set(key, text)
-    if (request === regeoRequest && selectedIndex.value === index) {
-      pointAddress.value = text
-      pointAddressPending.value = false
-    }
-  } catch {
-    if (request === regeoRequest && selectedIndex.value === index) {
-      pointAddress.value = ''
-      pointAddressPending.value = false
-    }
-  }
-}
-
 function selectPoint(index: number): void {
   const point = trackPoints.value[index]
   if (!point) return
   selectedIndex.value = index
   focus.value = { lng: point.lng, lat: point.lat }
-  void loadAddress(index, point)
+  void loadPointAddress(point)
 }
 
 function stepPoint(delta: number): void {
@@ -130,15 +107,13 @@ function selectFromList(index: number): void {
 
 function closePoint(): void {
   selectedIndex.value = null
-  pointAddress.value = ''
-  pointAddressPending.value = false
-  regeoRequest++
+  clearPointAddress()
 }
 
 function resetPointSelection(): void {
   closePoint()
   focus.value = null
-  addressCache.clear()
+  clearPointAddressCache()
 }
 
 watch(selectedDate, resetPointSelection)
@@ -160,7 +135,7 @@ function showEmptyToast(): void {
 
 onUnmounted(() => {
   clearTimeout(emptyToastTimer)
-  regeoRequest++
+  clearPointAddress()
 })
 
 watch(
@@ -215,31 +190,22 @@ function confirmDate(date: string): void {
       </span>
 
       <div class="absolute right-4 top-14 z-20 flex flex-col space-y-3">
-        <button
-          type="button"
-          class="h-14 w-14 flex flex-col items-center justify-center rounded-xl bg-surface-elevated shadow-lg disabled:opacity-60"
+        <MapRailButton
+          icon="i-ph-list-dashes"
+          :label="t('device.trackPointsShort')"
           :aria-label="t('device.trackPoints')"
           aria-haspopup="dialog"
           :aria-expanded="listOpen"
           :disabled="trackState.status !== 'success'"
           @click="listOpen = true"
-        >
-          <span class="i-ph-list-dashes text-2xl text-text-primary" aria-hidden="true" />
-          <span class="mt-0.5 text-xs leading-none text-text-primary">
-            {{ t('device.trackPointsShort') }}
-          </span>
-        </button>
-        <RouterLink
+        />
+        <MapRailButton
           v-if="deviceId != null"
-          :to="`/devices/${deviceId}/track-setting`"
-          class="h-14 w-14 flex flex-col items-center justify-center rounded-xl bg-surface-elevated shadow-lg"
+          icon="i-ph-sliders-horizontal"
+          :label="t('device.trackSettingShort')"
           :aria-label="t('device.trackSetting')"
-        >
-          <span class="i-ph-sliders-horizontal text-2xl text-text-primary" aria-hidden="true" />
-          <span class="mt-0.5 text-xs leading-none text-text-primary">
-            {{ t('device.trackSettingShort') }}
-          </span>
-        </RouterLink>
+          :to="`/devices/${deviceId}/track-setting`"
+        />
       </div>
 
       <QueryState :status="recentState.status" :error="recentState.error" @retry="reloadRecent()">

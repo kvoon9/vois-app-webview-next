@@ -208,53 +208,53 @@ async function removeFence(): Promise<void> {
   <div class="page">
     <PageHeader :title="t('device.fenceTitle')" />
 
-    <main class="map-viewport">
+    <main class="fixed inset-x-0 top-14 bottom-0 flex flex-col">
       <QueryState :status="state.status" :error="state.error" @retry="reload()">
-        <MapCanvas picker :center="mapCenter" :fence="preview" @pick="pickCenter" />
+        <div class="relative min-h-0 flex-1">
+          <MapCanvas picker :center="mapCenter" :fence="preview" @pick="pickCenter" />
 
-        <!-- Radius sits at the top like native: the two end labels name the
-             range, the round buttons step it, the slider carries the green dot. -->
-        <section
-          class="absolute left-0 right-0 top-0 z-2 rounded-b-[28px] bg-surface-elevated px-4 pb-4 pt-3 shadow-lg"
-        >
-          <div class="flex items-center">
-            <button
-              type="button"
-              class="h-9 w-9 flex-none flex items-center justify-center rounded-full bg-surface-muted text-header text-text-primary"
-              aria-label="-50"
-              @click="stepRadius(-RADIUS_STEP)"
-            >
-              −
-            </button>
-            <span class="ml-3 flex-none text-small text-text-secondary">
-              {{ t('device.fenceRadiusValue', { n: MIN_RADIUS }) }}
-            </span>
-            <input
-              v-model.number="radius"
-              type="range"
-              :min="MIN_RADIUS"
-              :max="MAX_RADIUS"
-              :step="RADIUS_STEP"
-              class="mx-3 min-w-0 flex-1 accent-primary"
-              :aria-label="t('device.fenceRadius')"
-            />
-            <span class="mr-3 flex-none text-small text-text-secondary">
-              {{ t('device.fenceRadiusValue', { n: MAX_RADIUS }) }}
-            </span>
-            <button
-              type="button"
-              class="h-9 w-9 flex-none flex items-center justify-center rounded-full bg-surface-muted text-header text-text-primary"
-              aria-label="+50"
-              @click="stepRadius(RADIUS_STEP)"
-            >
-              +
-            </button>
-          </div>
-        </section>
+          <!-- Radius sits at the top like native: the two end labels name the
+               range, the round buttons step it, the slider carries the green dot. -->
+          <section
+            class="absolute left-0 right-0 top-0 z-2 rounded-b-[28px] bg-surface-elevated px-4 pb-4 pt-3 shadow-lg"
+          >
+            <div class="flex items-center">
+              <button
+                type="button"
+                class="h-9 w-9 flex-none flex items-center justify-center rounded-full bg-surface-muted text-header text-text-primary"
+                aria-label="-50"
+                @click="stepRadius(-RADIUS_STEP)"
+              >
+                −
+              </button>
+              <span class="ml-3 flex-none text-small text-text-secondary">
+                {{ t('device.fenceRadiusValue', { n: MIN_RADIUS }) }}
+              </span>
+              <input
+                v-model.number="radius"
+                type="range"
+                :min="MIN_RADIUS"
+                :max="MAX_RADIUS"
+                :step="RADIUS_STEP"
+                class="mx-3 min-w-0 flex-1 accent-primary"
+                :aria-label="t('device.fenceRadius')"
+              />
+              <span class="mr-3 flex-none text-small text-text-secondary">
+                {{ t('device.fenceRadiusValue', { n: MAX_RADIUS }) }}
+              </span>
+              <button
+                type="button"
+                class="h-9 w-9 flex-none flex items-center justify-center rounded-full bg-surface-muted text-header text-text-primary"
+                aria-label="+50"
+                @click="stepRadius(RADIUS_STEP)"
+              >
+                +
+              </button>
+            </div>
+          </section>
+        </div>
 
-        <section
-          class="absolute bottom-0 left-0 right-0 z-2 rounded-t-[28px] bg-surface-dialog px-5 pb-6 pt-4"
-        >
+        <section class="flex-none rounded-t-[28px] bg-surface-dialog px-5 pb-6 pt-4">
           <div class="min-h-11 flex items-center justify-between">
             <span class="flex-none text-body">{{ t('device.fenceCenter') }}</span>
             <span class="ml-4 min-w-0 flex-1 text-right text-2nd-body text-text-secondary">

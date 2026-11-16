@@ -16,6 +16,20 @@ Twelve features are mapped, covering every route under `src/pages` except `playg
 
 Every `/v2` route goes to the real backend (`https://api.voischat.cn`); the local mock server has been removed. Screens still mid-migration may call endpoints the backend does not implement yet — they fail with the UI's network-error state, which is itself the expected behavior to capture.
 
+## Playwright specs
+
+The repeatable path for a mapped feature is its spec under `.pi/skills/verify-vois-webview/playwright/specs/`. Run `vp run verify:web`; it attaches to the DevServer and signs in with the debug account. The ego-browser recipes below remain the exploration and fallback path.
+
+| Feature           | Spec                          |
+| ----------------- | ----------------------------- |
+| Account switching | `account-switching.verify.ts` |
+| Device list       | `device-list.verify.ts`       |
+| Device detail     | `device-detail.verify.ts`     |
+| Help and feedback | `help-and-feedback.verify.ts` |
+| Home and auth     | `smoke.verify.ts`             |
+
+The other features have no spec yet. Drive their recipe below, and add a spec when the journey is stable and read-only.
+
 ## Driving conventions
 
 - Start every recipe from the baseline state unless its preconditions say otherwise. A feature's `Preconditions:` may chain to another feature file's (device pages depend on the device list); resolve the chain before driving — the baseline above always applies.

@@ -63,6 +63,12 @@ export default defineConfig({
         command: 'node scripts/apipost-doc-to-markdown.mjs',
         cache: false,
       },
+      // Drives a live DevServer and the real backend; a cached pass would replay a stale screen.
+      'verify:web': {
+        command:
+          'playwright test --config .pi/skills/verify-vois-webview/playwright/playwright.config.ts',
+        cache: false,
+      },
     },
   },
   resolve: {

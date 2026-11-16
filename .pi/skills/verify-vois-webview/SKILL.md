@@ -1,11 +1,11 @@
 ---
 name: verify-vois-webview
-description: 'Drive the VOIS WebView app (apps/website) the way a user does and prove behavior with captured evidence: launch the DevServer, check the instance with doctor.mjs, drive it with ego-browser, and read the debug capture. Use when verifying UI, bridge, or API behavior in this repo, after a change under apps/website, or when asked whether a screen still works.'
+description: 'Drive the VOIS WebView app (apps/website) the way a user does and prove behavior with captured evidence: run the Playwright feature specs when the feature has one, launch the DevServer, check the instance with doctor.mjs, drive it with ego-browser for exploration, and read the debug capture. Use when verifying UI, bridge, or API behavior in this repo, after a change under apps/website, or when asked whether a screen still works.'
 ---
 
 # Verify the VOIS WebView
 
-This skill drives the real app in a shared browser and proves what happened with the debug pipeline's own capture. `features/` is the maintained map of user-facing behavior: read `features/README.md` before driving, then the matching feature file as the recipe. Nothing here replaces `vp check` / `vp test`; it covers what unit tests cannot see — a click, a route, a bridge message, a `/v2` call.
+This skill proves real behavior with the debug pipeline's own capture. A mapped feature with a Playwright spec runs through `vp run verify:web`; the ego-browser recipes cover exploration and features without one. `features/` is the maintained map of user-facing behavior: read `features/README.md` before driving, then the matching feature file as the recipe. Nothing here replaces `vp check` / `vp test`; it covers what unit tests cannot see — a click, a route, a bridge message, a `/v2` call.
 
 There is no seeded fixture. The DevServer proxies `/v2` to the real backend signed in as the debug account, so the proof is **agreement between what the screen shows and what the captured response says**, not a hardcoded expected string.
 
@@ -38,7 +38,16 @@ What doctor cannot see: a wedged UI on a healthy process — a stale dialog, a s
 
 ## Drive
 
-**UI — `ego-browser`** (repo mandate, see `.agents/skills/ego-browser`). One TaskSpace for the whole task; reuse its numeric id across rounds; navigate one page (`p1`) with `goto()` instead of opening tabs. The user's shared profile holds the signed-in session — never clear storage, switch profiles, or launch another browser.
+**Feature specs — Playwright.** A mapped feature with a `specs/*.verify.ts` file is proven by the suite, not by hand:
+
+```sh
+vp run verify:web    # every spec, uncached
+pnpm exec playwright test --config .pi/skills/verify-vois-webview/playwright/playwright.config.ts specs/device-list.verify.ts
+```
+
+The suite attaches to the DevServer already on 3021 (`VERIFY_BASE_URL` overrides) and never starts one, because a second server truncates the capture. It signs in with a fresh desktop Chromium context through `/__vois-bridge/access-token`, so no shared profile or storage state is involved. Each spec asserts the screen against the captured `network` / `bridge` event and writes screenshots, ARIA snapshots, and redacted JSON under `apps/website/.tmp/verify/<feature-id>/`. It fails on a restarted server or a UI that disagrees with the capture. Failure artifacts and opt-in traces (`VERIFY_TRACE=1`) stay scratch under `.../_runner/`; traces can contain credentials and are never evidence.
+
+**Exploration — `ego-browser`.** Use it when no spec covers the journey, when the screen is unknown, or when the user's shared session matters. Read `.agents/skills/ego-browser` first. One TaskSpace for the whole task; reuse its numeric id across rounds; navigate one page (`p1`) with `goto()` instead of opening tabs. The user's shared profile holds the signed-in session — never clear storage, switch profiles, or launch another browser.
 
 ```sh
 ego-browser nodejs <<'EOF'
@@ -78,7 +87,7 @@ Never print auth parameters. Event URLs carry `token=`, `sign=`, `appid=`; respo
 
 ## Evidence
 
-Artifacts go to `apps/website/.tmp/verify/<feature-id>/` (gitignored, survives teardown). Name them so a reader can tell which run and which entry point they came from.
+Artifacts go to `apps/website/.tmp/verify/<feature-id>/` (gitignored, survives teardown). Name them so a reader can tell which run and which entry point they came from. The Playwright specs write that evidence themselves: a passing spec is the action, the ARIA/screenshot state, and the captured side effect. Cite its directory and assertion instead of re-driving the flow.
 
 A proof is three things, not one:
 
@@ -104,12 +113,15 @@ Proof standards for this app:
 - Stop the DevServer this run started (its pane or pid). Leave the user's server and other panes alone.
 - Undo scratch: reload a page you typed into without submitting; delete temp files you created outside the evidence directory.
 - Keep `apps/website/.tmp/verify/**`. Cleanup removes instances and scratch state, never the evidence; confirm after teardown that the artifacts still exist at their named path.
+- `vp run verify:web` leaves no process behind; it closes its browser with the run. `apps/website/.tmp/verify/_runner/` is scratch and may be deleted.
 - Release the ego-browser TaskSpace the way the ego-browser skill says; if the user was driving, hand it back instead of closing.
 
 ## Helpers
 
 | Helper                      | Invocation                                                                      |
 | --------------------------- | ------------------------------------------------------------------------------- |
+| Feature suite (Playwright)  | `vp run verify:web`                                                             |
+| Suite contract              | `.pi/skills/verify-vois-webview/playwright/README.md`                           |
 | Instance doctor (read-only) | `node .pi/skills/verify-vois-webview/scripts/doctor.mjs [--port 3021] [--json]` |
 | Feature map                 | `.pi/skills/verify-vois-webview/features/README.md`                             |
 

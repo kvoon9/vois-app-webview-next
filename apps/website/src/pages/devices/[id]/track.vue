@@ -10,21 +10,11 @@ import PageHeader from '~/components/PageHeader.vue'
 import QueryState from '~/components/settings/QueryState.vue'
 import { parseRouteParamId } from '~/composables/useRouteParamId'
 import type { AMapPoint } from '~/composables/useAMap'
-import {
-  getDeviceDetail,
-  getDeviceTrack,
-  getRecentTrackPoint,
-  type TrackPoint,
-} from '~/utils/device-api'
-import { wgs84ToGcj02 } from '~/utils/coords'
+import { getDeviceDetail, getDeviceTrack, getRecentTrackPoint } from '~/utils/device-api'
+import { buildDayTrack, toMapPoint } from '~/utils/track'
 
 /** Fallback center (Shenzhen) while there is no fix and no track point yet. */
 const DEFAULT_CENTER: AMapPoint = { lng: 114.0668, lat: 22.6305 }
-
-function toMapPoint(point: TrackPoint): AMapPoint {
-  if (point.coordType === 1) return wgs84ToGcj02(point.lng, point.lat)
-  return { lng: point.lng, lat: point.lat }
-}
 
 const route = useRoute()
 const { t } = useI18n({ useScope: 'global' })
@@ -66,7 +56,7 @@ const recent = computed(() => {
   const point = recentState.value.data
   return point ? toMapPoint(point) : null
 })
-const track = computed(() => filterJumps(trackState.value.data ?? []).map(toMapPoint))
+const track = computed(() => buildDayTrack(trackState.value.data ?? []))
 
 /** The date the map shows, as native's `M/d` tag. */
 const dateLabel = computed(() => {
@@ -74,48 +64,6 @@ const dateLabel = computed(() => {
   return `${date.month}/${date.day}`
 })
 
-/** Great-circle distance in meters; the track comes in one coordinate system. */
-function distance(a: TrackPoint, b: TrackPoint): number {
-  const rad = Math.PI / 180
-  const dLat = (b.lat - a.lat) * rad
-  const dLng = (b.lng - a.lng) * rad
-  const h =
-    Math.sin(dLat / 2) ** 2 +
-    Math.cos(a.lat * rad) * Math.cos(b.lat * rad) * Math.sin(dLng / 2) ** 2
-  return 2 * 6371000 * Math.asin(Math.sqrt(h))
-}
-
-function timeOf(point: TrackPoint): number {
-  return Date.parse(point.time.replace(' ', 'T'))
-}
-
-function speed(a: TrackPoint, b: TrackPoint): number {
-  const seconds = (timeOf(b) - timeOf(a)) / 1000
-  return seconds > 0 ? distance(a, b) / seconds : 0
-}
-
-/**
- * Drop isolated GPS spikes the way native does: a dot flies away and comes
- * straight back. A point is a spike when both hops exceed 100 m/s while its
- * neighbours are close to each other; real movement keeps the point.
- */
-function filterJumps(points: TrackPoint[]): TrackPoint[] {
-  if (points.length < 3) return points
-  const kept: TrackPoint[] = []
-  for (let i = 0; i < points.length; i++) {
-    const point = points[i]!
-    const previous = points[i - 1]
-    const next = points[i + 1]
-    if (previous && next) {
-      const inSpeed = speed(previous, point)
-      const outSpeed = speed(point, next)
-      const skipSpeed = speed(previous, next)
-      if (inSpeed > 100 && outSpeed > 100 && skipSpeed <= 100) continue
-    }
-    kept.push(point)
-  }
-  return kept
-}
 const center = computed(() => recent.value ?? track.value[0] ?? DEFAULT_CENTER)
 
 /**

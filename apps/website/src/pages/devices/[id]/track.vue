@@ -6,6 +6,7 @@ import { useI18n } from 'vue-i18n'
 import { useRoute } from 'vue-router'
 import MapCanvas from '~/components/device/MapCanvas.vue'
 import TrackCalendarModal from '~/components/device/TrackCalendarModal.vue'
+import TrackPointDrawer from '~/components/device/TrackPointDrawer.vue'
 import TrackPointPopup from '~/components/device/TrackPointPopup.vue'
 import PageHeader from '~/components/PageHeader.vue'
 import QueryState from '~/components/settings/QueryState.vue'
@@ -61,6 +62,7 @@ const recent = computed(() => {
 const trackPoints = computed(() => buildDayTrack(trackState.value.data ?? []))
 const selectedIndex = shallowRef<number | null>(null)
 const focus = shallowRef<{ point: AMapPoint; nonce: number } | null>(null)
+const listOpen = shallowRef(false)
 const pointAddress = shallowRef('')
 const pointAddressPending = shallowRef(false)
 const addressCache = new Map<string, string>()
@@ -119,6 +121,11 @@ function stepPoint(delta: number): void {
   const current = selectedIndex.value
   if (current == null) return
   selectPoint(Math.min(Math.max(current + delta, 0), trackPoints.value.length - 1))
+}
+
+function selectFromList(index: number): void {
+  listOpen.value = false
+  selectPoint(index)
 }
 
 function closePoint(): void {
@@ -207,6 +214,34 @@ function confirmDate(date: string): void {
         {{ dateLabel }}
       </span>
 
+      <div class="absolute right-4 top-14 z-20 flex flex-col space-y-3">
+        <button
+          type="button"
+          class="h-14 w-14 flex flex-col items-center justify-center rounded-xl bg-surface-elevated shadow-lg disabled:opacity-60"
+          :aria-label="t('device.trackPoints')"
+          aria-haspopup="dialog"
+          :aria-expanded="listOpen"
+          :disabled="trackState.status !== 'success'"
+          @click="listOpen = true"
+        >
+          <span class="i-ph-list-dashes text-2xl text-text-primary" aria-hidden="true" />
+          <span class="mt-0.5 text-xs leading-none text-text-primary">
+            {{ t('device.trackPointsShort') }}
+          </span>
+        </button>
+        <RouterLink
+          v-if="deviceId != null"
+          :to="`/devices/${deviceId}/track-setting`"
+          class="h-14 w-14 flex flex-col items-center justify-center rounded-xl bg-surface-elevated shadow-lg"
+          :aria-label="t('device.trackSetting')"
+        >
+          <span class="i-ph-sliders-horizontal text-2xl text-text-primary" aria-hidden="true" />
+          <span class="mt-0.5 text-xs leading-none text-text-primary">
+            {{ t('device.trackSettingShort') }}
+          </span>
+        </RouterLink>
+      </div>
+
       <QueryState :status="recentState.status" :error="recentState.error" @retry="reloadRecent()">
         <template v-if="recentState.data !== undefined">
           <QueryState :status="trackState.status" :error="trackState.error" @retry="reloadTrack()">
@@ -241,6 +276,14 @@ function confirmDate(date: string): void {
         </template>
       </QueryState>
     </main>
+
+    <TrackPointDrawer
+      v-model:open="listOpen"
+      :points="trackPoints"
+      :selected-index="selectedIndex"
+      :date-label="dateLabel"
+      @select="selectFromList"
+    />
 
     <TrackCalendarModal
       :open="calendarOpen"

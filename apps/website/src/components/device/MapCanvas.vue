@@ -39,6 +39,7 @@ const props = defineProps<{
 const emit = defineEmits<{
   pick: [point: AMapPoint]
   'select-track-point': [index: number]
+  'device-marker-click': []
 }>()
 
 const { t } = useI18n({ useScope: 'global' })
@@ -129,15 +130,15 @@ function drawOverlays(): void {
 
   const nextOverlays: AMapOverlay[] = []
   if (props.marker) {
-    nextOverlays.push(
-      new amap.value.Marker({
-        position: pointValue(props.marker),
-        title: t('device.deviceLocation'),
-        content: deviceMarkerContent(),
-        // Native anchors the marker view at its centre (anchor 0.5, 0.5).
-        offset: [-31.5, -31.5],
-      }),
-    )
+    const marker = new amap.value.Marker({
+      position: pointValue(props.marker),
+      title: t('device.deviceLocation'),
+      content: deviceMarkerContent(),
+      // Native anchors the marker view at its centre (anchor 0.5, 0.5).
+      offset: [-31.5, -31.5],
+    })
+    marker.on('click', () => emit('device-marker-click'))
+    nextOverlays.push(marker)
   }
   if (props.me) {
     nextOverlays.push(

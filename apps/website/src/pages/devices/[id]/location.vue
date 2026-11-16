@@ -6,9 +6,11 @@ import { RouterLink, useRoute, useRouter } from 'vue-router'
 import BaseModal from '~/components/BaseModal.vue'
 import MapCanvas from '~/components/device/MapCanvas.vue'
 import MapRailButton from '~/components/device/MapRailButton.vue'
+import TrackPointPopup from '~/components/device/TrackPointPopup.vue'
 import PageHeader from '~/components/PageHeader.vue'
 import QueryState from '~/components/settings/QueryState.vue'
 import { parseRouteParamId } from '~/composables/useRouteParamId'
+import { usePointAddress } from '~/composables/usePointAddress'
 import { createPageLocationSource, useRealtimeLocation } from '~/composables/useRealtimeLocation'
 import {
   getDeviceDetail,
@@ -19,6 +21,7 @@ import {
   type TrackFrequency,
   type TrackPoint,
 } from '~/utils/device-api'
+import { buildDayTrack, type TrackMapPoint } from '~/utils/track'
 
 const { t } = useI18n({ useScope: 'global' })
 const route = useRoute()
@@ -54,6 +57,32 @@ const device = computed(() => deviceState.value.data ?? null)
 const fence = computed<DeviceFence | null>(() => state.value.data?.[0] ?? null)
 const reportFrequency = computed<TrackFrequency | null>(() => state.value.data?.[1] ?? null)
 const recentPoint = computed<TrackPoint | null>(() => state.value.data?.[2] ?? null)
+
+const {
+  address,
+  pending: addressPending,
+  load: loadAddress,
+  clear: clearAddress,
+} = usePointAddress()
+
+/** The latest point converted for the panel; the map keeps its own marker. */
+const dayPoint = computed(() => {
+  const point = recentPoint.value
+  return point ? (buildDayTrack([point])[0] ?? null) : null
+})
+const selectedPoint = shallowRef<TrackMapPoint | null>(null)
+
+function openPanel(): void {
+  const point = dayPoint.value
+  if (!point) return
+  selectedPoint.value = point
+  void loadAddress(point)
+}
+
+function closePanel(): void {
+  selectedPoint.value = null
+  clearAddress()
+}
 
 /** Native warns on both `off` and `low`: the fence cannot fire either way. */
 const fenceWarning = computed(() => {
@@ -164,6 +193,17 @@ function startFence(): void {
           :marker-name="device?.nick ?? ''"
           :me="myMarker"
           :fence="fence"
+          @device-marker-click="openPanel"
+        />
+
+        <TrackPointPopup
+          v-if="selectedPoint"
+          :point="selectedPoint"
+          :index="0"
+          :count="1"
+          :address="address"
+          :address-pending="addressPending"
+          @close="closePanel"
         />
 
         <!-- Native chrome: a vertical stack of white rounded squares on the

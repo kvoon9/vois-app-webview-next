@@ -49,11 +49,11 @@ export interface AMapMap {
   on(event: 'click', handler: (event: AMapMapEvent) => void): void
   on(event: 'mapmove' | 'zoomchange', handler: () => void): void
   lngLatToContainer(lnglat: [number, number]): AMapPixel
+  containerToLngLat(pixel: AMapPixel): AMapPoint
   addControl(control: AMapControl): void
   add(overlays: AMapOverlay | AMapOverlay[]): void
   remove(overlays: AMapOverlay | AMapOverlay[]): void
-  setCenter(center: [number, number]): void
-  panBy(x: number, y: number, duration?: number): void
+  setCenter(center: [number, number], immediately?: boolean, duration?: number): void
   setFitView(overlays?: AMapOverlay[], immediately?: boolean, padding?: number[]): void
   zoomIn(): void
   zoomOut(): void
@@ -107,6 +107,7 @@ export interface AMapApi {
   Marker: new (options: AMapMarkerOptions) => AMapMarker
   Circle: new (options: AMapCircleOptions) => AMapOverlay
   Polyline: new (options: AMapLineOptions) => AMapOverlay
+  Pixel: new (x: number, y: number) => AMapPixel
   Scale: new () => AMapControl
   ToolBar: new (options?: { position?: string }) => AMapControl
   Geocoder: new (options?: { radius?: number }) => AMapGeocoder

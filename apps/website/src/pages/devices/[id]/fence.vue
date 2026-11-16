@@ -51,6 +51,8 @@ const recentPoint = computed<TrackPoint | null>(() => state.value.data?.[1] ?? n
 const center = shallowRef<AMapPoint | null>(null)
 /** The latest pick; the map previews it until 确认 commits or 取消 reverts. */
 const pending = shallowRef<AMapPoint | null>(null)
+/** Bumped on confirm so the editor animates a refit of the committed fence. */
+const fitNonce = shallowRef(0)
 const radius = shallowRef(300)
 const name = shallowRef('')
 /**
@@ -162,6 +164,7 @@ function confirmPick(): void {
   center.value = pending.value
   pending.value = null
   picked.value = true
+  fitNonce.value += 1
 }
 
 function cancelPick(): void {
@@ -253,6 +256,7 @@ async function removeFence(): Promise<void> {
             :fence="preview"
             :fence-from="fenceFrom"
             :anchor="pending"
+            :fit-nonce="fitNonce"
             @pick="pickCenter"
           >
             <template #anchor-popup>

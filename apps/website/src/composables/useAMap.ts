@@ -27,6 +27,12 @@ export interface AMapMapEvent {
   lnglat: { lng: number; lat: number }
 }
 
+/** Container-relative pixel returned by `lngLatToContainer`. */
+export interface AMapPixel {
+  getX(): number
+  getY(): number
+}
+
 export interface AMapGeocodeResult {
   regeocode?: { formattedAddress?: string }
 }
@@ -41,6 +47,8 @@ export interface AMapGeocoder {
 
 export interface AMapMap {
   on(event: 'click', handler: (event: AMapMapEvent) => void): void
+  on(event: 'mapmove' | 'zoomchange', handler: () => void): void
+  lngLatToContainer(lnglat: [number, number]): AMapPixel
   addControl(control: AMapControl): void
   add(overlays: AMapOverlay | AMapOverlay[]): void
   remove(overlays: AMapOverlay | AMapOverlay[]): void
@@ -67,6 +75,8 @@ interface AMapMarkerOptions {
   /** Pixel offset for custom content, [x, y] from top-left. */
   offset?: [number, number]
   zIndex?: number
+  /** Let clicks on the marker reach the map instead of stopping at it. */
+  bubble?: boolean
 }
 
 interface AMapCircleOptions {
@@ -87,6 +97,8 @@ interface AMapLineOptions {
   strokeOpacity: number
   lineJoin: 'round'
   lineCap: 'round'
+  strokeStyle?: 'solid' | 'dashed'
+  strokeDasharray?: number[]
 }
 
 export interface AMapApi {

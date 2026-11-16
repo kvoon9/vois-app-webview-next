@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vite-plus/test'
 import type { TrackPoint } from './device-api'
-import { buildDayTrack, filterJumps, formatTrackPoint, formatTrackTime } from './track'
+import { buildDayTrack, formatTrackPoint, formatTrackTime } from './track'
 
 function point(lng: number, lat: number, time: string, coordType: 0 | 1 = 0): TrackPoint {
   return { lng, lat, time, radius: 0, coordType }
@@ -26,7 +26,10 @@ describe('day track', () => {
       point(121.4001, 31.2, '2026-02-11 08:00:10'),
     ]
 
-    expect(filterJumps(points)).toEqual([points[0], points[2]])
+    expect(buildDayTrack(points).map(({ time }) => time)).toEqual([
+      '2026-02-11 08:00:00',
+      '2026-02-11 08:00:10',
+    ])
   })
 
   it('shifts wgs84 points into gcj02 and keeps gcj02 as is', () => {

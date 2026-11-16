@@ -30,8 +30,8 @@ const props = defineProps<{
   track?: TrackMapPoint[]
   /** The point whose detail card is open; only its marker switches to primary. */
   selectedTrackIndex?: number | null
-  /** A camera target that re-applies whenever the nonce changes. */
-  focus?: { point: AMapPoint; nonce: number } | null
+  /** Replace with a new point object to pan the map there. */
+  focus?: AMapPoint | null
   /** Let the map report taps, for picking a fence centre. */
   picker?: boolean
 }>()
@@ -47,7 +47,6 @@ const container = useTemplateRef<HTMLDivElement>('container')
 const map = shallowRef<AMapMap | null>(null)
 const amap = shallowRef<AMapApi | null>(null)
 const overlays = shallowRef<AMapOverlay[]>([])
-/** Track markers in array order, so selection can recolour one by index. */
 let trackMarkerOverlays: AMapMarker[] = []
 let lastSelectedIndex: number | null = null
 const error = shallowRef<string | null>(null)
@@ -262,7 +261,7 @@ onMounted(async () => {
       )
     }
     drawOverlays()
-    if (props.focus) map.value?.setCenter(pointValue(props.focus.point))
+    if (props.focus) map.value?.setCenter(pointValue(props.focus))
   } catch (reason) {
     error.value = reason instanceof Error ? reason.message : String(reason)
   }
@@ -306,7 +305,7 @@ watch(
 watch(
   () => props.focus,
   (focus) => {
-    if (focus && map.value) map.value.setCenter(pointValue(focus.point))
+    if (focus && map.value) map.value.setCenter(pointValue(focus))
   },
 )
 

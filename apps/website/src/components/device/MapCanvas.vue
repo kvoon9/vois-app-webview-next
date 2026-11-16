@@ -298,8 +298,14 @@ watch(
   (next) => {
     const previous = lastSelectedIndex
     lastSelectedIndex = next ?? null
-    if (previous != null) trackMarkerOverlays[previous]?.setContent(markerContent(previous, false))
-    if (next != null) trackMarkerOverlays[next]?.setContent(markerContent(next, true))
+    if (previous != null) {
+      trackMarkerOverlays[previous]?.setContent(markerContent(previous, false))
+      trackMarkerOverlays[previous]?.setOptions({ zIndex: 110 })
+    }
+    if (next != null) {
+      trackMarkerOverlays[next]?.setContent(markerContent(next, true))
+      trackMarkerOverlays[next]?.setOptions({ zIndex: 120 })
+    }
   },
 )
 

@@ -19,6 +19,8 @@ export interface AMapOverlay {
 export interface AMapMarker extends AMapOverlay {
   on(event: 'click', handler: () => void): void
   setContent(content: string): void
+  /** The constructor zIndex is frozen at creation; selection must reapply it. */
+  setOptions(options: { zIndex?: number }): void
 }
 
 export interface AMapMapEvent {

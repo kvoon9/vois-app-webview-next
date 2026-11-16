@@ -6,10 +6,11 @@ import { useI18n } from 'vue-i18n'
 import { useRoute } from 'vue-router'
 import MapCanvas from '~/components/device/MapCanvas.vue'
 import TrackCalendarModal from '~/components/device/TrackCalendarModal.vue'
+import TrackPointPopup from '~/components/device/TrackPointPopup.vue'
 import PageHeader from '~/components/PageHeader.vue'
 import QueryState from '~/components/settings/QueryState.vue'
 import { parseRouteParamId } from '~/composables/useRouteParamId'
-import type { AMapPoint } from '~/composables/useAMap'
+import { useAMap, type AMapPoint } from '~/composables/useAMap'
 import { getDeviceDetail, getDeviceTrack, getRecentTrackPoint } from '~/utils/device-api'
 import { buildDayTrack, toMapPoint } from '~/utils/track'
 
@@ -18,6 +19,7 @@ const DEFAULT_CENTER: AMapPoint = { lng: 114.0668, lat: 22.6305 }
 
 const route = useRoute()
 const { t } = useI18n({ useScope: 'global' })
+const { reverseGeocode } = useAMap()
 /** Native opens the date picker as the page appears, today preselected. */
 const calendarOpen = shallowRef(true)
 const selectedDate = shallowRef(today(getLocalTimeZone()).toString())
@@ -56,7 +58,17 @@ const recent = computed(() => {
   const point = recentState.value.data
   return point ? toMapPoint(point) : null
 })
-const track = computed(() => buildDayTrack(trackState.value.data ?? []))
+const trackPoints = computed(() => buildDayTrack(trackState.value.data ?? []))
+const selectedIndex = shallowRef<number | null>(null)
+const focus = shallowRef<{ point: AMapPoint; nonce: number } | null>(null)
+const pointAddress = shallowRef('')
+const pointAddressPending = shallowRef(false)
+const addressCache = new Map<string, string>()
+let regeoRequest = 0
+
+const selectedPoint = computed(() =>
+  selectedIndex.value == null ? null : (trackPoints.value[selectedIndex.value] ?? null),
+)
 
 /** The date the map shows, as native's `M/d` tag. */
 const dateLabel = computed(() => {
@@ -64,7 +76,65 @@ const dateLabel = computed(() => {
   return `${date.month}/${date.day}`
 })
 
-const center = computed(() => recent.value ?? track.value[0] ?? DEFAULT_CENTER)
+const center = computed(
+  () => trackPoints.value[trackPoints.value.length - 1] ?? recent.value ?? DEFAULT_CENTER,
+)
+
+async function loadAddress(index: number, point: AMapPoint): Promise<void> {
+  const request = ++regeoRequest
+  const key = `${point.lng.toFixed(6)},${point.lat.toFixed(6)}`
+  const cached = addressCache.get(key)
+  if (cached !== undefined) {
+    pointAddress.value = cached
+    pointAddressPending.value = false
+    return
+  }
+  pointAddress.value = ''
+  pointAddressPending.value = true
+  try {
+    const text = await reverseGeocode(point)
+    // Cache even after the user moves on, so reopening the point is instant.
+    addressCache.set(key, text)
+    if (request === regeoRequest && selectedIndex.value === index) {
+      pointAddress.value = text
+      pointAddressPending.value = false
+    }
+  } catch {
+    if (request === regeoRequest && selectedIndex.value === index) {
+      pointAddress.value = ''
+      pointAddressPending.value = false
+    }
+  }
+}
+
+function selectPoint(index: number): void {
+  const point = trackPoints.value[index]
+  if (!point) return
+  selectedIndex.value = index
+  focus.value = { point, nonce: (focus.value?.nonce ?? 0) + 1 }
+  void loadAddress(index, point)
+}
+
+function stepPoint(delta: number): void {
+  const current = selectedIndex.value
+  if (current == null) return
+  selectPoint(Math.min(Math.max(current + delta, 0), trackPoints.value.length - 1))
+}
+
+function closePoint(): void {
+  selectedIndex.value = null
+  pointAddress.value = ''
+  pointAddressPending.value = false
+  regeoRequest++
+}
+
+function resetPointSelection(): void {
+  closePoint()
+  focus.value = null
+  addressCache.clear()
+}
+
+watch(selectedDate, resetPointSelection)
 
 /**
  * An empty day reports through the bottom toast native uses, which times out on
@@ -83,13 +153,19 @@ function showEmptyToast(): void {
 
 onUnmounted(() => {
   clearTimeout(emptyToastTimer)
+  regeoRequest++
 })
 
 watch(
   () => trackState.value.status,
   (status) => {
-    if (status !== 'success' || awaitingDate.value !== selectedDate.value) return
-    if (track.value.length === 0) showEmptyToast()
+    if (status !== 'success') {
+      closePoint()
+      focus.value = null
+      return
+    }
+    if (awaitingDate.value !== selectedDate.value) return
+    if (trackPoints.value.length === 0) showEmptyToast()
     awaitingDate.value = null
   },
 )
@@ -102,7 +178,7 @@ function confirmDate(date: string): void {
   calendarOpen.value = false
   // Confirming the same day keeps the query key, so the watcher never fires and
   // an empty day would stay silent; report it here instead.
-  if (unchanged && trackState.value.status === 'success' && track.value.length === 0) {
+  if (unchanged && trackState.value.status === 'success' && trackPoints.value.length === 0) {
     showEmptyToast()
     awaitingDate.value = null
   }
@@ -139,7 +215,21 @@ function confirmDate(date: string): void {
               :marker="recent"
               :marker-avatar="device?.avatar ?? null"
               :marker-name="device?.nick ?? ''"
-              :track="track"
+              :track="trackPoints"
+              :selected-track-index="selectedIndex"
+              :focus="focus"
+              @select-track-point="selectPoint"
+            />
+            <TrackPointPopup
+              v-if="selectedPoint"
+              :point="selectedPoint"
+              :index="selectedIndex ?? 0"
+              :count="trackPoints.length"
+              :address="pointAddress"
+              :address-pending="pointAddressPending"
+              @close="closePoint"
+              @previous="stepPoint(-1)"
+              @next="stepPoint(1)"
             />
             <p
               v-if="emptyToast"

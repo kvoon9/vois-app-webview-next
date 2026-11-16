@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, shallowRef, useTemplateRef, watch } from 'vue'
+import { computed, onMounted, onUnmounted, shallowRef, useTemplateRef, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {
   useAMap,
@@ -27,6 +27,10 @@ const props = defineProps<{
   /** The viewer's own position (bridge GPS), drawn as the my-location dot. */
   me?: AMapPoint | null
   fence?: DeviceFence | null
+  /** The confirmed centre a pending pick would replace; drawn dimmed. */
+  fenceFrom?: AMapPoint | null
+  /** The pending centre the anchor popup points at. */
+  anchor?: AMapPoint | null
   track?: TrackMapPoint[]
   /** The point whose detail card is open; only its marker switches to primary. */
   selectedTrackIndex?: number | null
@@ -57,9 +61,9 @@ let fenceCircleForFit: AMapOverlay | null = null
 /**
  * Fit padding in AMap's avoid order [top, bottom, left, right], which is not
  * CSS's [top, right, bottom, left]; setFitView silently misreads CSS order,
- * and that is what landed the editor's fence under the bottom sheet. Viewer
- * values clear the status pill at the top and the fence warning / locate-me
- * controls at the bottom.
+ * which once put the editor's fence under its bottom sheet. Viewer values
+ * clear the status pill at the top and the fence warning / locate-me controls
+ * at the bottom.
  */
 const VIEWER_FIT_AVOID = [80, 120, 80, 80]
 /** Editor fit padding [top, bottom, left, right]; clears the fence editor's
@@ -71,9 +75,52 @@ const EDITOR_FIT_AVOID: [number, number, number, number] = [80, 40, 40, 40]
  * across saves must reset it, or the gate would skip the next entry's fit. */
 let lastFitted: { lng: number; lat: number; radius: number } | null = null
 
+/** The anchor marker's container pixel and the side its card sits on. */
+const anchorPosition = shallowRef<{
+  left: number
+  top: number
+  side: 'left' | 'right'
+} | null>(null)
+
 function pointValue(point: AMapPoint): [number, number] {
   return [point.lng, point.lat]
 }
+
+/** Projection only answers after the map exists; recompute on every camera move. */
+function updateAnchorPosition(): void {
+  const mapValue = map.value
+  const point = props.anchor
+  const element = container.value
+  if (!mapValue || !point || !element) {
+    anchorPosition.value = null
+    return
+  }
+  const pixel = mapValue.lngLatToContainer(pointValue(point))
+  const x = pixel.getX()
+  const y = pixel.getY()
+  const width = element.clientWidth
+  const height = element.clientHeight
+  const fitsRight = x + 36 + 120 <= width
+  // The wrapper is centred on `top` (`translateY(-50%)`), so both bounds are
+  // padded by half the 72px card: keep it below the 64px radius strip and
+  // inside the map.
+  const cardHalfHeight = 36
+  anchorPosition.value = {
+    left: fitsRight ? x + 36 : x - 36,
+    top: Math.min(Math.max(y - 28, 64 + 8 + cardHalfHeight), height - 8 - cardHalfHeight),
+    side: fitsRight ? 'right' : 'left',
+  }
+}
+
+const anchorStyle = computed(() => {
+  const position = anchorPosition.value
+  if (!position) return undefined
+  return {
+    left: `${position.left}px`,
+    top: `${position.top}px`,
+    transform: position.side === 'left' ? 'translate(-100%, -50%)' : 'translateY(-50%)',
+  }
+})
 
 /** Native renders the position marker as its MapUserAvatar view: a blue
  * bearing droplet (63dp) behind a white ring (40.5dp) and a 36dp round avatar,
@@ -172,6 +219,33 @@ function drawOverlays(): void {
       }),
     )
   }
+  // A pending pick keeps the confirmed centre in view: dimmed pin plus a
+  // dashed line to the preview circle.
+  if (props.fenceFrom) {
+    if (props.fence) {
+      nextOverlays.push(
+        new amap.value.Polyline({
+          path: [pointValue(props.fenceFrom), pointValue(props.fence)],
+          strokeColor: '#6b6b6c',
+          strokeWeight: 2,
+          strokeOpacity: 1,
+          lineJoin: 'round',
+          lineCap: 'round',
+          strokeStyle: 'dashed',
+          strokeDasharray: [6, 6],
+        }),
+      )
+    }
+    nextOverlays.push(
+      new amap.value.Marker({
+        position: pointValue(props.fenceFrom),
+        content: `<img src="${devicePinUrl}" alt="" style="width:36px;height:36px;opacity:0.55">`,
+        offset: [-18, -36],
+        // The editor promises a pick anywhere; a pin must not be a dead spot.
+        bubble: true,
+      }),
+    )
+  }
   // Native paints the fence pure green over an 8% black fill and draws no
   // centre marker on the viewer page, just the disc.
   if (props.fence) {
@@ -199,6 +273,7 @@ function drawOverlays(): void {
           title: t('device.fenceCenter'),
           content: `<img src="${devicePinUrl}" alt="" style="width:53px;height:53px">`,
           offset: [-26.5, -51],
+          bubble: true,
         }),
       )
     }
@@ -238,6 +313,7 @@ function drawOverlays(): void {
 
   overlays.value = nextOverlays
   if (nextOverlays.length > 0) map.value.add(nextOverlays)
+  updateAnchorPosition()
 
   // Native frames the fence on entry. The viewer gates on fence id so user
   // panning stays put; the editor gates on geometry, since its preview id is
@@ -283,6 +359,8 @@ onMounted(async () => {
       map.value.on('click', (event) =>
         emit('pick', { lng: event.lnglat.lng, lat: event.lnglat.lat }),
       )
+      map.value.on('mapmove', updateAnchorPosition)
+      map.value.on('zoomchange', updateAnchorPosition)
     }
     drawOverlays()
     if (props.focus) map.value?.setCenter(pointValue(props.focus))
@@ -310,10 +388,16 @@ watch(
     props.markerAvatar,
     props.markerName,
     props.fence,
+    props.fenceFrom,
     props.track,
   ],
   () => drawOverlays(),
   { deep: true },
+)
+
+watch(
+  () => props.anchor,
+  () => updateAnchorPosition(),
 )
 
 watch(
@@ -349,6 +433,10 @@ onUnmounted(() => {
 <template>
   <div class="relative h-full w-full overflow-hidden bg-surface-muted">
     <div ref="container" class="h-full w-full" />
+
+    <div v-if="anchor && anchorStyle" class="absolute z-20" :style="anchorStyle">
+      <slot name="anchor-popup" />
+    </div>
 
     <!-- Native map chrome: compass top-left, locate-me bottom-left above the
          scale, zoom bottom-right. The page's own buttons stack over these. -->

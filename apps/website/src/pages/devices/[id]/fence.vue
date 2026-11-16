@@ -49,9 +49,10 @@ const fence = computed<DeviceFence | null>(() => state.value.data?.[0] ?? null)
 const recentPoint = computed<TrackPoint | null>(() => state.value.data?.[1] ?? null)
 
 const center = shallowRef<AMapPoint | null>(null)
+/** The latest pick; the map previews it until 确认 commits or 取消 reverts. */
+const pending = shallowRef<AMapPoint | null>(null)
 const radius = shallowRef(300)
 const name = shallowRef('')
-const address = shallowRef('')
 /**
  * Native leaves 围栏中心 empty until the centre is set: the seeded position only
  * places the map, it does not claim to be the user's choice.
@@ -59,14 +60,20 @@ const address = shallowRef('')
 const picked = shallowRef(false)
 const deleteConfirmation = shallowRef(false)
 
-/** Reverse-geocode replies can land out of order; only the latest one may win. */
-let geocodeRequest = 0
+/** Addresses keyed by point, so cancelling a pick restores the old centre's
+ * address without a second lookup. */
+const addresses = shallowRef(new Map<string, string>())
 
-/** Seeds the draft from the stored fence, else from the last known position. */
+/**
+ * Seeds the draft once per device. The query refetches when the WebView regains
+ * focus, and a late reply must not discard a pending or confirmed pick.
+ */
+let seededDeviceId: number | null = null
 watch(
   () => state.value.data,
   (data) => {
-    if (!data) return
+    if (!data || deviceId.value == null || seededDeviceId === deviceId.value) return
+    seededDeviceId = deviceId.value
     const stored = data[0]
     if (stored) {
       const storedCenter = { lng: stored.lng, lat: stored.lat }
@@ -89,47 +96,76 @@ onMounted(() => {
 
 const mapCenter = computed(() => center.value ?? recentPoint.value ?? DEFAULT_CENTER)
 
+/** The point the map and the 围栏中心 row describe: the pick while pending. */
+const shownPoint = computed(() => pending.value ?? center.value)
+
 /** The circle the map previews; a stored fence keeps its id. */
-const preview = computed<DeviceFence | null>(() =>
-  center.value
-    ? {
-        id: fence.value?.id ?? 0,
-        name: name.value,
-        lng: center.value.lng,
-        lat: center.value.lat,
-        radius: radius.value,
-      }
-    : null,
-)
+const preview = computed<DeviceFence | null>(() => {
+  const point = shownPoint.value
+  if (!point) return null
+  return {
+    id: fence.value?.id ?? 0,
+    name: name.value,
+    lng: point.lng,
+    lat: point.lat,
+    radius: radius.value,
+  }
+})
+
+/** The confirmed centre a pending pick would replace. */
+const fenceFrom = computed(() => (pending.value ? center.value : null))
+
+const address = computed(() => {
+  const point = shownPoint.value
+  return point ? (addresses.value.get(pointKey(point)) ?? '') : ''
+})
+
+function pointKey(point: AMapPoint): string {
+  return `${point.lng},${point.lat}`
+}
 
 function formatPoint(point: AMapPoint): string {
   return `${point.lng.toFixed(5)}, ${point.lat.toFixed(5)}`
 }
 
 /**
- * The address of the centre. Until one is picked the row stays empty like
+ * The address of the shown centre. Until one is picked the row stays empty like
  * native; when the lookup is unavailable the coordinates keep it informative.
  */
 const centerText = computed(() => {
-  if (!center.value || !(picked.value || fence.value)) return ''
-  return address.value || formatPoint(center.value)
+  const point = shownPoint.value
+  if (!point) return ''
+  if (!pending.value && !(picked.value || fence.value)) return ''
+  return address.value || formatPoint(point)
 })
 
 async function showAddress(point: AMapPoint): Promise<void> {
-  const request = ++geocodeRequest
+  const key = pointKey(point)
+  if (addresses.value.has(key)) return
   try {
     const next = await reverseGeocode(point)
-    if (request === geocodeRequest) address.value = next
+    const cache = new Map(addresses.value)
+    cache.set(key, next)
+    addresses.value = cache
   } catch {
-    // Coordinates are the fallback; the row never shows a stale address.
-    if (request === geocodeRequest) address.value = ''
+    // Coordinates are the fallback; failed lookups stay uncached.
   }
 }
 
 function pickCenter(point: AMapPoint): void {
-  center.value = point
-  picked.value = true
+  pending.value = point
   void showAddress(point)
+}
+
+function confirmPick(): void {
+  if (!pending.value) return
+  center.value = pending.value
+  pending.value = null
+  picked.value = true
+}
+
+function cancelPick(): void {
+  pending.value = null
 }
 
 /** Native's ± buttons step the radius by 50 m and clamp to 200–1000 m. */
@@ -211,7 +247,36 @@ async function removeFence(): Promise<void> {
     <main class="fixed inset-x-0 top-14 bottom-0 flex flex-col">
       <QueryState :status="state.status" :error="state.error" @retry="reload()">
         <div class="relative min-h-0 flex-1">
-          <MapCanvas picker :center="mapCenter" :fence="preview" @pick="pickCenter" />
+          <MapCanvas
+            picker
+            :center="pending ?? mapCenter"
+            :fence="preview"
+            :fence-from="fenceFrom"
+            :anchor="pending"
+            @pick="pickCenter"
+          >
+            <template #anchor-popup>
+              <div class="w-28 rounded-standard bg-surface-elevated p-2 shadow-xl">
+                <p class="text-small font-medium">{{ t('device.fenceSetCenterConfirm') }}</p>
+                <div class="mt-2 flex space-x-2">
+                  <button
+                    type="button"
+                    class="h-8 flex-1 rounded-small bg-surface-muted text-small"
+                    @click="cancelPick"
+                  >
+                    {{ t('modal.cancel') }}
+                  </button>
+                  <button
+                    type="button"
+                    class="h-8 flex-1 rounded-small bg-primary text-primary-text text-small"
+                    @click="confirmPick"
+                  >
+                    {{ t('modal.confirm') }}
+                  </button>
+                </div>
+              </div>
+            </template>
+          </MapCanvas>
 
           <!-- Radius sits at the top like native: the two end labels name the
                range, the round buttons step it, the slider carries the green dot. -->
@@ -285,7 +350,7 @@ async function removeFence(): Promise<void> {
           <button
             type="button"
             class="mt-4 btn-primary"
-            :disabled="saveMutation.isLoading.value"
+            :disabled="saveMutation.isLoading.value || pending !== null"
             @click="save"
           >
             {{ saveMutation.isLoading.value ? t('device.saving') : t('device.fenceSave') }}

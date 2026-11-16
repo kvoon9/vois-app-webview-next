@@ -61,7 +61,7 @@ const recent = computed(() => {
 })
 const trackPoints = computed(() => buildDayTrack(trackState.value.data ?? []))
 const selectedIndex = shallowRef<number | null>(null)
-const focus = shallowRef<{ point: AMapPoint; nonce: number } | null>(null)
+const focus = shallowRef<AMapPoint | null>(null)
 const listOpen = shallowRef(false)
 const pointAddress = shallowRef('')
 const pointAddressPending = shallowRef(false)
@@ -113,7 +113,7 @@ function selectPoint(index: number): void {
   const point = trackPoints.value[index]
   if (!point) return
   selectedIndex.value = index
-  focus.value = { point, nonce: (focus.value?.nonce ?? 0) + 1 }
+  focus.value = { lng: point.lng, lat: point.lat }
   void loadAddress(index, point)
 }
 

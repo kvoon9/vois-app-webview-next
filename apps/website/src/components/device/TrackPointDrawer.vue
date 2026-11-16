@@ -63,7 +63,7 @@ watch(open, async (isOpen) => {
           <DrawerClose as-child>
             <button
               type="button"
-              class="ml-3 h-10 w-10 flex flex-none items-center justify-center rounded-full bg-surface-muted text-text-secondary focus-visible:ring-2 focus-visible:ring-primary/40"
+              class="ml-3 h-11 w-11 flex flex-none items-center justify-center rounded-full bg-surface-muted text-text-secondary focus-visible:ring-2 focus-visible:ring-primary/40"
               :aria-label="t('modal.close')"
             >
               <span class="i-ph-x" aria-hidden="true" />

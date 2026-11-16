@@ -72,33 +72,25 @@ async function confirmPay(): Promise<void> {
         @retry="reload()"
       >
         <ul class="space-y-3">
-          <li
-            v-for="card in state.data"
-            :key="card.iccid"
-            class="rounded-standard bg-surface-elevated p-4"
-          >
-            <div class="flex items-start justify-between space-x-3">
-              <div class="min-w-0 flex-1">
-                <p class="truncate text-body font-medium">{{ card.userNick }}</p>
-                <p class="mt-1 truncate text-small text-text-secondary">
-                  {{ t('device.model') }}: {{ card.product }}
-                </p>
-                <p class="mt-1 truncate text-small text-text-secondary">
-                  {{ t('device.userNumber') }}: {{ card.userNum }}
-                </p>
-                <p class="mt-1 text-small text-text-secondary">
-                  {{ t('device.expireAt') }}: {{ card.expiryDate }}
-                </p>
-              </div>
-              <button
-                type="button"
-                class="ml-3 inline-flex h-11 flex-none items-center text-small font-medium text-primary focus-visible:ring-2 focus-visible:ring-primary/40 disabled:opacity-50"
-                :disabled="busy"
-                @click="startRenew(card)"
-              >
-                {{ t('device.renewNow') }}
-              </button>
-            </div>
+          <li v-for="card in state.data" :key="card.iccid">
+            <button
+              type="button"
+              class="block w-full rounded-standard bg-surface-elevated p-4 text-left active:bg-surface-field disabled:opacity-60"
+              :disabled="busy"
+              @click="startRenew(card)"
+            >
+              <span class="block truncate text-body font-medium">{{ card.userNick }}</span>
+              <span class="mt-1 block truncate text-small text-text-secondary">
+                {{ t('device.model') }}: {{ card.product }}
+              </span>
+              <span class="mt-1 block truncate text-small text-text-secondary">
+                {{ t('device.userNumber') }}: {{ card.userNum }}
+              </span>
+              <span class="mt-1 block text-small text-text-secondary">
+                {{ t('device.expireAt') }}: {{ card.expiryDate }}
+              </span>
+              <span class="sr-only">{{ t('device.renewNow') }}</span>
+            </button>
           </li>
         </ul>
       </QueryState>

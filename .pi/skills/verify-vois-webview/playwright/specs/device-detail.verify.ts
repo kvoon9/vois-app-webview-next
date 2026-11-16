@@ -58,19 +58,16 @@ test('renders the detail fields from device-get-detail and cancels the unbind di
     await expect(page.getByText(`微喇号: ${detail.userNum}`)).toBeVisible()
   }
 
+  // The action needs an ICCID; the rows only need the card object.
   const rechargeEntry = page.getByRole('button', { name: '缴费充值' })
+  if (detail.canRecharge) await expect(rechargeEntry).toBeVisible()
+  else await expect(rechargeEntry).toHaveCount(0)
+
   if (detail.hasSimCard) {
-    await expect(rechargeEntry).toBeVisible()
-    if (detail.iccid !== undefined) {
-      await expect(page.getByText(`卡 ICCID: ${detail.iccid}`)).toBeVisible()
-    }
-    if (detail.expiryDate !== undefined) {
-      await expect(page.getByText(`卡到期时间: ${detail.expiryDate}`)).toBeVisible()
-    }
+    await expect(page.getByText(`卡 ICCID: ${detail.iccid || '暂无'}`)).toBeVisible()
+    await expect(page.getByText(`卡到期时间: ${detail.expiryDate || '暂无'}`)).toBeVisible()
     if (detail.cardRecharge) await expect(page.getByText('卡片状态: 需充值')).toBeVisible()
     await expect(page.getByRole('link', { name: '流量卡充值记录' })).toBeVisible()
-  } else {
-    await expect(rechargeEntry).toHaveCount(0)
   }
 
   await expect(page.getByRole('link', { name: '群组管理' })).toBeVisible()
@@ -104,7 +101,8 @@ test('renders the detail fields from device-get-detail and cancels the unbind di
   await expect(page.getByRole('button', { name: '确定' })).toBeVisible()
   await page.getByRole('button', { name: '取消' }).click()
   await expect(page.getByText('是否解除绑定设备？')).toHaveCount(0)
-  await page.waitForTimeout(500)
+  // Absence needs a bounded window; the debug client posts a write immediately after the call.
+  await page.waitForTimeout(1000)
   const unbindCalls = capture
     .since(dialogMark)
     .filter(
@@ -175,7 +173,9 @@ test('back pops to the list without a close-page handshake', async ({
   const backMark = capture.mark()
   await page.getByRole('button', { name: '返回' }).click()
   await expect(page).toHaveURL(/#\/devices$/)
-  await page.waitForTimeout(500)
+  await expect(page.getByRole('heading', { name: '已连接设备' })).toBeVisible()
+  // Absence needs a bounded window; the debug client posts a write immediately after the call.
+  await page.waitForTimeout(1000)
   const closePage = capture
     .since(backMark)
     .filter((event) => event.type === 'bridge' && event.protocol === 'close-page')

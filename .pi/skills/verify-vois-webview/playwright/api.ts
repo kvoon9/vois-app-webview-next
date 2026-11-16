@@ -28,6 +28,7 @@ export interface DeviceDetail {
   reminderSupport?: boolean
   emergencySupport?: boolean
   hasSimCard: boolean
+  canRecharge: boolean
   cardRecharge: boolean
   iccid?: string
   expiryDate?: string
@@ -42,8 +43,11 @@ export function capturedBody(call: DebugEvent, label: string): JsonObject {
 
 export function readDevices(body: JsonObject): DeviceRow[] {
   const data = asJsonObject(readValue(body, 'data'))
-  const devices = readValue(data ?? {}, 'devices')
-  if (!Array.isArray(devices)) return []
+  if (data === undefined) throw new Error('manager-get-all-device data is not an object')
+  const devices = readValue(data, 'devices')
+  if (!Array.isArray(devices)) {
+    throw new Error('manager-get-all-device data.devices is not an array')
+  }
   return devices.flatMap((item) => {
     const device = asJsonObject(item)
     if (device === undefined) return []
@@ -63,6 +67,7 @@ export function readDeviceDetail(body: JsonObject): DeviceDetail {
   const device = asJsonObject(readValue(data ?? {}, 'device'))
   if (device === undefined) throw new Error('device-get-detail data.device is not an object')
   const sim = asJsonObject(readValue(device, 'sim_card'))
+  const iccid = sim === undefined ? undefined : readString(sim, 'iccid')
   return {
     nick: readString(device, 'nick'),
     product: readString(device, 'product'),
@@ -75,8 +80,10 @@ export function readDeviceDetail(body: JsonObject): DeviceDetail {
     reminderSupport: readBoolean(device, 'reminder_support'),
     emergencySupport: readBoolean(device, 'emergency_support'),
     hasSimCard: sim !== undefined,
+    // The recharge action needs an ICCID; the SIM rows only need the card object.
+    canRecharge: iccid !== undefined && iccid !== '',
     cardRecharge: sim === undefined ? false : readBoolean(sim, 'recharge') === true,
-    iccid: sim === undefined ? undefined : readString(sim, 'iccid'),
+    iccid,
     expiryDate: sim === undefined ? undefined : readString(sim, 'expiry_date'),
   }
 }

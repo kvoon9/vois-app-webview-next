@@ -2,12 +2,10 @@ import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { setTimeout as delay } from 'node:timers/promises'
 import {
-  agreeUiCapture,
   findRepoRoot,
   probeDebugServer,
   readEventsFile,
   type DebugEvent,
-  type UiCaptureAgreement,
 } from '../../../../packages/mcp/src/index.ts'
 
 /** Which captured call to wait for. `path` compares the URL pathname exactly. */
@@ -32,7 +30,6 @@ export interface DebugCapture {
   since(mark: number): DebugEvent[]
   waitForNetwork(match: NetworkMatch, from: number, timeoutMs?: number): Promise<DebugEvent>
   waitForBridge(match: BridgeMatch, from: number, timeoutMs?: number): Promise<DebugEvent>
-  agree(text: string, events: DebugEvent[]): UiCaptureAgreement
   /** Throws when the server restarted, because the capture then belongs to another instance. */
   assertSameSession(): Promise<void>
 }
@@ -91,6 +88,14 @@ export async function createDebugCapture(
     )
   }
   const sessionStartedAt = status.sessionStartedAt
+  // A server in another worktree owns its own capture file; this checkout would never see its events.
+  const localCount = readEvents().length
+  if (Math.abs(status.count - localCount) > 50) {
+    throw new Error(
+      `the server on port ${port} reports ${status.count} events but this checkout has ${localCount}; ` +
+        `it likely belongs to another worktree. Start this worktree's DevServer or set VERIFY_PORT and VERIFY_BASE_URL.`,
+    )
+  }
 
   function readEvents(): DebugEvent[] {
     try {
@@ -130,7 +135,8 @@ export async function createDebugCapture(
       .slice(-5)
       .map((event) => summarizeEvent(event, kind))
     throw new Error(
-      `no ${label} captured in ${timeoutMs}ms; last ${kind} events: ${seen.join(', ') || 'none'}`,
+      `no ${label} captured in ${timeoutMs}ms; last ${kind} events: ${seen.join(', ') || 'none'}. ` +
+        `If another worktree owns port ${port}, its capture is not this checkout's file.`,
     )
   }
 
@@ -156,7 +162,6 @@ export async function createDebugCapture(
         `${match.direction ?? 'any'} ${match.protocol}`,
         timeoutMs,
       ),
-    agree: (text, events) => agreeUiCapture(text, events),
     assertSameSession,
   }
 }

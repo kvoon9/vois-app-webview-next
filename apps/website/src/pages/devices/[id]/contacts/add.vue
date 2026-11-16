@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useMutation, useQuery, useQueryCache } from '@pinia/colada'
-import { computed, shallowRef } from 'vue'
+import { computed, onUnmounted, shallowRef } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute } from 'vue-router'
 import BaseModal from '~/components/BaseModal.vue'
@@ -68,11 +68,25 @@ const selectableFriends = computed(() =>
     .map(({ item }) => item),
 )
 
+const highlightedId = shallowRef<number | null>(null)
+let highlightTimer: ReturnType<typeof setTimeout> | undefined
+
 function jumpTo(letter: string): void {
+  const first = visibleFriends.value.find((entry) => entry.initial === letter)
+  if (!first) return
+  highlightedId.value = first.item.userId
   document
     .querySelector<HTMLElement>(`[data-contact-initial="${letter}"]`)
     ?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  clearTimeout(highlightTimer)
+  highlightTimer = setTimeout(() => {
+    highlightedId.value = null
+  }, 1200)
 }
+
+onUnmounted(() => {
+  clearTimeout(highlightTimer)
+})
 const selectedCount = computed(() => selectedIds.value.length)
 const allSelected = computed(
   () =>
@@ -174,6 +188,7 @@ async function submit(): Promise<void> {
               :aria-pressed="selectedIds.includes(entry.item.userId)"
               :data-contact-initial="entry.initial"
               class="min-h-16 w-full scroll-mt-16 flex items-center px-4 text-left disabled:opacity-50"
+              :class="highlightedId === entry.item.userId ? 'bg-surface-selected' : ''"
               :disabled="existingIds.has(entry.item.userId)"
               @click="toggleFriend(entry.item)"
             >

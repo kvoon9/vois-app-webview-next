@@ -266,6 +266,8 @@ Intl.DateTimeFormat.__setDefaultTimeZone(zone)
 
 chunk 体积：540 KB raw / 169 KB gzip / 89 KB brotli（现代包），legacy 包 540 KB。主包不受影响（207 KB / 62.8 KB gzip）。
 
+2026-11-16：`@formatjs/intl-displaynames` 升到 v8 后 locale-data 体积约减半（en / zh / zh-Hant 合计 223 KB），chunk 降到 374 KB raw / 136 KB gzip / 85 KB brotli（现代包），legacy 包 375 KB，构建的 500 KB chunk 警告随之消失。
+
 顺带一个副作用：因为探测在下载之前，formatjs 那段激进的 `hasScriptBug` 自检在健康机器上根本不会执行（3.3 节）。
 
 **没做**：DateTimeFormat（日历的月份/星期名）。等第 6 节的真机探针确认确实退化了再加，代价是再 +107 KB brotli 和 3.5 节的时区坑。

@@ -64,7 +64,12 @@ let fenceCircleForFit: AMapOverlay | null = null
 const VIEWER_FIT_AVOID = [80, 120, 80, 80]
 /** Editor fit padding [top, bottom, left, right]; clears the fence editor's
  * radius strip and the bottom sheet at its tallest, delete button included. */
-const EDITOR_FIT_AVOID = [80, 328, 40, 40]
+const EDITOR_FIT_AVOID: [number, number, number, number] = [80, 328, 40, 40]
+/** A picked centre must land in the visible band, not under the bottom sheet. */
+const EDITOR_CENTER_PAN = [
+  (EDITOR_FIT_AVOID[2] - EDITOR_FIT_AVOID[3]) / 2,
+  (EDITOR_FIT_AVOID[0] - EDITOR_FIT_AVOID[1]) / 2,
+] as const
 /** The fence geometry the editor camera last framed; plain state like
  * fenceCircleForFit. Save and delete leave via goBack and unmount the page,
  * so it dies with the component. A refactor that keeps the map mounted
@@ -144,6 +149,11 @@ function drawOverlays(): void {
   if (!centeredPoint || centeredPoint.lng !== center.lng || centeredPoint.lat !== center.lat) {
     centeredPoint = { lng: center.lng, lat: center.lat }
     map.value.setCenter(pointValue(center))
+    // The entry fit frames the fence in the visible band; a later pick would
+    // otherwise sit at the container centre, under the bottom sheet.
+    if (props.picker && lastFitted) {
+      map.value.panBy(EDITOR_CENTER_PAN[0], EDITOR_CENTER_PAN[1], 0)
+    }
   }
   fenceCircleForFit = null
 

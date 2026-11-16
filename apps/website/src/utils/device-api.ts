@@ -454,7 +454,9 @@ export async function getDeviceTrack(deviceId: number, date: string): Promise<Tr
   const response = await weilaFetch<{ tracks: TrackPointDto[] }>('/v2/subuser/track-get', {
     body: { user_id: deviceId, date },
   })
-  return response.data.tracks.map(toTrackPoint)
+  // The endpoint answers newest-first; the track page, its last-point lookup
+  // and filterJumps all assume time moves forward.
+  return response.data.tracks.map(toTrackPoint).sort((a, b) => a.time.localeCompare(b.time))
 }
 
 /** Today's last track point; the "recent location" shown before realtime fixes arrive. */

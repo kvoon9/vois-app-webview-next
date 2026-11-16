@@ -312,6 +312,26 @@ describe('device API', () => {
       })
     })
 
+    it("sorts a day's points oldest-first", async () => {
+      const morning = Math.floor(new Date(2026, 1, 11, 8, 30, 15).getTime() / 1000)
+      const evening = Math.floor(new Date(2026, 1, 11, 19, 5, 9).getTime() / 1000)
+      weilaFetch.mockResolvedValue(
+        ok({
+          tracks: [
+            { lat: 31.3, lng: 121.5, radius: 10, type: 0, ts: evening },
+            { lat: 31.2, lng: 121.4, radius: 30, type: 1, ts: morning },
+          ],
+        }),
+      )
+
+      const points = await getDeviceTrack(9, '2026-02-11')
+
+      expect(points.map((point) => point.time)).toEqual([
+        '2026-02-11 08:30:15',
+        '2026-02-11 19:05:09',
+      ])
+    })
+
     it('returns the last point of today as the recent location', async () => {
       vi.useFakeTimers()
       vi.setSystemTime(new Date(2026, 1, 11, 10, 0, 0))

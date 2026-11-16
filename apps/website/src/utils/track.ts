@@ -2,8 +2,15 @@ import type { AMapPoint } from '~/composables/useAMap'
 import { wgs84ToGcj02 } from '~/utils/coords'
 import type { TrackPoint } from '~/utils/device-api'
 
-/** One day point ready for AMap: GCJ-02 plus the wall-clock label. */
+/** One day point ready for AMap: the wire fields plus the GCJ-02 map position. */
 export interface TrackMapPoint extends AMapPoint {
+  /** Wire coordinate before the GCJ-02 conversion. */
+  rawLng: number
+  rawLat: number
+  /** Accuracy radius in meters; 0 when the device reported none. */
+  radius: number
+  /** 0 = GCJ-02, 1 = WGS-84. */
+  coordType: 0 | 1
   /** `YYYY-MM-DD HH:mm:ss`, device-local, display only. */
   time: string
 }
@@ -58,7 +65,16 @@ function filterJumps(points: TrackMapPoint[]): TrackMapPoint[] {
 /** Convert first: a day may mix WGS-84 and GCJ-02 points, so the spike filter
  * must compare coordinates in one system. */
 export function buildDayTrack(points: TrackPoint[]): TrackMapPoint[] {
-  return filterJumps(points.map((point) => ({ ...toMapPoint(point), time: point.time })))
+  return filterJumps(
+    points.map((point) => ({
+      ...toMapPoint(point),
+      rawLng: point.lng,
+      rawLat: point.lat,
+      radius: point.radius,
+      coordType: point.coordType,
+      time: point.time,
+    })),
+  )
 }
 
 /** `2026-11-16 08:35:12` -> `08:35:12`; returns the input when shorter. */

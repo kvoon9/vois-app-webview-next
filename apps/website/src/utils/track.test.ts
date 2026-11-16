@@ -41,9 +41,21 @@ describe('day track', () => {
     expect(wgs).toEqual({
       lng: 121.40464868048423,
       lat: 31.198150256565185,
+      rawLng: 121.4,
+      rawLat: 31.2,
+      radius: 0,
+      coordType: 1,
       time: '2026-02-11 08:00:00',
     })
-    expect(gcj).toEqual({ lng: 121.4, lat: 31.2, time: '2026-02-11 08:00:01' })
+    expect(gcj).toEqual({
+      lng: 121.4,
+      lat: 31.2,
+      rawLng: 121.4,
+      rawLat: 31.2,
+      radius: 0,
+      coordType: 0,
+      time: '2026-02-11 08:00:01',
+    })
   })
 
   it('formats the display time and the coordinate fallback', () => {

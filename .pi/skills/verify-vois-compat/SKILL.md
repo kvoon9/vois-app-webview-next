@@ -32,7 +32,7 @@ This is `vp check && vp test`. `vp check` owns format, lint, and type checking; 
 
 The model-shaped tests from PR #24 are the reference for what belongs here. They assert observable contracts, not internals: `apps/website/src/utils/bridge/contract-matrix.test.ts` walks protocol against reply shape (success, native error, unknown action, invalid JSON, timeout), `apps/website/src/utils/device-api.test.ts` pins the API surface, and composables such as `usePageBack`, `usePageParams`, `useAccountId`, and `useNavigationContext` have their own contract tests. Add a cell to the matrix rather than a bespoke mock when a bridge behavior changes.
 
-Before deciding a behavior is covered, read `.pi/skills/verify-vois-webview/features/README.md`. L1 cannot see a click, a route, a real `/v2` response, or a bridge handshake, so those move to L2 or the feature skill.
+Before deciding a behavior is covered, read `.pi/skills/verify-vois-webview/features/README.md`. L1 cannot see a click, a route, a real `/v2` response, or a bridge handshake, so those move to L2 or the feature skill. A mapped feature with a Playwright spec is proven there with `vp run verify:web`; L2 still owns the Chrome 70 bundle proof and is not a feature substitute.
 
 ## L2 legacy sweep
 

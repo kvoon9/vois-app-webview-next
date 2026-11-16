@@ -30,7 +30,16 @@ export {
 } from './events.ts'
 export { REDACTED, redactJson, redactText } from './redact.ts'
 export type { JsonObject, JsonValue } from './json.ts'
-export { JsonValueSchema, parseJson } from './json.ts'
+export {
+  JsonValueSchema,
+  asJsonObject,
+  decodeField,
+  parseJson,
+  readBoolean,
+  readNumber,
+  readString,
+  readValue,
+} from './json.ts'
 export type { McpServerInfo, McpTextContent, McpTool, McpToolResult } from './mcp.ts'
 export { createMcpHandler, textResult } from './mcp.ts'
 export { apiBaseUrl, buildSignedUrl, callVoisApi, generateV2Query } from './api.ts'

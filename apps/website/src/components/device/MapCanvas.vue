@@ -193,6 +193,9 @@ function drawOverlays(): void {
       strokeWeight: 2,
       fillColor: '#000000',
       fillOpacity: 0.08,
+      // The editor picks the centre anywhere on the map; without bubble the
+      // circle swallows clicks inside the disc.
+      bubble: true,
     })
     nextOverlays.push(fenceCircle)
     // Only the editor carries a centre marker: native's fence editor pins

@@ -77,6 +77,8 @@ interface AMapCircleOptions {
   strokeWeight: number
   fillColor: string
   fillOpacity?: number
+  /** Let clicks inside the disc reach the map instead of stopping at the circle. */
+  bubble?: boolean
 }
 
 interface AMapLineOptions {

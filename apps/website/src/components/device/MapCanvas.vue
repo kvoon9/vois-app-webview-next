@@ -196,9 +196,10 @@ function drawOverlays(): void {
   }
   if (props.track) {
     const selected = props.selectedTrackIndex ?? null
-    props.track.forEach((point, index) => {
+    for (let index = 0; index < props.track.length; index++) {
+      const point = props.track[index]!
       const isSelected = index === selected
-      const trackMarker = new amap.value!.Marker({
+      const trackMarker = new amap.value.Marker({
         position: pointValue(point),
         title: point.time,
         content: markerContent(index, isSelected),
@@ -208,7 +209,7 @@ function drawOverlays(): void {
       trackMarker.on('click', () => emit('select-track-point', index))
       trackMarkerOverlays.push(trackMarker)
       nextOverlays.push(trackMarker)
-    })
+    }
     lastSelectedIndex = selected
   }
 

@@ -5,9 +5,10 @@
   "type": "module",
   "scripts": {
     "dev": "vp dev --host",
-    "build": "tsc && vp build",
+    "build": "tsrs --noEmit && vp build",
     "preview": "vp preview --host --port 5173 --debug",
     "debug:logs": "vois-webview-debug",
+    "typecheck": "tsrs --noEmit",
     "test": "vp test",
     "check": "vp check"
   },
@@ -42,6 +43,7 @@
     "@vitejs/plugin-legacy": "catalog:build",
     "@vitejs/plugin-vue": "catalog:build",
     "terser": "catalog:build",
+    "tsrs": "catalog:tooling",
     "typescript": "catalog:tooling",
     "unocss": "catalog:build",
     "vite": "catalog:build",

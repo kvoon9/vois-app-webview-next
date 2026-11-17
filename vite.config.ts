@@ -9,6 +9,7 @@ export default defineConfig({
     singleQuote: true,
     ignorePatterns: [
       '.agents/skills/**',
+      '.claude/skills/**',
       'tools/oxlint/anti-slop/**',
       'apps/docs/**',
       'docs/**/*.md',
@@ -53,7 +54,12 @@ export default defineConfig({
       'anti-slop/require-safety-comment-for-type-assertion': 'error',
     },
     options: { typeAware: true, typeCheck: true },
-    ignorePatterns: ['apps/docs/**', '.agents/skills/**', 'tools/oxlint/anti-slop/**'],
+    ignorePatterns: [
+      'apps/docs/**',
+      '.agents/skills/**',
+      '.claude/skills/**',
+      'tools/oxlint/anti-slop/**',
+    ],
   },
   run: {
     cache: true,

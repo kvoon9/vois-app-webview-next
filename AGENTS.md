@@ -27,6 +27,12 @@ cd <worktree> && vp install
 
 Machines running the local `kvoon.worktree-hooks` herdr plugin execute the `herdr-worktree.yaml` hooks automatically on worktree creation (`vp install` there covers the dependency step); without the plugin, follow the manual steps above.
 
+## Skills and MCP for both agents
+
+Skills have one source of truth: `.agents/skills/<name>/SKILL.md`. `.claude/skills` is a directory symlink to it, and the project-owned skills under `.pi/skills/` are per-skill symlinks, so pi and Claude Code load the same set; add or edit a skill only under `.agents/skills/`. Existing `.pi/skills/...` paths in scripts and docs keep resolving through those links.
+
+MCP also has one source: `.pi/mcp.json`, with `.mcp.json` at the repo root symlinked to it, so Claude Code and pi read the same servers. Keep entries portable across both clients — Claude Code expands `${VAR}` but does not execute pi's `!command` env values, and `command`/`args` are spawned as-is (no `~` or shell expansion). Machine-specific resolution belongs in a `node scripts/<wrapper>.mjs` launcher, as `scripts/rea-mcp.mjs` does. Claude Code treats `.mcp.json` servers as project-scoped and asks for one approval per project.
+
 ## Feature lanes and acceptance
 
 Features ship as lanes: one lane = one worktree + one branch (`worktree/<lane>`) + one PR against main, built by delegated subagents. Create the worktree with `herdr worktree create --branch worktree/<lane> --base main` (or `herdr_worktree_jump`), never bare `git worktree add`. Keep lanes file-disjoint; anything touching the same file serializes.

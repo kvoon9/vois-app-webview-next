@@ -13,6 +13,8 @@
  *   node changelog.mjs --to v0.11.0 --from v0.10.1 [--max-items 6]
  */
 import { execFileSync } from 'node:child_process'
+import { realpathSync } from 'node:fs'
+import { pathToFileURL } from 'node:url'
 
 /**
  * Section order and Chinese titles. `types` are conventional-commit types; the
@@ -162,7 +164,12 @@ function main() {
   )
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+// A raw string compare only matches an absolute, un-symlinked argv[1]; canonical
+// file URLs make the documented relative `.pi/skills/...` invocation work too.
+if (
+  process.argv[1] &&
+  import.meta.url === pathToFileURL(realpathSync(process.argv[1])).href
+) {
   try {
     main()
   } catch (error) {

@@ -23,6 +23,7 @@ import { execFileSync, spawnSync } from 'node:child_process'
 import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
+import { pathToFileURL } from 'node:url'
 import { parseArgs } from 'node:util'
 import { buildMessage, latestTag, releaseNotes } from './changelog.mjs'
 
@@ -155,7 +156,12 @@ function main() {
     )
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+// A raw string compare only matches an absolute, un-symlinked argv[1]; canonical
+// file URLs make the documented relative `.pi/skills/...` invocation work too.
+if (
+  process.argv[1] &&
+  import.meta.url === pathToFileURL(fs.realpathSync(process.argv[1])).href
+) {
   try {
     main()
   } catch (error) {

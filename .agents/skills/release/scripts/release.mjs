@@ -15,6 +15,8 @@
  * so the failure is visible.
  */
 import { execFileSync, spawnSync } from 'node:child_process'
+import { realpathSync } from 'node:fs'
+import { pathToFileURL } from 'node:url'
 import { parseArgs } from 'node:util'
 import { git, latestTag, previousTag } from './changelog.mjs'
 import { DEFAULT_SESSION, compose, deliver } from './notify-release.mjs'
@@ -227,7 +229,12 @@ async function main() {
   )
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+// A raw string compare only matches an absolute, un-symlinked argv[1]; canonical
+// file URLs make the documented relative `.pi/skills/...` invocation work too.
+if (
+  process.argv[1] &&
+  import.meta.url === pathToFileURL(realpathSync(process.argv[1])).href
+) {
   main().catch((error) => {
     console.error(`\nrelease: ${error.message}`)
     process.exit(1)

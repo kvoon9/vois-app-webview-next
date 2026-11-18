@@ -2,12 +2,13 @@
 import { useMutation, useQuery, useQueryCache } from '@pinia/colada'
 import { computed, shallowRef, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useRoute, useRouter } from 'vue-router'
+import { useRoute } from 'vue-router'
 import BaseModal from '~/components/BaseModal.vue'
 import FieldEditModal from '~/components/FieldEditModal.vue'
 import PageHeader from '~/components/PageHeader.vue'
 import QueryState from '~/components/settings/QueryState.vue'
 import { parseRouteParamId } from '~/composables/useRouteParamId'
+import { usePageBack } from '~/composables/usePageBack'
 import { useToast } from '~/composables/useToast'
 import {
   createDeviceReminder,
@@ -36,7 +37,7 @@ const DAY_KEYS = [
 
 const { t } = useI18n({ useScope: 'global' })
 const route = useRoute()
-const router = useRouter()
+const { goBack } = usePageBack()
 const queryCache = useQueryCache()
 const { showToast } = useToast()
 const deviceId = computed(() => parseRouteParamId(route.params.id))
@@ -128,10 +129,6 @@ const removeMutation = useMutation({
   },
 })
 
-async function backToList(): Promise<void> {
-  await router.push(`/devices/${deviceId.value}/reminders`)
-}
-
 async function save(): Promise<void> {
   if (saveMutation.isLoading.value) return
   // Native refuses an empty reminder before it writes, and offers the content
@@ -144,7 +141,7 @@ async function save(): Promise<void> {
     await saveMutation.mutateAsync()
     await queryCache.invalidateQueries({ key: ['device-management', 'reminders'] })
     showToast(t('device.reminderSaved'))
-    await backToList()
+    goBack()
   } catch (error) {
     showToast(error instanceof Error ? error.message : String(error), { type: 'error' })
   }
@@ -156,7 +153,7 @@ async function removeReminder(): Promise<void> {
     await removeMutation.mutateAsync()
     await queryCache.invalidateQueries({ key: ['device-management', 'reminders'] })
     showToast(t('device.reminderRemoved'))
-    await backToList()
+    goBack()
   } catch (error) {
     showToast(error instanceof Error ? error.message : String(error), { type: 'error' })
   }

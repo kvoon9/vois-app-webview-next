@@ -1,6 +1,6 @@
 {
   "name": "utils",
-  "version": "0.12.9",
+  "version": "0.12.10",
   "description": "A starter for creating a TypeScript package.",
   "homepage": "https://github.com/author/library#readme",
   "bugs": {

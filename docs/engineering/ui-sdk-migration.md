@@ -81,6 +81,28 @@
 - ImageCropper：SDK 只有 `data-error` 属性没有错误事件，用 MutationObserver 桥接回 `failed`，保住消费方「坏文件原样上传」的逃生通道。已知变化：透明源像素编码为黑（`cropImage` 无白色底层）；不透明照片无影响。
 - 契约测试新增 26 条（5+8+5+8），含 switch 的 checkPattern 断言。
 
+## 浏览器级验收（DevServer 3022，debug 账号，真实后端）
+
+驱动方式按 verify-vois-webview 技能：ego-browser 共享会话，doctor 全绿（connected、30 次 /v2 成功、auth 200、158 条捕获事件零 error）。截图在 `/tmp/vois-shots/`。
+
+已驱动并通过的界面：
+- 设备列表与设备详情（Avatar 渲染）。
+- 共享位置开关（SDK Switch 真实渲染，ON 态）。
+- 复制设备号 → 绿色 toast（SDK ToastRegion/maxVisible=1）。
+- 缴费充值确认弹窗（BaseModal，居中，320/375 双尺寸）。
+- 解除绑定 danger 弹窗（BaseModal，danger tone）。
+- 修改设备头像 → 文件上传 → ImageCropper frame 模式真实解码渲染（`createImageBitmap` 路径），圆形引导框与提示文案完整；未点确认，避免向生产写入头像。
+- 好友翻译设置页的只读语言触发器（LanguagePickerDrawer 的 DrawerTrigger part 在真实引擎渲染正确，按设计禁用）。
+- 登录页账号输入（SDK Combobox 渲染为 combobox 角色，可键入）。
+- 轨迹页：进入即弹选择日期日历（42 格、选中态、未来日不可用，320/375）；确认后开轨迹点抽屉（17 行，时间与坐标，Escape 可关，320/375）。
+
+独立视觉评审（评审代理对 14 张截图的裁决）：首轮 NOT CONFIRMED，命中一处 320×568 真实几何问题，日历底页横切页头且页脚被切。修复为底页 `max-h: calc(100vh-4rem)` 加高度 ≤640px 时的紧凑间距（`eda862f`），320 实测页头完整、页脚 12px 净空，375 逐像素不变，复审 PASS。另两条非阻断记录：缴费弹窗的产品名在产品名与描述各出现一次（数据本身如此，组件未改）；danger 弹窗的取消按钮带琥珀色焦点环（SDK 初始焦点落在首个可聚焦元素，环是应用既有 focus-visible 样式）。
+
+未能驱动的界面及原因：
+- LanguagePickerDrawer 的交互态只在群成员页（TranslationSettingModal），debug 账号没有群组；好友详情页里该组件按设计恒为禁用只读。行为由 5 条 jsdom 契约测试覆盖。
+- 裁剪器的确认上传：会真实修改设备头像，未执行；编码路径由 8 条契约测试（mock 边界）覆盖。
+- 夹具操作：为可达性临时把测试好友的翻译模式切换过，结束后已用 API 恢复到原始 skill=2。
+
 ## 未做（明确出范围）
 
 - Custom Parts（createParts/usePrimitive/usePart）手写零件：本轮盘点后没有适用场景，全部行为都有现成组件覆盖。若后续出现 SDK 缺零件的交互再启用，方法论已存于记忆（ui-sdk-contract-testing）。

@@ -11,15 +11,13 @@
  *   vp run docs:apipost                       # 用内置的默认分享链接
  *   node scripts/apipost-doc-to-markdown.mjs <文档URL|issue_id> [-o 输出目录] [--single 文件名]
  *
- * 默认输出 api-reference/<项目英文名>/，目录与文件名一律 ASCII：
- * 目录查 FOLDER_SLUGS，接口文件名取 URL 末段。
- * 注意不能挪进 docs/：apps/docs 的 @nuxt/content 会把路径逐段 slugify，
- * 中文段一律变成空串（“群组”、“加入群组”都是 ""），几十个接口会撞到同一个路径。
+ * 默认输出 docs/api-reference/<项目英文名>/，目录与文件名一律 ASCII，
+ * 可被 apps/docs 的 @nuxt/content 直接收录（路径逐段 slugify 时不会遇到中文段）。
  * 仓库是公开的，所以示例参数里的 token / sign 默认打码，用 --keep-secrets 可以保留原值。
  */
 
 import { mkdir, readdir, readFile, stat, writeFile } from 'node:fs/promises'
-import { dirname, join, posix, resolve } from 'node:path'
+import { dirname, join, posix, relative, resolve, sep } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const ORIGIN = 'https://docs.apipost.net'
@@ -262,8 +260,10 @@ function renderIndex({ children, depth = 0, base = '.', link = true }) {
       lines.push(`${indent}- **${name}**`)
       lines.push(...renderIndex({ children: node.children, depth: depth + 1, base, link }))
     } else {
-      // 单文件模式没有可跳转的文件路径，只列出名称
-      const label = link ? `[${name}](${base}/${node.relPath})` : name
+      // 文档站路由不带 .md；单文件模式没有可跳转的路径，只列出名称
+      const route = node.relPath.replace(/\.md$/, '')
+      const href = base === '.' ? `./${route}` : `${base}/${route}`
+      const label = link ? `[${name}](${href})` : name
       lines.push(
         `${indent}- ${label} ${node.method ? `\`${node.method}\`` : ''} \`${node.shortUrl}\``,
       )
@@ -404,12 +404,16 @@ async function main() {
     return
   }
 
-  // 不能放进 docs/：apps/docs 的 @nuxt/content 会把路径逐段 slugify，中文段一律变空串
-  const outDir =
-    args.outDir ||
-    join(fileURLToPath(new URL('..', import.meta.url)), 'api-reference', projectDirName(docTitle))
+  // 放进 docs/，由 apps/docs 的 @nuxt/content 直接收录；路径段全部是 ASCII
+  const docsDir = join(fileURLToPath(new URL('..', import.meta.url)), 'docs')
+  const outDir = args.outDir || join(docsDir, 'api-reference', projectDirName(docTitle))
+  const routeBase = relative(docsDir, outDir).startsWith('..')
+    ? '.'
+    : `/${relative(docsDir, outDir).split(sep).join('/')}`
   const source = `${ORIGIN}/docs/detail/${issueId}`
   await prepareOutDir(outDir)
+  // 目录导航标题；放在生成目录里，重新生成时不会被丢掉
+  files.set('.navigation.md', `---\ntitle: ${docTitle}\n---\n`)
   for (const [relPath, content] of files) await writeFileEnsured(join(outDir, relPath), content)
 
   const indexLines = [
@@ -425,7 +429,7 @@ async function main() {
   indexLines.push(
     `共 ${flattened.length} 个接口，由 \`vp run docs:apipost\` 生成，请勿手改。`,
     '',
-    ...renderIndex({ children: rootNodes, base: '.' }),
+    ...renderIndex({ children: rootNodes, base: routeBase }),
     '',
   )
   await writeFileEnsured(join(outDir, 'README.md'), `${indexLines.join('\n').trimEnd()}\n`)

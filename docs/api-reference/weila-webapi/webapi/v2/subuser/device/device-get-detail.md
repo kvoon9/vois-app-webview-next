@@ -59,7 +59,8 @@ description: WEBAPI / v2 / subuser管理 / 设备 · POST http://localhost/v2/su
 			"avatar": "https://cdn.voischat.cn/weila/avatar/default/user.png",
 			"location_share": false,
 			"location_support": true, //是否支持位置分享
-			"reminder_support": true,//是否支持提醒功能
+			"reminder_support": true, //是否支持提醒功能
+			"emergency_support": true, //是否支持紧急联系人
 			"online": false,
 			"battery": 0, // 电量 0~100 0 电量数据过期 
 			"sim_card": {

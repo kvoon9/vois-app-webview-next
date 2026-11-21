@@ -44,6 +44,7 @@
     "@unocss/reset": "catalog:build",
     "@vitejs/plugin-legacy": "catalog:build",
     "@vitejs/plugin-vue": "catalog:build",
+    "jsdom": "catalog:",
     "terser": "catalog:build",
     "tsrs": "catalog:tooling",
     "typescript": "catalog:tooling",

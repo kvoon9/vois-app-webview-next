@@ -8,12 +8,13 @@ catalogMode: prefer
 catalogs:
   vue:
     '@pinia/colada': ^1.4.9
+    '@ui-sdk/core': 0.1.0-beta.13
+    '@ui-sdk/vue': 0.1.0-beta.13
     '@vue/runtime-vapor': 3.6.0-rc.9
     '@vueuse/core': ^15.0.0
     '@vueuse/integrations': ^15.0.0
     '@vueuse/router': ^15.0.0
     pinia: ^4.1.0
-    reka-ui: ^2.11.0
     vue: 3.6.0-rc.9
     vue-i18n: ^11.4.20
     vue-router: ^5.5.1
@@ -45,6 +46,9 @@ catalogs:
     vue: 3.5.43
 overrides:
   vite@*: catalog:build
+  # The UI SDK's Vue package peers on core with a caret range; a second copy
+  # breaks popup anchor names (vercel-labs/ui#932), so core stays exact.
+  '@ui-sdk/core': 0.1.0-beta.13
 allowBuilds:
   better-sqlite3: true
   core-js: true
@@ -52,6 +56,8 @@ allowBuilds:
   vue-demi: true
   workerd: true
 minimumReleaseAgeExclude:
+  - '@ui-sdk/core@0.1.0-beta.13'
+  - '@ui-sdk/vue@0.1.0-beta.13'
   - '@vue/compiler-core@3.6.0-rc.9'
   - '@vue/compiler-dom@3.6.0-rc.9'
   - '@vue/compiler-sfc@3.6.0-rc.9'
@@ -87,5 +93,6 @@ catalog:
   '@vois/webview-bridge': ^0.6.0
   '@x18n/cli': ^0.1.14
   '@x18n/core': ^0.1.14
+  jsdom: ^31.0.1
   pinyin-pro: ^3.29.5
   wrangler: ^4.162.0

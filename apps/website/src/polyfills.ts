@@ -8,7 +8,7 @@ interface ObjectApi {
 }
 
 // Android WebView Chrome 92 (App 5.0.8 on Android 10) has no Object.hasOwn,
-// and reka-ui calls it when a dialog mounts. Define it before the app mounts.
+// and the UI SDK kernel calls it when a primitive mounts. Define it before the app mounts.
 // SAFETY: every supported engine has Object.defineProperty; only hasOwn is optional here.
 const objectApi = Object as ObjectApi
 if (objectApi.hasOwn === undefined) {
@@ -39,6 +39,40 @@ if (!hasBootApi('queueMicrotask')) {
   window.queueMicrotask = (callback) => {
     void Promise.resolve().then(callback)
   }
+}
+
+// The UI SDK releases a closing popup only after Element.getAnimations
+// (Chrome 84) resolves. An empty result ends that wait immediately; older
+// engines skip exit animations instead of throwing. SAFETY: callers only
+// iterate the returned array.
+if (!('getAnimations' in Element.prototype)) {
+  objectApi.defineProperty(Element.prototype, 'getAnimations', {
+    value: () => [],
+    configurable: true,
+    writable: true,
+  })
+}
+
+// The UI SDK watcher registry holds one WeakRef (Chrome 84) per mounted
+// primitive; without it every mount logs a ReferenceError. A strong
+// reference is equivalent: the registry pins the instance for the same
+// lifetime. SAFETY: window is the global object, and globalThis is
+// ensured above.
+if (!hasBootApi('WeakRef')) {
+  class StrongRefShim<T extends object> {
+    private readonly held: T
+    constructor(held: T) {
+      this.held = held
+    }
+    deref(): T | undefined {
+      return this.held
+    }
+  }
+  objectApi.defineProperty(window, 'WeakRef', {
+    value: StrongRefShim,
+    configurable: true,
+    writable: true,
+  })
 }
 
 // Chrome 70 has AbortController natively; this keeps the measured Chrome 64

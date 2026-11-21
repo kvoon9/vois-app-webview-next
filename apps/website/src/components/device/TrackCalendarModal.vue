@@ -63,14 +63,14 @@ function confirm(): void {
     <DialogBackdrop class="fixed inset-0 bg-black/50" />
 
     <DialogContent
-      class="fixed top-auto right-auto bottom-0 left-1/2 m-0 h-fit w-full max-w-sm -translate-x-1/2 flex flex-col overflow-y-auto rounded-t-[28px] bg-surface-dialog px-5 pb-5 pt-7 text-text-primary shadow-xl max-h-[calc(100vh-2rem)]"
+      class="track-calendar-sheet fixed top-auto right-auto bottom-0 left-1/2 m-0 h-fit w-full max-w-sm -translate-x-1/2 flex flex-col overflow-y-auto rounded-t-[28px] bg-surface-dialog px-5 pb-5 pt-7 text-text-primary shadow-xl max-h-[calc(100vh-4rem)]"
     >
       <DialogTitle class="text-center text-subtitle font-semibold">
         {{ t('device.selectDate') }}
       </DialogTitle>
 
       <Calendar
-        class="mt-7"
+        class="track-calendar-body mt-7"
         :value="selectedDate"
         :locale="locale"
         :fixed-weeks="true"
@@ -107,7 +107,7 @@ function confirm(): void {
         </CalendarGrid>
       </Calendar>
 
-      <footer class="mt-7 flex space-x-3">
+      <footer class="track-calendar-footer mt-7 flex flex-none space-x-3">
         <button
           type="button"
           class="h-12 flex-1 rounded-button bg-surface-muted text-header font-medium"
@@ -152,5 +152,19 @@ function confirm(): void {
 .track-calendar-day[data-unavailable] {
   color: var(--color-text-secondary);
   opacity: 0.4;
+}
+
+/* Below 640px tall the sheet reaches its cap, so the spacing tightens to keep
+ * the footer buttons fully visible instead of scrolling them under the edge. */
+@media (max-height: 640px) {
+  .track-calendar-sheet {
+    padding-top: 1rem;
+    padding-bottom: 0.75rem;
+  }
+
+  .track-calendar-body,
+  .track-calendar-footer {
+    margin-top: 0.75rem;
+  }
 }
 </style>

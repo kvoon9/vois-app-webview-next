@@ -1,12 +1,6 @@
-import { shallowRef } from 'vue'
+import { createToaster } from '@ui-sdk/vue/toast'
 
 export type ToastType = 'success' | 'error' | 'info'
-
-export interface Toast {
-  id: number
-  message: string
-  type: ToastType
-}
 
 export interface ToastOptions {
   duration?: number
@@ -14,45 +8,25 @@ export interface ToastOptions {
 }
 
 const defaultDuration = 3000
-const toast = shallowRef<Toast | null>(null)
-let dismissTimer: ReturnType<typeof setTimeout> | undefined
-let nextId = 0
+const toastId = 'app-toast'
 
-function clearDismissTimer(): void {
-  if (dismissTimer !== undefined) {
-    clearTimeout(dismissTimer)
-    dismissTimer = undefined
-  }
-}
+/** The app's single toast queue; ToastHost renders it once at the root. */
+export const toaster = createToaster({ duration: defaultDuration })
 
 /** Show one short-lived application message. The latest message replaces the previous one. */
 function showToast(message: string, options: ToastOptions = {}): void {
-  clearDismissTimer()
-
-  const id = ++nextId
-  toast.value = {
-    id,
-    message,
-    type: options.type ?? 'success',
-  }
-
   const duration = options.duration ?? defaultDuration
-  if (duration > 0) {
-    dismissTimer = setTimeout(() => {
-      if (toast.value?.id === id) dismissToast()
-    }, duration)
-  }
-}
-
-function dismissToast(): void {
-  clearDismissTimer()
-  toast.value = null
+  toaster(message, {
+    id: toastId,
+    type: options.type ?? 'success',
+    // The old API treated a non-positive duration as "never auto-close".
+    duration: duration > 0 ? duration : Number.POSITIVE_INFINITY,
+  })
 }
 
 export function useToast() {
   return {
-    toast,
     showToast,
-    dismissToast,
+    dismissToast: () => toaster.dismiss(),
   }
 }

@@ -7,7 +7,9 @@ import { runSweep, writeResults } from './sweep.mjs'
 
 const REPO_ROOT = fileURLToPath(new URL('../../../../', import.meta.url)).replace(/\/$/, '')
 const DIST_DIR = join(REPO_ROOT, 'apps/website/dist')
-const PREVIEW_PORT = 8081
+// A machine-local ssh tunnel may own 8081; VOIS_PREVIEW_PORT moves the sweep
+// to a free port without touching that tunnel.
+const PREVIEW_PORT = Number(process.env.VOIS_PREVIEW_PORT ?? 8081)
 const PREVIEW_URL = `http://127.0.0.1:${PREVIEW_PORT}`
 const MINIMUM_TARGET = 64
 const vpBin = process.env.VP_BIN ?? 'vp'

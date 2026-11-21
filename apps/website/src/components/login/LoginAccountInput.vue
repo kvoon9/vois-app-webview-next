@@ -1,13 +1,12 @@
 <script setup lang="ts">
 import {
-  ComboboxAnchor,
+  Combobox,
   ComboboxContent,
   ComboboxInput,
   ComboboxItem,
-  ComboboxRoot,
+  ComboboxList,
   ComboboxTrigger,
-  ComboboxViewport,
-} from 'reka-ui'
+} from '@ui-sdk/vue/combobox'
 import { useI18n } from 'vue-i18n'
 
 defineProps<{
@@ -16,6 +15,7 @@ defineProps<{
   disabled: boolean
 }>()
 
+// Free text is the value, so the query binding carries both typing and selection.
 const account = defineModel<string>({ required: true })
 const { t } = useI18n({ useScope: 'global' })
 </script>
@@ -23,18 +23,10 @@ const { t } = useI18n({ useScope: 'global' })
 <template>
   <div>
     <label for="login-account" class="text-2nd-body">{{ label }}</label>
-    <ComboboxRoot
-      v-model="account"
-      class="relative mt-2"
-      :disabled="disabled"
-      :reset-search-term-on-blur="false"
-      :reset-search-term-on-select="false"
-      ignore-filter
-    >
-      <ComboboxAnchor class="relative">
+    <Combobox v-model:query="account" :disabled="disabled" :filter="false" allow-custom-value>
+      <div class="relative mt-2">
         <ComboboxInput
           id="login-account"
-          v-model="account"
           inputmode="text"
           autocomplete="username"
           class="input-field pr-12"
@@ -48,12 +40,12 @@ const { t } = useI18n({ useScope: 'global' })
         >
           <span class="i-ph-caret-down" aria-hidden="true" />
         </ComboboxTrigger>
-      </ComboboxAnchor>
+      </div>
       <ComboboxContent
         v-if="accounts.length"
-        class="absolute left-0 right-0 z-10 mt-1 rounded-standard bg-surface-elevated shadow-lg"
+        class="w-[var(--anchor-width)] rounded-standard bg-surface-elevated shadow-lg"
       >
-        <ComboboxViewport class="max-h-60 overflow-y-auto p-1">
+        <ComboboxList class="max-h-60 overflow-y-auto p-1">
           <ComboboxItem
             v-for="name in accounts"
             :key="name"
@@ -62,8 +54,8 @@ const { t } = useI18n({ useScope: 'global' })
           >
             {{ name }}
           </ComboboxItem>
-        </ComboboxViewport>
+        </ComboboxList>
       </ComboboxContent>
-    </ComboboxRoot>
+    </Combobox>
   </div>
 </template>

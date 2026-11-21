@@ -1,6 +1,12 @@
+import { createRequire } from 'node:module'
 import { configDefaults, defineConfig } from 'vite-plus'
 
+// Root tests mount SFCs, so reuse the website's Vue plugin rather than a second root dependency.
+const websiteRequire = createRequire(new URL('./apps/website/package.json', import.meta.url))
+const vue = websiteRequire('@vitejs/plugin-vue').default
+
 export default defineConfig({
+  plugins: [vue()],
   test: {
     // Vitest v4 compatibility: preserve mock call history.
     // Remove after tests no longer rely on calls from setup or earlier tests.

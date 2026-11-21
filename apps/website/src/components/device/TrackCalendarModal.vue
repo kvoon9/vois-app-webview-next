@@ -1,24 +1,17 @@
 <script setup lang="ts">
-import { getLocalTimeZone, parseDate, today, type DateValue } from '@internationalized/date'
 import {
-  CalendarCell,
-  CalendarCellTrigger,
+  Calendar,
+  CalendarDay,
   CalendarGrid,
-  CalendarGridBody,
-  CalendarGridHead,
-  CalendarGridRow,
-  CalendarHeadCell,
   CalendarHeading,
-  CalendarHeader,
   CalendarNext,
-  CalendarPrev,
-  CalendarRoot,
-  DialogContent,
-  DialogOverlay,
-  DialogPortal,
-  DialogRoot,
-  DialogTitle,
-} from 'reka-ui'
+  CalendarPrevious,
+  CalendarWeekday,
+  CalendarWeekdays,
+  CalendarWeeks,
+  type CalendarValue,
+} from '@ui-sdk/vue/calendar'
+import { Dialog, DialogBackdrop, DialogContent, DialogTitle } from '@ui-sdk/vue/dialog'
 import { shallowRef, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 
@@ -33,129 +26,131 @@ const emit = defineEmits<{
 }>()
 
 const { locale, t } = useI18n({ useScope: 'global' })
-const selectedDate = shallowRef<DateValue>(parseDate(props.value))
+const selectedDate = shallowRef(props.value)
+const maxDate = shallowRef(localISODate())
 
 watch(
   () => [props.open, props.value] as const,
-  ([open, value]) => {
-    if (open) selectedDate.value = parseDate(value)
+  ([isOpen, value]) => {
+    if (!isOpen) return
+    selectedDate.value = value
+    maxDate.value = localISODate()
   },
 )
 
-function handleOpenChange(open: boolean): void {
-  if (!open) emit('cancel')
+function localISODate(): string {
+  const now = new Date()
+  const month = String(now.getMonth() + 1).padStart(2, '0')
+  const day = String(now.getDate()).padStart(2, '0')
+  return `${now.getFullYear()}-${month}-${day}`
+}
+
+function handleOpenChange(isOpen: boolean): void {
+  if (!isOpen) emit('cancel')
+}
+
+function handleValueChange(value: CalendarValue): void {
+  if (value !== null && !Array.isArray(value)) selectedDate.value = value
 }
 
 function confirm(): void {
-  emit('confirm', selectedDate.value.toString())
+  emit('confirm', selectedDate.value)
 }
 </script>
 
 <template>
-  <DialogRoot :open="open" @update:open="handleOpenChange">
-    <DialogPortal>
-      <DialogOverlay class="fixed inset-0 z-modal bg-black/50 p-4">
-        <DialogContent
-          class="absolute bottom-0 left-1/2 max-h-[calc(100vh-2rem)] w-full max-w-sm -translate-x-1/2 overflow-y-auto rounded-t-[28px] bg-surface-dialog px-5 pb-5 pt-7 text-text-primary shadow-xl"
-          :aria-describedby="undefined"
-          @escape-key-down="handleOpenChange(false)"
-        >
-          <DialogTitle class="text-center text-subtitle font-semibold">
-            {{ t('device.selectDate') }}
-          </DialogTitle>
+  <Dialog :open="open" @update:open="handleOpenChange">
+    <DialogBackdrop class="fixed inset-0 bg-black/50" />
 
-          <CalendarRoot
-            v-slot="{ grid, weekDays }"
-            v-model="selectedDate"
-            class="mt-7"
-            :locale="locale"
-            :fixed-weeks="true"
-            :initial-focus="true"
-            :prevent-deselect="true"
-            :max-value="today(getLocalTimeZone())"
+    <DialogContent
+      class="fixed top-auto right-auto bottom-0 left-1/2 m-0 h-fit w-full max-w-sm -translate-x-1/2 flex flex-col overflow-y-auto rounded-t-[28px] bg-surface-dialog px-5 pb-5 pt-7 text-text-primary shadow-xl max-h-[calc(100vh-2rem)]"
+    >
+      <DialogTitle class="text-center text-subtitle font-semibold">
+        {{ t('device.selectDate') }}
+      </DialogTitle>
+
+      <Calendar
+        class="mt-7"
+        :value="selectedDate"
+        :locale="locale"
+        :fixed-weeks="true"
+        :unavailable="{ after: maxDate }"
+        @value-change="handleValueChange"
+      >
+        <div class="flex items-center justify-between px-2">
+          <CalendarPrevious
+            class="h-10 w-10 flex items-center justify-center rounded-full text-2xl text-text-primary hover:bg-surface-muted data-[disabled]:opacity-40"
           >
-            <CalendarHeader class="flex items-center justify-between px-2">
-              <CalendarPrev
-                class="h-10 w-10 flex items-center justify-center rounded-full text-2xl text-text-primary hover:bg-surface-muted disabled:opacity-40"
-              >
-                <span class="i-ph-caret-left" aria-hidden="true" />
-              </CalendarPrev>
-              <CalendarHeading class="text-header font-medium" />
-              <CalendarNext
-                class="h-10 w-10 flex items-center justify-center rounded-full text-2xl text-text-primary hover:bg-surface-muted disabled:opacity-40"
-              >
-                <span class="i-ph-caret-right" aria-hidden="true" />
-              </CalendarNext>
-            </CalendarHeader>
+            <span class="i-ph-caret-left" aria-hidden="true" />
+          </CalendarPrevious>
+          <CalendarHeading class="text-header font-medium" />
+          <CalendarNext
+            class="h-10 w-10 flex items-center justify-center rounded-full text-2xl text-text-primary hover:bg-surface-muted data-[disabled]:opacity-40"
+          >
+            <span class="i-ph-caret-right" aria-hidden="true" />
+          </CalendarNext>
+        </div>
 
-            <div class="mt-4">
-              <CalendarGrid
-                v-for="month in grid"
-                :key="month.value.toString()"
-                class="w-full border-collapse"
-              >
-                <CalendarGridHead>
-                  <CalendarGridRow>
-                    <CalendarHeadCell
-                      v-for="weekDay in weekDays"
-                      :key="weekDay"
-                      class="h-9 text-center text-small font-normal text-text-secondary"
-                    >
-                      {{ weekDay }}
-                    </CalendarHeadCell>
-                  </CalendarGridRow>
-                </CalendarGridHead>
-                <CalendarGridBody>
-                  <CalendarGridRow v-for="(week, index) in month.rows" :key="index">
-                    <CalendarCell
-                      v-for="day in week"
-                      :key="day.toString()"
-                      :date="day"
-                      class="h-11 p-0 text-center"
-                    >
-                      <CalendarCellTrigger
-                        :day="day"
-                        :month="month.value"
-                        as="button"
-                        class="h-10 w-10 rounded-full text-body transition-colors"
-                      >
-                        <template #default="{ dayValue, outsideView, disabled, selected }">
-                          <span
-                            class="h-10 w-10 flex items-center justify-center rounded-full"
-                            :class="[
-                              selected ? 'bg-primary text-primary-text' : '',
-                              outsideView || disabled ? 'text-text-secondary/40' : '',
-                            ]"
-                          >
-                            {{ dayValue }}
-                          </span>
-                        </template>
-                      </CalendarCellTrigger>
-                    </CalendarCell>
-                  </CalendarGridRow>
-                </CalendarGridBody>
-              </CalendarGrid>
-            </div>
-          </CalendarRoot>
+        <CalendarGrid class="mt-4 w-full border-collapse">
+          <CalendarWeekdays v-slot="{ index }">
+            <CalendarWeekday
+              :index="index"
+              class="h-9 text-center text-small font-normal text-text-secondary"
+            />
+          </CalendarWeekdays>
+          <CalendarWeeks v-slot="{ cell }">
+            <CalendarDay
+              :value="cell.date"
+              class="track-calendar-day h-11 p-0 text-center text-body"
+            />
+          </CalendarWeeks>
+        </CalendarGrid>
+      </Calendar>
 
-          <footer class="mt-7 flex space-x-3">
-            <button
-              type="button"
-              class="h-12 flex-1 rounded-button bg-surface-muted text-header font-medium"
-              @click="emit('cancel')"
-            >
-              {{ t('modal.cancel') }}
-            </button>
-            <button
-              type="button"
-              class="h-12 flex-1 rounded-button bg-primary text-header font-medium text-primary-text"
-              @click="confirm"
-            >
-              {{ t('modal.ok') }}
-            </button>
-          </footer>
-        </DialogContent>
-      </DialogOverlay>
-    </DialogPortal>
-  </DialogRoot>
+      <footer class="mt-7 flex space-x-3">
+        <button
+          type="button"
+          class="h-12 flex-1 rounded-button bg-surface-muted text-header font-medium"
+          @click="emit('cancel')"
+        >
+          {{ t('modal.cancel') }}
+        </button>
+        <button
+          type="button"
+          class="h-12 flex-1 rounded-button bg-primary text-header font-medium text-primary-text"
+          @click="confirm"
+        >
+          {{ t('modal.ok') }}
+        </button>
+      </footer>
+    </DialogContent>
+  </Dialog>
 </template>
+
+<style scoped>
+/* A table cell cannot be the 40px circle itself, so paint it centered behind the label. */
+.track-calendar-day {
+  background-position: center;
+  background-repeat: no-repeat;
+  vertical-align: middle;
+  transition:
+    color 150ms,
+    opacity 150ms;
+}
+
+.track-calendar-day[data-selected] {
+  background-image: radial-gradient(
+    circle closest-side,
+    var(--color-primary) 98%,
+    transparent 100%
+  );
+  background-size: 2.5rem 2.5rem;
+  color: var(--color-primary-text);
+}
+
+.track-calendar-day[data-outside],
+.track-calendar-day[data-unavailable] {
+  color: var(--color-text-secondary);
+  opacity: 0.4;
+}
+</style>

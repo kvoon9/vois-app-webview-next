@@ -8,7 +8,7 @@ interface ObjectApi {
 }
 
 // Android WebView Chrome 92 (App 5.0.8 on Android 10) has no Object.hasOwn,
-// and reka-ui calls it when a dialog mounts. Define it before the app mounts.
+// and the UI SDK kernel calls it when a primitive mounts. Define it before the app mounts.
 // SAFETY: every supported engine has Object.defineProperty; only hasOwn is optional here.
 const objectApi = Object as ObjectApi
 if (objectApi.hasOwn === undefined) {

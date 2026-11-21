@@ -63,8 +63,26 @@
 - 页面隐藏时的动画门控：SDK 无开关，但其驱动把动画起点推迟到首渲染帧，效果等价。搜索框淡入保留门控。
 - WeakRef shim 是强引用：注册表本就钉住实例，无额外泄漏。
 
+## 自研组件收编（第二轮）
+
+策略：有 SDK 现成家族的直接换用，没有的保留手写。盘点结论是本文档记录时没有需要 Custom Parts 的场景，全部有现成组件覆盖。
+
+| 组件 | 迁到 | 提交 | 删除的手写逻辑 |
+| --- | --- | --- | --- |
+| ToggleSwitch | Switch + SwitchThumb | d11dc26 | role/aria-checked/点击按钮，改为受控 presentational |
+| Avatar | Avatar + AvatarImage + AvatarFallback | 1de99ed | loaded/failed 状态机、src watch、loading computed |
+| ToastHost + useToast | createToaster + ToastRegion | 24fec67 | 单条替换 toast 实现；固定 id `app-toast` 是文档明文的等价复用语义 |
+| ImageCropper | ImageCropper frame 模式 + cropImage | 9e9bc48 | 184 行指针/pinch 几何与 105 行工具，工具及其测试一并删除 |
+
+保留手写（SDK 无对应家族）：AzIndexRail（字母 scrub 条，非数值 slider）、TrackPointPopup（地图卡片，非弹层语义）、PageHeader 等业务组合件。
+
+实现要点：
+- Toast：`duration <= 0` 的旧语义（永不自动关闭）映射为 `Infinity`；SDK 在 99+ 给区域设 `flex-direction: column`，加 `flex-row` 保持旧的横向居中；列表 reset 自写，因为 SDK 的规则在被丢弃的 layer 里。
+- ImageCropper：SDK 只有 `data-error` 属性没有错误事件，用 MutationObserver 桥接回 `failed`，保住消费方「坏文件原样上传」的逃生通道。已知变化：透明源像素编码为黑（`cropImage` 无白色底层）；不透明照片无影响。
+- 契约测试新增 26 条（5+8+5+8），含 switch 的 checkPattern 断言。
+
 ## 未做（明确出范围）
 
-- 自研组件的 Custom Parts 重写（ToggleSwitch/ToastHost/Avatar）。用户提及但本轮聚焦 reka-ui 替换，Custom Parts 试点留待后续 lane。
+- Custom Parts（createParts/usePrimitive/usePart）手写零件：本轮盘点后没有适用场景，全部行为都有现成组件覆盖。若后续出现 SDK 缺零件的交互再启用，方法论已存于记忆（ui-sdk-contract-testing）。
 - docs 应用的 @nuxt/ui 仍带 reka-ui 传递依赖，不在本 lane。
-- 真机（非快照）WebView 验收。快照探针已证功能，真机回归留给 release 流程。
+- 真机（非快照）WebView 验收。快照探针已证功能，真机回归留给 release 流程。ImageCropper 的 `cropImage` 对 File 走 `createImageBitmap`（iOS WKWebView 15+），iOS 14 设备上会落到 failed 逃生通道（原样上传），值得真机确认。

@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { computed, shallowRef, watch } from 'vue'
+import { Avatar, AvatarFallback, AvatarImage } from '@ui-sdk/vue/avatar'
+import { computed } from 'vue'
 
 type AvatarSize = 'sm' | 'md' | 'profile' | 'lg' | 'xl' | '2xl'
 
@@ -33,42 +34,29 @@ const SIZE_CLASS = {
   '2xl': 'h-24 w-24 text-3xl',
 } satisfies Record<AvatarSize, string>
 
-const failed = shallowRef(false)
-const loaded = shallowRef(false)
-
-// A new src is an unloaded image again; without this, the previous result sticks.
-watch(
-  () => props.src,
-  () => {
-    failed.value = false
-    loaded.value = false
-  },
-)
-
-// A remote image in flight is not the avatar yet. Nothing in the slot claims to be
-// it: the spinner says "loading" and the initial is reserved for the no-image and
-// broken-image cases, so an upload never flashes the old letter back.
-const loading = computed(() => Boolean(props.src) && !loaded.value && !failed.value)
-
 const initial = computed(() => props.name.trim().slice(0, 1) || '?')
 </script>
 
 <template>
-  <span
+  <Avatar
     class="relative flex flex-none items-center justify-center overflow-hidden rounded-full bg-surface-muted text-text-secondary"
     :class="SIZE_CLASS[size]"
   >
-    <span v-if="loading" class="i-ph-spinner animate-spin" aria-hidden="true" />
-    <template v-else>{{ initial }}</template>
-    <img
-      v-if="src && !failed"
+    <AvatarImage
+      v-if="src"
       :src="src"
       :alt="alt"
       class="absolute inset-0 h-full w-full object-cover transition-opacity duration-200"
-      :class="loaded ? 'opacity-100' : 'opacity-0'"
-      @load="loaded = true"
-      @error="failed = true"
     />
+    <AvatarFallback v-slot="{ state }">
+      <!-- A src that has not bound its image yet is still in flight, so it gets the spinner. -->
+      <span
+        v-if="state.loadingStatus === 'loading' || (state.loadingStatus === 'idle' && src)"
+        class="i-ph-spinner animate-spin"
+        aria-hidden="true"
+      />
+      <template v-else>{{ initial }}</template>
+    </AvatarFallback>
     <span
       v-if="showStatus && online !== undefined"
       class="status-dot"
@@ -76,5 +64,5 @@ const initial = computed(() => props.name.trim().slice(0, 1) || '?')
       :aria-label="statusLabel"
       :role="statusLabel ? 'img' : undefined"
     />
-  </span>
+  </Avatar>
 </template>

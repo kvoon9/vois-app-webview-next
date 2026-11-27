@@ -4,7 +4,7 @@ description: '安卓 App 设备管理功能在 H5 端复刻的可行性结论：
 
 # 设备管理复刻可行性
 
-> 2026-10-15。材料有三份：安卓 APK 反编译源码（`vender/WL_V5.0.4_Code504_09181532.apk`，jadx 输出在本机 `/tmp/vois-apk/wl-src`）、Apipost 导出的真实接口文档（`api-reference/`，44 个 `/v2/subuser` 接口）、website 现状代码。本文是动手前的结论。2026-10-15 更新：Phase 0（删 mock）与 Phase 1（页面接真实 API）已落地，实时定位按轮询桥方案实现（见 `docs/native/android/v5.0.8+508/location-bridge.md`）；后端补接口项 A1-A11 待排期。
+> 2026-10-15。材料有三份：安卓 APK 反编译源码（`vender/WL_V5.0.4_Code504_09181532.apk`，jadx 输出在本机 `/tmp/vois-apk/wl-src`）、Apipost 导出的真实接口文档（`docs/api-reference/`，44 个 `/v2/subuser` 接口）、website 现状代码。本文是动手前的结论。2026-10-15 更新：Phase 0（删 mock）与 Phase 1（页面接真实 API）已落地，实时定位按轮询桥方案实现（见 `docs/native/android/v5.0.8+508/location-bridge.md`）；后端补接口项 A1-A11 待排期。
 >
 > 同日补充：v5.0.8 包（`WL_V5.0.8_Code508_10151723.apk`）逆向完成后，第 2 节的实时位置按实际落地的桥实现更新。
 >
@@ -27,7 +27,7 @@ description: '安卓 App 设备管理功能在 H5 端复刻的可行性结论：
 
 安卓走两条通道。一条是私有 TCP 长连接（protobuf）：绑定设备、锁定、远程关机、改设备配置（围栏、省电档、位置共享开关、紧急联系人、按键联系人、音量）、实时位置、设备的好友和群操作，全走这条。另一条是普通 HTTP：设备信息、轨迹、SOS 次数、提醒、SIM 卡充值，走这条。
 
-问题是 H5 接不了那条 TCP 长连接。好在后端已经把大部分管理操作 HTTP 化了——就是 `api-reference` 里那 44 个 `/v2/subuser` 接口，本质上是把 socket 通道里管理员会用到的操作包装成 HTTP 给管理页面用。所以围栏、省电档、紧急联系人这些在安卓里走 socket 的功能，H5 反而能直接做。没包进来的部分（锁定、关机、音量、按键联系人、群会话设置），就是第 3 节要请后端补的。
+问题是 H5 接不了那条 TCP 长连接。好在后端已经把大部分管理操作 HTTP 化了——就是 `docs/api-reference` 里那 44 个 `/v2/subuser` 接口，本质上是把 socket 通道里管理员会用到的操作包装成 HTTP 给管理页面用。所以围栏、省电档、紧急联系人这些在安卓里走 socket 的功能，H5 反而能直接做。没包进来的部分（锁定、关机、音量、按键联系人、群会话设置），就是第 3 节要请后端补的。
 
 另外两个对复刻有利的事实：
 

@@ -6,6 +6,9 @@ import path from 'node:path'
 // source of truth. Walk it recursively (subtrees like docs/native/ keep their
 // own layout) so every document route is prerendered for `nuxt generate`.
 const docsDir = fileURLToPath(new URL('../../docs', import.meta.url))
+// Parity report images live with their reports under docs/; Nitro serves them
+// at /parity so the existing markdown image URLs stay valid.
+const parityAssetsDir = fileURLToPath(new URL('../../docs/parity/images', import.meta.url))
 const docRoutes: string[] = []
 const walkDocs = (dir: string, prefix = ''): void => {
   for (const entry of readdirSync(dir, { withFileTypes: true })) {
@@ -14,8 +17,11 @@ const walkDocs = (dir: string, prefix = ''): void => {
     } else if (entry.name === '.navigation.md') {
       // Directory navigation config, not a page.
     } else if (entry.name.endsWith('.md')) {
-      // Content slugs the file segment to lowercase (README.md -> /readme).
-      docRoutes.push(`/${prefix}${entry.name.replace(/\.md$/, '').toLowerCase()}`)
+      // Content slugs the file segment to lowercase (README.md -> /readme)
+      // and maps index.md to the directory route.
+      const slug = entry.name.replace(/\.md$/, '').toLowerCase()
+      const route = slug === 'index' ? prefix.replace(/\/$/, '') : `${prefix}${slug}`
+      docRoutes.push(`/${route}`)
     }
   }
 }
@@ -33,6 +39,15 @@ export default defineNuxtConfig({
     },
   },
   nitro: {
+    publicAssets: [
+      {
+        dir: parityAssetsDir,
+        baseURL: '/parity',
+        maxAge: 60 * 60 * 24 * 7,
+        // Let /parity/comparison-report-* fall through to the content pages.
+        fallthrough: true,
+      },
+    ],
     prerender: {
       crawlLinks: true,
       routes: ['/', ...docRoutes],

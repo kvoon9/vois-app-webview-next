@@ -10,6 +10,8 @@
  * 用法:
  *   vp run docs:apipost                       # 用内置的默认分享链接
  *   node scripts/apipost-doc-to-markdown.mjs <文档URL|issue_id> [-o 输出目录] [--single 文件名]
+ *   vp run docs:apipost:diff                  # 拉取后与提交的快照比较，不写文件（0 无变化 / 1 有变化 / 2 失败）
+ *                                              # 可加 --base <快照目录>、--diff-examples
  *
  * 默认输出 api-reference/<项目英文名>/，目录与文件名一律 ASCII：
  * 目录查 FOLDER_SLUGS，接口文件名取 URL 末段。
@@ -18,7 +20,7 @@
  * 仓库是公开的，所以示例参数里的 token / sign 默认打码，用 --keep-secrets 可以保留原值。
  */
 
-import { mkdir, readdir, readFile, stat, writeFile } from 'node:fs/promises'
+import { mkdir, readdir, readFile, rm, stat, writeFile } from 'node:fs/promises'
 import { dirname, join, posix, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
@@ -26,13 +28,27 @@ const ORIGIN = 'https://docs.apipost.net'
 const DEFAULT_DOC_URL = 'https://docs.apipost.net/docs/detail/6d697c60e879000'
 
 function parseArgs(argv) {
-  const args = { input: '', outDir: '', single: '', keepSecrets: false }
+  const args = {
+    input: '',
+    outDir: '',
+    single: '',
+    keepSecrets: false,
+    diff: false,
+    diffExamples: false,
+    base: '',
+  }
   for (let i = 0; i < argv.length; i++) {
     const arg = argv[i]
     if (arg === '-o' || arg === '--out') args.outDir = argv[++i]
     else if (arg === '--single') args.single = argv[++i]
     else if (arg === '--keep-secrets') args.keepSecrets = true
-    else if (!args.input) args.input = arg
+    else if (arg === '--diff') args.diff = true
+    else if (arg === '--diff-examples') args.diffExamples = true
+    else if (arg === '--base') {
+      const value = argv[++i]
+      if (!value) throw new Error('--base 需要一个快照目录')
+      args.base = value
+    } else if (!args.input) args.input = arg
   }
   return args
 }
@@ -297,17 +313,208 @@ async function prepareOutDir(outDir) {
         .catch(() => false))
     if (!owned && entries.length)
       throw new Error(`输出目录 ${outDir} 非空且不是本脚本生成的，请换一个目录或先清空`)
-    if (owned) {
-      const { rm } = await import('node:fs/promises')
-      await rm(outDir, { recursive: true, force: true })
-    }
+    if (owned) await rm(outDir, { recursive: true, force: true })
   }
   await mkdir(outDir, { recursive: true })
+}
+
+const REQUEST_SECTIONS = [
+  { name: 'query', read: (api) => api?.request?.query?.parameter },
+  { name: 'body', read: (api) => api?.request?.body?.raw_parameter },
+  { name: 'header', read: (api) => api?.request?.header?.parameter },
+  { name: 'restful', read: (api) => api?.request?.restful?.parameter },
+]
+
+// 示例值默认不参与比较：et/appid/token 本来就会轮换，算进去只会天天报变更
+const PARAM_FIELDS = ['field_type', 'description', 'not_null']
+
+/** 固定按码点排序，报告顺序不随机器 locale 变化。 */
+const compareKeys = (a, b) => (a < b ? -1 : a > b ? 1 : 0)
+
+/** 报告是给终端看的，一个字段占一行，换行符转义掉。 */
+function oneLine(value) {
+  const text = String(value ?? '').replace(/\r?\n/g, '\\n')
+  return text === '' ? '(empty)' : text
+}
+
+/**
+ * 契约身份是 method + pathname；origin 单独比较。
+ * 换域名（http://localhost → https://api.voischat.cn）是同一接口搬了家，不是删了再加。
+ */
+function indexEndpoints(raw) {
+  const list = raw?.details?.list
+  if (!Array.isArray(list)) throw new Error('快照缺少 details.list')
+  const endpoints = new Map()
+  for (const item of list) {
+    if (item?.target_type !== 'api') continue
+    const url = String(item.url ?? '').trim()
+    let pathname = url.split('?')[0].split('#')[0] || '/'
+    let origin = ''
+    try {
+      const parsed = new URL(url)
+      pathname = parsed.pathname || '/'
+      origin = parsed.origin
+    } catch {
+      // 相对地址没有 origin，保留上面的回退 pathname
+    }
+    const method = String(item.method ?? '').toUpperCase()
+    const key = `${method} ${pathname}`
+    endpoints.set(key, { key, origin, item })
+  }
+  return endpoints
+}
+
+function paramsByKey(list) {
+  const params = new Map()
+  for (const param of Array.isArray(list) ? list : []) {
+    if (!param || param.key == null) continue
+    params.set(String(param.key), param)
+  }
+  return params
+}
+
+/** 响应按 expect.name 分组，同名示例合并（上游极少重名）。 */
+function examplesByKey(api) {
+  const examples = new Map()
+  for (const example of Array.isArray(api?.response?.example) ? api.response.example : []) {
+    const name = String(example?.expect?.name || 'default')
+    const params = examples.get(name) ?? new Map()
+    for (const [key, param] of paramsByKey(example?.raw_parameter)) params.set(key, param)
+    examples.set(name, params)
+  }
+  return examples
+}
+
+function compareParam(oldParam, newParam, key, withValues) {
+  const changes = []
+  const fields = withValues ? [...PARAM_FIELDS, 'value'] : PARAM_FIELDS
+  for (const field of fields) {
+    const before = String(oldParam?.[field] ?? '')
+    const after = String(newParam?.[field] ?? '')
+    if (before === after) continue
+    // 值字段走和 Markdown 相同的打码规则
+    const show = (value) => oneLine(field === 'value' ? exampleValue(key, value) : value)
+    changes.push(`${field}: ${show(before)} -> ${show(after)}`)
+  }
+  return changes
+}
+
+function diffParams(oldParams, newParams, describeKey, withValues) {
+  const lines = []
+  const keys = [...new Set([...oldParams.keys(), ...newParams.keys()])].sort(compareKeys)
+  for (const key of keys) {
+    const oldParam = oldParams.get(key)
+    const newParam = newParams.get(key)
+    if (!oldParam) {
+      lines.push(`  ${describeKey(key)}`, '    added')
+      continue
+    }
+    if (!newParam) {
+      lines.push(`  ${describeKey(key)}`, '    removed')
+      continue
+    }
+    const changes = compareParam(oldParam, newParam, key, withValues)
+    if (!changes.length) continue
+    lines.push(`  ${describeKey(key)}`, ...changes.map((change) => `    ${change}`))
+  }
+  return lines
+}
+
+function diffEndpoint(oldEndpoint, newEndpoint, withValues) {
+  const oldItem = oldEndpoint.item
+  const newItem = newEndpoint.item
+  const lines = []
+
+  if (oldEndpoint.origin !== newEndpoint.origin)
+    lines.push(`  origin  ${oneLine(oldEndpoint.origin)} -> ${oneLine(newEndpoint.origin)}`)
+  if (String(oldItem.name ?? '') !== String(newItem.name ?? ''))
+    lines.push(`  name  ${oneLine(oldItem.name)} -> ${oneLine(newItem.name)}`)
+  if (String(oldItem.description ?? '') !== String(newItem.description ?? ''))
+    lines.push(`  description  ${oneLine(oldItem.description)} -> ${oneLine(newItem.description)}`)
+
+  for (const { name, read } of REQUEST_SECTIONS)
+    lines.push(
+      ...diffParams(
+        paramsByKey(read(oldItem)),
+        paramsByKey(read(newItem)),
+        (key) => `request ${name} ${key}`,
+        withValues,
+      ),
+    )
+
+  const oldExamples = examplesByKey(oldItem)
+  const newExamples = examplesByKey(newItem)
+  const names = [...new Set([...oldExamples.keys(), ...newExamples.keys()])].sort(compareKeys)
+  for (const name of names)
+    lines.push(
+      ...diffParams(
+        oldExamples.get(name) ?? new Map(),
+        newExamples.get(name) ?? new Map(),
+        (key) => `response ${name}.${key}`,
+        withValues,
+      ),
+    )
+
+  return lines
+}
+
+async function readSnapshot(baseDir) {
+  const path = join(baseDir, '_raw.json')
+  let text
+  try {
+    text = await readFile(path, 'utf8')
+  } catch {
+    throw new Error(`找不到快照 ${path}，请先运行 vp run docs:apipost，或用 --base 指定目录`)
+  }
+  try {
+    return JSON.parse(text)
+  } catch (error) {
+    throw new Error(`快照 ${path} 不是合法 JSON：${error.message}`)
+  }
+}
+
+/** --diff：只比较这次拉取的结果，不写仓库。 */
+async function runDiff({ details, baseDir, withValues }) {
+  const live = indexEndpoints({ details })
+  const base = indexEndpoints(await readSnapshot(baseDir))
+
+  const changed = new Map()
+  const added = []
+  const removed = []
+  for (const [key, endpoint] of live) {
+    const before = base.get(key)
+    if (!before) added.push(key)
+    else {
+      const lines = diffEndpoint(before, endpoint, withValues)
+      if (lines.length) changed.set(key, lines)
+    }
+  }
+  for (const key of base.keys()) if (!live.has(key)) removed.push(key)
+
+  if (!changed.size && !added.length && !removed.length) {
+    console.log(`no API changes against ${baseDir}`)
+    return 0
+  }
+
+  const blocks = []
+  for (const key of [...changed.keys()].sort(compareKeys))
+    blocks.push([`changed  ${key}`, ...changed.get(key)].join('\n'))
+  for (const key of added.sort(compareKeys)) blocks.push(`added    ${key}`)
+  for (const key of removed.sort(compareKeys)) blocks.push(`removed  ${key}`)
+  console.log(blocks.join('\n'))
+  console.log(`${changed.size} endpoint changed, ${added.length} added, ${removed.length} removed`)
+  return 1
 }
 
 async function main() {
   const args = parseArgs(process.argv.slice(2))
   keepSecrets = args.keepSecrets
+
+  if (!args.diff && (args.base || args.diffExamples))
+    throw new Error('--base 和 --diff-examples 需要配合 --diff 使用')
+  if (args.diff && (args.single || args.outDir))
+    throw new Error('--diff 不能和 --single 或 -o/--out 一起使用')
+
   // 不带参数时用内置的固定分享，方便 vp run docs:apipost 直接可用
   const input = args.input || DEFAULT_DOC_URL
 
@@ -365,6 +572,19 @@ async function main() {
   if (tree.project_name) tree.project_name = sanitizeProjectName(tree.project_name)
   const projectName = tree.project_name || ''
   const docTitle = projectName || tree.name || items[0]?.name || 'ApiPost 文档'
+
+  if (args.diff) {
+    const baseDir = args.base
+      ? resolve(args.base)
+      : join(
+          fileURLToPath(new URL('..', import.meta.url)),
+          'api-reference',
+          projectDirName(docTitle),
+        )
+    const code = await runDiff({ details, baseDir, withValues: args.diffExamples })
+    if (code) process.exitCode = code
+    return
+  }
 
   // 保留 ApiPost 的目录层级，但每一段都换成 ASCII slug
   const files = new Map()
@@ -445,7 +665,8 @@ async function main() {
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url))
   main().catch((error) => {
     console.error(`失败: ${error.message}`)
-    process.exit(1)
+    // --diff 用 2 表示拉取/渲染失败；0 是无变更，1 是有变更
+    process.exit(process.argv.slice(2).includes('--diff') ? 2 : 1)
   })
 
 export { endpointSlug, folderSlug, projectDirName, sanitizeProjectName }

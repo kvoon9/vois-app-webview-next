@@ -6,7 +6,13 @@ import { useRoute } from 'vue-router'
 import PageHeader from '~/components/PageHeader.vue'
 import QueryState from '~/components/settings/QueryState.vue'
 import { parseRouteParamId } from '~/composables/useRouteParamId'
-import { getDeviceDetail, getRenewOrderRecords, type RenewOrderRecord } from '~/utils/device-api'
+import {
+  getDeviceDetail,
+  getRenewOrderRecords,
+  type RenewOrderRecord,
+  type RenewOrderState,
+  type RenewPaymentKind,
+} from '~/utils/device-api'
 
 const { t } = useI18n({ useScope: 'global' })
 const route = useRoute()
@@ -36,18 +42,47 @@ const filteredRecords = computed(() =>
     : records.value,
 )
 
+/** Payment kind → its label key; a new kind breaks typecheck here. */
+const PAYMENT_KIND_KEYS = {
+  unpaid: 'device.orderStatusUnpaid',
+  paid: 'device.orderStatusPaid',
+  closed: 'device.orderStatusClosed',
+  expired: 'device.orderStatusExpired',
+  timeout: 'device.orderStatusTimeout',
+  error: 'device.orderStatusError',
+} satisfies Record<RenewPaymentKind, string>
+
 /** The wire carries fen; the page shows yuan. */
 function formatAmount(amount: number): string {
   return `¥${(amount / 100).toFixed(2)}`
 }
 
-// The wire carries numbers; 1 marks the paid and charged states.
-function statusLabel(status: number): string {
-  return status === 1 ? t('device.orderStatusPaid') : t('device.orderStatusUnpaid')
+function paymentStatusText(orderState: RenewOrderState): string {
+  switch (orderState.kind) {
+    case 'conflict':
+      return t('device.orderStatusConflict')
+    case 'unknown':
+      return t('device.orderStatusUnknown', { code: orderState.status })
+    default:
+      return t(PAYMENT_KIND_KEYS[orderState.kind])
+  }
 }
 
-function chargeStatusLabel(chargeStatus: number): string {
-  return chargeStatus === 1 ? t('device.chargeStatusCharged') : t('device.chargeStatusUncharged')
+function chargeStatusText(orderState: RenewOrderState): string {
+  switch (orderState.kind) {
+    case 'paid':
+      return orderState.charged
+        ? t('device.chargeStatusCharged')
+        : t('device.chargeStatusUncharged')
+    case 'conflict':
+      return t('device.chargeStatusCharged')
+    default:
+      return t('device.notAvailable')
+  }
+}
+
+function isAlertState(orderState: RenewOrderState): boolean {
+  return orderState.kind === 'conflict' || orderState.kind === 'unknown'
 }
 </script>
 
@@ -66,21 +101,34 @@ function chargeStatusLabel(chargeStatus: number): string {
           <li v-for="record in filteredRecords" :key="record.orderNo" class="card">
             <div class="flex items-center justify-between">
               <span class="min-w-0 flex-1 truncate text-body font-medium">
-                {{ record.orderDesc }}
+                {{ record.orderDesc || t('device.renewOrderFallback') }}
               </span>
               <span class="ml-3 flex-none text-body font-medium">
                 {{ formatAmount(record.amount) }}
               </span>
             </div>
             <div class="mt-2 flex items-center justify-between text-small text-text-secondary">
-              <span>{{ t('device.orderStatus') }}: {{ statusLabel(record.status) }}</span>
+              <span>{{ t('device.orderStatus') }}</span>
+              <span :class="{ 'text-danger': isAlertState(record.state) }">
+                {{ paymentStatusText(record.state) }}
+              </span>
+            </div>
+            <div class="mt-1 flex items-center justify-between text-small text-text-secondary">
+              <span>{{ t('device.chargeStatus') }}</span>
+              <span>{{ chargeStatusText(record.state) }}</span>
+            </div>
+            <div class="mt-1 flex items-center justify-between text-small text-text-secondary">
+              <span>{{ t('device.createdAt') }}</span>
               <time>{{ record.createdAt }}</time>
             </div>
+            <div class="mt-1 break-all text-small text-text-secondary">
+              {{ t('device.orderNumber', { id: record.orderNo }) }}
+            </div>
             <div class="mt-1 flex items-start justify-between text-small text-text-secondary">
-              <span class="min-w-0 break-all">
-                {{ t('device.orderNumber', { id: record.orderNo }) }}
+              <span class="flex-none">{{ t('device.iccid') }}</span>
+              <span class="ml-3 min-w-0 break-all text-right">
+                {{ record.iccid || t('device.notAvailable') }}
               </span>
-              <span class="ml-3 flex-none">{{ chargeStatusLabel(record.chargeStatus) }}</span>
             </div>
           </li>
         </ul>

@@ -39,26 +39,41 @@ function rowButton(): HTMLButtonElement {
   return button
 }
 
+function presenceLabel(): HTMLElement {
+  const label = [...rowButton().querySelectorAll<HTMLElement>('span')].find((span) => {
+    const text = span.textContent?.trim()
+    return text === 'Online' || text === 'Offline'
+  })
+  if (!label) throw new Error('presence label is missing')
+  return label
+}
+
 describe('DeviceListItem', () => {
-  it('labels an online device and fills its row online', async () => {
+  it('labels an online device in the online colour', async () => {
     mountItem({ name: 'Watch', online: true })
     await flush()
 
-    expect(rowButton().textContent).toContain('Online')
-    expect(rowButton().classList.contains('border-status-online')).toBe(true)
-    expect(rowButton().classList.contains('border-status-offline')).toBe(false)
-    expect(rowButton().classList.contains('bg-surface-online')).toBe(true)
-    expect(rowButton().classList.contains('bg-surface-muted')).toBe(false)
+    expect(presenceLabel().textContent).toContain('Online')
+    expect(presenceLabel().classList.contains('text-status-online')).toBe(true)
+    expect(presenceLabel().classList.contains('text-status-offline')).toBe(false)
   })
 
-  it('labels an offline device and fills its row offline', async () => {
+  it('labels an offline device in the offline colour', async () => {
     mountItem({ name: 'Watch', online: false })
     await flush()
 
-    expect(rowButton().textContent).toContain('Offline')
-    expect(rowButton().classList.contains('border-status-offline')).toBe(true)
-    expect(rowButton().classList.contains('border-status-online')).toBe(false)
-    expect(rowButton().classList.contains('bg-surface-muted')).toBe(true)
+    expect(presenceLabel().textContent).toContain('Offline')
+    expect(presenceLabel().classList.contains('text-status-offline')).toBe(true)
+    expect(presenceLabel().classList.contains('text-status-online')).toBe(false)
+  })
+
+  it('keeps the shared card surface instead of a state fill or border', async () => {
+    mountItem({ name: 'Watch', online: true })
+    await flush()
+
+    expect(rowButton().classList.contains('bg-surface-elevated')).toBe(true)
     expect(rowButton().classList.contains('bg-surface-online')).toBe(false)
+    expect(rowButton().classList.contains('bg-surface-muted')).toBe(false)
+    expect(rowButton().classList.contains('border-status-online')).toBe(false)
   })
 })

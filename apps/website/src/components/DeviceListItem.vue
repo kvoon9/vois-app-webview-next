@@ -35,24 +35,23 @@ const icon = computed(() => batteryIcon(props.battery))
     <!-- The button owns the card fill so the whole row is the tap target. -->
     <button
       type="button"
-      class="w-full rounded-standard border px-3 py-3 flex items-center text-left"
-      :class="
-        online ? 'bg-surface-online border-status-online' : 'bg-surface-muted border-status-offline'
-      "
+      class="w-full rounded-standard bg-surface-elevated p-4 flex items-center text-left active:bg-surface-field"
       @click="$emit('click')"
     >
       <Avatar :name="name" :src="avatar" />
       <span class="ml-3 min-w-0 flex-1">
         <span class="flex items-center">
-          <span class="block min-w-0 flex-1 truncate text-body font-medium">{{ name }}</span>
+          <span class="block min-w-0 flex-1 truncate text-title-compact font-medium">{{
+            name
+          }}</span>
           <span
-            class="ml-2 flex-none text-small"
+            class="ml-2 flex-none text-body"
             :class="online ? 'text-status-online' : 'text-status-offline'"
           >
             {{ online ? t('device.online') : t('device.offline') }}
           </span>
         </span>
-        <span class="mt-0.5 flex items-center text-small text-text-secondary">
+        <span class="mt-1 flex items-center text-body text-text-secondary">
           <span v-if="product" class="truncate">{{ product }}</span>
           <span
             v-if="icon"

@@ -164,6 +164,12 @@ describe('device API', () => {
       expect(weilaFetch).toHaveBeenCalledWith('/v2/subuser/manager-get-all-device')
     })
 
+    it('treats a missing device list as an empty one', async () => {
+      weilaFetch.mockResolvedValue(ok({}))
+
+      await expect(getConnectedDevices()).resolves.toEqual([])
+    })
+
     it('lists online devices first and keeps the server order inside each group', async () => {
       const base = {
         user_num: '3001',
@@ -768,7 +774,7 @@ describe('device API', () => {
         {
           orderNo: 'RN20260211',
           amount: 2900,
-          state: { kind: 'paid', charged: true },
+          state: { payment: { kind: 'paid' }, charge: { kind: 'charged' } },
           orderDesc: '语音年卡',
           iccid: '8986',
           createdAt: '2026-02-11 10:00:00',
@@ -779,61 +785,70 @@ describe('device API', () => {
 
     it('maps each documented payment status to its kind', () => {
       const cases = [
-        [0, 0, { kind: 'unpaid' }],
-        [1, 0, { kind: 'paid', charged: false }],
-        [2, 0, { kind: 'closed' }],
-        [3, 0, { kind: 'expired' }],
-        [4, 0, { kind: 'timeout' }],
-        [5, 0, { kind: 'error' }],
-        [1, 1, { kind: 'paid', charged: true }],
+        [0, 'unpaid'],
+        [1, 'paid'],
+        [2, 'closed'],
+        [3, 'expired'],
+        [4, 'timeout'],
+        [5, 'error'],
       ] as const
 
-      for (const [status, chargeStatus, expected] of cases) {
-        expect(parseRenewOrderState(status, chargeStatus)).toEqual(expected)
-      }
-    })
-
-    it('treats a charge flag on a non-paid order as a conflict, never paid', () => {
-      for (const status of [0, 2, 3, 4, 5]) {
-        expect(parseRenewOrderState(status, 1)).toEqual({
-          kind: 'conflict',
-          status,
-          chargeStatus: 1,
+      for (const [status, kind] of cases) {
+        expect(parseRenewOrderState(status, 0)).toEqual({
+          payment: { kind },
+          charge: { kind: 'uncharged' },
         })
       }
     })
 
-    it('maps out-of-domain codes to unknown carrying both codes', () => {
+    it('renders a charge flag on a non-paid order as the wire says', () => {
+      const cases = [
+        [0, 'unpaid'],
+        [2, 'closed'],
+        [3, 'expired'],
+        [4, 'timeout'],
+        [5, 'error'],
+      ] as const
+
+      for (const [status, kind] of cases) {
+        expect(parseRenewOrderState(status, 1)).toEqual({
+          payment: { kind },
+          charge: { kind: 'charged' },
+        })
+      }
+    })
+
+    it('maps out-of-domain codes to unknown carrying the raw code', () => {
       for (const status of [-1, 6, 99, 2.5]) {
         expect(parseRenewOrderState(status, 0)).toEqual({
-          kind: 'unknown',
-          status,
-          chargeStatus: 0,
+          payment: { kind: 'unknown', code: status },
+          charge: { kind: 'uncharged' },
         })
       }
       for (const chargeStatus of [2, -1]) {
         expect(parseRenewOrderState(1, chargeStatus)).toEqual({
-          kind: 'unknown',
-          status: 1,
-          chargeStatus,
+          payment: { kind: 'paid' },
+          charge: { kind: 'unknown', code: chargeStatus },
         })
       }
     })
 
     it('is total over every number pair', () => {
-      const kinds = new Set([
+      const paymentKinds = new Set([
         'unpaid',
         'paid',
         'closed',
         'expired',
         'timeout',
         'error',
-        'conflict',
         'unknown',
       ])
+      const chargeKinds = new Set(['charged', 'uncharged', 'unknown'])
       for (let status = -5; status <= 12; status += 1) {
         for (let chargeStatus = -2; chargeStatus <= 3; chargeStatus += 1) {
-          expect(kinds.has(parseRenewOrderState(status, chargeStatus).kind)).toBe(true)
+          const state = parseRenewOrderState(status, chargeStatus)
+          expect(paymentKinds.has(state.payment.kind)).toBe(true)
+          expect(chargeKinds.has(state.charge.kind)).toBe(true)
         }
       }
     })
@@ -852,7 +867,7 @@ describe('device API', () => {
       ).toEqual([0, 1, 2, 3, 4, 5])
       // A code the snapshot lists must parse to a known kind, so deleting it
       // from the registry cannot hide behind the snapshot still listing it.
-      expect(statuses.map((status) => parseRenewOrderState(status, 0).kind)).not.toContain(
+      expect(statuses.map((status) => parseRenewOrderState(status, 0).payment.kind)).not.toContain(
         'unknown',
       )
 
@@ -862,7 +877,7 @@ describe('device API', () => {
         'apipost snapshot documents new charge status codes; update the parser registry and the locale labels',
       ).toEqual([0, 1])
       expect(
-        chargeStatuses.map((chargeStatus) => parseRenewOrderState(0, chargeStatus).kind),
+        chargeStatuses.map((chargeStatus) => parseRenewOrderState(0, chargeStatus).charge.kind),
       ).not.toContain('unknown')
     })
   })

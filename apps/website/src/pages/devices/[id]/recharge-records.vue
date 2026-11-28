@@ -97,24 +97,24 @@ function chargeStatusText(charge: RenewChargeState): string {
                 {{ formatAmount(record.amount) }}
               </span>
             </div>
-            <div class="mt-2 flex items-center justify-between text-2nd-body text-text-secondary">
+            <div class="mt-2 flex items-center justify-between text-body text-text-secondary">
               <span>{{ t('device.orderStatus') }}</span>
               <span :class="{ 'text-danger': record.state.payment.kind === 'unknown' }">
                 {{ paymentStatusText(record.state.payment) }}
               </span>
             </div>
-            <div class="mt-1 flex items-center justify-between text-2nd-body text-text-secondary">
+            <div class="mt-1 flex items-center justify-between text-body text-text-secondary">
               <span>{{ t('device.chargeStatus') }}</span>
               <span :class="{ 'text-danger': record.state.charge.kind === 'unknown' }">
                 {{ chargeStatusText(record.state.charge) }}
               </span>
             </div>
-            <div class="mt-1 flex items-center justify-between text-2nd-body text-text-secondary">
+            <div class="mt-1 flex items-center justify-between text-body text-text-secondary">
               <span>{{ t('device.createdAt') }}</span>
               <time>{{ record.createdAt }}</time>
             </div>
             <div
-              class="mt-1 flex flex-wrap items-start justify-between text-2nd-body text-text-secondary"
+              class="mt-1 flex flex-wrap items-start justify-between text-body text-text-secondary"
             >
               <span class="flex-none">{{ t('device.orderNumber') }}</span>
               <span class="ml-auto max-w-full flex-none break-all text-right">{{
@@ -122,7 +122,7 @@ function chargeStatusText(charge: RenewChargeState): string {
               }}</span>
             </div>
             <div
-              class="mt-1 flex flex-wrap items-start justify-between text-2nd-body text-text-secondary"
+              class="mt-1 flex flex-wrap items-start justify-between text-body text-text-secondary"
             >
               <span class="flex-none">{{ t('device.iccid') }}</span>
               <span class="ml-auto max-w-full flex-none break-all text-right">

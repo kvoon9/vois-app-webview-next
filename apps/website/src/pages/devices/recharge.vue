@@ -79,23 +79,37 @@ async function confirmPay(): Promise<void> {
               :disabled="busy"
               @click="startRenew(card)"
             >
-              <span class="block truncate text-body font-medium">
+              <span class="block truncate text-title-compact font-medium">
                 {{ card.userNick || t('device.simCard') }}
               </span>
-              <span v-if="card.product" class="mt-1 block truncate text-small text-text-secondary">
-                {{ t('device.model') }}: {{ card.product }}
+              <span
+                v-if="card.product"
+                class="mt-2 flex items-center justify-between text-body text-text-secondary"
+              >
+                <span class="flex-none">{{ t('device.model') }}</span>
+                <span class="ml-3 min-w-0 truncate text-right">{{ card.product }}</span>
               </span>
-              <span v-if="card.imei" class="mt-1 block truncate text-small text-text-secondary">
-                {{ t('device.deviceNumber') }}: {{ card.imei }}
+              <span
+                v-if="card.imei"
+                class="mt-1 flex items-center justify-between text-body text-text-secondary"
+              >
+                <span class="flex-none">{{ t('device.deviceNumber') }}</span>
+                <span class="ml-3 min-w-0 truncate text-right">{{ card.imei }}</span>
               </span>
-              <span v-if="card.userNum" class="mt-1 block truncate text-small text-text-secondary">
-                {{ t('device.userNumber') }}: {{ card.userNum }}
+              <span
+                v-if="card.userNum"
+                class="mt-1 flex items-center justify-between text-body text-text-secondary"
+              >
+                <span class="flex-none">{{ t('device.userNumber') }}</span>
+                <span class="ml-3 min-w-0 truncate text-right">{{ card.userNum }}</span>
               </span>
-              <span class="mt-1 block break-all text-small text-text-secondary">
-                {{ t('device.iccid') }}: {{ card.iccid }}
+              <span class="mt-1 flex items-start justify-between text-body text-text-secondary">
+                <span class="flex-none">{{ t('device.iccid') }}</span>
+                <span class="ml-3 min-w-0 break-all text-right">{{ card.iccid }}</span>
               </span>
-              <span class="mt-1 block text-small text-text-secondary">
-                {{ t('device.expireAt') }}: {{ card.expiryDate }}
+              <span class="mt-1 flex items-center justify-between text-body text-text-secondary">
+                <span class="flex-none">{{ t('device.expireAt') }}</span>
+                <span class="ml-3 min-w-0 truncate text-right">{{ card.expiryDate }}</span>
               </span>
               <span class="sr-only">{{ t('device.renewNow') }}</span>
             </button>

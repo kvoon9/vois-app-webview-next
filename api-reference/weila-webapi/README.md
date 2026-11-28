@@ -5,7 +5,7 @@ description: ApiPost 分享文档的 Markdown 快照
 
 # 微喇WEB接口
 
-> 来源：`https://docs.apipost.net/docs/detail/6d697c60e879000`  ·  拉取于 2026-10-28
+> 来源：`https://docs.apipost.net/docs/detail/6d697c60e879000`  ·  拉取于 2026-11-28
 
 共 44 个接口，由 `vp run docs:apipost` 生成，请勿手改。
 
@@ -32,7 +32,7 @@ description: ApiPost 分享文档的 Markdown 快照
         - [添加电话紧急联系人](./webapi/v2/subuser/emergency-contact/emergency-contact-add-phone.md) `POST` `http://localhost/v2/subuser/emergency-contact-add-phone`
         - [添加好友紧急联系人](./webapi/v2/subuser/emergency-contact/emergency-contact-add-friend.md) `POST` `http://localhost/v2/subuser/emergency-contact-add-friend`
       - **流量卡**
-        - [获取所有流量卡续费记录](./webapi/v2/subuser/simcard/simcard-get-all-renew-order.md) `POST` `http://localhost/v2/subuser/simcard-get-all-renew-order`
+        - [获取所有流量卡续费记录](./webapi/v2/subuser/simcard/simcard-get-all-renew-order.md) `POST` `https://api.voischat.cn/v2/subuser/simcard-get-all-renew-order`
         - [获取所有需要续费流量卡](./webapi/v2/subuser/simcard/simcard-get-all-need-renew.md) `POST` `http://localhost/v2/subuser/simcard-get-all-need-renew`
         - [流量卡创建续费订单](./webapi/v2/subuser/simcard/simcard-create-renew-order.md) `POST` `http://localhost/v2/subuser/simcard-create-renew-order`
       - **群组**

@@ -95,6 +95,8 @@ input[type='search']::-webkit-search-cancel-button {
       'surface-input': 'var(--color-surface-input)',
       'surface-selected': 'var(--color-surface-selected)',
       'surface-online': 'var(--color-surface-online)',
+      'status-online': 'var(--color-status-online)',
+      'status-offline': 'var(--color-status-offline)',
       // Neutral fill for control tracks, checkboxes, radios and dots; a fill,
       // never a border.
       fill: 'var(--color-fill)',

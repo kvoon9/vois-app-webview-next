@@ -79,12 +79,20 @@ async function confirmPay(): Promise<void> {
               :disabled="busy"
               @click="startRenew(card)"
             >
-              <span class="block truncate text-body font-medium">{{ card.userNick }}</span>
-              <span class="mt-1 block truncate text-small text-text-secondary">
+              <span class="block truncate text-body font-medium">
+                {{ card.userNick || t('device.simCard') }}
+              </span>
+              <span v-if="card.product" class="mt-1 block truncate text-small text-text-secondary">
                 {{ t('device.model') }}: {{ card.product }}
               </span>
-              <span class="mt-1 block truncate text-small text-text-secondary">
+              <span v-if="card.imei" class="mt-1 block truncate text-small text-text-secondary">
+                {{ t('device.deviceNumber') }}: {{ card.imei }}
+              </span>
+              <span v-if="card.userNum" class="mt-1 block truncate text-small text-text-secondary">
                 {{ t('device.userNumber') }}: {{ card.userNum }}
+              </span>
+              <span class="mt-1 block break-all text-small text-text-secondary">
+                {{ t('device.iccid') }}: {{ card.iccid }}
               </span>
               <span class="mt-1 block text-small text-text-secondary">
                 {{ t('device.expireAt') }}: {{ card.expiryDate }}

@@ -18,6 +18,9 @@
   --color-surface-selected: #e4f8e7;
   /* Row fill for a connected device in the App. */
   --color-surface-online: #ebfef5;
+  /* Presence: deep green when online, deep gray when offline. */
+  --color-status-online: #177a52;
+  --color-status-offline: #6b6b6c;
   --color-fill: #d9d9d9;
   --color-text-primary: #000000;
   --color-text-secondary: #6b6b6c;
@@ -34,6 +37,8 @@
   --color-surface-input: #2c2c2c;
   --color-surface-selected: #173e32;
   --color-surface-online: #17352c;
+  --color-status-online: #45c894;
+  --color-status-offline: #999a9b;
   --color-promo: #ffa733;
   --color-fill: #3a3b3c;
   --color-text-primary: #f8fff7;

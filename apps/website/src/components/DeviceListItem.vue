@@ -9,12 +9,14 @@ const props = withDefaults(
     avatar?: string | null
     name: string
     product?: string
+    online?: boolean
     /** 0-100; 0 means the reading expired, so the row shows nothing. */
     battery?: number
   }>(),
   {
     avatar: null,
     product: '',
+    online: false,
     battery: 0,
   },
 )
@@ -33,12 +35,23 @@ const icon = computed(() => batteryIcon(props.battery))
     <!-- The button owns the card fill so the whole row is the tap target. -->
     <button
       type="button"
-      class="w-full rounded-standard bg-surface-online px-3 py-3 flex items-center text-left"
+      class="w-full rounded-standard border px-3 py-3 flex items-center text-left"
+      :class="
+        online ? 'bg-surface-online border-status-online' : 'bg-surface-muted border-status-offline'
+      "
       @click="$emit('click')"
     >
       <Avatar :name="name" :src="avatar" />
       <span class="ml-3 min-w-0 flex-1">
-        <span class="block truncate text-2nd-body font-medium">{{ name }}</span>
+        <span class="flex items-center">
+          <span class="block min-w-0 flex-1 truncate text-body font-medium">{{ name }}</span>
+          <span
+            class="ml-2 flex-none text-small"
+            :class="online ? 'text-status-online' : 'text-status-offline'"
+          >
+            {{ online ? t('device.online') : t('device.offline') }}
+          </span>
+        </span>
         <span class="mt-0.5 flex items-center text-small text-text-secondary">
           <span v-if="product" class="truncate">{{ product }}</span>
           <span

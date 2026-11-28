@@ -5,7 +5,7 @@ The device list shows every device the signed-in manager account owns under the 
 ## Sub-features
 
 - `list-load` renders one row per device the manager API returns, under the 已连接设备 heading.
-- `list-row` shows the avatar, the nick, and the 型号 (`product`) as the row's only subtitle. When the API's `battery` is greater than `0`, it adds a battery icon and `<n>%` before the chevron, in red below 20%. There is no presence dot and no 微喇号/IMEI line.
+- `list-row` shows the avatar, the nick at the 16px body size with a 在线 / 离线 presence label on the same line (deep green when online, deep gray when offline), and the 型号 (`product`) as the subtitle. The row fill and border follow the state: light green fill with a deep green border when online, neutral gray fill with a deep gray border when offline. When the API's `battery` is greater than `0`, it adds a battery icon and `<n>%` before the chevron, in red below 20%. There is no presence dot and no 微喇号/IMEI line. The list renders online devices first and keeps the server order inside each group.
 - `list-open` opens the device detail page for the row the user chose.
 - `list-recharge-devices` is the 待续费设备 action at the header's top right; it opens `#/devices/recharge` whether or not any device is due.
 - `list-empty` keeps the 已连接设备 heading and shows 暂无已连接设备 when the account owns no devices.
@@ -26,14 +26,14 @@ Preconditions:
 
 - **Open the list.** Run `await page.goto("http://localhost:3021/#/devices")`, then wait for the capture to gain its call (not for a fixed delay). The capture gains `POST /v2/subuser/manager-get-all-device` with status 200, and `main` shows the 已连接设备 heading followed by the rows.
 - **Open renewal devices.** Click the header action 待续费设备. The URL becomes `#/devices/recharge`; the header reads 待续费设备 and the capture gains `POST /v2/subuser/simcard-get-all-need-renew`.
-- **Read one row.** Inspect the rows with `page.evaluate()` over `main ul li`: each row's text contains that device's `nick` and, when `product` is not empty, its `product` as the single subtitle. When the captured `battery` is greater than `0`, the row also ends with `<battery>%`; when it is `0`, no percentage renders. The row has no presence dot and no 微喇号/IMEI text.
-- **Agree with the capture.** Read the last `manager-get-all-device` event from `.tmp/vois-webview-debug/events.jsonl` and count `responseBody.data.devices`. The number of `main ul li` rows equals that count; a mismatch means the screen is not rendering this call's data.
+- **Read one row.** Inspect the rows with `page.evaluate()` over `main ul li`: each row's text contains that device's `nick`, its 在线 / 离线 label, and, when `product` is not empty, its `product` as the single subtitle. When the captured `battery` is greater than `0`, the row also ends with `<battery>%`; when it is `0`, no percentage renders. The row has no presence dot and no 微喇号/IMEI text.
+- **Agree with the capture.** Read the last `manager-get-all-device` event from `.tmp/vois-webview-debug/events.jsonl` and count `responseBody.data.devices`. The number of `main ul li` rows equals that count; the rendered order is the capture order with `online: true` devices moved first, and the capture order holds inside each group. A mismatch means the screen is not rendering this call's data.
 - **Open a device.** Choose the row. Run `await page.click('loc=role:button[name*="<nick>"]', { label: "open device detail" })`. The URL becomes `#/devices/<user_id>` and the header title is 设备详情.
 - **Proof.** Run `await page.snapshot()` and write it to `apps/website/.tmp/verify/device-list/list.aria.txt`, then `await page.screenshot({ path: 'apps/website/.tmp/verify/device-list/list.png' })`. Both artifacts show the header 设备, the 已连接设备 heading, each row's nick and 型号; neither contains a `token`/`sign`/`appid` value.
 
 ## Gotchas
 
-- The presence dot is gone by design: `aria-label="离线"` (and any online marker) matches no element on this page, so a row with only two lines is the current design, not a regression.
+- There is no presence dot: a row states 在线 / 离线 as text and a border, so a row with two lines is the current design, not a regression.
 - The row no longer prints 微喇号 or IMEI; 设备号 and 微喇号 live on the detail page, behind the row.
 - `battery` is `0` to `100`, and `0` means the last reading expired rather than an empty battery. The row hides the indicator for `0`, so a device with no percentage is unknown, not broken. The debug account's device is currently offline with `battery: 0`; a percentage needs an online device, or a clearly labelled in-page response fixture for layout only.
 - The fleet belongs to the debug account: row count, names, and ids change between accounts and over time. Assert agreement with the capture, never a fixed device name.

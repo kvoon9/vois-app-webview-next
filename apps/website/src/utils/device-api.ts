@@ -393,7 +393,8 @@ type EmptyData = Record<string, never>
 /** Return every device the current account manages. */
 export async function getConnectedDevices(): Promise<Device[]> {
   const response = await weilaFetch<{ devices: DeviceDto[] }>('/v2/subuser/manager-get-all-device')
-  return response.data.devices.map(toDevice)
+  // Online devices lead; the server order holds inside each group.
+  return response.data.devices.map(toDevice).sort((a, b) => Number(b.online) - Number(a.online))
 }
 
 /** Load one device's full profile. */

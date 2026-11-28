@@ -56,6 +56,7 @@ function openRechargeDevices(): void {
             :name="device.nick"
             :avatar="device.avatar"
             :product="device.product"
+            :online="device.online"
             :battery="device.battery"
             @click="openDevice(device)"
           />

@@ -7,18 +7,18 @@ Renewal and payment for a device's SIM card. The device detail's 缴费充值 en
 - `recharge-entry` is the 缴费充值 control in the device detail info card, at the right of the 型号 row. It renders only when the device has a SIM card and opens the confirm modal. Each tap creates a new order; it never reuses a previous unpaid order.
 - `recharge-confirm` shows the product name, the product description, and the amount in yuan, with 支付 as the action.
 - `recharge-pay` sends the order through the bridge `wechat-app-prepay` and renders the result states: 确认支付, 支付中, 支付成功, 支付失败, and 当前 App 版本不支持网页内支付，请升级 App。 The paying modal has a manual 关闭 action; closing it only hides the modal, the bridge result can still land.
-- `recharge-list` lists each SIM card due for renewal with its device model, device number, ICCID, and expiry. Each row is a button whose accessible name includes the card details plus 续费. The list carries no unit price and has no checkboxes.
+- `recharge-list` lists each SIM card due for renewal with everything the card response carries: the device nickname (流量卡 when the response has none), 型号, 设备号, 微喇号, 卡 ICCID, and 卡到期时间. Rows for fields the response leaves empty are omitted. Each row is a button whose accessible name includes the card details plus 续费. The list carries no unit price and has no checkboxes.
 - `recharge-item` starts one renewal from a card tap: it creates one order for that card and stops at the confirm modal. Each tap creates a new order; the next card is a separate order.
-- `recharge-records` lists the account's renewal orders with order number, amount, state, and time.
+- `recharge-records` lists the account's renewal orders with order number, amount, state, and time. The device-detail 流量卡充值记录 link to it is always present.
 
 ## How to get to it (user POV)
 
 - Device detail → 缴费充值 (in the info card, at the right of the 型号 row; shown when the device has a SIM card).
 - Device list header → 待续费设备 (top-right action; always shown; opens `/devices/recharge`). Each card there is a button; tap it to start renewal.
-- Device detail → 流量卡充值记录 (in-app link; shown whenever the device has a SIM card).
+- Device detail → 流量卡充值记录 (in-app link; always present).
 - Open `#/devices/recharge` or `#/devices/<id>/recharge-records` directly; native may deep-link this way.
 
-The records list is account-wide (`simcard-get-all-renew-order` takes no device), so the `<id>` in the records URL does not scope the rows.
+The order call `simcard-get-all-renew-order` takes no device, so the page reads every order. When the device profile carries a `sim_card`, the page narrows the rows to that ICCID; a device without one shows the account-wide list.
 
 ## Driving it with ego-browser
 
@@ -31,7 +31,7 @@ Preconditions:
 
 - **Open from the list.** On `#/devices`, click the header action 待续费设备. The URL becomes `#/devices/recharge` and the header reads 待续费设备.
 - **List.** Run `await page.goto("http://localhost:3021/#/devices/recharge")`. The header reads 待续费设备 and the capture gains `POST /v2/subuser/simcard-get-all-need-renew` with `errcode: 0`. Each row is a button whose accessible name includes the card details plus 续费; there are no checkboxes and no 续费单价 field.
-- **Agree with the capture.** The number of rows equals `responseBody.data.renews.length`, and a row's `iccid`, `imei`, and `expiry_date` match its `renews` entry.
+- **Agree with the capture.** The number of rows equals `responseBody.data.renews.length`, and each row renders whichever of its entry's `user_nick`, `product`, `imei`, `user_num`, `iccid`, and `expiry_date` are non-empty; a row without a `user_nick` shows 流量卡 as its title.
 - **Renew one card.** Click the card. The whole row is a button, so the click can land on any detail line. The capture gains `POST /v2/subuser/simcard-create-renew-order` with `{ iccid, pay_method, pkg_name }`; the confirm modal shows the product, description, and amount in yuan. 取消 closes it and leaves the order unpaid; 支付 starts the bridge.
 - **Entry.** From `#/devices/<id>` of a device whose captured `device-get-detail` carries `sim_card`, the info card shows 缴费充值 at the right of the 型号 row. For a device without `sim_card` the entry is absent. Both states check against the same capture.
 - **Confirm modal.** Click 缴费充值 or a card. The modal shows the product name, the product description, and the amount in yuan. 支付 is the action.

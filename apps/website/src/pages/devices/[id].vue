@@ -167,10 +167,8 @@ async function confirmUnbind(): Promise<void> {
 }
 
 /** Copies through the shared path: the App's clipboard, then the web APIs, then a selection. */
-async function copyDeviceNumber(): Promise<void> {
-  const imei = device.value?.imei
-  if (!imei) return
-  if (await copyToClipboard(imei)) showToast(t('device.copied'))
+async function copyText(value: string): Promise<void> {
+  if (await copyToClipboard(value)) showToast(t('device.copied'))
   else showToast(t('device.copyFailed'), { type: 'error' })
 }
 
@@ -299,7 +297,7 @@ function onCropFailed(): void {
                 type="button"
                 class="ml-2 flex-none text-small text-text-secondary focus-visible:ring-2 focus-visible:ring-primary/40"
                 :aria-label="t('device.copyDeviceNumber')"
-                @click="copyDeviceNumber"
+                @click="copyText(device.imei)"
               >
                 <span class="mr-1 text-fill" aria-hidden="true">|</span>
                 {{ t('device.copy') }}
@@ -308,12 +306,36 @@ function onCropFailed(): void {
             <div class="break-all px-4 py-1.5 text-body">
               {{ t('device.version') }}: {{ device.sdkVersion || t('device.notAvailable') }}
             </div>
-            <div class="px-4 py-1.5 text-body">
-              {{ t('device.userNumber') }}: {{ device.userNum || t('device.notAvailable') }}
+            <div class="flex items-center px-4 py-1.5 text-body">
+              <span class="min-w-0 flex-1 truncate">
+                {{ t('device.userNumber') }}: {{ device.userNum || t('device.notAvailable') }}
+              </span>
+              <button
+                v-if="device.userNum"
+                type="button"
+                class="ml-2 flex-none text-small text-text-secondary focus-visible:ring-2 focus-visible:ring-primary/40"
+                :aria-label="t('device.copyUserNumber')"
+                @click="copyText(device.userNum)"
+              >
+                <span class="mr-1 text-fill" aria-hidden="true">|</span>
+                {{ t('device.copy') }}
+              </button>
             </div>
             <template v-if="device.simCard">
-              <div class="px-4 py-1.5 text-body">
-                {{ t('device.iccid') }}: {{ device.simCard.iccid || t('device.notAvailable') }}
+              <div class="flex items-center px-4 py-1.5 text-body">
+                <span class="min-w-0 flex-1 break-all">
+                  {{ t('device.iccid') }}: {{ device.simCard.iccid || t('device.notAvailable') }}
+                </span>
+                <button
+                  v-if="device.simCard.iccid"
+                  type="button"
+                  class="ml-2 flex-none text-small text-text-secondary focus-visible:ring-2 focus-visible:ring-primary/40"
+                  :aria-label="t('device.copyIccid')"
+                  @click="copyText(device.simCard.iccid)"
+                >
+                  <span class="mr-1 text-fill" aria-hidden="true">|</span>
+                  {{ t('device.copy') }}
+                </button>
               </div>
               <div class="px-4 py-2 text-2nd-body text-text-secondary">
                 {{ t('device.expireAt') }}:
@@ -328,7 +350,6 @@ function onCropFailed(): void {
               </div>
             </template>
             <RouterLink
-              v-if="device.simCard"
               :to="`/devices/${deviceId}/recharge-records`"
               class="min-h-14 w-full panel-row text-body"
             >
@@ -358,7 +379,7 @@ function onCropFailed(): void {
               :to="`/devices/${deviceId}/emergency-contacts`"
               class="min-h-14 w-full panel-row text-body"
             >
-              <span class="text-text-secondary">{{ t('device.emergencyContactSettings') }}</span>
+              <span>{{ t('device.emergencyContactSettings') }}</span>
               <span class="row-chevron" aria-hidden="true" />
             </RouterLink>
           </div>

@@ -151,6 +151,31 @@ describe('device API', () => {
       expect(weilaFetch).toHaveBeenCalledWith('/v2/subuser/manager-get-all-device')
     })
 
+    it('lists online devices first and keeps the server order inside each group', async () => {
+      const base = {
+        user_num: '3001',
+        nick: 'watch',
+        avatar: '',
+        product: 'CF03',
+        imei: '866',
+        version: 'v1.110',
+      }
+      weilaFetch.mockResolvedValue(
+        ok({
+          devices: [
+            { ...base, user_id: 1, online: false },
+            { ...base, user_id: 2, online: true },
+            { ...base, user_id: 3, online: false },
+            { ...base, user_id: 4, online: true },
+          ],
+        }),
+      )
+
+      const devices = await getConnectedDevices()
+
+      expect(devices.map((item) => item.userId)).toEqual([2, 4, 1, 3])
+    })
+
     it('prefers the short sdk_version over the firmware string', async () => {
       weilaFetch.mockResolvedValue(ok({ device: { ...deviceDto, sdk_version: 'v1.6.0' } }))
 

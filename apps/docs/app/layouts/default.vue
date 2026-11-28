@@ -9,7 +9,7 @@ const { data: navigation } = await useAsyncData('docs-navigation', () =>
     <UHeader title="Vois WebView 文档">
       <template #right>
         <UButton
-          to="https://github.com/kvoon9/vois-app-webview-next"
+          to="https://github.com/voischat/app-webview-next"
           target="_blank"
           icon="i-lucide-github"
           color="neutral"

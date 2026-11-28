@@ -5,7 +5,7 @@ The device list shows every device the signed-in manager account owns under the 
 ## Sub-features
 
 - `list-load` renders one row per device the manager API returns, under the 已连接设备 heading.
-- `list-row` shows the avatar, the nick at the 16px body size with a 在线 / 离线 presence label on the same line (deep green when online, deep gray when offline), and the 型号 (`product`) as the subtitle. The row fill and border follow the state: light green fill with a deep green border when online, neutral gray fill with a deep gray border when offline. When the API's `battery` is greater than `0`, it adds a battery icon and `<n>%` before the chevron, in red below 20%. There is no presence dot and no 微喇号/IMEI line. The list renders online devices first and keeps the server order inside each group.
+- `list-row` shows the avatar, the nick at the 18px title size with a 14px 在线 / 离线 presence label on the same line (deep green when online, deep gray when offline), and the 型号 (`product`) as a 14px subtitle. Every row uses the same elevated white card as the recharge and renewal lists, with no state fill or border. When the API's `battery` is greater than `0`, it adds a battery icon and `<n>%` after the subtitle, in red below 20%. There is no presence dot and no 微喇号/IMEI line. The list renders online devices first and keeps the server order inside each group.
 - `list-open` opens the device detail page for the row the user chose.
 - `list-recharge-devices` is the 待续费设备 action at the header's top right; it opens `#/devices/recharge` whether or not any device is due.
 - `list-empty` keeps the 已连接设备 heading and shows 暂无已连接设备 when the account owns no devices.
@@ -33,7 +33,7 @@ Preconditions:
 
 ## Gotchas
 
-- There is no presence dot: a row states 在线 / 离线 as text and a border, so a row with two lines is the current design, not a regression.
+- There is no presence dot: a row states 在线 / 离线 as coloured text, so a row with two lines is the current design, not a regression.
 - The row no longer prints 微喇号 or IMEI; 设备号 and 微喇号 live on the detail page, behind the row.
 - `battery` is `0` to `100`, and `0` means the last reading expired rather than an empty battery. The row hides the indicator for `0`, so a device with no percentage is unknown, not broken. The debug account's device is currently offline with `battery: 0`; a percentage needs an online device, or a clearly labelled in-page response fixture for layout only.
 - The fleet belongs to the debug account: row count, names, and ids change between accounts and over time. Assert agreement with the capture, never a fixed device name.

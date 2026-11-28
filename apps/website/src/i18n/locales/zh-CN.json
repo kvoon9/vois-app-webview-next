@@ -221,7 +221,6 @@
     "orderStatusExpired": "交易单过期",
     "orderStatusTimeout": "支付超时",
     "orderStatusError": "订单异常",
-    "orderStatusConflict": "状态异常",
     "orderStatusUnknown": "未知状态 {code}",
     "chargeStatus": "续费状态",
     "chargeStatusCharged": "已充值",

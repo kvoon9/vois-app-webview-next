@@ -221,7 +221,6 @@
     "orderStatusExpired": "交易單過期",
     "orderStatusTimeout": "支付逾時",
     "orderStatusError": "訂單異常",
-    "orderStatusConflict": "狀態異常",
     "orderStatusUnknown": "未知狀態 {code}",
     "chargeStatus": "續費狀態",
     "chargeStatusCharged": "已儲值",

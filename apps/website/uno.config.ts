@@ -12,6 +12,10 @@ export const BLOCKED_UTILITIES: BlocklistRule[] = [
         'Use vh/screen or a pinned fixed layout; WebViews older than Chrome 108 drop these units.',
     },
   ],
+  [
+    /^text-xs(\/|$)/,
+    { message: 'Use the text scale (text-small and up); text-xs is not part of it.' },
+  ],
 ]
 
 /**

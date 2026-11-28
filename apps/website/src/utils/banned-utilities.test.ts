@@ -69,8 +69,17 @@ describe('banned utilities', () => {
 
     expect(
       offenses,
-      'Use flex and space-*/margin instead of grid/gap. Use vh/screen instead of svh/dvh/lvh viewport units. The legacy target is Chrome 83.',
+      'Use flex and space-*/margin instead of grid/gap. Use vh/screen instead of svh/dvh/lvh viewport units. Use the text scale (text-small and up) instead of text-xs. The legacy target is Chrome 83.',
     ).toEqual([])
+  })
+
+  it('blocks text-xs and keeps the text scale', async () => {
+    const uno = await createGenerator(unoConfig)
+    const blocked = ['text-xs', 'text-xs/4']
+    const allowed = ['text-small', 'text-2nd-body', 'text-body']
+
+    for (const token of blocked) expect(uno.isBlocked(token), token).toBe(true)
+    for (const token of allowed) expect(uno.isBlocked(token), token).toBe(false)
   })
 
   it('blocks modern viewport units, even inside arbitrary values', async () => {

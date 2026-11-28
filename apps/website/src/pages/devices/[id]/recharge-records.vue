@@ -121,8 +121,9 @@ function isAlertState(orderState: RenewOrderState): boolean {
               <span>{{ t('device.createdAt') }}</span>
               <time>{{ record.createdAt }}</time>
             </div>
-            <div class="mt-1 break-all text-small text-text-secondary">
-              {{ t('device.orderNumber', { id: record.orderNo }) }}
+            <div class="mt-1 flex items-start justify-between text-small text-text-secondary">
+              <span class="flex-none">{{ t('device.orderNumber') }}</span>
+              <span class="ml-3 min-w-0 break-all text-right">{{ record.orderNo }}</span>
             </div>
             <div class="mt-1 flex items-start justify-between text-small text-text-secondary">
               <span class="flex-none">{{ t('device.iccid') }}</span>

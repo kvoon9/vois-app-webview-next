@@ -180,16 +180,67 @@ export interface WechatPaymentConfirmation {
   tradeNo: string
 }
 
+/** What one renewal record means to the page. */
+export type RenewOrderState =
+  | { kind: 'unpaid' }
+  | { kind: 'paid'; charged: boolean }
+  | { kind: 'closed' }
+  | { kind: 'expired' }
+  | { kind: 'timeout' }
+  | { kind: 'error' }
+  | { kind: 'conflict'; status: number; chargeStatus: number }
+  | { kind: 'unknown'; status: number; chargeStatus: number }
+
+/** The payment kinds the snapshot documents; label tables key off this. */
+export type RenewPaymentKind = Exclude<RenewOrderState['kind'], 'conflict' | 'unknown'>
+
 /** One historical renewal order (`simcard-get-all-renew-order`). */
 export interface RenewOrderRecord {
   orderNo: string
   /** Fen (分). */
   amount: number
-  status: number
-  chargeStatus: number
+  state: RenewOrderState
   orderDesc: string
   iccid: string
   createdAt: string
+}
+
+/** The one status code that means paid; it also carries the charge flag. */
+const RENEW_PAID_STATUS = 1
+
+/** Builds the state for one documented status code, given its charge flag. */
+type RenewOrderStateBuilder = (chargeStatus: number) => RenewOrderState
+
+/** Maps every documented payment status code to the state it stands for. */
+const RENEW_ORDER_STATES: ReadonlyMap<number, RenewOrderStateBuilder> = new Map<
+  number,
+  RenewOrderStateBuilder
+>([
+  [0, () => ({ kind: 'unpaid' })],
+  [RENEW_PAID_STATUS, (chargeStatus) => ({ kind: 'paid', charged: chargeStatus === 1 })],
+  [2, () => ({ kind: 'closed' })],
+  [3, () => ({ kind: 'expired' })],
+  [4, () => ({ kind: 'timeout' })],
+  [5, () => ({ kind: 'error' })],
+])
+
+/** Charge codes the snapshot documents (`data.orders.charge_status`). */
+const RENEW_CHARGE_STATUS_CODES: ReadonlySet<number> = new Set([0, 1])
+
+/**
+ * Parse the wire pair at the boundary; total over every number. A charge flag on
+ * an order that is not paid contradicts the payment status, so it surfaces as
+ * `conflict` instead of a paid order.
+ */
+export function parseRenewOrderState(status: number, chargeStatus: number): RenewOrderState {
+  const state = RENEW_ORDER_STATES.get(status)
+  if (state == null || !RENEW_CHARGE_STATUS_CODES.has(chargeStatus)) {
+    return { kind: 'unknown', status, chargeStatus }
+  }
+  if (chargeStatus === 1 && status !== RENEW_PAID_STATUS) {
+    return { kind: 'conflict', status, chargeStatus }
+  }
+  return state(chargeStatus)
 }
 
 export type ReminderRepeat = 'once' | 'daily' | 'weekdays' | 'custom' | 'monthly'
@@ -1022,8 +1073,7 @@ function toRenewOrderRecord(record: RenewOrderRecordDto): RenewOrderRecord {
   return {
     orderNo: record.order_no,
     amount: record.amount,
-    status: record.status,
-    chargeStatus: record.charge_status,
+    state: parseRenewOrderState(record.status, record.charge_status),
     orderDesc: record.order_desc,
     iccid: record.iccid,
     createdAt: record.created,

@@ -74,7 +74,7 @@ The ego-browser skill is installed at `.agents/skills/ego-browser` from `citrola
 
 ### Release skill
 
-`.pi/skills/release` owns shipping a version: `bumpp --recursive`, the tag push that triggers `.github/workflows/release.yml`, waiting for the GitHub Release, and the Chinese QQ notification sent through the local QQ desktop app. Its `references/` fixes the message format (`message-format.md`), the release pipeline (`pipeline.md`) and the QQ driver (`qqctl.md`). The notification body is commit-derived; changelogen was dropped because its markdown and blank lines do not survive a QQ message.
+`.pi/skills/release` owns shipping a version: `bumpp --recursive`, the tag push that triggers `.github/workflows/release.yml`, and waiting for the GitHub Release. Its `references/pipeline.md` documents the pipeline and how to recover a failed workflow.
 
 ### Switching between worktree servers
 

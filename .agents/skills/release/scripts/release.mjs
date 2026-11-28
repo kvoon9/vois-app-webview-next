@@ -3,23 +3,17 @@
  * Release vois-app-webview-next in one command.
  *
  *   bump (bumpp) -> commit + tag + push -> Release workflow (tag push)
- *                -> wait for the GitHub Release -> QQ notification
+ *                -> wait for the GitHub Release
  *
  * Usage:
  *   node .pi/skills/release/scripts/release.mjs --type minor
  *   node .pi/skills/release/scripts/release.mjs --type patch --dry-run
- *   node .pi/skills/release/scripts/release.mjs --skip-bump --skip-watch   # only notify
- *
- * The QQ notification is the last step and never blocks a released version:
- * if it fails the release itself is already out, and the script exits non-zero
- * so the failure is visible.
+ *   node .pi/skills/release/scripts/release.mjs --skip-bump --skip-watch   # only inspect the last tag
  */
 import { execFileSync, spawnSync } from 'node:child_process'
 import { realpathSync } from 'node:fs'
 import { pathToFileURL } from 'node:url'
 import { parseArgs } from 'node:util'
-import { git, latestTag, previousTag } from './changelog.mjs'
-import { DEFAULT_SESSION, compose, deliver } from './notify-release.mjs'
 
 const REPO_ROOT = execFileSync('git', ['rev-parse', '--show-toplevel'], { encoding: 'utf8' }).trim()
 const WORKFLOW = 'release.yml'
@@ -27,6 +21,26 @@ const WORKFLOW = 'release.yml'
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
 const log = (step, message) => console.log(`\u001B[36m[${step}]\u001B[0m ${message}`)
 const warn = (message) => console.warn(`\u001B[33m[warn]\u001B[0m ${message}`)
+
+function git(args, { allowFail = false } = {}) {
+  try {
+    return execFileSync('git', args, {
+      cwd: REPO_ROOT,
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'pipe'],
+    }).trim()
+  } catch (error) {
+    if (allowFail) return null
+    throw error
+  }
+}
+
+const latestTag = (ref = 'HEAD') => git(['describe', '--tags', '--abbrev=0', ref], { allowFail: true })
+
+function previousTag(tag) {
+  if (!tag) return null
+  return git(['describe', '--tags', '--abbrev=0', `${tag}^`], { allowFail: true })
+}
 
 function run(cmd, args, { allowFail = false, quiet = false } = {}) {
   const result = spawnSync(cmd, args, {
@@ -151,17 +165,12 @@ async function main() {
   const { values } = parseArgs({
     options: {
       type: { type: 'string', default: 'patch' },
-      to: { type: 'string', default: DEFAULT_SESSION },
-      repo: { type: 'string' },
       'dry-run': { type: 'boolean', default: false },
       'skip-bump': { type: 'boolean', default: false },
       'skip-watch': { type: 'boolean', default: false },
-      'skip-notify': { type: 'boolean', default: false },
       'allow-dirty': { type: 'boolean', default: false },
       'no-push': { type: 'boolean', default: false },
       'watch-timeout': { type: 'string', default: '300' },
-      'notes-file': { type: 'string' },
-      'max-items': { type: 'string', default: '6' },
       yes: { type: 'boolean', default: true },
     },
   })
@@ -169,16 +178,14 @@ async function main() {
   const plan = {
     bump: !values['skip-bump'],
     watch: !values['skip-watch'] && !values['no-push'],
-    notify: !values['skip-notify'],
     type: values.type,
-    to: values.to,
     dryRun: values['dry-run'],
   }
 
   if (values['dry-run']) {
     const current = latestTag()
     log('plan', JSON.stringify({ ...plan, currentTag: current }, null, 2))
-    log('plan', 'dry run: nothing is bumped, pushed or sent')
+    log('plan', 'dry run: nothing is bumped or pushed')
     return
   }
 
@@ -191,27 +198,12 @@ async function main() {
     tag = bumped.tag
     previous = bumped.previous
   }
-  if (!tag) throw new Error('no tag to watch or notify about')
+  if (!tag) throw new Error('no tag to watch')
   log('tag', `${previous || '(first release)'} -> ${tag}`)
 
   let release = null
   if (plan.watch) release = await watch({ tag, timeoutMs })
   else log('watch', 'skipped')
-
-  if (plan.notify) {
-    const payload = compose({
-      tag,
-      repo: values.repo,
-      notesFile: values['notes-file'],
-      maxItems: Number(values['max-items']),
-    })
-    log('notify', `-> QQ 会话「${values.to}」（正文来源：${payload.source}）`)
-    const delivery = deliver(payload.message, { to: values.to })
-    log('notify', `delivered: ${JSON.stringify(delivery?.steps ?? delivery)}`)
-    console.log(`\n${payload.message}\n`)
-  } else {
-    log('notify', 'skipped')
-  }
 
   console.log(
     JSON.stringify(
@@ -220,8 +212,6 @@ async function main() {
         tag,
         previous,
         release: release?.url ?? null,
-        notified: plan.notify,
-        to: values.to,
       },
       null,
       2,
@@ -231,10 +221,7 @@ async function main() {
 
 // A raw string compare only matches an absolute, un-symlinked argv[1]; canonical
 // file URLs make the documented relative `.pi/skills/...` invocation work too.
-if (
-  process.argv[1] &&
-  import.meta.url === pathToFileURL(realpathSync(process.argv[1])).href
-) {
+if (process.argv[1] && import.meta.url === pathToFileURL(realpathSync(process.argv[1])).href) {
   main().catch((error) => {
     console.error(`\nrelease: ${error.message}`)
     process.exit(1)

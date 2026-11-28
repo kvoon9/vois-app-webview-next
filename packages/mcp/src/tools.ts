@@ -27,7 +27,7 @@ import { textResult } from './mcp.ts'
 
 /** How to start the debug server, included wherever a server is missing. */
 const START_HINT = [
-  'No debug server answered. Start one in a Herdr pane with:',
+  'No debug server answered. Start one as a background process with:',
   '  cd apps/website && vp dev --host --port 3021',
   'or for the production artifact:',
   '  vp run preview:production',

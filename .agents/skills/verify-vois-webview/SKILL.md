@@ -16,13 +16,13 @@ cd apps/website && vp dev --host --port 3021
 ```
 
 - One `~/.vois/.env` serves every worktree (`VITE_APP_ID` / `VITE_APP_KEY` are build inputs; the DevServer needs them too). Missing file → copy `apps/website/.env.example`.
-- Run it in a terminal that outlives the turn: with Herdr (`HERDR_ENV=1`), `herdr_layout pane_split` then `herdr_pane run`; otherwise a `bg_task` spawn. Do not block the turn on it.
-- Ready is all three, in order: `➜  Local: http://localhost:3021/` in the pane → `curl -s http://127.0.0.1:3021/__debug/status` returns JSON → a page load logs `🟢 WebView debug connected`. The third one is the real gate; without it you have a website, not an instrumented WebView. If the marker is missing on a live server, reload the page with `?debug-reload=1`.
+- Run it as a background task that outlives the turn. Do not block the turn on it.
+- Ready is all three, in order: `➜  Local: http://localhost:3021/` in the server output → `curl -s http://127.0.0.1:3021/__debug/status` returns JSON → a page load logs `🟢 WebView debug connected`. The third one is the real gate; without it you have a website, not an instrumented WebView. If the marker is missing on a live server, reload the page with `?debug-reload=1`.
 - After upgrading dependencies, restart the DevServer. When a stale dependency cache breaks rendering or injection, restart with `vp dev --host --port 3021 --force` and reload the browser.
 - The debug plugin is pnpm-linked from a sibling repo. If Vite warns `vite-plugin-vois-webview-debug not installed`, the pipeline is off for this checkout and every verification here is invalid until it resolves.
-- **One DevServer per worktree.** The plugin truncates `apps/website/.tmp/vois-webview-debug/events.jsonl` at startup, so a second server erases the first run's capture. A second concurrent instance needs `git worktree add`.
+- **One DevServer per worktree.** The plugin truncates `apps/website/.tmp/vois-webview-debug/events.jsonl` at startup, so a second server erases the first run's capture. A second concurrent instance needs its own worktree.
 - **One backend.** All `/v2` traffic goes to the real API; there is no mock server anymore.
-- Teardown: stop the process this run started — the pane you created, or the pid `bg_status` reports. Never `pkill -f vite`: other worktrees and the user's own server share that name.
+- Teardown: stop the process this run started (the background task or its pid). Never `pkill -f vite`: other worktrees and the user's own server share that name.
 - Production artifact and subpath checks, only when that is the question: `vp run preview:production` (port 8080, `--debug` required for the debug account). The artifact uses relative asset paths (`base: './'`), so a subpath regression shows up here as a blank page rather than in production. Daily work is the DevServer.
 
 ## Doctor

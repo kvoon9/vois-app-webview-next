@@ -190,7 +190,7 @@
     "contactRemoved": "Contact deleted.",
     "rechargeRecords": "Recharge records",
     "emptyRechargeRecords": "No recharge records.",
-    "orderNumber": "Order {id}",
+    "orderNumber": "Order number",
     "orderStatus": "Payment status",
     "rechargeDevices": "Devices to recharge",
     "emptyRechargeDevices": "No devices available for recharge.",

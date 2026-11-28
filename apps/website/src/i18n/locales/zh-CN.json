@@ -190,7 +190,7 @@
     "contactRemoved": "联系人已删除。",
     "rechargeRecords": "流量卡充值记录",
     "emptyRechargeRecords": "暂无充值记录。",
-    "orderNumber": "订单号 {id}",
+    "orderNumber": "订单号",
     "orderStatus": "支付状态",
     "rechargeDevices": "待续费设备",
     "emptyRechargeDevices": "暂无可续费的设备。",

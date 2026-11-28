@@ -11,7 +11,7 @@
 - Use ego lite's `ego-browser` to test interactive UI behavior (clicks, form inputs, visual state) in addition to `vp check` and `vp test`. Read `.agents/skills/ego-browser/SKILL.md` first. Use the user's shared browser login state; do not use `agent-browser` or launch a separate browser for this project.
 - Leaving a page after a save or submit ("done" buttons included) must go through `usePageBack().goBack()`, the same path as the header back button. Never call `router.back()` or hand-roll a fallback directly — that is what drops the native `close-page` handshake.
 - Commit messages and PR titles must follow Conventional Commits, e.g. fix(runtime): align Ink parity behavior.
-- Use herdr to start a dev server
+- Start the DevServer as a background command; it must outlive the turn.
 - Use the DevServer on port 3021 for daily development, debugging, and interactive UI testing. Preview is only for validating production builds or deployment paths; do not start it as the primary development server.
 
 ## New Worktree Setup
@@ -25,8 +25,6 @@ cd <worktree> && vp install
 
 `~/.vois/.env` holds `VITE_APP_ID` / `VITE_APP_KEY` (build) and the AMap keys the device-location page needs. `vite.config.ts` points `envDir` there, so every worktree shares one copy; CI has no such directory and injects the same names as `process.env`, which wins over the file.
 
-Machines running the local `kvoon.worktree-hooks` herdr plugin execute the `herdr-worktree.yaml` hooks automatically on worktree creation (`vp install` there covers the dependency step); without the plugin, follow the manual steps above.
-
 ## Skills and MCP for both agents
 
 Skills have one source of truth: `.agents/skills/<name>/SKILL.md`. `.claude/skills` is a directory symlink to it, and the project-owned skills under `.pi/skills/` are per-skill symlinks, so pi and Claude Code load the same set; add or edit a skill only under `.agents/skills/`. Existing `.pi/skills/...` paths in scripts and docs keep resolving through those links.
@@ -35,16 +33,16 @@ MCP also has one source: `.pi/mcp.json`, with `.mcp.json` at the repo root symli
 
 ## Feature lanes and acceptance
 
-Features ship as lanes: one lane = one worktree + one branch (`worktree/<lane>`) + one PR against main, built by delegated subagents. Create the worktree with `herdr worktree create --branch worktree/<lane> --base main` (or `herdr_worktree_jump`), never bare `git worktree add`. Keep lanes file-disjoint; anything touching the same file serializes.
+Features ship as lanes: one lane = one worktree + one branch (`worktree/<lane>`) + one PR against main, built by delegated subagents. Start the lane in a fresh worktree from `origin/main` with the agent's own worktree command; never bare `git worktree add`. Keep lanes file-disjoint; anything touching the same file serializes.
 
-- **Agent roles**: code agents run on the `deepseek-flash` template; judgment, review, and anything visual run on the `judge` template (glm-5.3-flash with image input). Always pass `agent_type` explicitly; a generic subagent inherits the parent model.
+- **Agent roles**: set the model explicitly on every delegated subagent (a generic subagent otherwise inherits the parent's model), and use a vision-capable model for judgment and visual review.
 - **Briefs are self-contained** (subagents see no parent conversation): file pointers, constraints, lanes to stay out of, and acceptance criteria written as measurable checks. Point subagents at `.pi/skills/verify-vois-webview/features/` when the touched screen has a behavior map.
 - **Gates, exit codes only**: never pipe gate commands into `tail` (the pipe masks the failure exit), and never chain them with `;` (the chain continues past a failure). Run `vp run ready` (check, test, build) and require exit 0, on the committed tree. CI repeats `vp check && vp test` on every PR; build stays a local gate.
 - **Browser evidence** comes from the verification skill's pipeline: the lane worktree's own DevServer port, `scripts/doctor.mjs`, ego-browser drives, and `.tmp/vois-webview-debug/events.jsonl` captures. Report measurements and captured events, not adjectives.
 - **Vision acceptance for UI changes**: before pushing, screenshot the changed views at the primary phone size (375×812) and, when the change touches layout geometry, sweep the small-phone edge (320×568) too; then have a `judge` agent review the PNGs against the intended design. Fix and re-shoot until confirmed.
 - **Push once per lane**: commit freely in the worktree, but push only when the lane is review-ready, and afterwards only for review fixups. Every push starts a CI run, yet only a lane's final commit is reviewed. `vp run ready` locally is the feedback loop; pushing is not a checkpoint.
 - **PRs**: one per lane, title under Conventional Commits, body carries evidence (measurements, capture excerpts, screenshot paths, known trade-offs). The push and `gh pr create` both need the kvoon9 account (`gh auth switch --user kvoon9`, switch back afterwards — see Release). Humans review and merge.
-- **Landing**: from the main checkout, commit everything in the worktree first (`git add -A`), then `git cherry-pick`, never `git merge`. Conflicts: keep both sides (union), then `git -c core.editor=true cherry-pick --continue`. After landing, verify (`vp install` if deps changed, `vp run ready` exit 0), then `herdr worktree remove --workspace <ID>` and `git branch -D <branch>`.
+- **Landing**: merge the lane's PR with no merge commit (fast-forward when possible, otherwise a rebase merge), then `git pull --ff-only` in the main checkout and run `vp run ready` exit 0. Delete the lane's remote branch afterwards; remove the worktree with the tool that created it.
 
 ## WebView Testing
 

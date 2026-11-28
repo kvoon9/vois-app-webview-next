@@ -748,7 +748,10 @@ export async function getRenewOrderRecords(): Promise<RenewOrderRecord[]> {
   const response = await weilaFetch<{ orders: RenewOrderRecordDto[] }>(
     '/v2/subuser/simcard-get-all-renew-order',
   )
-  return (response.data.orders ?? []).map(toRenewOrderRecord)
+  // The wire sends the oldest order first; the page reads newest first.
+  return (response.data.orders ?? [])
+    .map(toRenewOrderRecord)
+    .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
 }
 
 // ---------------------------------------------------------------------------

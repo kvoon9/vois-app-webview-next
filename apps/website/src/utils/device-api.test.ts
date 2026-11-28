@@ -783,6 +783,45 @@ describe('device API', () => {
       expect(weilaFetch).toHaveBeenCalledWith('/v2/subuser/simcard-get-all-renew-order')
     })
 
+    it('sorts renewal orders newest first', async () => {
+      weilaFetch.mockResolvedValue(
+        ok({
+          orders: [
+            {
+              amount: 1,
+              status: 0,
+              charge_status: 0,
+              order_no: 'A',
+              iccid: '8986',
+              order_desc: '',
+              created: '2026-11-10 10:00:00',
+            },
+            {
+              amount: 1,
+              status: 0,
+              charge_status: 0,
+              order_no: 'C',
+              iccid: '8986',
+              order_desc: '',
+              created: '2026-11-12 10:00:00',
+            },
+            {
+              amount: 1,
+              status: 0,
+              charge_status: 0,
+              order_no: 'B',
+              iccid: '8986',
+              order_desc: '',
+              created: '2026-11-11 10:00:00',
+            },
+          ],
+        }),
+      )
+
+      const records = await getRenewOrderRecords()
+      expect(records.map((record) => record.orderNo)).toEqual(['C', 'B', 'A'])
+    })
+
     it('maps each documented payment status to its kind', () => {
       const cases = [
         [0, 'unpaid'],

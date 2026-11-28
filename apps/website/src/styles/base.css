@@ -6,6 +6,9 @@
   /* Irreversible modal actions: a soft red fill with the label carrying the red. */
   --color-danger-soft: #fef3f3;
   --color-danger-soft-text: #e90f1e;
+  /* Pending states: an amber pair for a status that still needs the user. */
+  --color-warning-soft: #fdf3e2;
+  --color-warning-soft-text: #8f4e00;
   /* The App's recharge call to action. */
   --color-promo: #ec8000;
   --color-surface: #f9fafb;
@@ -39,6 +42,8 @@
   --color-surface-online: #17352c;
   --color-status-online: #45c894;
   --color-status-offline: #999a9b;
+  --color-warning-soft: #3a2a12;
+  --color-warning-soft-text: #ffb24d;
   --color-promo: #ffa733;
   --color-fill: #3a3b3c;
   --color-text-primary: #f8fff7;

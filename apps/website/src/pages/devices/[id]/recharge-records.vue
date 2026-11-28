@@ -4,6 +4,7 @@ import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute } from 'vue-router'
 import PageHeader from '~/components/PageHeader.vue'
+import Tag, { type TagTone } from '~/components/Tag.vue'
 import QueryState from '~/components/settings/QueryState.vue'
 import { parseRouteParamId } from '~/composables/useRouteParamId'
 import {
@@ -53,6 +54,24 @@ const PAYMENT_KIND_KEYS = {
   error: 'device.orderStatusError',
 } satisfies Record<RenewPaymentKind, string>
 
+/** Payment kind → tag tone; every kind has a tone, including an unknown code. */
+const PAYMENT_TONES = {
+  unpaid: 'warning',
+  paid: 'success',
+  closed: 'neutral',
+  expired: 'neutral',
+  timeout: 'danger',
+  error: 'danger',
+  unknown: 'danger',
+} satisfies Record<RenewPaymentState['kind'], TagTone>
+
+/** Charge kind → tag tone. */
+const CHARGE_TONES = {
+  charged: 'success',
+  uncharged: 'warning',
+  unknown: 'danger',
+} satisfies Record<RenewChargeState['kind'], TagTone>
+
 /** The wire carries fen; the page shows yuan. */
 function formatAmount(amount: number): string {
   return `¥${(amount / 100).toFixed(2)}`
@@ -99,15 +118,17 @@ function chargeStatusText(charge: RenewChargeState): string {
             </div>
             <div class="mt-2 flex items-center justify-between text-body text-text-secondary">
               <span>{{ t('device.orderStatus') }}</span>
-              <span :class="{ 'text-danger': record.state.payment.kind === 'unknown' }">
-                {{ paymentStatusText(record.state.payment) }}
-              </span>
+              <Tag
+                :label="paymentStatusText(record.state.payment)"
+                :tone="PAYMENT_TONES[record.state.payment.kind]"
+              />
             </div>
             <div class="mt-1 flex items-center justify-between text-body text-text-secondary">
               <span>{{ t('device.chargeStatus') }}</span>
-              <span :class="{ 'text-danger': record.state.charge.kind === 'unknown' }">
-                {{ chargeStatusText(record.state.charge) }}
-              </span>
+              <Tag
+                :label="chargeStatusText(record.state.charge)"
+                :tone="CHARGE_TONES[record.state.charge.kind]"
+              />
             </div>
             <div class="mt-1 flex items-center justify-between text-body text-text-secondary">
               <span>{{ t('device.createdAt') }}</span>

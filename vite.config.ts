@@ -84,6 +84,11 @@ export default defineConfig({
         command: 'node scripts/apipost-doc-to-markdown.mjs',
         cache: false,
       },
+      // 同样联网，缓存会重放过期结果
+      'docs:apipost:diff': {
+        command: 'node scripts/apipost-doc-to-markdown.mjs --diff',
+        cache: false,
+      },
     },
   },
   resolve: {

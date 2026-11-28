@@ -30,6 +30,7 @@ describe('Tag', () => {
     const tag = mountTag()
 
     expect(tag.textContent).toContain('Paid')
+    expect(tag.classList.contains('text-2nd-body')).toBe(true)
     expect(tag.classList.contains('bg-surface-muted')).toBe(true)
     expect(tag.classList.contains('text-text-secondary')).toBe(true)
   })

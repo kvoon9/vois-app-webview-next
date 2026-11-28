@@ -20,7 +20,7 @@ const emit = defineEmits<{ click: [] }>()
     :aria-label="ariaLabel ?? label"
   >
     <span :class="[icon, 'text-2xl text-text-primary']" aria-hidden="true" />
-    <span class="mt-0.5 text-small leading-none text-text-primary">{{ label }}</span>
+    <span class="mt-0.5 text-2nd-body leading-none text-text-primary">{{ label }}</span>
   </RouterLink>
   <button
     v-else
@@ -31,6 +31,6 @@ const emit = defineEmits<{ click: [] }>()
     @click="emit('click')"
   >
     <span :class="[icon, 'text-2xl text-text-primary']" aria-hidden="true" />
-    <span class="mt-0.5 text-small leading-none text-text-primary">{{ label }}</span>
+    <span class="mt-0.5 text-2nd-body leading-none text-text-primary">{{ label }}</span>
   </button>
 </template>

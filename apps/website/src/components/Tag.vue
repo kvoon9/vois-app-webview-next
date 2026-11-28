@@ -16,7 +16,7 @@ const TONE_CLASS = {
 
 <template>
   <span
-    class="inline-flex items-center whitespace-nowrap rounded-small px-2 py-0.5 text-small font-medium"
+    class="inline-flex items-center whitespace-nowrap rounded-small px-2 py-0.5 text-2nd-body font-medium"
     :class="TONE_CLASS[tone]"
   >
     {{ label }}

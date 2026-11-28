@@ -180,19 +180,23 @@ export interface WechatPaymentConfirmation {
   tradeNo: string
 }
 
-/** What one renewal record means to the page. */
-export type RenewOrderState =
-  | { kind: 'unpaid' }
-  | { kind: 'paid'; charged: boolean }
-  | { kind: 'closed' }
-  | { kind: 'expired' }
-  | { kind: 'timeout' }
-  | { kind: 'error' }
-  | { kind: 'conflict'; status: number; chargeStatus: number }
-  | { kind: 'unknown'; status: number; chargeStatus: number }
-
 /** The payment kinds the snapshot documents; label tables key off this. */
-export type RenewPaymentKind = Exclude<RenewOrderState['kind'], 'conflict' | 'unknown'>
+export type RenewPaymentKind = 'unpaid' | 'paid' | 'closed' | 'expired' | 'timeout' | 'error'
+
+/** One payment code; an undocumented code keeps its raw value. */
+export type RenewPaymentState = { kind: RenewPaymentKind } | { kind: 'unknown'; code: number }
+
+/** One charge flag; an undocumented code keeps its raw value. */
+export type RenewChargeState =
+  | { kind: 'charged' }
+  | { kind: 'uncharged' }
+  | { kind: 'unknown'; code: number }
+
+/** The two wire fields of one renewal record, each read on its own terms. */
+export interface RenewOrderState {
+  payment: RenewPaymentState
+  charge: RenewChargeState
+}
 
 /** One historical renewal order (`simcard-get-all-renew-order`). */
 export interface RenewOrderRecord {
@@ -205,42 +209,34 @@ export interface RenewOrderRecord {
   createdAt: string
 }
 
-/** The one status code that means paid; it also carries the charge flag. */
-const RENEW_PAID_STATUS = 1
-
-/** Builds the state for one documented status code, given its charge flag. */
-type RenewOrderStateBuilder = (chargeStatus: number) => RenewOrderState
-
-/** Maps every documented payment status code to the state it stands for. */
-const RENEW_ORDER_STATES: ReadonlyMap<number, RenewOrderStateBuilder> = new Map<
-  number,
-  RenewOrderStateBuilder
->([
-  [0, () => ({ kind: 'unpaid' })],
-  [RENEW_PAID_STATUS, (chargeStatus) => ({ kind: 'paid', charged: chargeStatus === 1 })],
-  [2, () => ({ kind: 'closed' })],
-  [3, () => ({ kind: 'expired' })],
-  [4, () => ({ kind: 'timeout' })],
-  [5, () => ({ kind: 'error' })],
+/** Maps every documented payment status code to its kind. */
+const RENEW_PAYMENT_KINDS: ReadonlyMap<number, RenewPaymentKind> = new Map([
+  [0, 'unpaid'],
+  [1, 'paid'],
+  [2, 'closed'],
+  [3, 'expired'],
+  [4, 'timeout'],
+  [5, 'error'],
 ])
 
-/** Charge codes the snapshot documents (`data.orders.charge_status`). */
-const RENEW_CHARGE_STATUS_CODES: ReadonlySet<number> = new Set([0, 1])
+/** Maps every documented charge status code to its kind. */
+const RENEW_CHARGE_KINDS: ReadonlyMap<number, 'charged' | 'uncharged'> = new Map([
+  [0, 'uncharged'],
+  [1, 'charged'],
+])
 
 /**
- * Parse the wire pair at the boundary; total over every number. A charge flag on
- * an order that is not paid contradicts the payment status, so it surfaces as
- * `conflict` instead of a paid order.
+ * Parse the wire pair at the boundary; total over every number. Payment and
+ * charge stand on their own: whatever the backend sends is what the page shows,
+ * so `charge_status = 1` on a closed order reads as charged, not as an error.
  */
 export function parseRenewOrderState(status: number, chargeStatus: number): RenewOrderState {
-  const state = RENEW_ORDER_STATES.get(status)
-  if (state == null || !RENEW_CHARGE_STATUS_CODES.has(chargeStatus)) {
-    return { kind: 'unknown', status, chargeStatus }
+  const payment = RENEW_PAYMENT_KINDS.get(status)
+  const charge = RENEW_CHARGE_KINDS.get(chargeStatus)
+  return {
+    payment: payment == null ? { kind: 'unknown', code: status } : { kind: payment },
+    charge: charge == null ? { kind: 'unknown', code: chargeStatus } : { kind: charge },
   }
-  if (chargeStatus === 1 && status !== RENEW_PAID_STATUS) {
-    return { kind: 'conflict', status, chargeStatus }
-  }
-  return state(chargeStatus)
 }
 
 export type ReminderRepeat = 'once' | 'daily' | 'weekdays' | 'custom' | 'monthly'
@@ -443,9 +439,11 @@ type EmptyData = Record<string, never>
 
 /** Return every device the current account manages. */
 export async function getConnectedDevices(): Promise<Device[]> {
-  const response = await weilaFetch<{ devices: DeviceDto[] }>('/v2/subuser/manager-get-all-device')
+  const response = await weilaFetch<{ devices?: DeviceDto[] }>('/v2/subuser/manager-get-all-device')
+  // An account with no devices answers `data: {}`; that is an empty list, not a failure.
+  const devices = response.data.devices ?? []
   // Online devices lead; the server order holds inside each group.
-  return response.data.devices.map(toDevice).sort((a, b) => Number(b.online) - Number(a.online))
+  return devices.map(toDevice).sort((a, b) => Number(b.online) - Number(a.online))
 }
 
 /** Load one device's full profile. */

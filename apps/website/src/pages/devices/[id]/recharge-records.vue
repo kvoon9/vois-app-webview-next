@@ -9,9 +9,10 @@ import { parseRouteParamId } from '~/composables/useRouteParamId'
 import {
   getDeviceDetail,
   getRenewOrderRecords,
+  type RenewChargeState,
   type RenewOrderRecord,
-  type RenewOrderState,
   type RenewPaymentKind,
+  type RenewPaymentState,
 } from '~/utils/device-api'
 
 const { t } = useI18n({ useScope: 'global' })
@@ -57,32 +58,21 @@ function formatAmount(amount: number): string {
   return `¥${(amount / 100).toFixed(2)}`
 }
 
-function paymentStatusText(orderState: RenewOrderState): string {
-  switch (orderState.kind) {
-    case 'conflict':
-      return t('device.orderStatusConflict')
-    case 'unknown':
-      return t('device.orderStatusUnknown', { code: orderState.status })
-    default:
-      return t(PAYMENT_KIND_KEYS[orderState.kind])
-  }
+function paymentStatusText(payment: RenewPaymentState): string {
+  return payment.kind === 'unknown'
+    ? t('device.orderStatusUnknown', { code: payment.code })
+    : t(PAYMENT_KIND_KEYS[payment.kind])
 }
 
-function chargeStatusText(orderState: RenewOrderState): string {
-  switch (orderState.kind) {
-    case 'paid':
-      return orderState.charged
-        ? t('device.chargeStatusCharged')
-        : t('device.chargeStatusUncharged')
-    case 'conflict':
+function chargeStatusText(charge: RenewChargeState): string {
+  switch (charge.kind) {
+    case 'charged':
       return t('device.chargeStatusCharged')
-    default:
-      return t('device.notAvailable')
+    case 'uncharged':
+      return t('device.chargeStatusUncharged')
+    case 'unknown':
+      return t('device.orderStatusUnknown', { code: charge.code })
   }
-}
-
-function isAlertState(orderState: RenewOrderState): boolean {
-  return orderState.kind === 'conflict' || orderState.kind === 'unknown'
 }
 </script>
 
@@ -109,13 +99,15 @@ function isAlertState(orderState: RenewOrderState): boolean {
             </div>
             <div class="mt-2 flex items-center justify-between text-small text-text-secondary">
               <span>{{ t('device.orderStatus') }}</span>
-              <span :class="{ 'text-danger': isAlertState(record.state) }">
-                {{ paymentStatusText(record.state) }}
+              <span :class="{ 'text-danger': record.state.payment.kind === 'unknown' }">
+                {{ paymentStatusText(record.state.payment) }}
               </span>
             </div>
             <div class="mt-1 flex items-center justify-between text-small text-text-secondary">
               <span>{{ t('device.chargeStatus') }}</span>
-              <span>{{ chargeStatusText(record.state) }}</span>
+              <span :class="{ 'text-danger': record.state.charge.kind === 'unknown' }">
+                {{ chargeStatusText(record.state.charge) }}
+              </span>
             </div>
             <div class="mt-1 flex items-center justify-between text-small text-text-secondary">
               <span>{{ t('device.createdAt') }}</span>

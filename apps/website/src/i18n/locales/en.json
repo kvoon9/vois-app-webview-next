@@ -221,7 +221,6 @@
     "orderStatusExpired": "Expired",
     "orderStatusTimeout": "Payment timed out",
     "orderStatusError": "Order error",
-    "orderStatusConflict": "Status conflict",
     "orderStatusUnknown": "Unknown status {code}",
     "chargeStatus": "Renewal status",
     "chargeStatusCharged": "Applied",

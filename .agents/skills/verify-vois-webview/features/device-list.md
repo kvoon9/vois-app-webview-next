@@ -39,4 +39,4 @@ Preconditions:
 - The fleet belongs to the debug account: row count, names, and ids change between accounts and over time. Assert agreement with the capture, never a fixed device name.
 - The 待续费设备 action is always rendered; an account with no due cards gets the 待续费设备 page's empty state, not a hidden entry.
 - A row is a `button`, not a link — `a[href*="/devices/"]` finds nothing.
-- With zero devices the 已连接设备 heading stays and 暂无已连接设备 replaces the rows; there is no seeded fixture to create one, so the journey reports the failure and stops.
+- With zero devices the 已连接设备 heading stays and 暂无已连接设备 replaces the rows; there is no seeded fixture to create one, so the journey reports the failure and stops. The endpoint may answer `data: {}` with no `devices` key at all (observed 2026-11-28); that is the same empty list, not an error page.

@@ -90,36 +90,42 @@ function chargeStatusText(charge: RenewChargeState): string {
         <ul class="space-y-3">
           <li v-for="record in filteredRecords" :key="record.orderNo" class="card">
             <div class="flex items-center justify-between">
-              <span class="min-w-0 flex-1 truncate text-body font-medium">
+              <span class="min-w-0 flex-1 truncate text-title-compact font-medium">
                 {{ record.orderDesc || t('device.renewOrderFallback') }}
               </span>
-              <span class="ml-3 flex-none text-body font-medium">
+              <span class="ml-3 flex-none text-title-compact font-medium">
                 {{ formatAmount(record.amount) }}
               </span>
             </div>
-            <div class="mt-2 flex items-center justify-between text-small text-text-secondary">
+            <div class="mt-2 flex items-center justify-between text-2nd-body text-text-secondary">
               <span>{{ t('device.orderStatus') }}</span>
               <span :class="{ 'text-danger': record.state.payment.kind === 'unknown' }">
                 {{ paymentStatusText(record.state.payment) }}
               </span>
             </div>
-            <div class="mt-1 flex items-center justify-between text-small text-text-secondary">
+            <div class="mt-1 flex items-center justify-between text-2nd-body text-text-secondary">
               <span>{{ t('device.chargeStatus') }}</span>
               <span :class="{ 'text-danger': record.state.charge.kind === 'unknown' }">
                 {{ chargeStatusText(record.state.charge) }}
               </span>
             </div>
-            <div class="mt-1 flex items-center justify-between text-small text-text-secondary">
+            <div class="mt-1 flex items-center justify-between text-2nd-body text-text-secondary">
               <span>{{ t('device.createdAt') }}</span>
               <time>{{ record.createdAt }}</time>
             </div>
-            <div class="mt-1 flex items-start justify-between text-small text-text-secondary">
+            <div
+              class="mt-1 flex flex-wrap items-start justify-between text-2nd-body text-text-secondary"
+            >
               <span class="flex-none">{{ t('device.orderNumber') }}</span>
-              <span class="ml-3 min-w-0 break-all text-right">{{ record.orderNo }}</span>
+              <span class="ml-auto max-w-full flex-none break-all text-right">{{
+                record.orderNo
+              }}</span>
             </div>
-            <div class="mt-1 flex items-start justify-between text-small text-text-secondary">
+            <div
+              class="mt-1 flex flex-wrap items-start justify-between text-2nd-body text-text-secondary"
+            >
               <span class="flex-none">{{ t('device.iccid') }}</span>
-              <span class="ml-3 min-w-0 break-all text-right">
+              <span class="ml-auto max-w-full flex-none break-all text-right">
                 {{ record.iccid || t('device.notAvailable') }}
               </span>
             </div>
